@@ -1,0 +1,3329 @@
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-light: #475569;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-light: #eef2ff;
+  --accent-soft: #f5f5ff;
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --info: #06b6d4;
+  --info-light: #ecfeff;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.06), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 12px 28px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.06);
+  --shadow-overlay: 0 24px 48px rgba(15,23,42,0.18);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html {
+  /* Force la scrollbar à toujours être visible pour éviter
+     les sauts de largeur entre onglets de contenu court vs long */
+  overflow-y: scroll;
+  /* Empêche iOS Safari de booster automatiquement la taille du texte
+     quand on passe en paysage (sans ça, certaines polices deviennent
+     beaucoup plus grandes en paysage qu'en portrait). */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+code { font-family: "SF Mono", "Monaco", "Consolas", monospace; font-size: 0.9em; }
+
+/* Hide number input spinners (so text-align: right aligns to true right edge) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; min-height: 100dvh;
+  flex-direction: column; gap: 16px;
+  font-size: 14px; color: var(--text-muted);
+}
+.spinner {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.input {
+  width: 100%; padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 14px; color: var(--text);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+/* Inputs date / month : sur desktop on garde le picker natif du navigateur.
+   La neutralisation d'apparence + texte centré ne s'applique qu'en mobile
+   (cf. media query plus bas) pour préserver la cohérence visuelle iOS. */
+input[type="date"],
+input[type="month"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* Suppression du flash bleu iOS Safari au tap (visible notamment sur les éléments
+   SVG cliquables des graphiques Recharts). */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+.recharts-wrapper :focus,
+.recharts-surface :focus,
+.recharts-pie-sector,
+.recharts-sector {
+  outline: none;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+/* v600 : champ Note — le liseré indigo au focus est porté par le CONTENEUR
+   (focus-within), qui rogne (overflow:hidden) la barre de défilement dans les
+   coins arrondis → liseré propre sur les 4 côtés, même quand le texte défile
+   (avant, la barre du textarea « cassait » le liseré à droite). */
+.note-field {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.note-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.note-field textarea {
+  display: block; width: 100%;
+  border: 0; outline: none; background: transparent;
+  color: var(--text); font-size: 14px; font-family: inherit; line-height: 1.4;
+  padding: 10px 14px;
+}
+.label {
+  display: block; font-size: 12px; font-weight: 500;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 16px; border: 1px solid transparent;
+  border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary { background: var(--text); color: white; border-color: var(--text); }
+.btn-primary:hover { background: #1e293b; }
+.btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-accent:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-lg { padding: 12px 22px; font-size: 14px; }
+/* Bouton « Supprimer » en bas des modales d'édition (remplace le × des lignes). */
+.btn-delete-line {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 11px 16px;
+  border: 1px solid #fca5a5; background: var(--danger-light);
+  color: var(--danger); font-family: inherit; font-size: 14px; font-weight: 600;
+  border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s;
+}
+.btn-delete-line:hover { background: #fee2e2; }
+/* Boutons d'action d'un formulaire d'édition sur une seule ligne :
+   le bouton principal (Enregistrer/Modifier) prend la place, « Supprimer » à
+   droite à sa largeur de contenu. */
+.form-actions { display: flex; gap: 8px; align-items: stretch; }
+.form-actions > .btn { flex: 1; }
+.form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: var(--radius-md);
+  background: transparent; color: var(--text-muted);
+  font-size: 16px; cursor: pointer; transition: all 0.15s;
+}
+.btn-icon:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border); }
+.btn-icon.btn-icon-danger:hover {
+  background: var(--danger-light);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.card-hover:hover { box-shadow: var(--shadow-md); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border: 1px solid var(--border);
+  background: var(--surface); border-radius: var(--radius-full);
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.pill:hover { border-color: var(--border-strong); color: var(--text); }
+.pill-active { background: var(--text); color: white; border-color: var(--text); }
+.pill-active:hover { color: white; }
+.pill-ghost { color: var(--text-muted); border-style: dashed; }
+.pill-ghost:hover { background: var(--surface-hover); color: var(--text); }
+
+.num { font-variant-numeric: tabular-nums; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 1000;
+  /* Pas de backdrop-filter (flou) : trop coûteux en repaint, surtout sur
+     iOS Safari et en modales empilées (double flou). Un simple
+     assombrissement du fond suffit et reste fluide. */
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  max-width: 500px; width: 100%; max-height: 90vh; overflow: hidden;
+  box-shadow: var(--shadow-overlay); animation: slideUp 0.2s ease;
+  display: flex; flex-direction: column;
+}
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  /* v566 : padding vertical réduit 18→12px (en-tête plus compact sur
+     desktop). Titre et bouton ✕ inchangés. Le mobile garde ses réglages
+     dédiés plus bas (dont la marge d'encoche en PWA), non touchés. */
+  padding: 12px 24px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.modal-title { font-size: 15px; font-weight: 600; margin: 0; }
+.modal-body { padding: 24px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+.dropdown-menu {
+  position: absolute; top: calc(100% + 6px); min-width: 220px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  padding: 6px; z-index: 110;
+}
+.dropdown-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 12px; background: transparent; border: none;
+  border-radius: var(--radius-sm); font-size: 13px;
+  color: var(--text); text-align: left; cursor: pointer;
+  transition: background 0.1s; font-family: inherit;
+}
+.dropdown-item:hover { background: var(--surface-hover); }
+.dropdown-item-danger { color: var(--danger); }
+.dropdown-item-danger:hover { background: var(--danger-light); }
+.dropdown-separator { height: 1px; background: var(--border); margin: 6px -6px; }
+/* v584 : bloc identité (avatar + email) en haut du menu ⋯ desktop, aligné à
+   gauche (motif menu de compte) — pendant desktop de .sheet-id (feuille mobile). */
+.dropdown-id { display: flex; align-items: center; gap: 11px; padding: 9px 10px; }
+.dropdown-avatar {
+  width: 38px; height: 38px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #1e293b, var(--text)); color: #fff;
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.22); flex-shrink: 0;
+}
+.dropdown-id-txt { min-width: 0; }
+.dropdown-id-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.dropdown-id-mail {
+  font-size: 12px; color: var(--text-muted); line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* v584 : ligne version en bas du menu ⋯ desktop, style fin (hairline pâle +
+   texte allégé) — pendant desktop de .sheet-version. */
+.dropdown-version {
+  border-top: 1px solid #eef1f5; margin: 5px -6px 0; padding: 8px 12px 3px;
+  text-align: center; font-size: 10.5px; font-weight: 300;
+  color: var(--text-subtle); font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Charges partagées (modale)
+   ============================================================ */
+.charges-input {
+  width: 100%; min-width: 120px; padding: 7px 9px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit;
+  background: var(--surface); color: var(--text);
+}
+.charges-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.charges-input:disabled { background: var(--surface-hover); color: var(--text-muted); }
+/* Champs numériques : largeur fixe confortable, alignés à droite */
+.charges-input--num { width: 110px; min-width: 0; }
+.charges-select {
+  padding: 7px 8px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
+  background: var(--surface); color: var(--text); cursor: pointer;
+}
+.charges-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.charges-table th, .charges-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  text-align: right; white-space: nowrap; vertical-align: middle;
+}
+.charges-table th:first-child, .charges-table td:first-child { text-align: left; }
+.charges-table thead th {
+  font-size: 11px; color: var(--text-muted); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.03em;
+  border-bottom: 1.5px solid var(--border-strong);
+  position: sticky; top: 0; background: var(--surface); z-index: 1;
+}
+.charges-table tbody tr:hover { background: var(--surface-alt); }
+.charges-table tbody tr:last-child td { border-bottom: none; }
+/* (Les colonnes "personnes" n'ont volontairement pas de fond différent.) */
+/* ============================================================
+   Segmented control générique — même langage que la nav desktop
+   (rail gris, segments sans bordure, pastille foncée glissante
+   .seg-indicator positionnée par useSlideIndicator).
+   Utilisé par les onglets de scénarios du module Charges.
+   ============================================================ */
+.seg-bar { display: flex; align-items: center; gap: 8px; }
+.seg-rail {
+  position: relative;
+  display: inline-flex; gap: 3px; align-items: center;
+  background: #eef1f5;
+  border-radius: 11px; padding: 3px;
+  overflow-x: auto; max-width: 100%;
+  flex: 0 1 auto; min-width: 0;
+}
+.seg-rail::-webkit-scrollbar { display: none; }
+.seg-tab {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  padding: 7px 13px; background: transparent;
+  border: none; border-radius: 8px;
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: color 0.15s; white-space: nowrap;
+  position: relative; z-index: 1;
+}
+.seg-tab:hover { color: var(--text); }
+.seg-tab-active { color: white; }
+.seg-tab-active:hover { color: white; }
+/* Le « + » est une ACTION → bouton fantôme carré hors du rail */
+.seg-add {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 32px; height: 32px;
+  border: 1px dashed var(--border-strong); border-radius: 9px;
+  background: transparent; color: var(--text-muted);
+  font-size: 16px; line-height: 1; cursor: pointer; transition: all 0.15s;
+}
+.seg-add:hover { color: var(--accent); border-color: var(--accent); }
+/* Segment autonome ÉPINGLÉ hors du rail (ex. « Comparer ») : toujours
+   visible même si le rail défile, icône + libellé complets, foncé quand
+   la vue est active. */
+.seg-solo {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  padding: 9px 14px;
+  background: #eef1f5; border: none; border-radius: 11px;
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  margin-left: auto;
+}
+.seg-solo:hover { color: var(--text); }
+.seg-solo.on { background: var(--text); color: white; }
+.seg-solo.on:hover { color: white; }
+
+/* Mise en évidence d'un résultat de recherche localisé (requestLocate) :
+   flash violet + liseré accent qui s'estompent, puis retour à la normale. */
+@keyframes rowFlash {
+  0%, 55% { background-color: var(--accent-light); box-shadow: inset 3px 0 0 var(--accent); }
+  100% { background-color: transparent; box-shadow: inset 3px 0 0 transparent; }
+}
+.row-flash { animation: rowFlash 2.4s ease forwards; }
+
+/* Liste des charges : lignes dans le style des opérations du compte courant */
+.charge-list { display: flex; flex-direction: column; }
+.charge-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.charge-row:last-child { border-bottom: none; }
+.charge-row:hover { background: var(--surface-alt); }
+.charge-badge {
+  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--danger-light); color: var(--danger);
+  font-weight: 700; font-size: 13px;
+}
+.charge-main { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.charge-label {
+  width: 100%; border: 1px solid transparent; background: transparent;
+  border-radius: var(--radius-sm); padding: 5px 7px;
+  font-size: 14px; font-weight: 600; font-family: inherit; color: var(--text);
+}
+.charge-label:hover { border-color: var(--border); }
+.charge-label:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-light); }
+.charge-sub { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); padding-left: 7px; }
+.charge-sub-item { display: inline-flex; align-items: center; gap: 5px; }
+.charge-sub .ptag { font-weight: 600; color: var(--text-light); }
+.charge-sub .charges-input--num { width: 88px; }
+.charge-sub .cur, .charge-total .cur { color: var(--text-muted); font-size: 12px; }
+.charge-sub-sep { opacity: 0.45; }
+.charge-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+.charge-total { display: inline-flex; align-items: center; gap: 5px; }
+.charge-total-ro { min-width: 96px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.charge-joint {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-muted); cursor: pointer; user-select: none;
+}
+
+/* En-tête de scénario + sélecteur */
+.charges-scenarios { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.charges-scenario-head { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+.charges-field { flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px; }
+.charges-ref-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--text-light); cursor: pointer;
+  padding-bottom: 9px; white-space: nowrap;
+}
+/* % de comparaison sous le montant dans le tableau de comparaison */
+.cmp-pct { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== Refonte Charges : onglets, en-tête, revenus, cartes, comparaison ===== */
+.charges-tabbar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+/* Onglets de scénarios : rail segmented (défile horizontalement si besoin,
+   le scénario cliqué est recentré via scrollIntoView) + « Comparer »
+   épinglé à droite, toujours visible avec icône + texte. */
+
+/* Zone scénario : ligne compacte (nom + référence + corbeille) */
+.charges-scenario-head {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
+}
+.charges-scenario-head .scen-name { flex: 1 1 200px; }
+.charges-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Étoile "référence" : icône seule (tient sur la ligne du nom même en mobile) */
+.star-btn { color: var(--text-subtle); font-size: 17px; line-height: 1; }
+.star-btn.on { color: var(--warning); border-color: var(--warning); background: var(--warning-light); }
+.star-btn:hover { color: var(--warning); }
+.ref-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--warning); color: var(--warning); background: var(--warning-light);
+  border-radius: var(--radius-full); padding: 8px 13px;
+  font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap;
+}
+.ref-btn.off { border-color: var(--border); color: var(--text-muted); background: var(--surface); }
+
+/* Revenus : cartes par personne — style « stat-card » blanc (cf. compte
+   courant) : fine bordure, pastille colorée en haut à droite. */
+.inc-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.inc-fld {
+  flex: 1; min-width: 150px; position: relative;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 15px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.inc-fld:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.inc-ava {
+  position: absolute; top: 12px; right: 12px;
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.inc-name {
+  display: block; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+  padding-right: 36px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.inc-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); font-weight: 600; margin-top: 9px; }
+.inc-amt { display: flex; align-items: baseline; gap: 5px; margin-top: 2px; }
+.inc-amt-input {
+  border: 1px solid transparent; background: transparent; font-family: inherit;
+  font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--text);
+  text-align: left; padding: 2px 3px; border-radius: var(--radius-sm); min-width: 2ch;
+}
+.inc-amt-input:hover { border-color: var(--border); }
+.inc-amt-input:focus { outline: none; border-color: var(--accent); background: var(--surface-alt); }
+.inc-amt .cur { color: var(--text-muted); font-weight: 600; font-size: 16px; }
+/* Symbole € atténué (cohérent avec .tx-currency de l'app) */
+.cur { color: var(--text-muted); font-weight: 500; }
+
+/* Pastilles de couleur (utilisées dans la comparaison) */
+.pc-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+.pc-dot.sm { width: 8px; height: 8px; }
+
+/* Synthèse : tuiles KPI par personne — style stat-card blanc. */
+.pcards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pcard {
+  position: relative;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 15px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.pcard:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.pc-ava {
+  position: absolute; top: 12px; right: 12px;
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.pc-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding-right: 36px; }
+.pcard-hero { margin-top: 9px; }
+.pcard-hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); font-weight: 600; }
+.pcard-hero-val { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 2px; }
+.pcard-sub { font-size: 12px; color: var(--text-muted); margin-top: 7px; font-variant-numeric: tabular-nums; }
+.pcard-sub b { color: var(--text); font-weight: 600; }
+.pcard .cur { color: var(--text-muted); }
+@media (max-width: 560px) { .pcards { grid-template-columns: 1fr; } }
+
+/* Tableau de comparaison (fin, regroupé par poste) */
+/* Comparatif (D1) : une carte par personne, scénarios en lignes, colonne
+   « Scénario » figée. Valeurs exactes par défaut ; arrondies en portrait
+   smartphone (bascule .cmpd-exact / .cmpd-round). Écart en % sous la valeur. */
+.cmp-d1 { display: flex; flex-direction: column; gap: 12px; }
+.cmpp { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.cmpp-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px 9px; }
+.cmpp-ava { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.cmpp-name { font-size: 14px; font-weight: 700; }
+.cmpp-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cmpp-tab { border-collapse: collapse; width: 100%; }
+.cmpp-tab th { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); text-align: right; padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.cmpp-tab td { font-size: 12.5px; text-align: right; padding: 11px 12px; vertical-align: top; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmpp-tab td.cmpp-sc, .cmpp-tab th.cmpp-sc { position: sticky; left: 0; background: var(--surface); text-align: left; font-weight: 600; z-index: 2; min-width: 92px; box-shadow: 1px 0 0 var(--border); }
+.cmpp-tab tr.ref td { background: var(--accent-light); }
+.cmpp-tab tr.ref td.cmpp-sc { background: var(--accent-light); color: var(--accent); }
+/* Survol des lignes (convention de l'app) ; la ligne de référence garde son
+   fond indigo pour rester repérable. */
+.cmpp-tab tbody tr:hover td,
+.cmpp-tab tbody tr:hover td.cmpp-sc { background: var(--surface-alt); }
+.cmpp-tab tbody tr.ref:hover td,
+.cmpp-tab tbody tr.ref:hover td.cmpp-sc { background: var(--accent-light); }
+.cmpp-tab td .v { display: block; font-weight: 500; color: var(--text); line-height: 1.2; }
+.cmp-delta { display: block; font-size: 11px; font-weight: 400; margin-top: 4px; }
+.cmp-delta.down { color: var(--danger); }
+.cmp-delta.up { color: var(--success); }
+.cmp-delta.neu { color: var(--text-subtle); }
+.cmp-star { color: var(--accent); }
+/* arrondi (portrait smartphone) vs exact (paysage + desktop) */
+.cmpd-round { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {
+  .cmpp-tab th, .cmpp-tab td { padding: 9px 9px; }
+  .cmpp-tab td { font-size: 12px; }            /* valeurs (pas les en-têtes) */
+  .cmpp-tab td.cmpp-sc, .cmpp-tab th.cmpp-sc { min-width: 74px; }
+  .cmp-delta { font-size: 10.5px; }
+  .cmpd-exact { display: none; }
+  .cmpd-round { display: inline; }
+}
+
+/* (Avatars .inc-ava / .pc-ava définis dans la section des cartes Revenus /
+   Synthèse : style stat-card, fond clair + initiales colorées en inline.) */
+
+/* Mode de répartition : liste déroulante neutre pour tous les modes
+   (50/50, Prorata, Perso) — pas de couleur. */
+
+/* Pastille toggle "Joint" */
+.jtoggle {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-subtle);
+  border-radius: var(--radius-full); padding: 5px 11px; cursor: pointer; font-family: inherit;
+  transition: all 0.12s;
+}
+.jtoggle.on { background: var(--accent-light); color: var(--accent); border-color: var(--accent-light); }
+.jtoggle:hover { border-color: var(--accent); }
+
+/* Liste de charges en lecture seule (édition via la sous-modale), compacte */
+.charge-row--ro {
+  flex-wrap: nowrap;
+  gap: 10px; padding: 7px 14px; align-items: center;
+}
+.charge-row--ro .charge-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.charge-name {
+  font-weight: 600; font-size: 14px; line-height: 1.25;
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.charge-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.charge-badge-mensuel { flex-shrink: 0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); background: var(--accent-light); padding: 2px 7px; border-radius: var(--radius-full); }
+/* Pastille € : grise pour une charge normale, indigo pour une charge mensuelle.
+   Sert aussi de poignée de glisser-déposer pour réordonner. */
+.charge-badge.mensuel { background: var(--accent-light); color: var(--accent); }
+.charge-badge { cursor: grab; }
+.charge-badge:active { cursor: grabbing; }
+.charge-badge--mini { width: 18px; height: 18px; font-size: 10px; }
+/* Indicateurs de glisser-déposer sur les lignes de charges */
+.charge-row.dragging { opacity: 0.15; } /* v572 : aligné sur les autres listes */
+.charge-row.drag-over-top { box-shadow: inset 0 2px 0 0 var(--accent); }
+.charge-row.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--accent); }
+/* (ancienne pastille ronde, conservée pour compat) */
+.charge-dot-mensuel { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.charge-list-footer { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.charge-legend { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-muted); }
+/* tag répartition */
+.charge-tag {
+  flex-shrink: 0; font-size: 10.5px; font-weight: 600; color: var(--text-light);
+  background: var(--surface-hover); border: 1px solid var(--border);
+  border-radius: var(--radius-full); padding: 1px 8px; line-height: 1.5;
+}
+/* Badge de la personne pour une charge perso (initiales colorées). */
+.charge-person-tag {
+  flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  border-radius: var(--radius-full); padding: 1px 8px; line-height: 1.6;
+}
+/* bloc montant + sommes par personne (discret, sous le total) */
+.charge-amount-block { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; text-align: right; }
+.charge-amount-block .charge-total-ro { min-width: 0; font-weight: 500; font-size: 14px; line-height: 1.2; color: var(--text); }
+.charge-split-mini { display: flex; gap: 7px; font-size: 10.5px; line-height: 1.1; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+/* Équivalent mensuel d'une charge annuelle (sous le total annuel) : discret. */
+.charge-monthly-equiv { font-size: 11px; line-height: 1.1; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+/* Ronds de code couleur : indigo = virement mensuel, jaune = provision annuelle. */
+.charge-vir-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; vertical-align: middle; }
+.charge-prov-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex-shrink: 0; vertical-align: middle; }
+.charge-pea-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; vertical-align: middle; }
+.charge-tampon-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--text-subtle); flex-shrink: 0; vertical-align: middle; }
+/* Sous-rubriques de répartition sous chaque carte de synthèse. */
+.pcard-alloc { border-top: 1px solid var(--border); margin-top: 9px; padding-top: 9px; display: flex; flex-direction: column; gap: 7px; }
+.pcard-alloc-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.pcard-alloc-lbl { flex: 1; color: var(--text-muted); }
+.pcard-alloc-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.pcard-alloc-val .cur { color: var(--text-muted); font-weight: 400; }
+.charge-legend .charge-vir-dot { margin-right: 5px; }
+/* Légende globale de la page charges. */
+.charges-legend-global { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin: 8px 2px 4px; }
+.charges-legend-global .charge-vir-dot, .charges-legend-global .charge-prov-dot { margin-right: 5px; }
+.csm-name { font-weight: 700; }
+.charge-row--ro .tx-edit, .charge-row--ro .tx-delete { flex-shrink: 0; }
+.charge-badge { width: 24px; height: 24px; font-size: 11px; }
+
+/* Formulaire "Charge" : segmented control + ligne mensuel */
+.seg { display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.seg-btn { flex: 1; padding: 10px 8px; background: var(--surface); border: none; border-right: 1px solid var(--border); font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+.seg-btn:last-child { border-right: none; }
+.seg-btn.on { background: var(--accent); color: #fff; }
+.charge-mensuel-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 14px; font-weight: 500;
+  padding: 10px 12px; background: var(--surface-alt); border-radius: var(--radius-md);
+}
+@media (max-width: 640px) {
+  /* 16px uniquement sur les CHAMPS de saisie : empêche le zoom auto d'iOS au
+     focus. Les .seg-btn sont des boutons (pas de zoom) → ils gardent leur
+     13px de base, sinon les libellés Pourcentage/Prorata/Montants sont trop
+     gros sur mobile. */
+  .charge-form .input { font-size: 16px; }
+}
+
+/* Seul le tableau défile horizontalement ; le bouton "+ Ajouter" reste
+   hors de cette zone, donc toujours visible même après un scroll latéral. */
+.charges-table-scroll { overflow-x: auto; }
+/* En-tête du tableau des charges, plus marqué */
+.charges-table--ch thead th { background: var(--surface-alt); }
+/* Montants figés (span .num) et éditables (.charges-input--num) à la même
+   taille de police, pour qu'ils soient indiscernables visuellement. */
+.charges-table--ch .num,
+.charges-table--ch .charges-input--num { font-size: 13.5px; }
+
+/* ---- MOBILE : police 16px sur les champs éditables pour empêcher le zoom
+   automatique d'iOS Safari au focus (l'app vise 16px sur mobile). ---- */
+@media (max-width: 640px) {
+  .charges-input, .charges-input--num, .charges-select,
+  .scen-name { font-size: 16px; }
+  /* 2 classes pour battre la règle desktop .charges-table--ch .xxx */
+  .charges-table--ch .num,
+  .charges-table--ch .charges-input--num { font-size: 16px; }
+  .charges-table th, .charges-table td { padding: 8px 9px; }
+  /* Revenus : 2 cartes côte à côte, compactes */
+  .inc-fld { padding: 11px 12px 12px; gap: 6px; }
+  .inc-ava { width: 26px; height: 26px; font-size: 10px; }
+  .inc-amt-input { font-size: 18px; }
+  .inc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pcards { grid-template-columns: 1fr; }
+}
+/* Mobile portrait : "+ Scénario" en icône seule (« + »), tandis que "Comparer"
+   conserve son libellé (action principale, on la garde explicite). */
+@media (max-width: 640px) and (orientation: portrait) {
+  /* Plus de place au libellé : on masque le détail ML/MLJ sous le total
+     (toujours visible dans la fiche d'édition et la synthèse). */
+  .charge-split-mini { display: none; }
+  /* Charges annuelles : on n'affiche que le total annuel (l'équivalent mensuel
+     reste visible dans la fiche d'édition). */
+  .charge-monthly-equiv { display: none; }
+}
+
+.pills-row {
+  display: flex; flex-wrap: nowrap; overflow-x: auto;
+  gap: 6px; padding: 2px 0;
+  align-items: center;
+}
+.pills-row::-webkit-scrollbar { height: 4px; }
+.pills-row::-webkit-scrollbar-track { background: transparent; }
+.pills-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.tabs {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tab {
+  padding: 12px 18px; background: transparent; border: none;
+  border-bottom: 2px solid transparent; font-size: 13px;
+  font-weight: 500; color: var(--text-muted); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab-active { color: var(--text); border-bottom-color: var(--accent); }
+
+.grid-hero, .grid-overview, .grid-2 { display: grid; gap: 16px; }
+.grid-hero { grid-template-columns: 1.4fr 1fr; }
+.grid-overview { grid-template-columns: 1.2fr 1fr; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+
+.main-container { max-width: 1240px; margin: 0 auto; padding: 12px 20px 24px; }
+
+.header-inner {
+  max-width: 1240px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.header-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
+
+/* ============================================================
+   App Bar fusionné (desktop) : logo + onglets + email + kebab
+   sur une seule ligne sticky
+   ============================================================ */
+.app-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(250,250,250,0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.app-bar-inner {
+  max-width: 1240px; margin: 0 auto;
+  padding: 8px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+/* Rail « segmented control » (refonte nav) : fond gris clair, les onglets
+   sont des segments sans bordure, l'actif est porté par la pastille foncée
+   glissante (.seg-indicator, positionnée en JS dans AppBar). */
+.app-bar-nav {
+  position: relative;
+  display: inline-flex; gap: 3px;
+  background: #eef1f5;
+  border-radius: 11px; padding: 3px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.app-bar-nav::-webkit-scrollbar { display: none; }
+.seg-indicator {
+  position: absolute; left: 0;
+  background: var(--text); border-radius: 8px;
+  z-index: 0; pointer-events: none;
+  /* Mode COMPOSITEUR (v506, même mécanique que la goutte mobile v499) :
+     le TRAJET passe par translateX(--tx) — fluide même pendant le
+     montage du module. La LARGEUR reste en transition classique : les
+     segments ont des largeurs variables (libellés desktop, noms de
+     scénarios Charges) et un scaleX déformerait les coins arrondis.
+     Ressort discret (1.05) : ambiance desktop plus sobre que la barre. */
+  transform: translateX(var(--tx, 0px));
+  transition: transform 0.34s cubic-bezier(0.24, 1.05, 0.32, 1),
+              width 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+              top 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.app-bar-user {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+  /* margin-left:auto : le rail segmented est en inline-flex (il ne pousse
+     plus comme l'ancien nav flex:1), c'est donc ici qu'on cale à droite. */
+  margin-left: auto;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+}
+/* Email utilisateur masqué : l'info est peu utile au quotidien et libère de
+   la place dans l'AppBar (visible sur ordi + mobile paysage). Sur mobile
+   portrait l'AppBar est déjà masquée, donc l'email n'y apparaît pas non plus. */
+.user-email { display: none; }
+
+/* Barre de navigation basse + titre de page : mobile uniquement.
+   Le layout complet vit ici (base commune), seuls display et les
+   ajustements de position sont pilotés par les media queries :
+   portrait ≤640px ET paysage téléphone (pointer:coarse). */
+.tabbar-wrap {
+  display: none; align-items: center; gap: 10px;
+  position: fixed; left: 34px; right: 34px;
+  /* Placement « Instagram » aux valeurs EXACTES mesurées sur captures
+     iPhone 17 Pro Max (maquette Mockup-Barre-Marges-Reel) : côtés 34px,
+     bas ≈30px sur appareils à encoche (safe-area 34 − 4). Le max()
+     garantit 14px sans indicateur d'accueil. Remplace le calage
+     « WhatsApp » (12px / safe-area − 18) des v419-465. Contrepartie
+     assumée : notre barre étant plus large qu'IG (capsule + « ⋯ »
+     séparé), les ovales se resserrent sur les écrans < 440pt — paliers
+     de padding plus bas. */
+  bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) - 4px));
+  z-index: 40;
+  /* Contraction façon Instagram : les insets latéraux s'animent
+     (34px ↔ 57px — amplitude de 23px, celle mesurée sur Instagram). */
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* PAS de transform ici : l'ancien translateZ(0) (contournement v439 du
+     bug de dérive iOS, rendu obsolète par le scroller interne) créait une
+     frontière de compositing qui COUPAIT l'échantillonnage du
+     backdrop-filter — le verre affichait du blanc au lieu du contenu
+     coloré qui passait dessous (visible au-dessus des graphiques). */
+}
+/* Ligne de titre mobile : titre à gauche + slot d'actions à droite
+   (la chip de mois du Compte courant s'y insère via portal React).
+   Typo du titre définie ICI (règle de base) pour être partagée par le
+   portrait ET le paysage — sinon le h1 retombe sur les défauts du
+   navigateur (32px gras + grosses marges) dans l'orientation qui ne
+   redéfinit pas ces propriétés. Les médias ne pilotent que display
+   et le padding-top (safe-area en portrait, réduit en paysage). */
+.title-row {
+  display: none;
+  align-items: center; justify-content: space-between; gap: 8px;
+  margin: 0 2px 12px;
+}
+.mobile-page-title {
+  font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+  margin: 0;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Hauteur VERROUILLÉE sur celle du titre (20px × line-height ≈ 24px) :
+   la chip de mois (32px) déborde visuellement de ~4px en haut/bas sans
+   pousser la ligne — la hero card reste exactement au même niveau que
+   dans les rubriques sans chip (Épargne, Investissements…). */
+.title-row-slot {
+  flex-shrink: 0;
+  height: 24px;
+  display: flex; align-items: center;
+}
+
+.hero-value-big { font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+.hero-card { padding: 24px; min-height: 0; position: relative; }
+/* L'en-tête (libellé + icône/badge/contrôles) : on sort l'élément de droite
+   du flux (position absolue, coin haut-droit) pour que la ligne ne soit pas
+   "gonflée" par l'icône — le gros montant colle ainsi au libellé. */
+.hero-card > div:first-child > :first-child { padding-right: 44px; }
+.hero-card > div:first-child > :last-child { position: absolute; top: 24px; right: 24px; margin: 0; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  margin-top: 10px;
+}
+.stats-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 16px 16px;
+  position: relative; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.stat-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.stat-card-icon {
+  position: absolute; top: 12px; right: 12px;
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-hover); color: var(--text-muted);
+}
+.stat-card-icon.income { background: var(--success-light); color: var(--success); }
+.stat-card-icon.expense { background: var(--danger-light); color: var(--danger); }
+.stat-card-icon.tr { background: var(--accent-light); color: var(--accent); }
+.stat-card-icon.tr-utensils { background: var(--warning-light); color: var(--warning); }
+.stat-card-label {
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 4px; padding-right: 32px;
+}
+.stat-card-value {
+  font-size: 19px; font-weight: 500;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  color: var(--text);
+}
+.stat-card-sub {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 4px; font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.value-positive { color: var(--success); }
+.value-negative { color: var(--danger); }
+.value-info { color: var(--info); }
+
+/* ============================================================
+   Module Épargne — détail d'un livret
+   ============================================================ */
+/* Ligne cliquable d'un livret dans la liste (curseur pointer + hover). */
+.asset-row.asset-row-clickable { cursor: pointer; }
+.asset-row.asset-row-clickable:hover { background: var(--surface-alt); }
+
+/* Carte solde calculé en haut du détail d'un livret. */
+.savings-balance-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 20px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.savings-balance-label {
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.savings-balance-value {
+  font-size: 28px; font-weight: 600;
+  letter-spacing: -0.02em; margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.savings-balance-sub {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 6px; font-variant-numeric: tabular-nums;
+}
+
+/* Stats compactes : versements / retraits / intérêts. */
+.savings-stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 14px;
+}
+.stat-card-icon.savings-in { background: var(--success-light); color: var(--success); }
+.stat-card-icon.savings-out { background: var(--danger-light); color: var(--danger); }
+.stat-card-icon.savings-itr { background: var(--info-light); color: var(--info); }
+
+/* Mobile : grille resserrée pour les stats de la vue détail d'un livret. */
+@media (max-width: 640px) {
+  .savings-stats-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+}
+
+/* Sections */
+.section-block {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-top: 14px; overflow: hidden;
+}
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 600;
+}
+.section-icon {
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.section-icon.income { background: var(--success-light); color: var(--success); }
+.section-icon.expense { background: var(--danger-light); color: var(--danger); }
+.section-icon.tr { background: var(--accent-light); color: var(--accent); }
+.section-icon.tr-utensils { background: var(--warning-light); color: var(--warning); }
+.section-icon.checking { background: var(--accent-light); color: var(--accent); }
+.section-icon.savings { background: var(--info-light); color: var(--info); }
+.section-icon.invest { background: var(--success-light); color: var(--success); }
+.section-icon.physical { background: var(--warning-light); color: var(--warning); }
+.section-total { font-size: 12px; color: var(--text-muted); }
+.section-total strong { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.tx-list { display: flex; flex-direction: column; }
+.tx-row {
+  display: grid; grid-template-columns: 28px 24px 1fr var(--amt-w, 130px);
+  gap: 10px; align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+  position: relative;
+}
+.tx-row:last-child { border-bottom: none; }
+.tx-row:hover { background: var(--surface-alt); }
+.tx-row.unpointed { opacity: 0.65; }
+.tx-row.unpointed:hover { opacity: 0.85; }
+
+/* Quand une ligne composite n'est pas pointée, ses composantes (affichées
+   sous la ligne) doivent visuellement hériter du même état. On atténue
+   donc tout le bloc composantes. NB : on ne peut pas appliquer .unpointed
+   uniquement aux .composite-comp-row car la .tx-row parente porte déjà
+   sa propre opacité — on attaque le wrapper .tx-composite-wrap.unpointed
+   qui ne contient QUE le bloc des composantes (puisque la ligne parente
+   gère son opacité elle-même via .tx-row.unpointed). */
+.tx-composite-wrap.unpointed .composite-comps { opacity: 0.65; }
+.tx-composite-wrap.unpointed:hover .composite-comps { opacity: 0.85; }
+.tx-row.auto .tx-amount { color: var(--accent); }
+
+.tx-icon {
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-hover);
+  flex-shrink: 0; cursor: grab;
+  user-select: none;
+}
+.tx-icon:active:not(.no-drag) { cursor: grabbing; }
+/* Zone de toucher élargie SYMÉTRIQUE de la poignée (v541, maquette
+   Mockup-Zone-Poignee.html) : la pastille reste 22px, mais un ::before
+   transparent étend sa zone tactile de 10px TOUT AUTOUR (~42px). Marge
+   identique sur les quatre côtés — bornée par la case ✓ à droite, qui reste
+   à ~6px et donc pleinement cochable. Classe .dnd-handle posée par le hook
+   useDragHandle : seules les vraies poignées sont concernées. */
+.tx-icon.dnd-handle { position: relative; }
+.tx-icon.dnd-handle::before { content: ''; position: absolute; inset: -10px; }
+/* v547 : protection anti-sélection/loupe sur TOUTES les poignées de drag,
+   quelle que soit leur classe de base — .dnd-handle est posée par le hook
+   useDragHandle sur chaque poignée (compte courant .tx-icon, récurrents
+   .tx-icon, charges .charge-badge). L'appui long tactile ne doit jamais
+   déclencher la sélection de texte ni la loupe/menu « Copier » d'iOS. Le
+   contenu de la ligne (libellés) reste sélectionnable. */
+.dnd-handle {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+/* v547 : le « chrome » de navigation ne doit pas laisser sélectionner son
+   texte ni afficher la loupe iOS au long-press — ce sont des commandes, pas
+   du contenu. Barre d'onglets mobile (capsule + libellés + « ⋯ »), segmented
+   desktop, et boutons recherche/« ⋯ » du header. Le CONTENU reste
+   sélectionnable (libellés, montants, e-mail du header, texte des sheets). */
+.tabbar-wrap, .app-bar-nav, .app-bar-user .btn-icon {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+/* Zone de tap de la case de pointage (v538) : remplit toute la hauteur de
+   sa colonne de grille (align-self stretch) pour un tap facile au pouce,
+   la case visuelle .tx-check restant centrée dedans. Sans déborder sur la
+   poignée (colonne voisine). */
+.tx-check-hit {
+  align-self: stretch; display: flex; align-items: center; justify-content: flex-start;
+  cursor: pointer; margin: -8px 0; /* récupère aussi le padding vertical de la ligne */
+  /* justify-content: flex-start (v539) : la case visuelle reste calée À GAUCHE
+     de sa colonne, comme avant la v538 — le centrage (v538) l'avait décalée
+     de ~3px vers la droite (régression signalée). */
+}
+/* Mode "Gestion des dates" : le drag & drop est désactivé, on retire
+   donc le cursor:grab pour ne pas suggérer une interaction qui n'existe plus. */
+.tx-icon.no-drag,
+.tx-icon.no-drag:active { cursor: default; }
+.tx-icon.income { background: var(--success-light); color: var(--success); }
+.tx-icon.expense { background: var(--danger-light); color: var(--danger); }
+.tx-icon.composite { background: var(--accent-light); color: var(--accent); }
+.tx-icon.tr { background: var(--warning-light); color: var(--warning); }
+.tx-icon.pat { background: var(--warning-light); color: var(--warning); }
+.tx-icon.savings-mini { background: var(--info-light); color: var(--info); }
+.tx-icon.mini {
+  width: 18px; height: 18px;
+  font-size: 10px;
+}
+
+.tx-check {
+  width: 18px; height: 18px; border: 2px solid var(--border-strong);
+  border-radius: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.tx-check.checked { background: var(--accent); border-color: var(--accent); color: white; }
+.tx-check.checked::after { content: '✓'; font-size: 12px; font-weight: bold; }
+
+/* Étiquette compacte JJ/MM cliquable, affichée à gauche du libellé
+   uniquement quand le toggle "Gestion des dates" est actif. */
+.tx-date-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 22px; min-width: 50px; width: 50px;
+  padding: 0 6px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-alt);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tx-date-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+.tx-date-chip-label {
+  font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* Variante de la grille .tx-row quand le mode "dates" est actif :
+   on insère une 3ème colonne pour la chip JJ/MM, sans casser le reste. */
+.tx-row.with-date {
+  grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px);
+}
+.tx-row.composite-row.with-date {
+  grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px);
+}
+
+/* Variante avec le crayon (.tx-edit) en dernière colonne (la suppression est
+   passée dans la modale d'édition, plus de croix sur la ligne). */
+.tx-row.with-edit {
+  grid-template-columns: 28px 24px 1fr var(--amt-w, 130px) 24px;
+}
+/* v577 : ligne TR (popup) — pas de colonne de pointage. Le libellé (1fr)
+   récupère la place libérée par la case à cocher. */
+.tx-row.tr-row.with-edit { grid-template-columns: 28px 1fr var(--amt-w, 130px) 24px; }
+.tx-row.with-edit.with-date {
+  grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px) 24px;
+}
+.tx-row.composite-row.with-edit {
+  grid-template-columns: 28px 24px 1fr var(--amt-w, 130px) 24px;
+}
+.tx-row.composite-row.with-edit.with-date {
+  grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px) 24px;
+}
+
+/* Étiquette "Le X" pour les récurrents (jour du mois 1-31), strictement
+   alignée sur .tx-date-chip pour la cohérence visuelle. */
+.recurring-day-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 22px; min-width: 50px; width: 50px;
+  padding: 0 6px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-alt);
+  cursor: pointer; flex-shrink: 0;
+  font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s, background 0.15s;
+}
+.recurring-day-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+.recurring-day-input {
+  width: 50px; height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: white;
+  font-size: 11px; font-family: inherit;
+  text-align: center;
+  outline: none;
+  flex-shrink: 0;
+}
+/* Sur mobile, le chip est légèrement plus compact pour s'adapter à la grille. */
+@media (max-width: 640px) {
+  .recurring-day-chip, .recurring-day-input { min-width: 44px; width: 44px; }
+}
+
+.tx-label, .tx-amount {
+  background: transparent; border: none; outline: none;
+  padding: 4px 6px; font-family: inherit;
+  color: var(--text); font-size: 14px;
+  border-radius: 4px; transition: background 0.1s;
+}
+
+/* Wrapper pour afficher un € grisé à droite d'un montant éditable.
+   Le wrapper prend la place de l'input dans la grid (cellule "montant"). */
+.tx-amount-wrap {
+  display: flex; align-items: center;
+  justify-content: flex-end; gap: 2px;
+  min-width: 0;
+}
+/* Couvre tous les inputs du wrapper : .tx-amount (Compte courant) ET les inputs
+   sans classe (composantes, récurrents) qui sinon gardent leur largeur native ~158px.
+   Les styles d'alignement (text-align right, tabular-nums) sont centralisés ici
+   pour fonctionner aussi bien avec input[type="number"] qu'avec les AmountInput
+   en type="text" (qui ont remplacé type="number" pour éviter le bug iOS Safari). */
+.tx-amount-wrap input {
+  flex: 1; min-width: 0; width: auto;
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tx-currency {
+  color: var(--text-muted);
+  font-size: 13px; font-weight: 500;
+  flex-shrink: 0; pointer-events: none;
+  padding-right: 2px;
+}
+
+/* Champ montant avec bouton ± (saisie du signe, indispensable sur mobile). */
+.signed-amount { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.signed-amount-btn {
+  flex-shrink: 0; width: 30px; height: 32px;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--surface); cursor: pointer;
+  font-size: 16px; font-weight: 600; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.08s, background 0.1s;
+}
+.signed-amount-btn.sgn-out { color: var(--danger);  background: var(--danger-light);  border-color: var(--danger-light); }
+.signed-amount-btn.sgn-in  { color: var(--success); background: var(--success-light); border-color: var(--success-light); }
+.signed-amount-btn.sgn-tr  { color: var(--warning); background: var(--warning-light); border-color: var(--warning-light); }
+.signed-amount-btn:active { transform: scale(0.94); }
+.signed-amount-btn.is-ro { cursor: default; }
+.signed-amount-btn.is-ro:active { transform: none; }
+/* Zone montant des composantes : largeur fixe → les boutons ± et les champs
+   s'alignent sur toutes les lignes (TR comprise), et le montant ne se coupe plus. */
+.modal-comp-row .signed-amount { width: 150px; }
+
+/* Variante « pleine largeur » pour un champ de formulaire principal (ex. TR
+   autonome) : on reprend le MÊME petit bouton ± séparé que les composantes,
+   suivi d'un champ bordé qui remplit la largeur (design cohérent avec la modale
+   des lignes composites). */
+.signed-amount.is-block { width: 100%; gap: 8px; }
+.signed-amount.is-block .signed-amount-btn { height: 40px; width: 40px; font-size: 17px; }
+.signed-amount.is-block .input { flex: 1; min-width: 0; width: auto; }
+
+/* Devise € grisée à droite des montants en texte (display non éditable).
+   Utilisé sur Épargne, Investissements, Actifs physiques, etc. */
+.currency-muted {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 1px;
+}
+.tx-label { width: 100%; min-width: 0; }
+.tx-label:focus { background: var(--surface-alt); }
+/* Inputs en lecture seule (libellé/montant des lignes affichées) : aucun
+   feedback visuel au focus. L'édition se fait via la modale (crayon). */
+.tx-label[readonly]:focus,
+.tx-amount[readonly]:focus,
+.tx-row input[readonly]:focus,
+.recurring-row input[readonly]:focus,
+.composite-comp-row input[readonly]:focus { background: transparent !important; outline: none; box-shadow: none; }
+.tx-label::placeholder { color: var(--text-subtle); }
+.tx-amount {
+  text-align: right; font-weight: 500; font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+.tx-amount:focus { background: var(--surface-alt); }
+.tx-amount[readonly] { cursor: default; color: var(--text-muted); }
+
+/* Coloration des montants selon le type de ligne. Le sélecteur :has()
+   regarde la classe variant portée par .tx-icon (income/expense/tr) et
+   propage la couleur foncée correspondante au montant — qu'il soit un
+   <input> dans .tx-amount-wrap ou un .tx-amount direct.
+   S'applique aux 3 conteneurs concernés : ligne d'opération mensuelle
+   (.tx-row), composante d'un composite (.composite-comp-row), et ligne
+   récurrente (.recurring-row). */
+.tx-row:has(.tx-icon.income) .tx-amount,
+.tx-row:has(.tx-icon.income) .tx-amount-wrap input,
+.tx-row:has(.tx-icon.income) .composite-amount-wrap input,
+.recurring-row:has(.tx-icon.income) .tx-amount-wrap input,
+.recurring-row:has(.tx-icon.income) .composite-amount-wrap input,
+.composite-comp-row:has(.tx-icon.income) .tx-amount-wrap input { color: var(--success); }
+
+.tx-row:has(.tx-icon.expense) .tx-amount,
+.tx-row:has(.tx-icon.expense) .tx-amount-wrap input,
+.tx-row:has(.tx-icon.expense) .composite-amount-wrap input,
+.recurring-row:has(.tx-icon.expense) .tx-amount-wrap input,
+.recurring-row:has(.tx-icon.expense) .composite-amount-wrap input,
+.composite-comp-row:has(.tx-icon.expense) .tx-amount-wrap input { color: var(--danger); }
+
+.tx-row:has(.tx-icon.tr) .tx-amount,
+.tx-row:has(.tx-icon.tr) .tx-amount-wrap input,
+.recurring-row:has(.tx-icon.tr) .tx-amount-wrap input,
+.composite-comp-row:has(.tx-icon.tr) .tx-amount-wrap input { color: var(--warning); }
+
+.tx-delete {
+  width: 24px; height: 24px; padding: 0;
+  border: none; background: transparent;
+  color: var(--text-subtle); font-size: 16px;
+  border-radius: 4px; cursor: pointer; opacity: 1;
+  transition: all 0.15s;
+}
+/* Bouton crayon "modifier" — dimensions identiques à .tx-delete pour ne
+   pas grossir la hauteur des lignes. Reste visible en permanence (pas
+   d'opacity 0) avec un hover en couleur accent. */
+.tx-edit {
+  width: 24px; height: 24px; padding: 0;
+  border: none; background: transparent;
+  color: var(--text-subtle);
+  border-radius: 4px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.tx-edit:hover { background: var(--accent-light); color: var(--accent); }
+.tx-delete:hover { background: var(--danger-light); color: var(--danger); }
+
+/* Composantes éditables dans les modales (OperationForm / RecurringForm) :
+   layout flex et croix toujours visible (pas de hover dans une modale
+   tactile, et la croix de suppression est l'action principale). */
+.modal-comp-row {
+  display: flex; gap: 8px; align-items: center;
+}
+.modal-comp-row .tx-delete { opacity: 1; }
+/* Wrapper du montant en mode modale : on lui donne le même look que
+   .input (bord + fond + radius) pour qu'il soit clairement identifié
+   comme champ saisissable, au même titre que le champ libellé à côté. */
+.modal-comp-row .tx-amount-wrap {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  height: 42px; padding: 0 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+/* Bouton ± et boîte montant à la même hauteur que le champ libellé (.input)
+   → ligne de composante alignée comme une ligne simple. */
+.modal-comp-row .signed-amount-btn { height: 42px; width: 40px; border-radius: var(--radius-md); font-size: 17px; }
+.modal-comp-row .tx-amount-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+/* Coloration du montant selon la catégorie de la composante, pour rester
+   cohérent avec l'affichage des lignes (vert entrée / rouge sortie /
+   jaune TR auto). */
+.modal-comp-row--income .tx-amount,
+.modal-comp-row--income .tx-amount-wrap input,
+.modal-comp-row--income .tx-currency { color: var(--success); }
+.modal-comp-row--expense .tx-amount,
+.modal-comp-row--expense .tx-amount-wrap input,
+.modal-comp-row--expense .tx-currency { color: var(--danger); }
+.modal-comp-row--tr .tx-amount,
+.modal-comp-row--tr .tx-amount-wrap input,
+.modal-comp-row--tr .tx-currency { color: var(--warning); }
+
+/* Liste scrollable dans une modale : on déborde des marges horizontales
+   du modal-body via marginLeft/Right négatifs, et on ré-applique le
+   padding sur chaque ligne. Résultat : la zone visuelle des lignes
+   (incluant le hover) atteint le bord du modal-body, et l'ascenseur
+   overlay (Mac/iOS, 0px de largeur dans le layout) se positionne par-
+   dessus la zone padding-right des lignes — plus de gap blanc visible
+   entre le contenu et le scrollbar. */
+.modal-scroll-list { margin-left: -24px; margin-right: -24px; }
+/* Padding-left = padding du modal-body pour aligner le contenu à
+   l'identique. Padding-right plus petit (8px) pour rapprocher la croix
+   du scrollbar (qui est au bord du modal-body) sans la coller. */
+.modal-scroll-list .op-row { padding-left: 24px; padding-right: 8px; }
+@media (max-width: 640px) {
+  .modal-scroll-list { margin-left: -16px; margin-right: -16px; }
+  .modal-scroll-list .op-row { padding-left: 16px; padding-right: 6px; }
+}
+
+.section-footer {
+  padding: 8px 14px 12px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.btn-add {
+  padding: 6px 12px; background: transparent;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text-muted); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-add:hover { border-color: var(--text-light); color: var(--text); }
+
+/* Composite row */
+.tx-composite-wrap {
+  border-bottom: 1px solid var(--border);
+}
+.tx-composite-wrap:last-child { border-bottom: none; }
+/* On retire le border-bottom de la ligne interne pour éviter le double
+   trait avec le wrapper (s'applique aussi bien à une ligne du vrai compte
+   .tx-row qu'à une ligne récurrente .recurring-row). Le background hérite
+   donc le hover s'applique normalement comme sur une ligne simple. */
+.tx-composite-wrap .tx-row,
+.tx-composite-wrap .recurring-row { border-bottom: none; }
+.tx-composite-wrap.expanded .composite-comps { display: block; }
+.composite-amount-wrap {
+  /* gap 2px (identique à .tx-amount-wrap) pour que le nombre du parent composite
+     s'aligne exactement à droite avec les lignes simples et les composantes :
+     un gap plus large décalait le nombre vers la gauche (visible surtout sur les
+     parents en dépense « − », d'où l'impression d'un défaut lié au signe). */
+  display: flex; align-items: center; gap: 2px;
+  justify-content: flex-end;
+}
+/* Largeur fixe sur l'input pour qu'il colle au chevron ▾ (sinon .tx-amount { width: 100% }
+   le fait s'étirer sur toute la cellule, créant un grand vide entre la flèche et le montant). */
+.composite-amount-wrap input {
+  flex: 0 0 auto;
+  /* Assez large pour un montant signé à 4 chiffres (« − 1 329.97 ») sans
+     troncature. La colonne du montant composite étant en `auto`, elle s'adapte
+     à cette largeur et le libellé (1fr) absorbe le reste. */
+  width: 96px;
+  max-width: 100%;
+}
+.composite-chevron {
+  width: 22px; height: 22px; padding: 0;
+  border: none; background: transparent;
+  color: var(--text-muted); border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.1s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* v529 : chevron vectoriel (Icon chevronDown 12px) — même trait 2.4 que
+   la chip et la projection (v528). La rotation reste portée par le
+   BOUTON (.expanded), rien ne change. */
+.composite-chevron svg { stroke-width: 2.4; display: block; }
+/* v530 : bouton « Afficher/Masquer l'évolution » (onglet Patrimoine) —
+   dernier glyphe flèche remplacé. Chevron rotatif à 7 px du libellé
+   (gap), règle commune v528. */
+.evo-toggle { display: inline-flex; align-items: center; gap: 7px; }
+.evo-chev {
+  display: inline-flex; align-items: center;
+  transition: transform 0.2s ease;
+}
+.evo-chev.open { transform: rotate(180deg); }
+.evo-chev svg { stroke-width: 2.4; display: block; }
+.composite-chevron:hover { background: var(--surface-hover); color: var(--text); }
+.tx-composite-wrap.expanded .composite-chevron { transform: rotate(180deg); }
+
+.composite-comps {
+  display: none; padding: 0 14px 0 50px;
+  border-top: 1px solid var(--border); background: var(--surface);
+}
+.composite-comp-row {
+  display: grid; grid-template-columns: 22px 1fr var(--amt-w, 130px);
+  gap: 10px; align-items: center; padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+  position: relative;
+}
+/* Variante "with-edit" : colonne fantôme 24px pour matcher le crayon de la
+   ligne composite parente, afin que les montants des composantes s'alignent
+   verticalement avec ceux des autres lignes. */
+.composite-comp-row.with-edit {
+  grid-template-columns: 22px 1fr var(--amt-w, 130px) 24px;
+}
+.composite-comp-row:last-child { border-bottom: none; }
+.composite-comp-row input {
+  background: transparent; border: none; outline: none;
+  font-family: inherit; font-size: 14px; padding: 4px 0;
+  color: var(--text);
+  /* Indispensable : un <input> en grille garde sinon sa largeur intrinsèque
+     (~170px) et refuse de rétrécir → la colonne libellé (1fr) déborde et pousse
+     le montant hors cadre (coupé sur mobile). min-width:0 laisse le libellé se
+     comprimer (et se tronquer), le montant reste visible. */
+  min-width: 0;
+}
+.composite-comp-row input[type="number"],
+.composite-comp-row input[inputmode="decimal"],
+.composite-comp-row input.tx-amount {
+  text-align: right; font-weight: 500; font-variant-numeric: tabular-nums;
+  padding: 4px 6px;
+}
+.composite-comp-row input:focus { background: var(--surface-alt); border-radius: 4px; }
+.composite-comp-row input.tr-auto { color: var(--warning); cursor: default; }
+.composite-comp-label-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.composite-comp-label-wrap input { flex: 1; min-width: 0; }
+.tr-tag {
+  background: var(--warning-light); color: var(--warning);
+  padding: 2px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  flex-shrink: 0;
+}
+/* Badge "COMPOSITE" — caché partout : le chevron ▾ suffit à indiquer un composite */
+.composite-tag { display: none; }
+.label-with-tag {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 0; width: 100%;
+}
+.label-with-tag input {
+  flex: 1; min-width: 0;
+}
+
+/* TR section */
+.tr-summary {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px; padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+.tr-stat { text-align: left; }
+.tr-stat-label {
+  font-size: 12px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.tr-stat-value { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tr-stat-value.accent { color: var(--accent); }
+
+/* Toggle */
+.toggle { display: inline-flex; align-items: center; cursor: pointer; }
+.toggle input { display: none; }
+.toggle-slider {
+  position: relative; width: 40px; height: 22px;
+  background: var(--border-strong); border-radius: 11px;
+  transition: background 0.15s;
+}
+.toggle-slider::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; background: white;
+  border-radius: 50%; box-shadow: var(--shadow-xs);
+  transition: transform 0.15s;
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::after { transform: translateX(18px); }
+
+/* Settings */
+.settings-group-title {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 24px 4px 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.settings-group-title:first-child { margin-top: 0; }
+.settings-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  margin-bottom: 14px;
+}
+.settings-card h2 { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+.settings-card .muted { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
+
+/* Portfolio settings (inside settings cards) */
+.portfolio-name-input {
+  flex: 1; min-width: 0;
+  font-size: 14px; font-weight: 600;
+  background: transparent; border: 1px solid transparent;
+  padding: 4px 8px; margin: -4px -8px;
+  border-radius: var(--radius-sm);
+  color: var(--text); font-family: inherit;
+  outline: none; transition: all 0.15s;
+}
+.portfolio-name-input:hover { border-color: var(--border); }
+.portfolio-name-input:focus {
+  background: var(--surface-alt);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+.portfolio-section-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text); margin: 16px 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+}
+.portfolio-subsection {
+  margin-left: 14px;
+  padding: 4px 0 8px;
+}
+
+/* ETF rows (same visual pattern as recurring rows) */
+.etf-row {
+  display: grid; grid-template-columns: 60px 1fr auto 40px 28px;
+  gap: 10px; align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+/* Toggle Capitalisant / Distribuant sur la fiche d'un support */
+.kind-toggle {
+  display: inline-flex;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+  font-size: 10.5px; font-weight: 600;
+  user-select: none;
+}
+.kind-toggle button {
+  border: none; background: transparent;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.kind-toggle button.active.cap { background: var(--accent); color: white; }
+.kind-toggle button.active.dist { background: #8b5cf6; color: white; }
+.etf-row:last-child { border-bottom: none; }
+.etf-ticker {
+  font-weight: 600; font-size: 13px;
+  color: var(--text); padding-left: 6px;
+}
+.etf-row input[type="text"] {
+  background: transparent; border: none; outline: none;
+  font-family: inherit; font-size: 14px; padding: 4px 6px;
+  color: var(--text); border-radius: 4px;
+  /* Laisse la colonne 1fr (libellé) se comprimer : sinon la largeur
+     intrinsèque de l'input fait déborder la grille → pastille couleur et
+     croix coupées à droite sur écran étroit. Le ticker reste à 60px fixes. */
+  min-width: 0;
+}
+.etf-row input.etf-ticker-input {
+  font-weight: 600; text-transform: uppercase;
+}
+.etf-row input[type="text"]:focus { background: var(--surface-alt); }
+.etf-row input[type="color"] {
+  width: 32px; height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px; cursor: pointer; padding: 2px;
+}
+
+/* v586 — Édition des supports : liste compacte cliquable + modale SupportForm */
+.support-edit-row {
+  display: grid; grid-template-columns: 18px 1fr auto 24px;
+  align-items: center; gap: 10px;
+  padding: 11px 14px; border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.support-edit-row:last-child { border-bottom: none; }
+.support-edit-row:hover { background: var(--surface-alt); }
+.support-edit-dot { width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0; }
+.support-edit-name { font-size: 14px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.support-edit-lbl { font-weight: 400; color: var(--text-muted); font-size: 11.5px; }
+.support-edit-cible { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Contrôle souple « Total des cibles » sous la liste */
+.target-sum {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 8px; padding: 8px 12px; border-radius: 9px; font-size: 12.5px;
+}
+.target-sum.ok   { background: var(--success-light); color: #047857; }
+.target-sum.warn { background: var(--warning-light); color: #b45309; }
+.target-sum b { font-variant-numeric: tabular-nums; }
+
+/* Modale support : segmented control « type » façon onglets desktop (pilule accent) */
+.support-type-seg { display: flex; background: #eef1f5; border-radius: 11px; padding: 3px; gap: 3px; }
+.support-type-seg button {
+  flex: 1; padding: 10px 12px; border: none; background: transparent;
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  border-radius: 8px; cursor: pointer; font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.support-type-seg button.active { background: var(--accent); color: #fff; }
+.support-tick-row { display: grid; grid-template-columns: 1fr 56px; gap: 12px; align-items: end; }
+.support-isin-row { display: grid; grid-template-columns: 1fr 110px; gap: 12px; align-items: end; }
+.support-color {
+  width: 56px; height: 44px; border: 1px solid var(--border);
+  border-radius: var(--radius-md); cursor: pointer; padding: 3px; background: var(--surface);
+}
+.support-target-input { text-align: right; font-variant-numeric: tabular-nums; }
+/* v593 : modale support — couleur (à gauche) + toggle Type (à droite) sur une ligne */
+.support-type-row { display: flex; gap: 12px; align-items: flex-end; }
+.support-type-cell { flex: 1; min-width: 0; }
+.support-color-cell { flex: 0 0 auto; }
+
+/* v593 : sur une ligne de support, nom complet si la place le permet (desktop
+   + smartphone paysage), nom court sinon (smartphone portrait). Pur CSS. */
+.support-name-short { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {
+  .support-name-full { display: none; }
+  .support-name-short { display: inline; }
+}
+.settings-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 12px;
+  padding-right: 12px;
+}
+.field-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 12px;
+}
+.field-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+.recurring-row {
+  display: grid; grid-template-columns: 28px 1fr var(--amt-w, 130px);
+  gap: 10px; align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+/* Variante "mode dates" : DayChip ("Le 5") inséré entre l'icône et le libellé. */
+.recurring-row.with-date {
+  grid-template-columns: 28px 56px 1fr var(--amt-w, 130px);
+}
+/* Variante avec le crayon (.tx-edit) en dernière colonne (delete passé en modale). */
+.recurring-row.with-edit {
+  grid-template-columns: 28px 1fr var(--amt-w, 130px) 24px;
+}
+.recurring-row.with-edit.with-date {
+  grid-template-columns: 28px 56px 1fr var(--amt-w, 130px) 24px;
+}
+/* Récurrent composite : colonne montant en `auto` (comme le composite du mois)
+   pour ne pas tronquer le total signé (« − 1 329.97 »). */
+.recurring-row.composite-row { grid-template-columns: 28px 1fr var(--amt-w, 130px); }
+.recurring-row.composite-row.with-date { grid-template-columns: 28px 56px 1fr var(--amt-w, 130px); }
+.recurring-row.composite-row.with-edit { grid-template-columns: 28px 1fr var(--amt-w, 130px) 24px; }
+.recurring-row.composite-row.with-edit.with-date { grid-template-columns: 28px 56px 1fr var(--amt-w, 130px) 24px; }
+.recurring-row:last-child { border-bottom: none; }
+.recurring-row:hover { background: var(--surface-alt); }
+.recurring-row input {
+  background: transparent; border: none; outline: none;
+  font-family: inherit; font-size: 14px; padding: 4px 6px;
+  color: var(--text); border-radius: 4px;
+}
+.recurring-row input[type="number"],
+.recurring-row input[inputmode="decimal"] { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+.recurring-row input:focus { background: var(--surface-alt); }
+
+/* Month picker */
+.month-picker { position: relative; }
+
+/* ============================================================
+   Chip de sélection du mois « ‹ Juillet 2026 ▾ › » — remplace le
+   bandeau centré au-dessus du hero (le hero remonte au niveau des
+   autres rubriques). Deux variantes :
+   - hero : translucide, dans le coin haut-droit de la hero card (desktop)
+   - light : claire, dans la ligne de titre mobile (via portal)
+   ============================================================ */
+.month-chip {
+  display: inline-flex; align-items: center; gap: 2px;
+  border-radius: var(--radius-full); padding: 3px;
+  position: relative;
+  /* Hauteur VERROUILLÉE (v493) : 26px de chevrons + 2×3px de padding.
+     C'était déjà la hauteur naturelle, mais l'explicite garantit qu'AUCUN
+     contenu (cadenas de mois figé, libellé long, caret) ne peut plus la
+     faire varier, sur aucun navigateur. box-sizing: border-box global →
+     32px tout compris. */
+  height: 32px;
+}
+/* Le popover calendrier s'ancre sur la CHIP (droite alignée), pas centré
+   sous le label — sinon il déborderait de l'écran, la chip vivant près
+   du bord droit. */
+/* v494 — display:inline-flex + align-items:center : ce span alignait le
+   label sur sa BASELINE ; or un bouton flex exporte la baseline de son
+   PREMIER enfant — texte sans cadenas, bas du SVG avec cadenas (mois
+   figé) → le label entier se décalait de ~2px selon l'état (« Juillet
+   est plus bas »). Le centrage flex ignore les baselines : position
+   verticale identique dans tous les cas. */
+.month-chip .month-picker { position: static; display: inline-flex; align-items: center; }
+.month-chip .month-picker-popover {
+  left: auto; right: 0; transform: none;
+  top: calc(100% + 8px);
+}
+.mc-chev {
+  width: 26px; height: 26px; border: none; background: transparent;
+  border-radius: var(--radius-full); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.mc-chev:disabled { opacity: 0.3; cursor: default; }
+.mc-label {
+  border: none; background: transparent; font-family: inherit;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 0 6px; white-space: nowrap; text-transform: capitalize;
+  font-variant-numeric: tabular-nums;
+}
+/* vertical-align : le caret 10px est aligné baseline par défaut, donc
+   visuellement trop bas face au texte 13px — on le recentre. */
+.mc-dd {
+  /* Chevron VECTORIEL (v528, maquette Mockup-Caret-Espacement.html, D) :
+     remplace le glyphe ▾. Écart 7px = règle commune à tous les chevrons
+     de dépliage (projection incluse) et au sélecteur d'année de Mosaïque.
+     Aligné en flex comme le cadenas → plus AUCUN recentrage optique
+     (l'ancien top -1.5px du glyphe est retiré). La rotation .mc-dd-open
+     pivote autour du vrai centre du SVG. */
+  margin-left: 7px;
+  display: inline-flex; align-items: center;
+  transition: transform 0.2s ease;
+}
+.mc-dd svg { stroke-width: 2.4; display: block; }
+.mc-dd-open { transform: rotate(180deg); }
+/* Variante hero (translucide sur fond foncé) */
+.month-chip-hero { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.14); }
+.month-chip-hero .mc-chev { color: rgba(255,255,255,0.65); }
+.month-chip-hero .mc-chev:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: white; }
+.month-chip-hero .mc-label { color: white; }
+.month-chip-hero .mc-dd { color: rgba(255,255,255,0.5); }
+/* Variante claire (ligne de titre mobile) */
+.month-chip-light { background: #eef1f5; }
+/* Mois/année plus gros sur mobile (maquette Mockup-Chip-Mois-Taille,
+   option A : 15px). Sans AUCUN décalage : la hauteur de la chip est
+   imposée par les chevrons (26px), pas par le texte, et le slot de la
+   ligne de titre est verrouillé à 24px. */
+.month-chip-light .mc-label { font-size: 15px; }
+.month-chip-light .mc-dd { font-size: 11px; }
+/* Chip ADAPTATIVE (maquette Mockup-Chip-Mois-Adaptatif) : le choix
+   complet/raccourci n'est plus une affaire d'orientation mais de PLACE,
+   décidé par mesure JS dans MonthChip. Le clone .mc-measure (invisible,
+   hors flux, dans la chip) reproduit la chip avec le mois complet pour
+   donner sa largeur « cible » avec les vraies règles CSS (15px en
+   variante light, chevrons 26px, paddings réels). */
+.mc-measure {
+  position: absolute; left: 0; top: 0;
+  visibility: hidden; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 3px; white-space: nowrap;
+}
+.month-chip-light .mc-chev { color: var(--text-subtle); }
+.month-chip-light .mc-chev:hover:not(:disabled) { background: #e2e8f0; color: var(--text); }
+.month-chip-light .mc-label { color: var(--text); }
+.month-chip-light .mc-dd { color: var(--text-subtle); }
+.month-picker-popover,
+.date-picker-popover {
+  position: absolute; top: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow-lg);
+  padding: 14px; z-index: 100;
+  /* Couleur explicite : le popover peut s'ouvrir depuis la chip du HERO
+     (color: white) — sans ça, le titre de l'année hériterait du blanc
+     et deviendrait invisible sur le fond blanc du calendrier. */
+  color: var(--text);
+}
+.month-picker-popover { width: 360px; }
+.date-picker-popover { width: 300px; }
+.date-grid-header {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 2px; margin-bottom: 4px;
+}
+.date-header-cell {
+  font-size: 11px; color: var(--text-muted);
+  text-align: center; font-weight: 500;
+  padding: 4px 0;
+}
+.date-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.date-cell {
+  height: 34px;
+  background: transparent; border: none;
+  border-radius: 8px;
+  font-family: inherit; font-size: 13px;
+  color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s, color 0.1s;
+}
+.date-cell:hover { background: var(--surface-hover); }
+.date-cell.outside { color: var(--text-subtle); }
+.date-cell.today {
+  font-weight: 700; color: var(--accent);
+  background: var(--accent-light);
+}
+.date-cell.selected {
+  background: var(--text); color: white;
+}
+.date-cell.selected:hover { background: var(--text); }
+.date-cell.selected.today { background: var(--accent); color: white; }
+.date-picker-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 10px; padding-top: 10px;
+  display: flex; justify-content: center;
+}
+.year-nav {
+  /* v532 (maquette Mockup-YearNav-Hauteur.html, variante B) : en-tête
+     COMPACT — l'ancienne hauteur venait des .btn-icon standard de 36 px
+     (taille header), surdimensionnés dans un popover (la chip de mois vit
+     très bien avec des flèches de 26 px). Gabarit PARTAGÉ par les 3
+     calendriers (picker de mois, date-picker des opérations, « Jour du
+     mois » des récurrents) : −14 px d'en-tête partout, d'un coup.
+     Bonus : les placeholders width:28 des variantes verrouillées
+     correspondent désormais exactement à la taille des boutons. */
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.year-nav .btn-icon { width: 28px; height: 28px; font-size: 14px; border-radius: 8px; }
+.year-label { font-size: 16px; font-weight: 600; }
+.month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.month-cell {
+  background: white; border: 1px dashed var(--border);
+  border-radius: 8px; padding: 14px 4px;
+  cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-muted); text-transform: capitalize;
+  transition: all 0.15s; position: relative;
+}
+.month-cell:hover {
+  border-color: var(--text-light); color: var(--text);
+  background: var(--bg); border-style: solid;
+}
+.month-cell.created {
+  background: var(--accent-light); border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.month-cell.created:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.month-cell.current {
+  background: var(--text); color: white; border-color: var(--text);
+  border-style: solid;
+}
+/* Mode SIMPLE du picker (v533, maquette Mockup-Picker-Simple.html) :
+   sélecteur d'options NEUTRE pour les formulaires (réglages, création de
+   compte) — bordure PLEINE fine (le pointillé signifie « à créer » dans le
+   picker riche), pas de pastille, pas de « + » au survol, pas de légende
+   (déjà masquée). Seule la sélection (.current) est mise en avant. */
+/* :not(.current) OBLIGATOIRE (v534) : cette règle est déclarée APRÈS
+   .month-cell.current à spécificité égale — sans la garde, elle écrasait
+   la couleur blanche du mois sélectionné (gris foncé sur fond foncé,
+   illisible — constaté en prod, la maquette masquait le bug par un
+   !important de confort). */
+.month-cell.plain:not(.current) { border: 1px solid var(--border); color: var(--text-light); }
+.month-cell.plain:not(.current):hover {
+  border-color: var(--text-light); color: var(--text);
+  background: var(--bg); border-style: solid;
+}
+/* Double classe : bat la règle « + » (.month-cell:not(.created)::after),
+   déclarée PLUS BAS avec la même spécificité — sans elle, le + gagnerait. */
+.month-cell.plain.plain::after { content: none; }
+
+/* Pastille "créé" en haut à droite des mois existants (sauf le mois courant) */
+.month-cell.created:not(.current)::after {
+  content: '';
+  position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
+.month-cell.created:not(.current):hover::after { background: white; }
+/* Indice "+" au survol des mois non créés */
+.month-cell:not(.created)::after {
+  content: '+';
+  position: absolute; top: 3px; right: 6px;
+  font-size: 13px; font-weight: 700; color: var(--text-subtle);
+  opacity: 0; transition: opacity 0.15s;
+}
+.month-cell:not(.created):hover::after { opacity: 1; }
+
+/* Légende du picker de mois */
+.picker-legend {
+  /* flex-wrap (v531) : 3 items possibles (+ « Mois figé ») — sur le
+     popover mobile de 300px, le 3e passe à la ligne au lieu de déborder. */
+  display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-muted);
+}
+.picker-legend-item { display: flex; align-items: center; gap: 6px; }
+.picker-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+}
+.picker-legend-box {
+  width: 10px; height: 10px; border-radius: 3px;
+  border: 1px dashed var(--border-strong); background: white;
+}
+/* v531 : cadenas en légende — même dessin que dans les cellules
+   (Icon lock 10px, trait 2.4, indigo comme la pastille « créé »). */
+.picker-legend-lock { display: inline-flex; align-items: center; color: var(--accent); }
+.picker-legend-lock svg { stroke-width: 2.4; display: block; }
+
+/* Module nav */
+/* Onglet du segmented control desktop (refonte nav) : segment sans bordure,
+   radius 8 dans le rail radius 11. Le fond foncé de l'actif est porté par
+   .seg-indicator (pastille glissante) ; l'onglet actif ne change que sa
+   couleur de texte. z-index:1 pour passer au-dessus de la pastille. */
+.module-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px; background: transparent;
+  border: none; border-radius: 8px;
+  color: var(--text-muted); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: color 0.15s; white-space: nowrap;
+  position: relative; z-index: 1;
+}
+.module-tab:hover { color: var(--text); }
+.module-tab-active { color: white; }
+.module-tab-active:hover { color: white; }
+.module-tab-icon {
+  width: 18px; height: 18px; display: inline-flex;
+  align-items: center; justify-content: center;
+}
+
+/* ============================================================
+   Refonte nav mobile — style « Liquid Glass » (iOS 26/27)
+   Capsule flottante détachée des bords + cercle « ⋯ » séparé,
+   matériau translucide (le contenu défile dessous), rétractation
+   au scroll (mode .mini : icônes seules, jamais masquée).
+   Structure JSX dans app.js : MobileTabBar / MobileSheet.
+   ============================================================ */
+:root {
+  /* Opacité du verre — pilotable plus tard par un réglage utilisateur
+     (esprit du slider de transparence d'iOS 27). 0.60 = prudent côté
+     lisibilité (Apple a re-opacifié ses barres après les bêtas d'iOS 26). */
+  --glass-a: 0.65;
+}
+/* Matériau Liquid Glass : translucidité + flou + saturation du contenu
+   qui passe dessous, liseré clair et reflet intérieur façon verre. */
+.glassbar {
+  background: rgba(252, 252, 254, var(--glass-a));
+  /* blur 24 : fond les frontières de couleur nettes (bords de graphiques)
+     au lieu de les laisser lisibles à travers le verre.
+     saturate 1.25 (au lieu de 1.8) : garde la vivacité du matériau sans
+     effet fluo au-dessus des aplats saturés (bandes du graphique). */
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
+  backdrop-filter: blur(24px) saturate(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+.tabbar-capsule {
+  flex: 1; min-width: 0;
+  border-radius: var(--radius-full);
+  display: flex; align-items: stretch;
+  /* Anneau FIN autour de la goutte (3px) — calé sur la barre d'Instagram :
+     la goutte occupe presque toute la hauteur, avec un léger espace. */
+  padding: 3px; position: relative;
+  /* Barre « liquide » (v495) : transform pour l'état PRESSÉ (gonflement
+     maintenu tant que le doigt touche), touch-action none pour que le
+     geste (bulle magnétique + drag) ne déclenche jamais de scroll. */
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.26, 1.2, 0.36, 1);
+  touch-action: none;
+}
+/* v508 : PULSE SUPPRIMÉ à la demande de l'utilisateur — les classes
+   .bar-pressed/.ind-pressed/.item-pressed restent posées par le JS
+   (réactivation en une règle CSS si l'envie revient), mais plus aucun
+   gonflement. Bulle magnétique, drag et ressorts de trajet conservés. */
+/* Goutte glissante : elle porte le fond foncé et l'ombre de l'actif */
+/* Goutte en MODE COMPOSITEUR (v499) : l'élément est une coquille
+   transparente positionnée à left:0, déplacée par translateX(--tx) —
+   transform est animé par le compositeur, la goutte glisse à 60fps même
+   pendant que React monte le module de destination (l'animation `left`
+   gelait sur le thread principal → saccades, diagnostiqué v498).
+   Le PINCEAU (fond, ombre, étirement pressé) vit sur ::before : deux
+   transforms indépendants (translateX de trajet / scaleX de pression),
+   chacun avec sa durée. Courbe de pose recalibrée v498 conservée :
+   départ vif, glissade feutrée, dépassement minuscule. */
+.tab-slide-ind {
+  position: absolute; left: 0;
+  z-index: 0; pointer-events: none;
+  transform: translateX(var(--tx, 0px));
+  /* v501 : valeurs CALIBRÉES PAR L'UTILISATEUR (page Mockup-Barre-
+     Calibrage, comparaison côte à côte avec Instagram) : pose 600ms,
+     dépassement MINI (1.03) — le « trop rapide » ressenti était en
+     réalité le rebond trop marqué, pas la durée. */
+  transition: transform 0.62s cubic-bezier(0.22, 1.08, 0.3, 1); /* v504 : retour aux réglages v500 (pose 620ms, retombée 460ms) à la demande de l'utilisateur */
+  will-change: transform;
+}
+.tab-slide-ind::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(15, 23, 42, 0.92); border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+  /* v500 : ASYMÉTRIE de ressort — la transition de BASE (0.46s) régit
+     la RETOMBÉE au relâcher (lente, feutrée) ; la classe pressée impose
+     la sienne (0.18s) pour un gonflement immédiat à l'appui. */
+  transition: transform 0.7s cubic-bezier(0.26, 1.2, 0.36, 1),
+              box-shadow 0.2s ease;
+}
+/* En main (drag) : --tx suit le doigt image par image (transition de
+   trajet coupée), ombre soulevée. */
+.tab-slide-ind.ind-dragging { transition: none; }
+.tab-slide-ind.ind-dragging::before { box-shadow: 0 6px 16px rgba(15, 23, 42, 0.4); }
+.tab-item {
+  flex: 1; border: none; background: transparent;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--text-light); padding: 0;
+  position: relative; z-index: 1; min-width: 0;
+}
+/* Pill = icône SEULE (variante A façon Instagram) : pas de libellé,
+   la goutte foncée marque l'actif. L'icône est enveloppée dans .tab-ico
+   pour animer son échelle pendant la contraction. */
+.tab-pill {
+  display: flex; align-items: center; justify-content: center;
+  /* Paddings ASYMÉTRIQUES (12px vertical / 19px horizontal) : la goutte
+     devient un OVALE ~60×46 (ratio Instagram), au lieu d'un rond. */
+  border-radius: var(--radius-full); padding: 12px 19px;
+  /* width:100% : la pill REMPLIT son slot. À 5 rubriques (slots flex:1
+     plus larges que l'ovale minimal), la goutte épouse toute la largeur →
+     anneau de 3px IDENTIQUE sur les 4 côtés, et ovale adaptatif selon la
+     largeur d'écran. En mode hug (<5), la largeur naturelle EST le slot :
+     aucun changement. */
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-width: 0; max-width: 100%;
+}
+.tab-item-active { color: white; }
+/* Échelle de l'icône en VARIABLES composées (v495) : base (mode mini /
+   paysage : 0.86) × pression (état pressé : 1.12) — les deux états se
+   combinent sans s'écraser (un appui en mode mini reste correct). */
+.tab-ico {
+  display: flex;
+  transform: scale(calc(var(--icob, 1) * var(--icop, 1)));
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Espace élastique capsule ↔ « ⋯ » : nul à 5 rubriques (la capsule
+   remplit), déployé en mode hug (voir ci-dessous). Le gap de 10px du
+   wrap reste la seule séparation quand le spacer est nul. */
+.tabbar-spacer { flex: 0 0 0px; }
+/* Mode HUG (moins de 5 rubriques actives) : capsule ajustée à son
+   contenu, alignée à GAUCHE, onglets à largeur naturelle — le « ⋯ »
+   reste vissé à droite. Points d'ancrage immuables quel que soit le
+   nombre de modules activés. */
+.tabbar-wrap.hug .tabbar-capsule { flex: 0 0 auto; }
+.tabbar-wrap.hug .tab-item { flex: 0 0 auto; }
+.tabbar-wrap.hug .tabbar-spacer { flex: 1 1 auto; }
+
+/* Écrans < 440pt : avec les marges « Instagram » exactes (34/57px), les
+   cinq ovales + « ⋯ » ne tiennent qu'en resserrant le padding horizontal
+   des pills par PALIERS (calculés pour chaque largeur d'iPhone réelle :
+   430/428, 414, 393/390, 375, 360, 320). L'icône de 22px ne bouge pas,
+   seul l'ovale s'affine. */
+@media (max-width: 434px) {
+  .tab-pill { padding: 12px 16px; }
+  .tabbar-wrap.mini .tab-pill { padding: 8px 11px; }
+}
+@media (max-width: 400px) {
+  .tab-pill { padding: 12px 13px; }
+  .tabbar-wrap.mini .tab-pill { padding: 8px 9px; }
+}
+@media (max-width: 370px) {
+  .tab-pill { padding: 12px 11px; }
+  .tabbar-wrap.mini .tab-pill { padding: 8px 8px; }
+}
+@media (max-width: 330px) {
+  .tab-pill { padding: 12px 7px; }
+  .tabbar-wrap.mini .tab-pill { padding: 8px 4px; }
+}
+
+/* Cercle « ⋯ » séparé de la capsule (pattern Music / App Store iOS 26+) */
+.tabbar-more {
+  flex: 0 0 50px; height: 50px;
+  border-radius: var(--radius-full);
+  font-size: 20px; color: var(--text-light);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Contraction au scroll (façon Instagram) : TOUTE la capsule se resserre —
+   marges latérales élargies, padding réduit, icônes à −14 %, cercle « ⋯ »
+   40 px. La barre se RÉDUIT mais ne disparaît jamais. */
+.tabbar-wrap.mini { left: 57px; right: 57px; }
+.tabbar-wrap.mini .tabbar-capsule { padding: 2px; }
+.tabbar-wrap.mini .tab-pill { padding: 8px 13px; }
+.tabbar-wrap.mini .tab-ico { --icob: 0.86; }
+.tabbar-wrap.mini .tabbar-more { flex-basis: 40px; height: 40px; font-size: 17px; }
+
+/* Bottom sheet (menu « ⋯ ») — flottante et en verre, comme la barre */
+.sheet-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(15, 23, 42, 0.4);
+  /* v525 : fondu allongé (0,2 → 0,4 s) pour NOYER la bascule de la barre
+     d'état iOS (repeinte par le système avec ~170-250 ms de retard) dans
+     l'animation. La sheet, elle, garde ses timings vifs. */
+  animation: sheetFade 0.4s ease;
+}
+.bottom-sheet {
+  position: fixed; left: 8px; right: 8px;
+  /* MÊME formule de bas que la barre (.tabbar-wrap) : les deux objets
+     flottants partagent la même ligne d'appui — l'ancien calage
+     (8px + safe-area ≈ 42px) laissait la sheet 12px plus haute que la
+     barre depuis le placement « Instagram » (~30px). */
+  bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) - 4px));
+  z-index: 61;
+  /* Tout en BLANC opaque, cartes délimitées par le liseré var(--border) —
+     c'est le langage des cards partout ailleurs dans l'app (stat-cards,
+     listes). Pas de translucidité : une sheet s'ouvre au-dessus d'un
+     backdrop assombri, le verre n'y apporterait rien. */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
+  padding: 8px 16px 16px;
+  animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sheet-handle {
+  width: 36px; height: 4px; border-radius: var(--radius-full);
+  background: rgba(15, 23, 42, 0.15); margin: 4px auto 14px;
+}
+/* ============================================================
+   Sheet « fiche de compte » (maquette Mockup-Sheet-Moderne, E1 —
+   la variante E2 « liste raffinée » reste en réserve dans la maquette) :
+   identité mise en scène (avatar dégradé centré + email), puis les
+   actions en GROS BOUTONS RONDS de 58px — le pattern des fiches
+   contact iOS / apps bancaires, taillé pour 3 actions. Même philosophie
+   « icônes d'abord » que la barre de navigation.
+   ============================================================ */
+.sheet-id {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0 4px;
+}
+.sheet-avatar-lg {
+  width: 58px; height: 58px; border-radius: var(--radius-full);
+  color: white; font-size: 23px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  /* Noir ardoise (comme l'avatar d'avant la refonte E1, l'icône de
+     l'app et le segmented desktop) — léger dégradé pour garder du
+     relief à cette taille, ombre assortie. */
+  background: linear-gradient(135deg, #1e293b, var(--text));
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3);
+}
+.sheet-id-name { font-size: 16px; font-weight: 700; margin-top: 10px; }
+.sheet-id-mail {
+  font-size: 12.5px; color: var(--text-muted); margin-top: 2px;
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sheet-actions {
+  display: flex; justify-content: center; gap: 22px;
+  padding: 18px 0 6px;
+}
+.sheet-act {
+  border: none; background: transparent;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--text);
+}
+.sheet-act-circle {
+  width: 58px; height: 58px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  background: #f1f3f7; color: var(--text-light);
+  transition: transform 0.12s;
+}
+.sheet-act:active .sheet-act-circle { transform: scale(0.93); }
+.sheet-act-circle.accent { background: var(--accent-light); color: var(--accent); }
+.sheet-act-circle.danger { background: var(--danger-light); color: var(--danger); }
+.sheet-act-lbl { font-size: 12px; font-weight: 600; color: var(--text-light); }
+.sheet-act.danger .sheet-act-lbl { color: var(--danger); }
+/* Zone basculante actions ⇄ confirmation de déconnexion (maquette
+   Mockup-Sheet-Confirm-Deconnexion) : les deux panneaux sont superposés
+   en absolute, le conteneur porte la hauteur (animée en JS par
+   MobileSheet). Le panneau inactif glisse latéralement et s'estompe. */
+.sheet-swap { position: relative; overflow: hidden; transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
+.swap-pane {
+  position: absolute; left: 0; right: 0; top: 0;
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.swap-pane.hidden-left  { opacity: 0; transform: translateX(-26px); pointer-events: none; }
+.swap-pane.hidden-right { opacity: 0; transform: translateX(26px);  pointer-events: none; }
+.sheet-confirm { padding: 20px 6px 6px; display: flex; flex-direction: column; gap: 10px; }
+.confirm-q { text-align: center; font-size: 14.5px; font-weight: 700; }
+.confirm-sub { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: -4px; margin-bottom: 6px; }
+.confirm-btn {
+  width: 100%; padding: 14px; border-radius: 14px; border: none;
+  font-family: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer;
+  transition: transform 0.12s, background 0.15s;
+}
+.confirm-btn:active { transform: scale(0.98); }
+.confirm-btn.out { background: var(--danger); color: white; box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3); }
+.confirm-btn.cancel { background: #f1f3f7; color: var(--text); }
+.sheet-version {
+  /* v584 : style fin (10.5px, léger) pour plus de discrétion. Pas de hairline
+     ici : l'espacement de la feuille sépare déjà visuellement du bloc au-dessus. */
+  text-align: center; font-size: 10.5px; font-weight: 300; color: var(--text-subtle);
+  padding: 10px 0 0; font-variant-numeric: tabular-nums;
+}
+/* Poignée physique (drag-to-dismiss) : sans touch-action:none, iOS
+   transforme le glissement vertical en scroll et cesse d'émettre les
+   pointermove — la sheet n'a de toute façon aucun contenu défilant. */
+.bottom-sheet { touch-action: none; }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetFade { from { opacity: 0; } to { opacity: 1; } }
+/* Fermeture ANIMÉE (classe .closing posée par MobileSheet 240ms avant le
+   démontage) : glissement vers le bas + fondu du backdrop, symétriques
+   de l'ouverture. `forwards` fige l'état final le temps du démontage. */
+@keyframes sheetDown { from { transform: translateY(0); } to { transform: translateY(110%); } }
+@keyframes sheetFadeOut { from { opacity: 1; } to { opacity: 0; } }
+.bottom-sheet.closing { animation: sheetDown 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.sheet-backdrop.closing { animation: sheetFadeOut 0.4s ease forwards; } /* v525 */
+
+/* Assets rows */
+.asset-row {
+  display: grid; grid-template-columns: 26px 1fr auto auto;
+  gap: 12px; align-items: center;
+  min-height: 60px; /* hauteur cohérente avec .portfolio-list-row */
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.asset-row .tx-icon { width: 26px; height: 26px; font-size: 12px; }
+.asset-row:last-child { border-bottom: none; }
+.asset-row:hover { background: var(--surface-alt); }
+.asset-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.asset-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.asset-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.asset-gain { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 400; }
+
+/* Lignes d'opérations (compactes, façon compte courant) */
+.op-row {
+  display: grid; gap: 10px; align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+  position: relative;
+}
+.op-row:last-child { border-bottom: none; }
+.op-row:hover { background: var(--surface-alt); }
+.op-row .tx-icon { cursor: default; }
+.op-main { min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.op-label { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op-date { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+/* Ligne composite : le chevron est accolé à la fin du libellé. Le libellé peut
+   se tronquer (…) quand la place manque, mais le chevron reste TOUJOURS visible
+   (flex-shrink:0) → il « suit » la fin du texte (à gauche si court, poussé à
+   droite si long). align-items:center pour aligner verticalement chevron+texte. */
+.op-label-chevron { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.op-label-chevron .op-label { min-width: 0; }
+.op-label-chevron .composite-chevron { flex: 0 0 auto; }
+.op-amount { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Recherche globale — command palette style
+   ============================================================ */
+.search-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  /* Pas de backdrop-filter : voir .modal-overlay (perf). */
+  z-index: 3000;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 60px 20px 20px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.search-modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 48px rgba(15,23,42,0.16), 0 8px 16px rgba(15,23,42,0.08);
+  width: 100%; max-width: 600px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: calc(100dvh - 80px);
+}
+.search-input-wrap {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.search-input-icon { color: var(--text-muted); display: inline-flex; }
+.search-input {
+  flex: 1;
+  /* min-width:0 : sinon le champ garde sa largeur intrinsèque et pousse le
+     compteur de résultats + la croix hors du cadre sur modale étroite
+     (portrait). Le champ se comprime, la croix reste toujours visible. */
+  min-width: 0;
+  border: none; outline: none;
+  font-family: inherit; font-size: 16px;
+  background: transparent; color: var(--text);
+}
+.search-input::placeholder { color: var(--text-subtle); }
+.search-input-meta {
+  font-size: 11.5px; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.search-close {
+  width: 28px; height: 28px; padding: 0;
+  border: none; background: transparent;
+  color: var(--text-muted);
+  font-size: 20px; line-height: 1;
+  border-radius: 6px; cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.search-close:hover { background: var(--surface-hover); color: var(--text); }
+.search-results {
+  overflow-y: auto; flex: 1;
+  padding: 8px 0;
+}
+.search-group { padding: 8px 0 4px; }
+.search-group-title {
+  font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 6px 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.search-group-count { color: var(--text-subtle); font-weight: 500; }
+.search-result {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border: none; background: transparent;
+  text-align: left; width: 100%;
+  font-family: inherit; color: inherit;
+}
+.search-result:hover, .search-result.focused {
+  background: var(--surface-alt);
+}
+.search-result-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.search-result-icon.checking { background: var(--accent-light); color: var(--accent); }
+.search-result-icon.savings { background: var(--info-light); color: var(--info); }
+.search-result-icon.investments { background: var(--success-light); color: var(--success); }
+.search-result-icon.physical { background: var(--warning-light); color: var(--warning); }
+.search-result-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.search-result-title {
+  font-size: 14px; font-weight: 500; color: var(--text);
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.search-result-title-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-result-title mark {
+  background: #fef3c7; color: var(--text);
+  padding: 0 2px; border-radius: 2px;
+}
+.search-result-sub {
+  font-size: 11.5px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* v582 : cadenas « mois figé » inséré juste avant le libellé du mois dans le
+   sous-titre d'un résultat. Discret (ton du sous-titre), aligné sur le texte. */
+.search-result-sub .sub-lock {
+  display: inline-flex; align-items: center;
+  color: var(--text-muted);
+  margin-right: 4px; vertical-align: -2px;
+}
+.search-result-right {
+  font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+}
+.search-result-right.pos { color: var(--success); }
+.search-result-right.neg { color: var(--danger); }
+/* v607 : icône note à côté du nom (cohérent avec les lignes du compte courant) —
+   le nom tronque avant elle, l'icône reste visible. */
+.search-note { flex-shrink: 0; color: var(--text-muted); }
+/* v612 : le texte cherché est dans la note → fond rond jaune (même #fef3c7 que
+   le surlignage des titres) derrière l'icône, façon bouton œil. */
+.search-note.note-hit .infotip-ico {
+  width: 22px; height: 22px; border-radius: 50%;
+  align-items: center; justify-content: center;
+  background: #fef3c7; color: var(--text);
+}
+.search-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.search-empty-icon {
+  width: 48px; height: 48px;
+  margin: 0 auto 12px;
+  background: var(--surface-alt);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+}
+.search-empty-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); margin-bottom: 4px;
+}
+.search-empty-hint { font-size: 12.5px; line-height: 1.5; }
+/* La recherche garde le style « palette » de base (ancré en haut) sur tous les
+   formats — portrait, paysage et desktop — pour un rendu identique partout. */
+
+/* Toast */
+.toast {
+  position: fixed; top: 20px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--text); color: white;
+  padding: 10px 18px; font-size: 13px; font-weight: 500;
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  z-index: 2000; animation: slideDown 0.2s ease;
+}
+.toast.error { background: var(--danger); }
+.toast.success { background: var(--success); }
+/* Toast PERSISTANT de mise à jour (service worker, v522) : même coquille
+   que le toast standard, enrichie de deux actions. Pas d'auto-dismiss —
+   c'est une invitation, pas une alerte (maquette Mockup-Toast-MAJ.html, A).
+   z-index légèrement inférieur : un toast standard passager passe DEVANT. */
+.toast.update {
+  display: flex; align-items: center; gap: 12px;
+  padding-right: 14px; white-space: nowrap; z-index: 1999;
+  /* v548 : décalé plus bas que les toasts passagers (top:20px) pour ne
+     jamais être recouvert par un « Opération ajoutée » — les deux restent
+     lisibles, empilés. Toast de MàJ persistant tant qu'on n'a pas mis à jour. */
+  top: 64px;
+}
+.toast.update .act {
+  border: none; cursor: pointer; font-family: inherit;
+  background: rgba(255, 255, 255, 0.16); color: white;
+  font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 7px;
+}
+.toast.update .act:hover { background: rgba(255, 255, 255, 0.26); }
+/* Tag « hors ligne » dans le menu ⋯ (v549, forme A) : pilule ambre discrète,
+   affichée dans la sheet mobile (sous l'identité) et dans le dropdown desktop,
+   pour expliquer le point ambre du « ⋯ ». Même code couleur que la pilule
+   réseau et le point ambre. */
+.offline-tag {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--warning-light); border: 1px solid #fde68a; color: #92400e;
+  font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px;
+  /* v550 : centré verticalement entre l'e-mail et les boutons. .sheet-id a
+     4px de padding-bas et .sheet-actions 18px de padding-haut → margin-top 14
+     donne 18px au-dessus et 18px en dessous. (Le desktop garde sa propre
+     marge via .offline-tag--menu ci-dessous.) */
+  margin: 14px auto 0; white-space: nowrap;
+}
+.offline-tag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+/* Variante menu desktop : pleine largeur du dropdown, un peu d'air autour. */
+.offline-tag--menu { margin: 2px 4px 6px; }
+
+/* ============================================================
+   SAUVEGARDES (v552) — carte Paramètres + confirmation de
+   restauration (comparatif Actuel/Restauré, piste 2).
+   ============================================================ */
+/* Statut sobre, au ton des Paramètres (pas de bandeau coloré). */
+.backup-status {
+  display: flex; align-items: center; gap: 7px;
+  margin: 0 0 12px; font-size: 12px; color: var(--text-muted);
+}
+.backup-status .ic { color: var(--text-subtle); flex-shrink: 0; display: inline-flex; }
+.backup-save { margin-bottom: 4px; }
+.backup-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.backup-row {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface);
+}
+.backup-row.latest { border-color: #c7d2fe; background: #fbfbff; }
+.backup-row .ic {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  background: var(--accent-light); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.backup-row .meta { flex: 1; min-width: 0; }
+.backup-row .d {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
+  font-size: 13px; font-weight: 700; line-height: 1.2;
+}
+.backup-row .figs { font-size: 11px; color: var(--text-subtle); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+/* Le tag type sur la ligne d'âge n'apparaît qu'en portrait mobile (cf. media query). */
+.backup-tag.sub-tag { display: none; }
+.backup-row .figs b { color: var(--text-muted); font-weight: 700; }
+.backup-row .figs .cc b { color: var(--accent); }
+.backup-tag {
+  font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: var(--radius-full);
+}
+.backup-tag.manual { background: var(--accent-light); color: var(--accent); }
+.backup-tag.auto { background: var(--surface-hover); color: var(--text-subtle); }
+.backup-tag.latest-tag { background: var(--accent-light); color: var(--accent); }
+/* « avant restauration » : teinte ardoise neutre, casse normale (libellé long). */
+.backup-tag.pre { background: #e7ecf3; color: #475569; text-transform: none; letter-spacing: 0; font-weight: 700; }
+.backup-restore {
+  border: 1px solid var(--border); background: var(--surface); color: var(--accent);
+  border-radius: 9px; padding: 7px 11px; font-family: inherit; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0;
+}
+.backup-restore:hover { background: var(--accent-light); }
+.backup-del {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-subtle);
+  border-radius: 9px; padding: 7px 9px; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;
+}
+.backup-del:hover { color: var(--danger); border-color: #fecaca; background: var(--danger-light); }
+.backup-showall {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--accent);
+  background: none; border: none; padding: 4px 2px; cursor: pointer;
+}
+.backup-showall:hover { text-decoration: underline; }
+.backup-showall .backup-chev { display: inline-flex; transition: transform 0.15s; }
+.backup-showall .backup-chev.up { transform: rotate(180deg); }
+
+/* v559 — Portrait mobile UNIQUEMENT : lignes de sauvegarde compactes
+   (2 lignes). On masque le pictogramme de gauche, on déplace le tag type
+   sur la ligne d'âge, et « Restaurer » devient une icône seule (la
+   confirmation s'ouvre de toute façon). Desktop/paysage : inchangé. */
+@media (max-width: 480px) and (orientation: portrait) {
+  .backup-row { gap: 10px; padding: 9px 11px; }
+  .backup-row .ic { display: none; }
+  .backup-row .d { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .backup-row .d .d-tag { display: none; }
+  .backup-row .figs .sub-tag { display: inline-block; }
+  .backup-restore { padding: 7px 9px; gap: 0; }
+  .backup-restore .lbl { display: none; }
+}
+
+/* --- Confirmation de restauration --- */
+.restore-confirm .rc-lead { font-size: 13px; line-height: 1.5; margin: 0 0 12px; color: var(--text); }
+.restore-confirm .rc-summary { font-size: 11.5px; color: var(--text-muted); margin: 0 0 9px; }
+.restore-confirm .rc-summary b { color: var(--accent); }
+.restore-confirm .rc-head {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 0 12px 6px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: var(--text-subtle);
+}
+.restore-confirm .rc-head span:nth-child(2), .restore-confirm .rc-head span:nth-child(3) { text-align: right; }
+.restore-confirm .rc-grid { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.restore-confirm .rc-r {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
+  padding: 8px 12px; font-size: 12.5px;
+}
+.restore-confirm .rc-r + .rc-r { border-top: 1px solid var(--border); }
+.restore-confirm .rc-r .gl { color: var(--text); font-weight: 600; }
+.restore-confirm .rc-r .ga { color: var(--text-subtle); text-align: right; white-space: nowrap; font-size: 11.5px; }
+.restore-confirm .rc-r .gb { text-align: right; white-space: nowrap; font-weight: 700; min-width: 58px; }
+.restore-confirm .rc-r.eq .gb { color: var(--text-subtle); font-weight: 600; }
+/* v560 — rubrique modifiée : fin liseré indigo à gauche + valeur restaurée
+   en accent (charte de l'app), sans fond coloré (fini l'ambre/brun). */
+.restore-confirm .rc-r.chgd { box-shadow: inset 3px 0 0 var(--accent); }
+.restore-confirm .rc-r.chgd .gb { color: var(--accent); }
+.restore-confirm .rc-r.total { background: #f8fafc; font-weight: 800; }
+.restore-confirm .rc-r.total .gl, .restore-confirm .rc-r.total .gb { font-weight: 800; color: var(--text); }
+.restore-confirm .rc-r.detail { background: #fbfbfd; }
+.restore-confirm .rc-r.detail .gl { padding-left: 12px; color: var(--text-subtle); font-weight: 500; font-size: 11.5px; }
+.restore-confirm .rc-r.detail .ga, .restore-confirm .rc-r.detail .gb { font-size: 11px; font-weight: 600; }
+.restore-confirm .rc-expand {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent);
+  cursor: pointer; background: none; border: none; padding: 9px 2px 0; font-family: inherit;
+}
+.restore-confirm .rc-safe {
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px;
+  font-size: 11.5px; color: #166534; line-height: 1.45; display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 18px;
+}
+.restore-confirm .rc-safe svg { color: var(--success); flex-shrink: 0; margin-top: 1px; }
+.restore-confirm .rc-blocked {
+  background: var(--warning-light); border: 1px solid #fde68a; border-radius: 10px; padding: 12px;
+  font-size: 12.5px; color: #92400e; line-height: 1.45; display: flex; gap: 9px; align-items: flex-start; margin: 4px 0 18px;
+}
+.restore-confirm .rc-blocked svg { flex-shrink: 0; margin-top: 1px; }
+.restore-confirm .rc-errs { font-size: 10.5px; opacity: .85; margin-top: 5px; }
+/* Pied de la fenêtre de restauration : on réutilise .form-actions de l'app
+   (flex + boutons flex:1) — plus de conteneur maison .rc-acts. */
+/* ---- Indicateur réseau (v523, maquettes Mockup-Pilule-Offline*.html) ----
+   Deux pièces, toutes SUPERPOSÉES (aucun décalage de layout) :
+   1. .net-dot — point ambre PERMANENT au coin des « ⋯ » (barre mobile et
+      header desktop) tant que l'app est hors ligne.
+   2. .net-pill — pilule TRANSITOIRE (4 s) à chaque bascule : ambre à la
+      coupure (« Hors ligne — modifications en attente »), verte au retour
+      (« De retour en ligne »). Canal séparé des toasts : pas d'écrasement
+      mutuel avec les confirmations d'action. */
+.net-dot {
+  position: absolute; top: -1px; right: -1px;
+  width: 11px; height: 11px; border-radius: var(--radius-full);
+  background: #f59e0b; border: 2px solid var(--surface);
+  pointer-events: none;
+}
+.tabbar-more { position: relative; }
+/* Header desktop : bouton 36px plus petit que le cercle mobile → point
+   réduit et rentré pour rester DANS l'empreinte du bouton. */
+.app-bar-user .net-dot { top: 2px; right: 2px; width: 9px; height: 9px; }
+.net-pill {
+  position: fixed; top: 66px; left: 50%; transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88); color: white;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  font-size: 11.5px; font-weight: 600; padding: 6px 12px;
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; gap: 7px;
+  z-index: 1998; white-space: nowrap; pointer-events: none;
+  animation: pillIn 0.3s ease;
+}
+@keyframes pillIn {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.net-pill .net-pill-dot {
+  width: 7px; height: 7px; border-radius: var(--radius-full); flex-shrink: 0;
+}
+.net-pill-amber .net-pill-dot { background: #f59e0b; }
+.net-pill-green .net-pill-dot { background: var(--success); }
+/* Mobile : pas de header → la pilule se cale sous la status bar (safe-area
+   en PWA standalone). Même breakpoint que le masquage de .app-header. */
+@media (max-width: 640px) {
+  .net-pill { top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+/* Paysage téléphone (header masqué aussi) : status bar absente en haut. */
+@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
+  .net-pill { top: 10px; }
+}
+@keyframes slideDown {
+  from { transform: translate(-50%, -10px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* Empty state */
+.empty-state {
+  padding: 40px 24px; text-align: center;
+  color: var(--text-muted); font-size: 14px;
+}
+.empty-state-icon {
+  width: 48px; height: 48px; margin: 0 auto 12px;
+  border-radius: 12px; background: var(--surface-hover);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-subtle); font-size: 22px;
+}
+
+/* Drag and drop */
+/* v572 : origine très estompée pendant le glisser (0,15) — le clone opaque
+   « soulevé » (dnd.js) devient la seule carte visible, fini le « double ». */
+.tx-row.dragging,
+.composite-comp-row.dragging,
+.recurring-row.dragging { opacity: 0.15; }
+/* Indicateur d'insertion RENFORCÉ (v543, maquette Mockup-Drag-Lisibilite,
+   option 2) : barre de 3px INSET (marges latérales) à coins arrondis + halo
+   diffus — se lit nettement même à travers le clone translucide (v543). */
+.tx-row.drag-over-top::before,
+.composite-comp-row.drag-over-top::before,
+.recurring-row.drag-over-top::before {
+  content: ''; position: absolute; top: -2px; left: 8px; right: 8px;
+  height: 3px; background: var(--accent); border-radius: 2px;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  z-index: 5;
+}
+.tx-row.drag-over-bottom::after,
+.composite-comp-row.drag-over-bottom::after,
+.recurring-row.drag-over-bottom::after {
+  content: ''; position: absolute; bottom: -2px; left: 8px; right: 8px;
+  height: 3px; background: var(--accent); border-radius: 2px;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  z-index: 5;
+}
+/* Surbrillance d'imbrication FRANCHE (v543) : contour + fond indigo léger. */
+.tx-row.drag-over-nest,
+.recurring-row.drag-over-nest {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent-light);
+  border-radius: 4px;
+}
+
+/* ============================================================
+   Patrimoine — toggle période sur le graphique d'évolution
+   ============================================================ */
+.period-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 0;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.period-toggle button {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.period-toggle button:hover { color: var(--text); }
+.period-toggle button.active {
+  background: white;
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ============================================================
+   Investissements — vue liste + sous-page portefeuille
+   ============================================================ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text-muted);
+  margin: 0 0 12px;
+  flex-wrap: wrap;
+}
+.breadcrumb-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: none;
+  color: var(--accent); font-weight: 500;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 6px;
+  font-family: inherit; font-size: inherit;
+  margin-left: -8px;
+  transition: background 0.15s;
+}
+.breadcrumb-link:hover { background: var(--accent-light); }
+.breadcrumb-sep { color: var(--text-subtle); }
+.breadcrumb-current { color: var(--text); font-weight: 500; }
+
+.hero-name-edit {
+  background: transparent;
+  border: 1px solid transparent;
+  color: white;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: -6px;
+  min-width: 0;
+  max-width: 70%;
+  font-family: inherit;
+  outline: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.hero-name-edit:hover { background: rgba(255,255,255,0.08); }
+.hero-name-edit:focus { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+/* Nom affiché (non éditable) dans le hero : le renommage passe par Réglages,
+   comme le Compte courant. Même rendu visuel que .hero-name-edit. */
+.hero-name-static {
+  color: white;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-kebab {
+  width: 32px; height: 32px;
+  color: rgba(255,255,255,0.55);
+}
+.hero-kebab:hover { background: rgba(255,255,255,0.08); color: white; border-color: transparent; }
+
+/* Liste des portefeuilles (vue consolidée) */
+.portfolio-list-row {
+  display: grid;
+  grid-template-columns: 26px 1fr auto 14px;
+  align-items: center; gap: 12px;
+  width: 100%;
+  min-height: 60px; /* hauteur cohérente avec .asset-row */
+  padding: 10px 16px;
+  border: none; border-top: 1px solid var(--border);
+  background: transparent;
+  text-align: left; cursor: pointer;
+  font-family: inherit; color: inherit;
+  transition: background 0.1s;
+}
+.portfolio-list-row:first-child { border-top: none; }
+.portfolio-list-row:hover { background: var(--surface-alt); }
+.portfolio-list-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.portfolio-list-main { min-width: 0; }
+.portfolio-list-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.portfolio-list-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.portfolio-list-right { text-align: right; }
+.portfolio-list-arrow { color: var(--text-subtle); font-size: 16px; line-height: 1; }
+
+/* Liste compacte des supports détenus (sous-page) */
+.support-row {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.support-row:first-child { border-top: none; }
+.support-row:hover { background: var(--surface-alt); }
+.support-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+.support-main { min-width: 0; }
+.support-name { font-size: 14px; font-weight: 600; }
+.support-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.support-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.support-gain { font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 400; margin-top: 2px; }
+
+/* v592 : pastille d'info (icône cible) + bulle survol/tap */
+.infotip { position: relative; display: inline-flex; align-items: center; cursor: pointer; vertical-align: -2px; }
+.infotip-ico { display: inline-flex; color: var(--text-subtle); }
+.infotip:hover .infotip-ico, .infotip:focus-visible .infotip-ico { color: var(--text-muted); }
+/* v593/v595 : tooltip BLANC (aligné sur CustomTooltip). Rendu en position
+   FIXE dans document.body (via portal) pour ne pas être rogné par un parent
+   overflow:hidden (ex. .support-sub en portrait). left/top posés en inline
+   (coordonnées de l'icône), transform pour le placer au-dessus. */
+.infotip-pop {
+  position: fixed; transform: translateY(calc(-100% - 8px));
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  font-size: 12.5px; font-weight: 500; line-height: 1.35;
+  padding: 7px 10px; border-radius: var(--radius-md); width: max-content; max-width: 220px;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.12); z-index: 3200; white-space: nowrap;
+  overscroll-behavior: contain; /* v602 : le défilement en butée de la bulle ne s'étend pas à la page (qui, en défilant, la fermerait) */
+}
+/* v596 : variante multi-ligne pour un commentaire (texte long) */
+.infotip-pop.infotip-pop--wrap { white-space: normal; max-width: min(420px, calc(100vw - 16px)); line-height: 1.4; }
+/* v596 : bulle commentaire sur une ligne d'opération — toujours visible
+   (le libellé tronque avant elle), centrée verticalement. */
+.op-note { flex-shrink: 0; align-self: center; }
+
+/* Badge "Distribuant" / "Capitalisant" affiché sur un support */
+.kind-badge {
+  display: inline-flex; align-items: center;
+  font-size: 9.5px; font-weight: 700;
+  padding: 1px 6px; border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+.kind-badge.dist { background: #f5f3ff; color: #8b5cf6; }
+.kind-badge.cap  { background: var(--accent-light); color: var(--accent); }
+.kind-badge.gift { background: #fdf2f8; color: #ec4899; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-hero, .grid-overview, .grid-2 { grid-template-columns: 1fr !important; }
+  /* Mobile : on force 2 colonnes même si .cols-3 est appliqué (TR désactivé),
+     pour éviter que les libellés "RESTE MOIS PRÉC.", "ENTRÉES POINTÉES", etc. se
+     coupent sur 3 lignes dans des cartes trop étroites. */
+  .stats-grid,
+  .stats-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  /* padding-bottom = hauteur de la barre basse (+ safe-area) pour que le
+     contenu et les boutons "+ Ajouter" en fin de liste ne passent pas
+     dessous. 88 → 102px : la barre est remontée de ~14px par le
+     placement « Instagram » (bottom safe-area − 4 au lieu de − 18). */
+  .main-container { padding: 4px 14px calc(102px + env(safe-area-inset-bottom, 0px)); }
+  .header-inner { padding: 10px 14px; gap: 8px; }
+  .hero-value-big { font-size: 32px; }
+  .hero-card { padding: 18px; min-height: 0; }
+  .hero-card > div:first-child > :last-child { top: 18px; right: 18px; }
+  .card { padding: 18px !important; }
+  .modal-title { font-size: 15px; }
+  .tab { padding: 10px 12px; font-size: 13px; }
+  /* Anti-zoom auto iOS Safari : tout input < 16px déclenche un zoom au focus.
+     On force 16px sur tous les inputs / textarea / select sur mobile. */
+  .input,
+  .note-field textarea,
+  .tx-label, .tx-amount,
+  .recurring-row input,
+  .composite-comp-row input,
+  .etf-row input,
+  input[type="date"], input[type="month"], input[type="number"], input[type="text"],
+  input[type="email"], input[type="password"],
+  textarea, select { font-size: 16px; }
+  /* Exception : les inputs en lecture seule des lignes affichées (compte
+     courant + récurrents + composantes) doivent garder 14px pour rester
+     alignés sur les spans .op-label/.op-date des autres lignes — l'auto-zoom
+     iOS n'intervient pas sur readonly puisqu'il n'y a pas de saisie. */
+  .tx-row input[readonly],
+  .recurring-row input[readonly],
+  .composite-comp-row input[readonly] { font-size: 14px; }
+  /* Inputs date / month sur mobile : neutralisation de l'apparence native iOS
+     (qui impose ses propres largeur et hauteur) + texte centré pour préserver
+     l'effet "bouton" visuel. Le picker iOS reste actif au tap. */
+  input[type="date"],
+  input[type="month"] {
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center;
+  }
+  /* Compte courant : resserrer les colonnes ; aligné avec composite-comp-row (96 / 22) */
+  /* Plus de colonne « croix » (suppression passée en modale) → on récupère la
+     place pour le montant (96→112 / 80→96), ce qui évite la coupure des
+     montants signés à 4 chiffres (« + 3 149.96 »). */
+  .tx-row { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px); gap: 6px; padding: 8px 10px; }
+  .tx-row.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px); }
+  .tx-row.composite-row.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px); }
+  /* Variantes avec crayon (.tx-edit) en dernière colonne (22px). */
+  .tx-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px) 22px; }
+  .tx-row.tr-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; } /* v577 : TR sans colonne de pointage (mobile) */
+  .tx-row.with-edit.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px) 22px; }
+  .tx-row.composite-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px) 22px; }
+  .tx-row.composite-row.with-edit.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px) 22px; }
+  /* Chip date plus compacte sur mobile pour économiser l'espace. */
+  .tx-date-chip { min-width: 44px; width: 44px; }
+  .tx-icon { width: 20px; height: 20px; }
+  /* Récurrents (modales Entrées/Sorties dans le menu ⋯) : mêmes colonnes et paddings que tx-row */
+  .recurring-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); gap: 6px; padding: 8px 10px; }
+  .recurring-row.with-date { grid-template-columns: 20px 44px 1fr var(--amt-w, 96px); }
+  .recurring-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
+  .recurring-row.with-edit.with-date { grid-template-columns: 20px 44px 1fr var(--amt-w, 96px) 22px; }
+  /* Récurrent composite : colonne montant `auto` (cf. desktop). */
+  .recurring-row.composite-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); }
+  .recurring-row.composite-row.with-date { grid-template-columns: 20px 44px 1fr var(--amt-w, 96px); }
+  .recurring-row.composite-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
+  .recurring-row.composite-row.with-edit.with-date { grid-template-columns: 20px 44px 1fr var(--amt-w, 96px) 22px; }
+  /* (la règle font-size: 13px qui était ici causait le zoom iOS sur les récurrents — retirée) */
+  /* Composantes : aligné strictement avec .tx-row mobile (padding 0 horizontal car composite-comps gère le bord droit) */
+  .composite-comp-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); gap: 6px; padding: 8px 0; }
+  /* Variante with-edit mobile : colonne fantôme 22px (matche le crayon parent) */
+  .composite-comp-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
+  .composite-comps { padding: 0 10px 0 28px; }
+  .composite-amount-wrap { gap: 2px; }
+  .composite-chevron { width: 20px; height: 20px; }
+  /* Épargne, Actifs physiques : Famille A légèrement plus aérée que tx-row */
+  .asset-row { padding: 10px 12px; gap: 8px; }
+  .asset-row .tx-icon { width: 22px; height: 22px; font-size: 11px; }
+  /* Configurer supports : alignée aussi */
+  .etf-row { padding: 8px 10px; gap: 6px; }
+  /* Boutons × et crayon resserrés pour tenir dans les cellules 22px en mobile */
+  .tx-delete { width: 22px; height: 22px; font-size: 14px; }
+  .tx-edit { width: 22px; height: 22px; }
+  /* Modale plein écran sur mobile → on serre les marges intérieures.
+     padding-top = safe-area (env(safe-area-inset-top)) + 28px d'aération.
+     - En Safari classique : env = 0 → 28px (espace propre sous la
+       status bar qui n'est PAS dans la viewport).
+     - En PWA "Ajouter à l'écran d'accueil" : env = hauteur status bar
+       (~47px sur iPhone à notch) → ~75px, ce qui pousse le contenu
+       sous la status bar transparente.
+     Combiné avec viewport-fit=cover dans le meta viewport. */
+  .modal-body {
+    /* Modale flottante centrée (marge de 14px tout autour via l'overlay) : elle
+       ne touche jamais le home indicator, donc pas de safe-area ici. Padding
+       symétrique 16px → plus de grande bande blanche après les boutons. */
+    padding: 16px;
+  }
+  .modal-header { padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px 16px; }
+}
+/* En mode PWA standalone (Ajouter à l'écran d'accueil), le titre / X
+   ont besoin de plus d'espace sous la status bar pour être visuellement
+   centrés. Sélecteur basé sur une classe posée en JS (cf. app.js) plutôt
+   que @media (display-mode: standalone) qui s'avère peu fiable sur iOS
+   Safari en mode "à l'écran d'accueil".
+   Restreint au portrait : en paysage, la status bar disparaît et on
+   utilise la règle smartphone-landscape ci-dessous. */
+@media (orientation: portrait) {
+  html.pwa-standalone .modal-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    padding-bottom: 10px;
+  }
+}
+
+/* === Smartphone en paysage ===
+   Approche inspirée d'une autre app qui gère bien ce cas : on NE force
+   PAS le fullscreen (qui casse le scroll avec height: 100vh en paysage
+   à cause du clavier iOS et de la barre Safari du bas). À la place :
+   - overlay avec un petit padding (12px) pour aérer
+   - modale max-height 94dvh (dynamic viewport, pas vh) → respecte
+     toujours la viewport réellement visible
+   - body avec overflow-y: auto et -webkit-overflow-scrolling: touch
+     pour un scroll natif fluide
+   - header compact (pas besoin de safe-area-top, la status bar n'est
+     pas en haut en paysage et la modale n'est pas plein écran de toute
+     façon) */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Décalage latéral en paysage smartphone : +30px de chaque côté
+     par rapport au padding mobile portrait (14px → 44px) pour que
+     contenu principal ET barre du haut (logo + onglets + email)
+     restent hors de la zone notch.
+     Sur app-bar-inner, le padding desktop est 20px → 44px aussi.
+     La barre basse (.tabbar) n'est pas modifiée ici : elle est masquée
+     en paysage (display:flex seulement sous max-width:640px). */
+  .main-container {
+    padding-left: 58px;
+    padding-right: 58px;
+  }
+  .app-bar-inner {
+    padding-left: 58px;
+    padding-right: 58px;
+  }
+  .modal-overlay {
+    /* Côtés : +15px par rapport au haut/bas (12px → 27px) pour réduire la
+       modale de ~30px en largeur, PLUS la safe-area latérale : en paysage le
+       notch est sur un côté, sans ça le bord de la modale (size xl, largeur
+       inline 880 > écran) passait dessous. */
+    padding: 12px calc(env(safe-area-inset-right, 0px) + 27px)
+             12px calc(env(safe-area-inset-left, 0px) + 27px);
+  }
+  .modal {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    max-height: 94dvh;
+    border-radius: var(--radius-lg);
+  }
+  .modal-body {
+    /* padding bas = padding haut (16px), pas de safe-area : la modale flotte
+       déjà à 12px du bas (overlay), donc le contenu reste au-dessus du home
+       indicator. Évite la bande blanche sous la dernière card en paysage. */
+    padding: 16px 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .modal-header {
+    padding: 12px 20px 10px 20px;
+  }
+  /* Override la règle PWA standalone qui ne s'applique pas via
+     @media (orientation: portrait), mais on s'assure ici que le header
+     paysage reste bien compact même si la classe .pwa-standalone est
+     posée par notre JS. */
+  html.pwa-standalone .modal-header {
+    padding: 12px 20px 10px 20px;
+  }
+}
+@media (max-width: 480px) {
+  .hero-value-big { font-size: 26px; }
+}
+/* Mobile en portrait : on masque l'affichage des dividendes dans le hero
+   pour ne pas faire grandir la card. En paysage et sur desktop, l'info reste visible. */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hero-dividends-stat { display: none; }
+}
+@media (max-width: 640px) {
+  .hide-mobile { display: none !important; }
+  /* AppBar desktop masqué sur mobile : la déconnexion est dans Paramètres → Mon compte */
+  .app-header { display: none; }
+  /* ---- Refonte nav mobile : barre basse fixe + titre non-sticky ---- */
+  /* Titre de la section courante : simple, défile avec le contenu (plus de
+     barre sticky en haut, plus d'auto-hide). En PWA standalone, le padding
+     safe-area-top évite que le titre passe sous la status bar. */
+  .title-row {
+    display: flex;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  }
+  /* La chip de mois vit dans la ligne de titre : celle du hero disparaît */
+  .month-chip-hero { display: none; }
+  /* ============================================================
+     SCROLLER INTERNE : sur mobile, la PAGE ne scrolle jamais —
+     c'est .main-container qui scrolle. Les éléments position:fixed
+     (barre basse, sheet) ne peuvent alors plus dériver, quels que
+     soient les bugs de viewport d'iOS en PWA (clavier, standalone…).
+     Helpers JS associés : getScrollRoot/appScrollY/scrollAppTo (utils.js).
+     ============================================================ */
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  .main-container {
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  /* Contenu TOUJOURS ≥ 1px plus haut que le scroller : sur les pages
+     courtes (Épargne…), sans overflow, iOS transmet le geste de scroll
+     à la PAGE qui rebondit — et la barre fixed suit le rebond. */
+  .main-inner { min-height: calc(100% + 1px); }
+  /* Barre du bas Liquid Glass (layout dans la règle de base) */
+  .tabbar-wrap { display: flex; }
+  /* Modale plein écran : règles déplacées dans le bloc
+     @media (max-width:640px) and (orientation: portrait) plus bas.
+     ATTENTION : en PAYSAGE la modale n'est PAS plein écran (marge + coins
+     arrondis, cf. bloc landscape) → il ne faut surtout pas y appliquer
+     stretch ni le voile blanc, sinon le paysage est cassé. */
+  .month-picker-popover { width: 300px; }
+  .portfolio-list-row { gap: 8px; padding: 10px 12px; }
+  .portfolio-list-icon { width: 22px; height: 22px; }
+  /* Famille A sur mobile : noms et sub-infos sur 1 ligne max avec ellipsis
+     pour éviter le wrap. Les parties à droite (valeur + gain en couleur)
+     restent prioritaires en place. */
+  /* min-width: 0 uniquement sur la cellule du milieu (nom + sub) pour permettre l'ellipsis,
+     pas sur la cellule de droite (valeur + gain) qui doit garder sa taille intrinsèque. */
+  .asset-row > div:nth-child(2),
+  .support-row > div:nth-child(2),
+  .portfolio-list-row > div:nth-child(2) { min-width: 0; }
+  .asset-name, .asset-sub,
+  .support-name, .support-sub,
+  .portfolio-list-name, .portfolio-list-sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Supports détenus : Famille A (entité du portefeuille, comme un compte d'épargne) */
+  .support-row { padding: 10px 12px; gap: 8px; }
+  .support-icon { width: 22px; height: 22px; font-size: 11px; }
+  /* Opérations : Famille B (transaction) */
+  .op-row { padding: 8px 10px; gap: 6px; }
+  /* (le support-gain reste affiché sur mobile pour cohérence avec asset-row et portfolio-list-row) */
+}
+
+/* === Modale : PORTRAIT smartphone (Safari ET PWA) — vraie carte flottante ===
+   Coller la modale aux bords faisait lutter sans fin contre la barre du
+   navigateur (hauteur variable, repli au scroll, couleur échantillonnée
+   derrière → zone sombre ambiguë), et une petite modale calée en haut
+   « pendouillait ». On utilise donc une carte CENTRÉE avec une marge tout
+   autour : le voile sombre l'encadre (backdrop assumé) et, l'overlay
+   s'arrêtant au viewport VISIBLE (100dvh), la bande sous la barre Safari reste
+   transparente. En paysage la modale reste gérée par le bloc landscape. */
+@media (max-width: 640px) and (orientation: portrait) {
+  .modal-overlay {
+    padding: 14px;
+    align-items: center;
+    top: 0; bottom: auto;
+    height: 100vh;   /* repli pour les navigateurs sans dvh */
+    height: 100dvh;  /* s'arrête au-dessus de la barre Safari */
+  }
+  .modal {
+    border-radius: var(--radius-lg); max-width: 100%; width: 100%;
+    height: auto;
+    max-height: calc(100vh - 28px);   /* repli sans dvh */
+    max-height: calc(100dvh - 28px);  /* marge de 14px haut + bas */
+  }
+  /* Carte flottante : le sommet ne touche jamais l'encoche → pas de
+     safe-area-top (qui ajouterait un grand vide au-dessus du titre). On force
+     le header compact, y compris en PWA (override de la règle pwa plus haut). */
+  .modal-header,
+  html.pwa-standalone .modal-header { padding: 14px 16px; }
+}
+
+/* ============================================================
+   PAYSAGE TÉLÉPHONE — la barre basse reste en place (cohérence
+   avec le portrait : le pouce trouve la nav au même endroit),
+   mais TOUJOURS compacte (icônes seules) pour préserver la
+   hauteur d'écran, très limitée en paysage (~375pt).
+   `pointer: coarse` cible les écrans tactiles uniquement : une
+   fenêtre desktop basse (< 600px) garde l'AppBar classique.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
+  /* L'AppBar desktop disparaît : même nav qu'en portrait */
+  .app-header { display: none; }
+  /* Ligne de titre (non-sticky) — pas de safe-area top en paysage,
+     la status bar n'est pas en haut. Typo héritée de la règle de base. */
+  .title-row { display: flex; padding-top: 6px; margin-bottom: 8px; }
+  .month-chip-hero { display: none; }
+  /* Barre basse : visible, avec safe-areas LATÉRALES (l'encoche est
+     sur un côté en paysage) */
+  .tabbar-wrap {
+    display: flex;
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px));
+  }
+  /* Compacte en permanence (équivaut au mode contracté, sans dépendre du
+     scroll) : la hauteur d'écran est comptée en paysage. */
+  .tabbar-wrap .tabbar-capsule { padding: 2px; }
+  .tabbar-wrap .tab-pill { padding: 8px 13px; }
+  .tabbar-wrap .tab-ico { --icob: 0.86; }
+  .tabbar-wrap .tabbar-more { flex: 0 0 40px; height: 40px; font-size: 17px; }
+  /* Le toggle .mini (scroll) ne doit pas écraser les insets safe-area
+     du paysage (spécificité supérieure de .tabbar-wrap.mini) */
+  .tabbar-wrap.mini {
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+  }
+  /* Le contenu ne passe pas sous la barre (capsule compacte ≈ 48px),
+     et scroller interne comme en portrait (page verrouillée). */
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  .main-container {
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Overflow garanti (cf. portrait) : le geste reste dans le scroller */
+  .main-inner { min-height: calc(100% + 1px); }
+  /* Bottom sheet : recadrée en largeur (pleine largeur = absurde en paysage) */
+  .bottom-sheet { left: 0; right: 0; margin: 0 auto; width: min(430px, calc(100% - 16px)); }
+}
+
+/* ============================================================
+   Carte « À rafraîchir » (v480, lignée PROD — maquette
+   Mockup-Card-Arafraichir) : icône neutre grise tant que la plus
+   ancienne valorisation a moins de 30 jours ; au-delà, l'icône passe
+   en ambre (.tr-utensils, réutilisé) et la date porte un compteur.
+   ============================================================ */
+.stat-card-icon.stale-neutral { background: #f1f5f9; color: var(--text-muted); }
+.stale-tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  background: var(--warning-light); color: #b45309;
+  border-radius: var(--radius-full); padding: 1px 7px;
+  margin-left: 6px; vertical-align: 2px;
+}
+
+/* ============================================================
+   MOIS FIGÉ (v485, lignée PROD — maquette Mockup-Mois-Fige-Interactif)
+   Consultation seule : les contrôles d'ÉDITION disparaissent (rien de
+   grisé qui fait « cassé »), les cases de pointage gardent leur forme
+   mais deviennent inertes (clics interceptés par le wrapper + toast).
+   Le cadenas est partout INFORMATIF, jamais bloquant.
+   ============================================================ */
+.frozen-month .tx-edit,
+.frozen-month .btn-add { display: none; }
+/* Le crayon masqué ne doit pas laisser sa COLONNE vide : en mois figé,
+   les grilles .with-edit reprennent le gabarit sans crayon — le libellé
+   récupère la place et les montants se calent à droite. Les colonnes
+   fantômes des composantes suivent (alignement vertical conservé). */
+.frozen-month .tx-row.with-edit,
+.frozen-month .tx-row.composite-row.with-edit { grid-template-columns: 28px 24px 1fr var(--amt-w, 130px); }
+.frozen-month .tx-row.tr-row.with-edit { grid-template-columns: 28px 1fr var(--amt-w, 130px); } /* v577 : TR figé sans pointage ni crayon */
+.frozen-month .tx-row.with-edit.with-date,
+.frozen-month .tx-row.composite-row.with-edit.with-date { grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px); }
+.frozen-month .composite-comp-row.with-edit { grid-template-columns: 22px 1fr var(--amt-w, 130px); }
+.frozen-month .composite-comp-row.with-edit > span[aria-hidden] { display: none; }
+/* Déclinaison MOBILE : mêmes gabarits compacts que les lignes sans crayon
+   du media ≤ 640px (112/96px de montant, icônes 20px) — sans cette
+   déclinaison, les règles ci-dessus (gabarits desktop 130px) écraseraient
+   les colonnes compactes par spécificité. */
+@media (max-width: 640px) {
+  .frozen-month .tx-row.with-edit,
+  .frozen-month .tx-row.composite-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px); }
+  .frozen-month .tx-row.tr-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px); } /* v577 : TR figé (mobile) */
+  .frozen-month .tx-row.with-edit.with-date,
+  .frozen-month .tx-row.composite-row.with-edit.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px); }
+  .frozen-month .composite-comp-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px); }
+}
+/* Cases de pointage ATTÉNUÉES en mois figé (v576) : même coche que l'active
+   (carré plein indigo + coche blanche), mais l'indigo est passé à 50 %
+   d'opacité → se lit « pointé mais verrouillé », sans le gris qui tranchait
+   avec la charte. Le curseur default + le bord adouci signalent le verrou. */
+.frozen-month .tx-check { cursor: default; border-color: var(--border); }
+.frozen-month .tx-check.checked {
+  /* v578 : bordure TRANSPARENTE (et non indigo 50 %) — sinon la bordure
+     translucide se superpose au fond translucide et l'anneau paraît plus
+     foncé. Transparente = le fond 50 % s'affiche uniformément sur toute
+     la case, sans liseré. */
+  background: rgba(79, 70, 229, 0.5); border-color: transparent; color: white;
+}
+.frozen-month .tx-date-chip { cursor: default; }
+.frozen-month .tx-icon { cursor: default; }
+/* Cadenas de la chip de mois (hero + titre mobile) — icône vectorielle
+   en currentColor : blanche sur la variante hero, ardoise sur la light.
+   Variante B (maquette Mockup-Chip-Cadenas) : 13px, opacité pleine,
+   trait 2.4, et CENTRAGE GÉOMÉTRIQUE — le label passe en flex (l'icône
+   s'alignait sinon sur la baseline du texte → visuellement trop basse). */
+.mc-label { display: inline-flex; align-items: center; }
+.mc-lock { display: inline-flex; align-items: center; margin-right: 5px; }
+.mc-lock svg { stroke-width: 2.4; display: block; }
+/* Cadenas des cellules du calendrier : REMPLACE la pastille « créé »
+   (masquée ci-dessous) à la même position — currentColor le rend indigo
+   sur cellule claire, blanc sur le mois courant et au survol. La cellule
+   reste sélectionnable normalement. */
+.month-cell { position: relative; }
+.month-cell-lock { position: absolute; top: 4px; right: 5px; display: inline-flex; }
+.month-cell-lock svg { stroke-width: 2.4; display: block; }
+.month-cell.created.frozen:not(.current)::after { content: none; }
+/* Item de menu désactivé (Supprimer un mois figé) */
+.dropdown-item:disabled { color: var(--text-subtle); cursor: not-allowed; }
+.dropdown-item:disabled:hover { background: transparent; }
+
+/* ============================================================
+   ŒIL DE POINTAGE (v509 — maquettes Mockup-Oeil-Pointage et
+   Mockup-Oeil-B-Responsive, variante B). L'œil masque les lignes déjà
+   pointées (mois actifs seulement) ; compteur d'en-tête si la place le
+   permet (mesure JS) ; bande de rappel sous la liste, toujours.
+   ============================================================ */
+/* PASTILLE œil+compteur (v515, forme B — contrôle UNIQUE du masquage).
+   Compacte (~54px masquée, ~28px affichée), marges verticales négatives :
+   n'agrandit jamais l'en-tête. Indigo quand le masquage est actif —
+   même langage que les pastilles de compteur de l'app. */
+.ops-eye-pill {
+  border: none; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; color: var(--text-subtle);
+  border-radius: var(--radius-full); padding: 6px 9px; margin: -6px 0;
+  font-family: inherit; font-size: 11.5px; font-weight: 800; line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.ops-eye-pill:hover { background: var(--surface-hover); color: var(--text); }
+.ops-eye-pill.on { background: var(--accent-light); color: var(--accent); }
+.ops-eye-pill.on:hover { background: #e0e7ff; }
+/* v551 — œil « aperçu au survol ». Au repos l'icône .eye-ico-rest (état
+   courant) est visible ; au survol on masque le repos et on montre
+   .eye-ico-hover (le résultat du clic), pour que l'icône dise la même chose
+   que l'infobulle. Cantonné à @media (hover: hover) : sur tactile il n'y a
+   pas de survol, et surtout le :hover « colle » au tap sur iOS/Android — on
+   éviterait donc un clignotement de l'icône d'aperçu au toucher. */
+.ops-eye-pill .eye-ico { display: inline-flex; }
+.ops-eye-pill .eye-ico-hover { display: none; }
+@media (hover: hover) {
+  .ops-eye-pill:hover .eye-ico-rest { display: none; }
+  .ops-eye-pill:hover .eye-ico-hover { display: inline-flex; }
+}
+.ops-all-done {
+  padding: 22px 14px; text-align: center; font-size: 12.5px; color: var(--text-muted);
+}
+.ops-all-done-big { font-size: 15px; font-weight: 700; color: var(--success); margin-bottom: 4px; }
+/* Fondu de disparition au pointage en mode masqué */
+.tx-row.fading, .tx-composite-wrap.fading { opacity: 0; transition: opacity 0.35s ease; }
+
+
+
+/* ============================================================
+   PROJECTION EXPLIQUÉE (v517 — maquette Mockup-Quatuor-Confort).
+   La valeur « Projection fin de mois » du hero est dépliable : détail
+   du calcul (reste projeté du mois précédent + entrées − sorties).
+   ============================================================ */
+.proj-value {
+  border: none; background: transparent; padding: 0; cursor: pointer;
+  font-family: inherit; font-size: 16px; font-weight: 600;
+  /* gap 7px (v528) : écart unique de tous les chevrons de dépliage. */
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.proj-chev {
+  /* v528 : chevron vectoriel, même règle que .mc-dd (trait 2.4). */
+  color: rgba(255, 255, 255, 0.4);
+  display: inline-flex; align-items: center; transition: transform 0.2s ease;
+}
+.proj-chev svg { stroke-width: 2.4; display: block; }
+.proj-chev.open { transform: rotate(180deg); }
+.proj-detail {
+  margin-top: 12px; padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px; font-size: 12.5px;
+}
+.pd-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 3px 0; color: rgba(255, 255, 255, 0.75);
+}
+.pd-row b { color: white; font-weight: 600; }
+.pd-row.pd-total { border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 5px; padding-top: 7px; }
+.pd-note {
+  margin-top: 8px; font-size: 10.5px; line-height: 1.5;
+  color: rgba(255, 255, 255, 0.4);
+}
