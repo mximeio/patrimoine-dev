@@ -236,7 +236,7 @@ function updateTRRefundsForMonth(checking, mKey) {
   //    +173,01 € de sorties sur la série réelle, en silence.
   //    Contrepartie assumée : saisir des TR d'un mois révolu ne met plus à
   //    jour le mois suivant tout seul — il faut le défiger et le corriger à
-  //    la main. Cf. CLAUDE.md §10 et §11 LOT 1 point 5.
+  //    la main. Cf. CLAUDE.md §10.
   if (nextMonth.frozen || next < currentMonthKey()) {
     return _wouldChangeTRRefund(nextMonth, refundAmount) ? 1 : 0;
   }
@@ -246,7 +246,7 @@ function updateTRRefundsForMonth(checking, mKey) {
   // React `checkingAccounts` (les appelants ne copient que l'objet `months`,
   // pas les mois eux-mêmes). Muter `e.amount` modifiait donc le state en
   // place ; invisible tant qu'un setState suivait, mais deux conséquences :
-  //  1) plus aucune mutation d'état partagé (§11 n° 1 bis) ;
+  //  1) plus aucune mutation d'état partagé ;
   //  2) l'IDENTITÉ de `checking.months[next]` ne change QUE si un montant a
   //     réellement bougé. C'est ce qui permet à l'appelant de savoir quels
   //     mois écrire par simple comparaison de références — sans compter les

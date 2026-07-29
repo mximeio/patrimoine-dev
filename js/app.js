@@ -387,7 +387,7 @@ function App() {
   // est l'entonnoir unique de TOUTES les écritures du compte courant (11
   // appelants). Un appelant qui ne déclare rien écrit tout — donc reste correct,
   // y compris pour la suppression d'un mois, que seul le `.set()` complet
-  // persiste. Cf. CLAUDE.md §11 n° 1, piège d.
+  // persiste. Cf. CLAUDE.md §10, « Écritures Firestore : DEUX voies ».
   const updateCheckingAccount = async (newAccount, monthKeys) => {
     setCheckingAccounts(prev => prev.map(a => a.id === newAccount.id ? newAccount : a));
     try {
