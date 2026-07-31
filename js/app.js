@@ -386,10 +386,22 @@ function App() {
   // ============================================================
   useEffect(() => {
     if (!dataLoaded || !user || !profile) return;
+    // 🔴 ATTENDRE AUSSI LES CHARGES. `dataLoaded` ne les attend PAS — c'est
+    // volontaire (un non-membre n'y a jamais accès, cf. `subscribeJoint`
+    // plus haut) — mais l'import en a besoin : `sharedChargesFrom` répond
+    // 'loading' tant que `joint` vaut `undefined`, donc les charges seraient
+    // IGNORÉES sans dialogue ni explication visible.
+    // Vécu le 31/07/2026 : sur trois reprises, l'une est passée avant l'arrivée
+    // des charges et les a silencieusement laissées de côté, l'autre non — une
+    // course, donc un comportement incompréhensible pour l'utilisateur.
+    // `joint` vaut `undefined` tant qu'on ne sait pas, puis un objet (membre)
+    // ou `null` (non-membre) : attendre qu'il soit tranché suffit, et
+    // `subscribeJoint` tranche toujours (son `onDenied` pose `null`).
+    if (joint === undefined) return;
     if (repriseFaite.current) return;
     repriseFaite.current = true;
     reprendreImportEnAttente(ctx);
-  }, [dataLoaded, user, profile]);
+  }, [dataLoaded, user, profile, joint]);
 
 
   // Flush immédiat du snapshot en attente quand la page passe en
