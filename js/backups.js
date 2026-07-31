@@ -12,15 +12,53 @@
 //  validation et la réécriture ci-dessous sont PORTÉES ici et nulle
 //  part ailleurs : les deux chemins destructeurs (import JSON de
 //  settings.js, restauration de sauvegarde) y passent — ne pas en
-//  recréer de copie. On NE sérialise PAS les charges (doc partagé
-//  `joint`) : hors périmètre.
+//  recréer de copie.
+//
+//  🔴 LES CHARGES (doc PARTAGÉ `joint/main`) — lire avant de toucher.
+//  Elles restent hors du périmètre des sauvegardes auto et manuelles,
+//  mais PLUS hors de celui des deux sauvegardes « pre- » : jusqu'au
+//  31/07/2026, écraser les charges à l'import était la SEULE écriture
+//  IRRÉVERSIBLE de l'application, alors que le dialogue promettait un
+//  retour arrière. `buildBackupPayload` accepte donc un 2ᵉ argument, que
+//  seuls les filets « avant import » et « avant restauration »
+//  renseignent — et `writeSharedCharges` est le seul endroit qui écrit
+//  ce document, sous double garde (accès membre + confirmation).
 // ============================================================
 
 const BACKUP_KEEP = 10;               // nombre de sauvegardes conservées
 const BACKUP_AUTO_INTERVAL_DAYS = 7;  // auto si rien depuis 7 jours
 
+// ============================================================
+//  Textes des dialogues du chemin destructeur — regroupés ICI parce
+//  qu'ils sont désormais partagés par l'import et la restauration.
+//  Ce ne sont pas des libellés d'agrément : ce sont les seules
+//  informations dont l'utilisateur dispose pour décider d'un
+//  écrasement. Ils doivent rester VRAIS — ne pas y promettre un retour
+//  arrière qui n'existe pas (c'est précisément le défaut corrigé le
+//  31/07/2026 : le dialogue promettait de revenir en arrière alors
+//  qu'aucune copie des charges n'était prise).
+// ============================================================
+const IMPORT_CONFIRM =
+  "Attention — Import complet\n\n" +
+  "Cela REMPLACE intégralement tes données actuelles (compte courant, épargne, enveloppes, actifs physiques) par celles du fichier.\n\n" +
+  "Une sauvegarde « avant import » de ton état actuel est créée automatiquement — tu pourras revenir en arrière.\n\n" +
+  "Continuer ?";
+// `filet` = le nom de la sauvegarde de repli qui vient d'être posée
+// (« avant import » ou « avant restauration ») : le texte doit nommer
+// celle où l'utilisateur retrouvera SES charges, pas une autre.
+const CHARGES_CONFIRM = (filet) =>
+  "Ce fichier contient aussi la répartition des charges (partagée).\n\n" +
+  "Attention : la remplacer écrasera les charges pour les DEUX comptes.\n\n" +
+  `Tes charges actuelles ont été copiées dans la sauvegarde « ${filet} ».\n\n` +
+  "Remplacer la répartition des charges ?";
+
 // --- Payload de sauvegarde = structure d'export, PARTIE PERSO ---
-function buildBackupPayload(ctx) {
+//  `jointData` (optionnel) = les charges partagées, à ne passer QUE pour
+//  les filets « pre- » (cf. l'en-tête). Absent, aucune clé `joint` n'est
+//  posée : Firestore REFUSE une valeur `undefined` (« Unsupported field
+//  value »), un `joint: undefined` ferait donc échouer la sauvegarde
+//  entière — c'est-à-dire le filet lui-même.
+function buildBackupPayload(ctx, jointData = null) {
   return {
     version: 4,
     exportedAt: new Date().toISOString(),
@@ -29,7 +67,42 @@ function buildBackupPayload(ctx) {
     savings: ctx.savings,
     portfolios: ctx.portfolios,
     physical: ctx.physical,
+    ...(jointData ? { joint: jointData } : {}),
   };
+}
+
+// --- Charges partagées : lecture du document courant pour le filet ---
+//  Renvoie { access, jointData } — `jointData` déjà débarrassé de `id`,
+//  `members` et `updatedAt` (même découpe que l'export). On ne lit que si
+//  le fichier porte des charges : sans ça, rien ne sera écrasé, donc rien
+//  n'est à sauvegarder.
+async function readSharedChargesForBackup(data) {
+  if (!data || !data.joint) return { access: false, jointData: null };
+  const { access, data: doc } = await Adapter.getJoint();
+  if (!access || !doc) return { access: false, jointData: null };
+  const { id, members, updatedAt, ...jointData } = doc;
+  return { access: true, jointData };
+}
+
+// --- Charges partagées : LA seule écriture du document `joint/main` ---
+//  Double garde, dans cet ordre :
+//   1. accès membre — sans lui les règles Firestore rejettent l'écriture,
+//      ce qui casserait l'import au lieu de l'amputer ;
+//   2. confirmation explicite — ce document est commun aux DEUX comptes,
+//      il ne suit donc pas le « oui » donné pour les données perso.
+//  `members` n'est JAMAIS renvoyé (les règles refusent sa modification) :
+//  déjà retiré à la lecture, retiré une seconde fois ici — la garde ne
+//  coûte rien et ce document verrouille l'accès des deux comptes.
+async function writeSharedCharges(jointDuFichier, access, ask, showToast, filet) {
+  if (!access) {
+    showToast("Charges non remplacées — pas d'accès au document partagé", 'error');
+    return false;
+  }
+  if (!ask(CHARGES_CONFIRM(filet))) return false;
+  const { id, members, updatedAt, ...jointData } = jointDuFichier;
+  await Adapter.updateJoint(jointData);
+  showToast('Répartition des charges remplacée', 'success');
+  return true;
 }
 
 // --- Totaux par rubrique (+ détail par ligne) à partir d'un jeu de
@@ -272,31 +345,115 @@ async function restorePersonalData(ctx, data) {
     if (!importedIds.has(a.id)) await Adapter.deleteCheckingAccount(user.uid, a.id);
   }
 
-  // --- Épargne : remplacement complet (peu critique, aucune migration
-  //     automatique ne s'y applique — contrairement aux comptes courants,
-  //     où vider la collection déclencherait un compte 'main' parasite) ---
+  // ============================================================
+  //  Épargne, portefeuilles, actifs — CRÉER PUIS SUPPRIMER.
+  //
+  //  ⚠️ C'était l'inverse jusqu'au 31/07/2026, et c'était la faille de
+  //  ce chemin : « supprimer tout PUIS créer » ouvre une fenêtre où la
+  //  collection est VIDE. Une coupure Firestore là-dedans (hors ligne,
+  //  quota, règles) et les livrets étaient PERDUS, seul recours la
+  //  sauvegarde de repli — or il n'y a aucune atomicité pour rattraper
+  //  ça (plusieurs collections, plusieurs documents).
+  //  En créant d'abord, le pire cas devient des DOUBLONS : visibles,
+  //  supprimables à la main, et le patrimoine reste lisible. On échange
+  //  une perte silencieuse contre un désordre réparable.
+  //
+  //  Deux raisons pour lesquelles l'inversion ne coûte rien :
+  //   - les ids ne sont de toute façon PAS préservés (`createSavings`
+  //     et consorts en génèrent de nouveaux) — ce chemin ne pouvait donc
+  //     pas compter sur une réutilisation d'id ;
+  //   - aucune migration automatique ne s'applique à ces trois
+  //     collections. C'est ce qui les distingue des comptes courants, où
+  //     vider la collection déclencherait en plus un compte 'main'
+  //     parasite (cf. le pavé ci-dessus) : eux avaient déjà le bon ordre,
+  //     ces trois-là l'ont maintenant aussi.
+  //  ⇒ Les listes des anciens ids sont relevées AVANT toute création,
+  //    sinon le cleanup emporterait ce qu'on vient d'écrire.
+  // ============================================================
   const existingSav = await Adapter.listSavings(user.uid);
-  for (const s of existingSav) await Adapter.deleteSavings(user.uid, s.id);
   for (const s of (data.savings || [])) {
     const { id, createdAt, updatedAt, ...rest } = s;
     await Adapter.createSavings(user.uid, rest);
   }
-  // --- Portefeuilles : remplacement complet ---
+  for (const s of existingSav) await Adapter.deleteSavings(user.uid, s.id);
+  // --- Portefeuilles ---
   const existingPf = await Adapter.listPortfolios(user.uid);
-  for (const p of existingPf) await Adapter.deletePortfolio(user.uid, p.id);
   for (const p of (data.portfolios || [])) {
     await Adapter.createPortfolio(user.uid, p.name || 'Enveloppe', p.data || {});
   }
-  // --- Actifs physiques : remplacement complet ---
+  for (const p of existingPf) await Adapter.deletePortfolio(user.uid, p.id);
+  // --- Actifs physiques ---
   const existingPh = await Adapter.listPhysical(user.uid);
-  for (const p of existingPh) await Adapter.deletePhysical(user.uid, p.id);
   for (const p of (data.physical || [])) {
     const { id, createdAt, updatedAt, ...rest } = p;
     await Adapter.createPhysical(user.uid, rest);
   }
+  for (const p of existingPh) await Adapter.deletePhysical(user.uid, p.id);
 
   // Profil EN DERNIER (modules activés inclus).
   if (data.profile) await updateProfile(data.profile);
+}
+
+// ============================================================
+//  IMPORT COMPLET depuis un fichier JSON — le chemin destructeur nº 2.
+//
+//  ⚠️ Ce corps vivait dans `doImport`, une closure du composant
+//  `DataActionsCard` (settings.js). Sorti ici le 31/07/2026 pour DEUX
+//  raisons, la seconde étant la vraie :
+//   1. c'est la place logique — backups.js porte déjà la validation et la
+//      réécriture, dont l'import n'était qu'un appelant ;
+//   2. une closure de composant n'est PAS un global : le harnais de test
+//      (`H.get()`) ne pouvait pas l'atteindre. La branche « charges » et
+//      le `catch` du filet étaient donc structurellement intestables —
+//      et c'est exactement ce que la revue de l'unification avait relevé
+//      sans en nommer la cause.
+//
+//  `io.confirm` permet de piloter les dialogues depuis les tests. En
+//  production, il est absent et l'on retombe sur le `confirm` du
+//  navigateur : le comportement est inchangé.
+//
+//  Renvoie true si l'import a eu lieu, false s'il a été ANNULÉ au
+//  dialogue — l'appelant en tire le toast et le rechargement, qui
+//  relèvent de lui (DOM). Lève si le fichier est refusé ou si une
+//  écriture échoue : ce rejet est ce qui empêche l'appelant d'annoncer
+//  « réussi » et de recharger sur des données à demi écrasées.
+// ============================================================
+async function importPatrimoineData(ctx, data, io = {}) {
+  const { user, showToast } = ctx;
+  const ask = io.confirm || ((msg) => confirm(msg));
+
+  const { ok, errors } = validatePatrimoineData(data);
+  if (!ok) throw new Error("Fichier invalide :\n• " + errors.join('\n• '));
+  if (!ask(IMPORT_CONFIRM)) return false;
+
+  // Les charges COURANTES sont lues AVANT le filet, pour y entrer — et
+  // avant toute écriture, pour que ce soit bien l'état d'origine.
+  const { access, jointData } = await readSharedChargesForBackup(data);
+
+  // Filet de sécurité (v565) : sauvegarde « avant import » de l'état
+  // ACTUEL avant d'écraser. NON BLOQUANT — si elle échoue, on poursuit
+  // (l'utilisateur l'a explicitement demandé). Mais on le DIT : c'était
+  // un simple console.warn jusqu'au 31/07/2026, donc l'utilisateur
+  // croyait avoir un filet qu'il n'avait pas.
+  try {
+    await Adapter.createBackup(user.uid, {
+      type: 'pre-import', at: new Date().toISOString(),
+      payload: buildBackupPayload(ctx, jointData),
+    });
+    await Adapter.pruneBackups(user.uid, BACKUP_KEEP);
+  } catch (e) {
+    console.warn('Sauvegarde avant import non créée', e);
+    showToast("Sauvegarde « avant import » impossible — import poursuivi sans filet", 'error');
+  }
+
+  await restorePersonalData(ctx, data);
+
+  // Charges (doc PARTAGÉ) : à part, car elles valent pour les DEUX
+  // comptes. Voir writeSharedCharges pour la double garde.
+  if (data.joint) {
+    await writeSharedCharges(data.joint, access, ask, showToast, 'avant import');
+  }
+  return true;
 }
 
 // ============================================================
@@ -539,8 +696,12 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
     if (!check.ok) return;
     setBusy(true);
     try {
+      // Les charges courantes d'abord : elles entrent dans le filet, et il
+      // faut les lire avant toute écriture. Ne lit rien si la sauvegarde
+      // restaurée n'en porte pas — rien ne sera alors écrasé.
+      const { access, jointData } = await readSharedChargesForBackup(payload);
       // Filet de sécurité : sauvegarde manuelle de l'état ACTUEL avant écrasement.
-      const curPayload = buildBackupPayload(ctx);
+      const curPayload = buildBackupPayload(ctx, jointData);
       await Adapter.createBackup(user.uid, {
         type: 'pre-restore', at: new Date().toISOString(), payload: curPayload,
       });
@@ -549,6 +710,14 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
       // l'unification, c'est l'import de settings.js qui appelle celle-ci,
       // et non l'inverse.
       await restorePersonalData(ctx, payload);
+      // Charges : une sauvegarde « avant import » en porte désormais (cf.
+      // l'en-tête). Sans ce bloc, la copie prise avant un import serait
+      // inutilisable POUR LES CHARGES le jour où elle sert — une copie de
+      // secours qui ne restaure pas est le défaut déjà rencontré sur
+      // `firestore.rules` (CLAUDE.md §5). Même double garde qu'à l'import.
+      if (payload.joint) {
+        await writeSharedCharges(payload.joint, access, (m) => confirm(m), showToast, 'avant restauration');
+      }
       showToast('Restauration réussie — rechargement…', 'success');
       setTimeout(() => window.location.reload(), 900);
     } catch (e) {

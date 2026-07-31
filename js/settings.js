@@ -1093,10 +1093,11 @@ function CompositeRecurringCompRow({ c, parent, variant, scope, list, index, onD
 
 function DataActionsCard({ ctx }) {
   const fileRef = useRef(null);
-  // L'écriture du profil est passée dans backups.js
-  // (`restorePersonalData(ctx, data)`, qui la prend dans `ctx`) : ce
-  // composant n'en a plus besoin, d'où un champ de moins ici.
-  const { user, checkingAccounts, savings, portfolios, physical, profile,
+  // L'écriture du profil, puis tout l'import, sont passés dans backups.js
+  // (`restorePersonalData` et `importPatrimoineData`, qui prennent `ctx`) :
+  // ce composant n'a plus besoin ni du profil ni de `user`. Il ne garde que
+  // ce dont l'EXPORT se sert — d'où deux champs de moins qu'à l'origine.
+  const { checkingAccounts, savings, portfolios, physical, profile,
     showToast } = ctx;
 
   const doExport = async () => {
@@ -1137,49 +1138,17 @@ function DataActionsCard({ ctx }) {
     reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        // Source unique, définie dans backups.js (chargé APRÈS settings.js,
-        // ce qui est sans effet : l'appel a lieu à l'exécution, tout est
-        // chargé — même motif que buildBackupPayload/BACKUP_KEEP ci-dessous).
-        const { ok, errors } = validatePatrimoineData(data);
-        if (!ok) {
-          throw new Error("Fichier invalide :\n• " + errors.join('\n• '));
-        }
-        if (!confirm(
-          "Attention — Import complet\n\n" +
-          "Cela REMPLACE intégralement tes données actuelles (compte courant, épargne, enveloppes, actifs physiques) par celles du fichier.\n\n" +
-          "Une sauvegarde « avant import » de ton état actuel est créée automatiquement — tu pourras revenir en arrière.\n\n" +
-          "Continuer ?"
-        )) return;
-        // Filet de sécurité (v565) : sauvegarde « avant import » de l'état
-        // ACTUEL avant d'écraser — même principe que la restauration. Non
-        // bloquant : si elle échoue, on prévient et on poursuit l'import
-        // (l'utilisateur l'a explicitement demandé).
-        try {
-          await Adapter.createBackup(user.uid, {
-            type: 'pre-import', at: new Date().toISOString(), payload: buildBackupPayload(ctx),
-          });
-          await Adapter.pruneBackups(user.uid, BACKUP_KEEP);
-        } catch (e) { console.warn('Sauvegarde avant import non créée', e); }
-        // Restauration des données perso depuis le fichier
-        await restorePersonalData(ctx, data);
-        // Répartition des charges (doc PARTAGÉ) — traitée à part car elle
-        // écrase les charges des DEUX comptes. Garde-fou d'accès obligatoire :
-        // si on n'est pas membre, on ne tente PAS l'écriture (sinon rejet des
-        // règles → import cassé), on prévient et on continue.
-        if (data.joint) {
-          const { access } = await Adapter.getJoint();
-          if (!access) {
-            showToast("Charges non importées — pas d'accès au document partagé", 'error');
-          } else if (confirm(
-            "Ce fichier contient aussi la répartition des charges (partagée).\n\n" +
-            "Attention : la remplacer écrasera les charges pour les DEUX comptes.\n\n" +
-            "Remplacer la répartition des charges ?"
-          )) {
-            const { id, members, updatedAt, ...jointData } = data.joint;
-            await Adapter.updateJoint(jointData);
-            showToast('Répartition des charges importée', 'success');
-          }
-        }
+        // Tout le chemin destructeur vit dans `importPatrimoineData`
+        // (backups.js) depuis le 31/07/2026 : validation, dialogues, filet
+        // « avant import », réécriture et charges partagées. Il en portait
+        // une copie ici, où elle était intestable (une closure de composant
+        // n'est pas un global — cf. l'en-tête de la fonction).
+        // ⚠️ Ne pas réintroduire cette logique ici : la source est unique.
+        // backups.js est chargé APRÈS settings.js, ce qui est sans effet —
+        // l'appel a lieu à l'exécution, tout est chargé.
+        // false = annulé au dialogue : il n'y a alors ni toast ni
+        // rechargement à faire, et surtout rien n'a été écrit.
+        if (!await importPatrimoineData(ctx, data)) return;
         showToast('Import complet réussi — rechargement…', 'success');
         setTimeout(() => window.location.reload(), 900);
       } catch (err) {
