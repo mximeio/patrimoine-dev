@@ -678,8 +678,22 @@ async function importPatrimoineData(ctx, data, io = {}) {
 
   // Charges (doc PARTAGÉ) : à part, car elles valent pour les DEUX
   // comptes. Voir writeSharedCharges pour la double garde.
+  // ⚠️ Les charges sont la DERNIÈRE étape, et elle est OPTIONNELLE : son échec
+  // ne doit pas faire passer pour raté un import qui a réussi. Sans ce
+  // try/catch, un rejet d'`updateJoint` (règles, réseau, conflit) remontait
+  // jusqu'à l'appelant, qui affichait « Erreur » et ne rechargeait pas — alors
+  // que les données perso étaient bien écrites. L'utilisateur pouvait alors
+  // relancer un import complet en croyant que rien n'avait été fait.
+  // ⇒ On renvoie 'partiel' (valeur VRAIE, donc les appelants qui testent
+  //   `if (!résultat)` continuent de fonctionner) pour que le message final
+  //   dise la vérité : importé, mais charges non remplacées.
   if (data.joint) {
-    await writeSharedCharges(data.joint, charges, ask, showToast, 'avant import');
+    try {
+      await writeSharedCharges(data.joint, charges, ask, showToast, 'avant import');
+    } catch (e) {
+      console.error('Charges non remplacées', e);
+      return 'partiel';
+    }
   }
   return true;
 }
@@ -938,7 +952,12 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
         type: 'pre-restore', at: new Date().toISOString(), payload: curPayload,
       }));
       if (verdictFilet === 'timeout') {
-        showToast("Connexion indisponible — restauration annulée, rien n'a été modifié. Réessaie.", 'error');
+        // ⚠️ Le conseil doit être « ferme et rouvre », pas « réessaie » :
+        // réessayer sans relancer l'application échoue à l'identique (mesuré
+        // trois fois le 31/07/2026). Ce message disait « Réessaie » alors que
+        // celui de l'import avait été corrigé — incohérence relevée en revue.
+        showToast("Restauration impossible — rien n'a été modifié. "
+          + "Ferme et rouvre l'application, puis réessaie.", 'error');
         setBusy(false);
         return;
       }
@@ -958,10 +977,17 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
       // inutilisable POUR LES CHARGES le jour où elle sert — une copie de
       // secours qui ne restaure pas est le défaut déjà rencontré sur
       // `firestore.rules` (CLAUDE.md §5). Même double garde qu'à l'import.
+      // ⚠️ Même raison qu'à l'import : l'échec des charges ne doit pas faire
+      // passer pour ratée une restauration réussie (cf. importPatrimoineData).
+      let chargesOk = true;
       if (payload.joint) {
-        await writeSharedCharges(payload.joint, charges, (m) => confirm(m), showToast, 'avant restauration');
+        try {
+          await writeSharedCharges(payload.joint, charges, (m) => confirm(m), showToast, 'avant restauration');
+        } catch (e) { console.error('Charges non restaurées', e); chargesOk = false; }
       }
-      showToast('Restauration réussie — rechargement…', 'success');
+      showToast(chargesOk
+        ? 'Restauration réussie — rechargement…'
+        : 'Données restaurées — les charges n\'ont pas pu être remplacées', chargesOk ? 'success' : 'error');
       setTimeout(() => window.location.reload(), 900);
     } catch (e) {
       console.error(e);

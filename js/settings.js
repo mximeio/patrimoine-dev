@@ -1167,8 +1167,13 @@ function DataActionsCard({ ctx }) {
         // CÔTÉ et reprendre après rechargement si la page est gelée (cf. le
         // pavé de `reprendreImportEnAttente`, backups.js). Sans lui, le report
         // est impossible et on retombe sur le message d'échec.
-        if (!await importPatrimoineData(ctx, data, { texteSource: e.target.result })) return;
-        showToast('Import complet réussi — rechargement…', 'success');
+        const résultat = await importPatrimoineData(ctx, data, { texteSource: e.target.result });
+        if (!résultat) return;   // annulé, différé, ou interrompu avec son propre message
+        // 'partiel' = données importées mais charges non remplacées. On recharge
+        // quand même (l'écran doit refléter les nouvelles données), en le disant.
+        showToast(résultat === 'partiel'
+          ? "Données importées — les charges n'ont pas pu être remplacées"
+          : 'Import complet réussi — rechargement…', résultat === 'partiel' ? 'error' : 'success');
         setTimeout(() => window.location.reload(), 900);
       } catch (err) {
         console.error(err);
