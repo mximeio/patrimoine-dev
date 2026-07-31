@@ -52,6 +52,48 @@ const CHARGES_CONFIRM = (filet) =>
   `Tes charges actuelles ont été copiées dans la sauvegarde « ${filet} ».\n\n` +
   "Remplacer la répartition des charges ?";
 
+// ============================================================
+//  🔴 ATTENDRE UNE ÉCRITURE FIRESTORE — SANS ATTENDRE INDÉFINIMENT.
+//
+//  Firestore ne résout la promesse d'une écriture qu'à **l'accusé de
+//  réception du SERVEUR**. Hors ligne, ou pendant qu'une connexion se
+//  rétablit, elle ne se résout donc **jamais** — elle ne rejette pas non
+//  plus : elle pend. La donnée est bien appliquée localement et mise en
+//  file d'attente, mais le code qui l'`await` reste suspendu pour de bon.
+//
+//  Mesuré le 31/07/2026 sur la base DEV : connexion coupée, une écriture
+//  n'était pas résolue après 6 s ; une LECTURE, elle, répondait depuis le
+//  cache ; et la même écriture s'est résolue dès le rétablissement — elle
+//  attendait en file.
+//
+//  C'est ce qui bloquait l'import sur iPhone : choisir un fichier met la
+//  PWA en arrière-plan, iOS la suspend, et au retour la connexion doit se
+//  rétablir. La première écriture pendait, donc pas de toast, pas de
+//  rechargement, et **pas de 2ᵉ dialogue** — le code ne l'atteignait
+//  jamais. Symptôme observé : l'import restait muet, puis ses écritures
+//  arrivaient 90 s plus tard, une fois la connexion revenue. Contournement
+//  trouvé par l'utilisateur : tuer la PWA et rouvrir (connexion neuve).
+//  ⚠️ Le défaut est ANTÉRIEUR au chantier du 31/07/2026 (l'import attend
+//  ces accusés depuis la v565) : il n'a été vu que parce que l'import a
+//  été testé sur mobile pour la première fois ce jour-là.
+//
+//  Renvoie 'ack' si le serveur a confirmé, 'timeout' au-delà du délai.
+//  Un vrai rejet (quota, règles) est **propagé** : il doit rester
+//  distinguable d'une absence de réseau, les deux ne se traitent pas
+//  pareil (cf. importPatrimoineData).
+//  ⚠️ Un 'timeout' ne veut PAS dire « l'écriture a échoué » : elle est en
+//  file et arrivera. Il veut dire « je ne peux pas le CONFIRMER » — d'où
+//  les messages utilisateur, qui ne doivent jamais annoncer un échec.
+// ============================================================
+const ACK_TIMEOUT_MS = 10000;        // filet + rotation : la sonde de connexion
+const ACK_TIMEOUT_PERSO_MS = 30000;  // réécriture complète : plus long, 31 mois
+function ackOuDelai(promesse, ms = ACK_TIMEOUT_MS) {
+  return Promise.race([
+    promesse.then(() => 'ack'),
+    new Promise((r) => setTimeout(() => r('timeout'), ms)),
+  ]);
+}
+
 // --- Payload de sauvegarde = structure d'export, PARTIE PERSO ---
 //  `jointData` (optionnel) = les charges partagées, à ne passer QUE pour
 //  les filets « pre- » (cf. l'en-tête). Absent, aucune clé `joint` n'est
@@ -444,42 +486,93 @@ async function restorePersonalData(ctx, data) {
 //  production, il est absent et l'on retombe sur le `confirm` du
 //  navigateur : le comportement est inchangé.
 //
-//  Renvoie true si l'import a eu lieu, false s'il a été ANNULÉ au
-//  dialogue — l'appelant en tire le toast et le rechargement, qui
-//  relèvent de lui (DOM). Lève si le fichier est refusé ou si une
-//  écriture échoue : ce rejet est ce qui empêche l'appelant d'annoncer
-//  « réussi » et de recharger sur des données à demi écrasées.
+//  Renvoie **true** seulement si l'import est allé au bout et qu'il reste
+//  quelque chose à annoncer. **false** = « ne rien annoncer » : soit
+//  l'utilisateur a annulé au dialogue, soit on s'est arrêté en chemin
+//  après avoir posé notre PROPRE message. L'appelant se contente donc de
+//  ne rien faire — le toast de succès et le rechargement, qui relèvent du
+//  DOM, lui appartiennent.
+//  Lève si le fichier est refusé ou si une écriture ÉCHOUE vraiment : ce
+//  rejet est ce qui empêche l'appelant d'annoncer « réussi » et de
+//  recharger sur des données à demi écrasées.
+//  `io.ackMs` / `io.ackPersoMs` : délais d'acquittement, abaissés par les
+//  tests (sinon un cas de blocage y coûterait 10 s de vrai temps).
 // ============================================================
 async function importPatrimoineData(ctx, data, io = {}) {
   const { user, showToast } = ctx;
   const ask = io.confirm || ((msg) => confirm(msg));
+  const ackMs = io.ackMs || ACK_TIMEOUT_MS;
+  const ackPersoMs = io.ackPersoMs || ACK_TIMEOUT_PERSO_MS;
 
   const { ok, errors } = validatePatrimoineData(data);
   if (!ok) throw new Error("Fichier invalide :\n• " + errors.join('\n• '));
   if (!ask(IMPORT_CONFIRM)) return false;
+
+  // Le silence n'est plus l'état par défaut : sur un gros fichier, plusieurs
+  // secondes s'écoulent sans rien à l'écran, et c'est ce qui a fait douter
+  // l'utilisateur de son propre import.
+  showToast('Import en cours…');
+
+  // Connexion NEUVE avant d'écrire : automatisation du « tuer la PWA et
+  // rouvrir » qui débloquait l'import sur iPhone (cf. Adapter.resetConnection).
+  // Bornée et silencieuse : si elle n'aboutit pas, la sonde du filet juste
+  // en dessous refusera l'import proprement. On ne dépend donc pas d'elle.
+  if (Adapter.resetConnection) {
+    await ackOuDelai(Adapter.resetConnection(), io.resetMs || 5000);
+  }
 
   // Les charges COURANTES, prises dans l'abonnement (aucun aller-retour
   // réseau — cf. le pavé de `sharedChargesFrom`, c'est ce qui bloquait
   // l'import sur iPhone). Lues avant le filet, pour y entrer.
   const charges = readSharedChargesForBackup(ctx, data);
 
-  // Filet de sécurité (v565) : sauvegarde « avant import » de l'état
-  // ACTUEL avant d'écraser. NON BLOQUANT — si elle échoue, on poursuit
-  // (l'utilisateur l'a explicitement demandé). Mais on le DIT : c'était
-  // un simple console.warn jusqu'au 31/07/2026, donc l'utilisateur
-  // croyait avoir un filet qu'il n'avait pas.
+  // ============================================================
+  //  Le filet fait aussi office de SONDE DE CONNEXION.
+  //
+  //  C'est la première écriture, et elle n'est PAS destructrice : si le
+  //  serveur ne l'acquitte pas, c'est que la connexion est morte, et il ne
+  //  faut alors surtout pas enchaîner sur les écritures destructrices —
+  //  elles partiraient en file d'attente, s'appliqueraient localement, et
+  //  le code resterait bloqué avant la branche des charges. Résultat
+  //  observé le 31/07/2026 : un import à moitié appliqué, en silence.
+  //  ⇒ Garantie posée ici : **aucune écriture destructrice n'est émise
+  //    sans un aller-retour serveur confirmé dans les secondes qui
+  //    précèdent.**
+  //
+  //  ⚠️ Deux issues à ne pas confondre :
+  //   - 'timeout' (pas de réseau) → on ABANDONNE, rien n'est modifié ;
+  //   - un vrai REJET (quota, règles) → on POURSUIT sans filet, comme
+  //     depuis la v565 : c'est un choix assumé, l'utilisateur a demandé
+  //     l'import. On le lui dit, c'est tout.
+  //  Le filet abandonné arrivera peut-être plus tard, une fois la
+  //  connexion revenue : une sauvegarde de plus, inoffensive.
+  // ============================================================
   try {
-    await Adapter.createBackup(user.uid, {
+    const verdict = await ackOuDelai(Adapter.createBackup(user.uid, {
       type: 'pre-import', at: new Date().toISOString(),
       payload: buildBackupPayload(ctx, charges.jointData),
-    });
-    await Adapter.pruneBackups(user.uid, BACKUP_KEEP);
+    }), ackMs);
+    if (verdict === 'timeout') {
+      showToast("Connexion indisponible — import annulé, rien n'a été modifié. Réessaie.", 'error');
+      return false;
+    }
+    await ackOuDelai(Adapter.pruneBackups(user.uid, BACKUP_KEEP), ackMs);
   } catch (e) {
     console.warn('Sauvegarde avant import non créée', e);
     showToast("Sauvegarde « avant import » impossible — import poursuivi sans filet", 'error');
   }
 
-  await restorePersonalData(ctx, data);
+  // La réécriture elle-même est bornée aussi, plus généreusement (31 mois).
+  // Un 'timeout' ici ne dit PAS que ça a échoué — les écritures sont en file
+  // et arriveront. Il dit qu'on ne peut pas le confirmer : on s'arrête donc
+  // AVANT les charges (ne jamais écrire le document partagé sur un état non
+  // confirmé) et on renvoie l'utilisateur vers son filet.
+  const verdictPerso = await ackOuDelai(restorePersonalData(ctx, data), ackPersoMs);
+  if (verdictPerso === 'timeout') {
+    showToast("Import non confirmé — connexion perdue en cours de route. "
+      + "Vérifie tes données ; une sauvegarde « avant import » a été créée.", 'error');
+    return false;
+  }
 
   // Charges (doc PARTAGÉ) : à part, car elles valent pour les DEUX
   // comptes. Voir writeSharedCharges pour la double garde.
@@ -735,14 +828,29 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
       const charges = readSharedChargesForBackup(ctx, payload);
       // Filet de sécurité : sauvegarde manuelle de l'état ACTUEL avant écrasement.
       const curPayload = buildBackupPayload(ctx, charges.jointData);
-      await Adapter.createBackup(user.uid, {
+      // ⚠️ Même SONDE DE CONNEXION qu'à l'import (cf. importPatrimoineData) :
+      // ce filet n'est pas destructeur, donc s'il n'est pas acquitté on
+      // n'écrit rien. Sans ça, une restauration lancée hors ligne s'appliquerait
+      // localement et resterait bloquée avant les charges, sans un mot.
+      const verdictFilet = await ackOuDelai(Adapter.createBackup(user.uid, {
         type: 'pre-restore', at: new Date().toISOString(), payload: curPayload,
-      });
-      await Adapter.pruneBackups(user.uid, BACKUP_KEEP);
+      }));
+      if (verdictFilet === 'timeout') {
+        showToast("Connexion indisponible — restauration annulée, rien n'a été modifié. Réessaie.", 'error');
+        setBusy(false);
+        return;
+      }
+      await ackOuDelai(Adapter.pruneBackups(user.uid, BACKUP_KEEP));
       // Restauration proprement dite. C'est la SOURCE (cf. en-tête) : depuis
       // l'unification, c'est l'import de settings.js qui appelle celle-ci,
       // et non l'inverse.
-      await restorePersonalData(ctx, payload);
+      const verdictPerso = await ackOuDelai(restorePersonalData(ctx, payload), ACK_TIMEOUT_PERSO_MS);
+      if (verdictPerso === 'timeout') {
+        showToast("Restauration non confirmée — connexion perdue en cours de route. "
+          + "Vérifie tes données ; une sauvegarde « avant restauration » a été créée.", 'error');
+        setBusy(false);
+        return;
+      }
       // Charges : une sauvegarde « avant import » en porte désormais (cf.
       // l'en-tête). Sans ce bloc, la copie prise avant un import serait
       // inutilisable POUR LES CHARGES le jour où elle sert — une copie de

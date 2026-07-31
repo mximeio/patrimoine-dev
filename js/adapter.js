@@ -197,9 +197,12 @@ const Adapter = {
     try {
       const ns = firebase.firestore;
       if (typeof ns.persistentLocalCache === 'function' && typeof ns.persistentMultipleTabManager === 'function') {
-        settings.localCache = ns.persistentLocalCache({
-          tabManager: ns.persistentMultipleTabManager(),
-        });
+        // ⚠️ SANS gestionnaire multi-onglets — même raison que le
+        // `enablePersistence()` ci-dessous. Cette branche ne tourne pas
+        // aujourd'hui (le build compat n'expose pas `persistentLocalCache`),
+        // mais si une version future l'exposait, y remettre
+        // `persistentMultipleTabManager()` réintroduirait le blocage.
+        settings.localCache = ns.persistentLocalCache();
         usedNewCacheAPI = true;
       }
     } catch (_) { /* fallback ci-dessous */ }
@@ -210,8 +213,37 @@ const Adapter = {
     } catch (_) {
       try { fbDb.settings(settings); } catch (__) {}
     }
+    // ============================================================
+    //  🔴 PERSISTANCE MONO-CONTEXTE — ne pas remettre `synchronizeTabs`.
+    //
+    //  `enablePersistence({ synchronizeTabs: true })` coordonne les
+    //  contextes d'une même origine par un **bail primaire** stocké dans
+    //  IndexedDB : un seul contexte parle au serveur, les autres passent
+    //  par lui. Si le détenteur du bail est une PWA que iOS a **suspendue**,
+    //  l'autre contexte attend ce bail indéfiniment.
+    //
+    //  Conséquence mesurée le 31/07/2026, sur iPhone, avec l'app ouverte
+    //  À LA FOIS en PWA installée et dans un onglet Safari : l'import
+    //  restait **totalement muet** — l'écriture n'atteignait même pas la
+    //  file locale (aucune trace côté serveur, ni sur le moment ni plus
+    //  tard, l'horodatage client des sauvegardes l'a prouvé). Le
+    //  contournement trouvé par l'utilisateur — tuer la PWA et rouvrir —
+    //  ne faisait que libérer le bail.
+    //  ⇒ Vérifié par élimination : **un seul contexte ouvert, trois imports
+    //    d'affilée passent en ~4 s chacun**, écritures acquittées en moins
+    //    d'une seconde. Deux contextes : blocage.
+    //
+    //  Ce qu'on perd, et c'est étroit : sur DESKTOP, un second onglet ouvert
+    //  EN MÊME TEMPS n'a plus le cache hors ligne (il fonctionne, en ligne).
+    //  Le `.catch()` absorbe précisément ce cas (`failed-precondition`).
+    //  Le hors ligne du contexte utilisé reste entier — le mode avion, validé
+    //  sur iPhone, n'est pas affecté.
+    //
+    //  ⚠️ Une application ne doit pas dépendre des habitudes d'onglets de
+    //  son utilisateur, surtout sur son chemin le plus destructeur.
+    // ============================================================
     if (!usedNewCacheAPI) {
-      fbDb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+      fbDb.enablePersistence().catch(() => {});
     }
   },
 
@@ -717,6 +749,38 @@ const Adapter = {
       { ...patch, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
       { merge: true }
     );
+  },
+
+  // ============================================================
+  //  Forcer une connexion Firestore NEUVE.
+  //
+  //  C'est l'automatisation d'un contournement trouvé à la main : sur
+  //  iPhone, un import restait muet, et « tuer la PWA puis la rouvrir » le
+  //  débloquait. Ce qui change au relancement, c'est la connexion.
+  //  Pourquoi elle se fige : choisir un fichier met la PWA en
+  //  arrière-plan, iOS la suspend, et au retour la connexion peut être
+  //  morte sans que le SDK le sache encore. Une écriture partie dans cet
+  //  état n'est jamais acquittée (elle est appliquée localement et mise en
+  //  file) — cf. le pavé d'`ackOuDelai`, backups.js.
+  //
+  //  ⚠️ Appelée UNIQUEMENT en tête des chemins destructeurs (import,
+  //  restauration), qui sont rares et déjà lents. Ne pas en parsemer
+  //  l'application : couper puis rétablir fait momentanément servir les
+  //  abonnements depuis le cache.
+  //  Les écritures en file d'attente survivent au cycle et repartent
+  //  ensuite : couper le réseau ne les annule pas.
+  //  Silencieuse et non bloquante — si ça échoue, la sonde du filet
+  //  prendra le relais et refusera l'import proprement.
+  // ============================================================
+  async resetConnection() {
+    try {
+      await fbDb.disableNetwork();
+      await fbDb.enableNetwork();
+      return true;
+    } catch (e) {
+      console.warn('Rétablissement de connexion impossible', e);
+      return false;
+    }
   },
 
   // 🔴 `getJoint()` — SUPPRIMÉE le 31/07/2026. NE PAS LA RECRÉER.
