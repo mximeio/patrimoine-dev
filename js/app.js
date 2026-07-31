@@ -77,14 +77,22 @@ function App() {
   // Canal séparé des toasts : aucun écrasement mutuel possible avec les
   // confirmations d'action. Tout est superposé : zéro décalage de layout.
   const [netOnline, setNetOnline] = useState(() => navigator.onLine !== false);
-  // Cet onglet a-t-il le cache hors ligne ? Depuis le passage en persistance
-  // MONO-CONTEXTE (adapter.js), un 2e contexte ouvert sur le même appareil n'en
-  // a pas. `true` par défaut : on n'affiche jamais d'alerte avant de savoir.
+  // Cet onglet peut-il afficher tes données ? `true` par défaut : on n'alerte
+  // jamais avant de savoir.
+  // ⚠️ Le signal est un FAIT observé — « j'ai lu depuis le cache et il était
+  // vide » (`patrimoine:cache-vide`, émis par adapter.js) — et NON le retour
+  // d'`enablePersistence()`. Mesuré le 31/07/2026 : celle-ci résout à `true`
+  // dans deux onglets, dont celui qui n'affiche ensuite aucune donnée. Une
+  // première version de cet indicateur s'appuyait dessus et affichait donc
+  // « tout va bien » exactement dans le cas à signaler. Ne pas y revenir.
   const [cacheOk, setCacheOk] = useState(true);
   useEffect(() => {
-    let vivant = true;
-    Promise.resolve(Adapter.persistenceOk).then(ok => { if (vivant) setCacheOk(ok !== false); });
-    return () => { vivant = false; };
+    const surSignal = (e) => setCacheOk(!e.detail);
+    window.addEventListener('patrimoine:cache-vide', surSignal);
+    // L'adapter a pu émettre AVANT ce montage (abonnements lancés au chargement) :
+    // on lit donc aussi l'état courant, sinon on manquerait le tout premier signal.
+    setCacheOk(!Adapter._cacheVide);
+    return () => window.removeEventListener('patrimoine:cache-vide', surSignal);
   }, []);
   const [netPill, setNetPill] = useState(null); // { text, color }
   const netPillTimer = useRef(null);
@@ -835,7 +843,7 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
                 que si l'on est AUSSI hors ligne : un onglet en ligne sans cache
                 fonctionne, une alerte permanente n'alerterait plus. */}
             {!cacheOk && (
-              <div className="offline-tag offline-tag--cache offline-tag--menu"><span className="offline-tag-dot" /> Pas de cache dans cet onglet — ne le recharge pas hors ligne</div>
+              <div className="offline-tag offline-tag--cache offline-tag--menu"><span className="offline-tag-dot" /> Données indisponibles hors ligne dans cet onglet — recharge-le en ligne</div>
             )}
             <button
               className="dropdown-item"
@@ -1295,7 +1303,7 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
           <div className="offline-tag"><span className="offline-tag-dot" /> Hors ligne — modifications en attente</div>
         )}
         {!cacheOk && (
-          <div className="offline-tag offline-tag--cache"><span className="offline-tag-dot" /> Pas de cache dans cet onglet — ne le recharge pas hors ligne</div>
+          <div className="offline-tag offline-tag--cache"><span className="offline-tag-dot" /> Données indisponibles hors ligne dans cet onglet — recharge-le en ligne</div>
         )}
         {/* Zone basculante actions ⇄ confirmation : glissement latéral
             croisé + hauteur animée, l'identité reste visible au-dessus

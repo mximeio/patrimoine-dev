@@ -2504,10 +2504,6 @@ input[type="month"] {
   white-space: normal; text-align: center; line-height: 1.35;
 }
 .offline-tag--cache .offline-tag-dot { background: var(--danger); }
-/* Pastille du « ⋯ » : rouge UNIQUEMENT hors ligne ET sans cache — le seul
-   état réellement problématique (un rechargement perdrait l'affichage).
-   En ligne sans cache, la pastille reste absente : cf. la maquette. */
-.net-dot--grave { background: var(--danger); }
 
 /* ============================================================
    SAUVEGARDES (v552) — carte Paramètres + confirmation de
@@ -2643,6 +2639,15 @@ input[type="month"] {
   background: #f59e0b; border: 2px solid var(--surface);
   pointer-events: none;
 }
+/* Variante GRAVE : hors ligne ET sans données dans cet onglet — le seul état
+   réellement problématique (un rechargement perdrait l'affichage). En ligne
+   sans cache, la pastille reste absente ; c'est le tag du menu qui informe.
+   ⚠️ DOIT rester APRÈS `.net-dot` : même spécificité (une classe), donc c'est
+   l'ordre du fichier qui tranche. Placée plus haut, elle était écrasée par le
+   `background: #f59e0b` ci-dessus et le rouge ne s'appliquait JAMAIS — défaut
+   constaté le 31/07/2026 en lisant la couleur calculée dans le navigateur
+   (`rgb(245,158,11)` au lieu du rouge attendu). */
+.net-dot--grave { background: var(--danger); }
 .tabbar-more { position: relative; }
 /* Header desktop : bouton 36px plus petit que le cercle mobile → point
    réduit et rentré pour rester DANS l'empreinte du bouton. */

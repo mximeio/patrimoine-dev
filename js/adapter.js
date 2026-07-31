@@ -273,18 +273,16 @@ const Adapter = {
     //  son utilisateur, surtout sur son chemin le plus destructeur.
     // ============================================================
     if (!usedNewCacheAPI) {
-      // ⚠️ On CAPTE le résultat au lieu de l'ignorer : c'est ce qui permet de
-      // dire à l'utilisateur que CET onglet n'a pas de cache hors ligne
-      // (§11 « Signaler l'onglet SANS cache »). L'échec le plus courant est
-      // `failed-precondition` — un autre contexte de la même origine a déjà
-      // pris la persistance. Ce n'est PAS une panne : l'onglet fonctionne, il
-      // n'a simplement pas de cache durable. D'où un ton neutre côté interface.
-      // Reste non bloquant : on ne rejette rien, on mémorise.
-      Adapter.persistenceOk = fbDb.enablePersistence()
-        .then(() => true)
-        .catch(() => false);
-    } else {
-      Adapter.persistenceOk = Promise.resolve(true);
+      // ⚠️ Le résultat est volontairement IGNORÉ, et ce n'est pas de la
+      // négligence : mesuré le 31/07/2026, `enablePersistence()` **résout à
+      // true dans DEUX onglets** de la même origine, y compris dans celui qui
+      // s'avère ensuite incapable d'afficher la moindre donnée hors ligne. Ce
+      // n'est donc PAS un indicateur fiable de « cet onglet a un cache
+      // utilisable » — une première version de l'indicateur s'appuyait dessus
+      // et annonçait « tout va bien » précisément dans le cas à signaler.
+      // ⇒ Le signal utilisé est la CONSÉQUENCE observée, pas l'intention
+      //   déclarée : cf. `_signalerCacheVide` et `subscribeCheckingAccounts`.
+      fbDb.enablePersistence().catch(() => {});
     }
   },
 
@@ -322,10 +320,37 @@ const Adapter = {
   _portfoliosCol(uid) { return this._userDoc(uid).collection('portfolios'); },
   _physicalCol(uid) { return this._userDoc(uid).collection('physical'); },
   _snapshotsCol(uid) { return this._userDoc(uid).collection('snapshots'); },
-  // Promesse résolue à true/false selon que la persistance hors ligne est
-  // active DANS CE CONTEXTE (cf. init()). Lue par app.js pour l'indicateur.
-  // Jamais rejetée.
-  persistenceOk: Promise.resolve(true),
+  // ============================================================
+  //  « Cet onglet n'a pas tes données » — signal fondé sur un FAIT.
+  //
+  //  Émis quand une lecture vient du cache ET ne contient rien : l'app est
+  //  alors incapable d'afficher les données, et ne peut pas savoir si elles
+  //  existent. C'est exactement ce que l'utilisateur voit à l'écran (des 0),
+  //  et c'est l'état qui a précédé la destruction de données du 31/07/2026.
+  //  ⚠️ Ne PAS revenir à `enablePersistence()` comme source : elle résout à
+  //  true même dans un onglet sans cache utilisable (mesuré). On mesure la
+  //  conséquence, pas l'intention.
+  //  Événement personnalisé, comme `patrimoine:open` (§7) : l'adapter ne
+  //  connaît pas React.
+  //  ⚠️ Transitoire au démarrage EN LIGNE : le premier instantané peut venir
+  //  du cache et être vide avant la réponse du serveur. C'est sans effet
+  //  visible — le tag vit dans le menu « ⋯ » (fermé), et la pastille ne
+  //  rougit que si l'app se croit aussi hors ligne. Il est effacé dès qu'une
+  //  donnée arrive.
+  // ============================================================
+  _cacheVide: false,
+  //  Renvoie true si un événement a réellement été émis, false si l'appel
+  //  était un no-op (état inchangé). Ce retour n'existe que pour rendre la
+  //  déduplication TESTABLE : sans lui, un test ne peut pas distinguer « appelé »
+  //  de « émis », et une déduplication cassée passerait inaperçue.
+  _signalerCacheVide(vide) {
+    if (this._cacheVide === !!vide) return false;   // n'émettre que sur changement
+    this._cacheVide = !!vide;
+    try {
+      window.dispatchEvent(new CustomEvent('patrimoine:cache-vide', { detail: this._cacheVide }));
+    } catch (_e) { /* environnement sans dispatchEvent (harnais de test) */ }
+    return true;
+  },
 
   // Données partagées (compte joint) — un seul doc partagé entre membres.
   _jointRef() { return fbDb.collection('joint').doc('main'); },
@@ -723,6 +748,7 @@ const Adapter = {
     return this._checkingAccountsCol(uidStr).onSnapshot(async (snap) => {
       if (!snap.empty) {
         seenAnyAccount = true;
+        this._signalerCacheVide(false);   // des données : l'onglet est utilisable
         onChange(snap.docs.map(d => this._normalizeCheckingAccount(d.id, d.data())));
         return;
       }
@@ -737,7 +763,14 @@ const Adapter = {
       // détruites le 31/07/2026 : une collection vide venant du cache était
       // prise pour un cold boot, et le `set()` sur `doc('main')` écrasait les
       // 31 mois. On affiche le vide, on n'écrit rien.
-      if (vientDuCache(snap)) { onChange([]); return; }
+      if (vientDuCache(snap)) {
+        // 🔴 Le signal : on lit depuis le cache et il est vide. On ne sait pas
+        // si des données existent — donc on n'écrit rien, et on le DIT.
+        this._signalerCacheVide(true);
+        onChange([]);
+        return;
+      }
+      this._signalerCacheVide(false);   // le serveur a répondu : plus de doute
       // Premier snapshot vide CONFIRMÉ PAR LE SERVEUR → cold boot d'un
       // utilisateur sans compte courant : auto-création du « Compte principal »
       // par défaut. (v583 : l'ancienne migration depuis `checking/main` a été
