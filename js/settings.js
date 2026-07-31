@@ -1163,7 +1163,11 @@ function DataActionsCard({ ctx }) {
         // l'appel a lieu à l'exécution, tout est chargé.
         // false = annulé au dialogue : il n'y a alors ni toast ni
         // rechargement à faire, et surtout rien n'a été écrit.
-        if (!await importPatrimoineData(ctx, data)) return;
+        // `texteSource` : le JSON brut, pour que l'import puisse se METTRE DE
+        // CÔTÉ et reprendre après rechargement si la page est gelée (cf. le
+        // pavé de `reprendreImportEnAttente`, backups.js). Sans lui, le report
+        // est impossible et on retombe sur le message d'échec.
+        if (!await importPatrimoineData(ctx, data, { texteSource: e.target.result })) return;
         showToast('Import complet réussi — rechargement…', 'success');
         setTimeout(() => window.location.reload(), 900);
       } catch (err) {

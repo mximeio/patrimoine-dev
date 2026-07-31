@@ -86,6 +86,12 @@ function App() {
   // première version de cet indicateur s'appuyait dessus et affichait donc
   // « tout va bien » exactement dans le cas à signaler. Ne pas y revenir.
   const [cacheOk, setCacheOk] = useState(true);
+  // ⚠️ REPRISE D'IMPORT après rechargement — cf. `reprendreImportEnAttente`
+  // (backups.js). Ne fait rien s'il n'y a pas de dépôt en attente, donc sans
+  // effet dans la quasi-totalité des ouvertures. Déclenchée une seule fois, et
+  // seulement quand les données sont chargées : l'import a besoin du `ctx`
+  // complet (profil, comptes, charges) pour construire son filet.
+  const repriseFaite = useRef(false);
   useEffect(() => {
     const surSignal = (e) => setCacheOk(!e.detail);
     window.addEventListener('patrimoine:cache-vide', surSignal);
@@ -359,6 +365,7 @@ function App() {
     maybeAutoBackup(user, { profile, checkingAccounts, savings, portfolios, physical });
   }, [dataLoaded, user, profile]);
 
+
   // Flush immédiat du snapshot en attente quand la page passe en
   // arrière-plan ou se ferme. La persistance offline de Firestore met
   // l'écriture en file (IndexedDB) même si le réseau n'a pas le temps
@@ -489,6 +496,21 @@ function App() {
       catch (e) { showToast('Erreur de sauvegarde des charges', 'error'); }
     },
   };
+
+  // ⚠️ REPRISE D'IMPORT après rechargement — cf. `reprendreImportEnAttente`
+  // (backups.js). Placée ICI, juste après `ctx`, à dessein : l'import a besoin
+  // du contexte COMPLET (profil, comptes, charges) pour bâtir son filet, et la
+  // proximité rend la dépendance évidente à la lecture.
+  // Gardée par `dataLoaded` et par un drapeau : **une seule tentative par
+  // session**, comme l'auto-sauvegarde. C'est ce qui interdit toute boucle de
+  // rechargement. Ne fait rien s'il n'y a pas de dépôt en attente, donc sans
+  // effet dans la quasi-totalité des ouvertures.
+  useEffect(() => {
+    if (!dataLoaded || !user || !profile) return;
+    if (repriseFaite.current) return;
+    repriseFaite.current = true;
+    reprendreImportEnAttente(ctx);
+  }, [dataLoaded, user, profile]);
 
   const modulesEnabled = profile.modulesEnabled;
   // `short` = libellé court pour la barre de navigation basse (mobile).

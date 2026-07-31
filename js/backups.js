@@ -469,6 +469,87 @@ async function restorePersonalData(ctx, data) {
 }
 
 // ============================================================
+//  🔴 REPRISE D'IMPORT DANS UNE PAGE NEUVE.
+//
+//  Pourquoi ça existe : sur iPhone, **revenir du sélecteur de fichiers fige le
+//  chemin d'écriture Firestore de la page**. La mutation n'est jamais créée —
+//  rien n'arrive au serveur, ni sur le moment ni plus tard — et TOUT ce qui
+//  écrit ensuite échoue aussi, y compris une sauvegarde manuelle. Seule une
+//  page neuve repart. Mesuré le 31/07/2026 : une app fraîchement lancée
+//  enchaîne 3 imports acquittés en 0 à 2,5 s ; une app longuement suspendue
+//  n'en passe aucun. Safari s'en sort (3/3), la PWA installée non.
+//
+//  Le principe : on ne devine pas si la page est gelée, on le CONSTATE — le
+//  filet « avant import » n'est pas acquitté — puis on met le fichier de côté,
+//  on recharge, et on reprend. Le cas normal (desktop, Safari, PWA fraîche)
+//  ne passe jamais par ici.
+//
+//  ⚠️ `sessionStorage` et non `localStorage`, à dessein : il meurt avec
+//  l'onglet, donc un dépôt orphelin ne peut pas survivre à la fermeture de
+//  l'app et déclencher un import fantôme des jours plus tard. Mesuré : 348 Ko
+//  déposés et retrouvés intacts après rechargement (le fichier réel en fait
+//  ~335 Ko, la limite est de ~5 Mo).
+//  ⚠️ Trois garde-fous contre l'import fantôme, cumulés :
+//   1. le dépôt est CONSOMMÉ (supprimé) avant toute écriture ;
+//   2. il est ignoré s'il a plus de 2 minutes ;
+//   3. la reprise ne peut PAS se différer à son tour (`dejaDiffere`), donc
+//      aucune boucle de rechargement possible.
+// ============================================================
+const IMPORT_EN_ATTENTE = 'patrimoine:import-a-reprendre';
+const IMPORT_REPRISE_MAX_MS = 120000;
+
+//  Met le fichier de côté et recharge. Renvoie false si c'est impossible
+//  (quota dépassé) — l'appelant retombe alors sur le message d'échec.
+function differerImport(texteJson, showToast) {
+  try {
+    sessionStorage.setItem(IMPORT_EN_ATTENTE, JSON.stringify({ texte: texteJson, at: Date.now() }));
+  } catch (e) {
+    console.warn('Import non différable (stockage de session)', e);
+    return false;
+  }
+  showToast("L'application se recharge pour terminer l'import…");
+  setTimeout(() => { window.location.reload(); }, 900);
+  return true;
+}
+
+//  Appelée au démarrage, une fois les données chargées (app.js).
+//  Ne fait rien s'il n'y a pas de dépôt — donc sans effet dans 99,9 % des
+//  ouvertures.
+async function reprendreImportEnAttente(ctx) {
+  let brut = null;
+  try { brut = sessionStorage.getItem(IMPORT_EN_ATTENTE); } catch (e) { return false; }
+  if (!brut) return false;
+  // ⚠️ CONSOMMER d'abord, agir ensuite : si l'import échoue ou si la page est
+  // rechargée entre-temps, il ne doit pas se rejouer.
+  try { sessionStorage.removeItem(IMPORT_EN_ATTENTE); } catch (e) {}
+  let dépôt;
+  try { dépôt = JSON.parse(brut); } catch (e) { return false; }
+  if (!dépôt || !dépôt.texte) return false;
+  if (!dépôt.at || (Date.now() - dépôt.at) > IMPORT_REPRISE_MAX_MS) {
+    console.warn('Import en attente ignoré : trop ancien');
+    return false;
+  }
+  let data;
+  try { data = JSON.parse(dépôt.texte); } catch (e) { return false; }
+  try {
+    // `dejaDiffere` : plus de report possible — au pire on affiche le message.
+    // `sansPremierDialogue` : le consentement a été donné avant le rechargement,
+    // à moins de 2 minutes. Le dialogue des CHARGES, lui, est reposé : il porte
+    // sur un document partagé, il ne se délègue pas.
+    const fait = await importPatrimoineData(ctx, data, { dejaDiffere: true, sansPremierDialogue: true });
+    if (fait) {
+      ctx.showToast('Import complet réussi — rechargement…', 'success');
+      setTimeout(() => { window.location.reload(); }, 900);
+    }
+    return fait;
+  } catch (err) {
+    console.error(err);
+    ctx.showToast('Erreur : ' + (err.message || 'import impossible'), 'error');
+    return false;
+  }
+}
+
+// ============================================================
 //  IMPORT COMPLET depuis un fichier JSON — le chemin destructeur nº 2.
 //
 //  ⚠️ Ce corps vivait dans `doImport`, une closure du composant
@@ -506,7 +587,9 @@ async function importPatrimoineData(ctx, data, io = {}) {
 
   const { ok, errors } = validatePatrimoineData(data);
   if (!ok) throw new Error("Fichier invalide :\n• " + errors.join('\n• '));
-  if (!ask(IMPORT_CONFIRM)) return false;
+  // `sansPremierDialogue` : reprise après rechargement, le consentement a déjà
+  // été donné moins de 2 minutes plus tôt (cf. reprendreImportEnAttente).
+  if (!io.sansPremierDialogue && !ask(IMPORT_CONFIRM)) return false;
 
   // Le silence n'est plus l'état par défaut : sur un gros fichier, plusieurs
   // secondes s'écoulent sans rien à l'écran, et c'est ce qui a fait douter
@@ -561,7 +644,18 @@ async function importPatrimoineData(ctx, data, io = {}) {
       payload: buildBackupPayload(ctx, charges.jointData),
     }), ackMs);
     if (verdict === 'timeout') {
-      showToast("Connexion indisponible — import annulé, rien n'a été modifié. Réessaie.", 'error');
+      // 🔴 Le filet n'est pas acquitté : la page est gelée (cf. le pavé de
+      // `reprendreImportEnAttente`). Rien n'a été écrit — on peut donc
+      // recharger sans risque et reprendre sur une page neuve.
+      if (!io.dejaDiffere && io.texteSource
+          && differerImport(io.texteSource, showToast)) {
+        return false;
+      }
+      // Report impossible, ou déjà tenté : on le dit, avec le SEUL conseil qui
+      // marche. ⚠️ Ne pas remettre « Réessaie » : réessayer sans relancer
+      // l'application échoue à l'identique (mesuré trois fois le 31/07/2026).
+      showToast("Import impossible — rien n'a été modifié. "
+        + "Ferme et rouvre l'application, puis réessaie.", 'error');
       return false;
     }
     await ackOuDelai(Adapter.pruneBackups(user.uid, BACKUP_KEEP), ackMs);
