@@ -1094,37 +1094,52 @@ function CompositeRecurringCompRow({ c, parent, variant, scope, list, index, onD
 function DataActionsCard({ ctx }) {
   const fileRef = useRef(null);
   // L'écriture du profil, puis tout l'import, sont passés dans backups.js
-  // (`restorePersonalData` et `importPatrimoineData`, qui prennent `ctx`) :
-  // ce composant n'a plus besoin ni du profil ni de `user`. Il ne garde que
-  // ce dont l'EXPORT se sert — d'où deux champs de moins qu'à l'origine.
-  const { checkingAccounts, savings, portfolios, physical, profile,
-    showToast } = ctx;
+  // (`restorePersonalData` et `importPatrimoineData`, qui prennent `ctx`) —
+  // et depuis le 31/07/2026 l'export passe par `buildBackupPayload(ctx, …)`,
+  // qui lit `ctx` lui aussi. Ce composant n'a donc plus besoin d'aucune
+  // donnée : il ne garde que `showToast`.
+  const { showToast } = ctx;
 
-  const doExport = async () => {
-    // Export v4 : ajoute `joint` (répartition des charges, doc partagé) si on y
-    // a accès. v3 = sans charges, v2 = checking (objet). L'import gère v2/3/4.
-    const exportData = {
-      version: 4,
-      exportedAt: new Date().toISOString(),
-      profile,
-      checkingAccounts,
-      savings, portfolios, physical,
-    };
-    // Charges partagées : incluses seulement si on est membre (accès en lecture).
-    // On retire members (verrouillé) + les métadonnées techniques.
-    try {
-      const { access, data } = await Adapter.getJoint();
-      if (access && data) {
-        const { id, members, updatedAt, ...jointData } = data;
-        exportData.joint = jointData;
-      }
-    } catch (_e) { /* pas d'accès → export sans les charges */ }
+  // ⚠️ SYNCHRONE, et ça n'est pas un détail de style. Cette fonction
+  // attendait `Adapter.getJoint()` avant de déclencher le téléchargement,
+  // ce qui causait DEUX défauts, tous deux constatés sur iPhone le
+  // 31/07/2026 :
+  //  1. le 2ᵉ export ne produisait plus rien du tout — ce `get()` ne se
+  //     résolvait jamais (cf. le pavé de `sharedChargesFrom`, backups.js),
+  //     et le `try/catch` ci-dessous n'attrape pas une promesse en suspens ;
+  //  2. même résolu, un `await` fait sortir le clic de la fenêtre
+  //     d'ACTIVATION UTILISATEUR ouverte par le tap — et Safari refuse
+  //     alors le téléchargement, en silence.
+  // ⇒ Les charges viennent maintenant de `ctx.joint` (abonnement temps
+  //   réel), donc sans aucune attente. **Ne pas réintroduire d'`await`
+  //   ici**, ni de lecture Firestore : tout ce qui précède `a.click()`
+  //   doit rester synchrone.
+  const doExport = () => {
+    // Export v4 = MÊME structure que le payload de sauvegarde : on passe
+    // donc par `buildBackupPayload`, source unique de cette forme (v3 = sans
+    // charges, v2 = checking objet ; l'import gère v2/3/4).
+    // Et par `sharedChargesFrom`, source unique de la lecture des charges —
+    // c'est lui qui retire `members` et les métadonnées.
+    const charges = sharedChargesFrom(ctx);
+    const exportData = buildBackupPayload(ctx, charges.jointData);
+    // Non-membre : export sans les charges, silencieusement — c'est normal
+    // et ça l'a toujours été. En revanche « pas encore chargées » est un
+    // état transitoire, et le taire produirait un export SILENCIEUSEMENT
+    // incomplet : on le dit.
+    if (charges.reason === 'loading') {
+      showToast('Export sans les charges — pas encore chargées', 'error');
+    }
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `patrimoine-${todayIso()}.json`;
+    // ⚠️ Le lien doit être DANS le document : certaines versions d'iOS
+    // ignorent un `.click()` sur un élément détaché.
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    a.remove();
     // v544 : on retarde la libération de l'URL objet. La révoquer tout de
     // suite après a.click() peut couper le téléchargement sur les navigateurs
     // qui lisent le blob de façon asynchrone. 1,5 s laisse le temps au

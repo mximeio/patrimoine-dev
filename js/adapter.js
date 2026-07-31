@@ -719,22 +719,29 @@ const Adapter = {
     );
   },
 
-  // Lecture ponctuelle du doc partagé "Charges" + test d'accès.
-  // Retourne { access, data } :
-  //   - access:true  + data (doc) si le doc existe et est lisible (= membre) ;
-  //   - access:false + data:null si le doc n'existe pas OU si la lecture est
-  //     refusée par les règles (= non membre).
-  // Sert à l'export (n'inclure les charges que si on y a accès) et à l'import
-  // (ne PAS tenter d'écrire si on n'est pas membre → sinon écriture rejetée).
-  async getJoint() {
-    try {
-      const snap = await this._jointRef().get();
-      if (!snap.exists) return { access: false, data: null };
-      return { access: true, data: { id: snap.id, ...snap.data() } };
-    } catch (_err) {
-      return { access: false, data: null };
-    }
-  },
+  // 🔴 `getJoint()` — SUPPRIMÉE le 31/07/2026. NE PAS LA RECRÉER.
+  //
+  // Elle faisait une lecture ponctuelle (`get()`) du doc partagé, pour
+  // l'export et pour l'import. Sur iPhone (PWA installée), le PREMIER
+  // `get()` sur `joint/main` répondait et **tous les suivants restaient en
+  // suspens** : ni résolus, ni rejetés. Conséquences constatées, toutes
+  // silencieuses — pas d'erreur, pas de toast, pas de rechargement :
+  //   - le 2ᵉ export d'une session ne produisait plus aucun fichier ;
+  //   - l'import s'arrêtait juste après la confirmation, avant même
+  //     d'écrire sa sauvegarde de repli.
+  // Un `try/catch` n'attrape pas une promesse qui pend, d'où le silence.
+  // Cause : un `get()` sur un document déjà écouté par `onSnapshot`, avec
+  // la persistance multi-onglets (`synchronizeTabs: true`, cf. `init()`)
+  // dans une PWA iOS.
+  //
+  // ⇒ Le remplacement est `sharedChargesFrom(ctx)` (backups.js), qui lit
+  //   `ctx.joint` — alimenté par `subscribeJoint` juste au-dessus. Cet
+  //   abonnement fonctionne, et il est plus frais qu'un `get()` (lequel
+  //   peut servir le cache). La lecture ponctuelle faisait donc DEUX fois
+  //   le même travail, et c'est la seconde fois qui bloquait.
+  //
+  // Si un besoin de lecture ponctuelle réapparaît un jour, passer par
+  // l'abonnement — pas par un `get()` sur ce document.
 
   translateAuthError(err) {
     const code = err?.code || '';

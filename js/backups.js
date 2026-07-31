@@ -71,17 +71,45 @@ function buildBackupPayload(ctx, jointData = null) {
   };
 }
 
-// --- Charges partagées : lecture du document courant pour le filet ---
-//  Renvoie { access, jointData } — `jointData` déjà débarrassé de `id`,
-//  `members` et `updatedAt` (même découpe que l'export). On ne lit que si
-//  le fichier porte des charges : sans ça, rien ne sera écrasé, donc rien
-//  n'est à sauvegarder.
-async function readSharedChargesForBackup(data) {
-  if (!data || !data.joint) return { access: false, jointData: null };
-  const { access, data: doc } = await Adapter.getJoint();
-  if (!access || !doc) return { access: false, jointData: null };
-  const { id, members, updatedAt, ...jointData } = doc;
-  return { access: true, jointData };
+// ============================================================
+//  Charges partagées — LE point unique de LECTURE (export, filets,
+//  restauration). Prend le document dans `ctx.joint`, alimenté par
+//  l'abonnement temps réel `subscribeJoint` (app.js), et le débarrasse
+//  de `id`, `members` et `updatedAt`.
+//
+//  🔴 NE JAMAIS remettre un `Adapter.getJoint()` ici (ni ailleurs sur ces
+//  chemins). C'était le cas jusqu'au 31/07/2026, et ça **bloquait
+//  l'export ET l'import sur iPhone** : le 1ᵉʳ `get()` sur `joint/main`
+//  répondait, les suivants ne se résolvaient JAMAIS — promesse en
+//  suspens, donc ni erreur, ni toast, ni rechargement, silence total.
+//  Diagnostic : un `get()` sur un document déjà écouté par `onSnapshot`,
+//  avec la persistance multi-onglets (`synchronizeTabs: true`) dans une
+//  PWA iOS. Un `try/catch` n'attrape pas une promesse qui pend.
+//  ⇒ L'abonnement, lui, fonctionne (c'est par lui que le module Charges
+//    s'affiche) et il est plus frais qu'un `get()`, qui peut renvoyer le
+//    cache. La lecture ponctuelle faisait donc DEUX fois le même travail,
+//    et c'est la seconde fois qui plantait. `Adapter.getJoint` a été
+//    supprimée pour qu'elle ne puisse pas revenir par inadvertance.
+//
+//  `reason` distingue les deux refus, qui ne se disent pas pareil à
+//  l'utilisateur : `'loading'` = l'abonnement n'a pas encore répondu
+//  (réessayer suffit), `'denied'` = non-membre (réessayer n'y changera
+//  rien). Les confondre ferait mentir le message.
+// ============================================================
+function sharedChargesFrom(ctx) {
+  // `undefined` = premier snapshot pas encore reçu ; `null` = accès refusé
+  // ou document absent (cf. subscribeJoint → onDenied).
+  if (ctx.joint === undefined) return { access: false, reason: 'loading', jointData: null };
+  if (!ctx.joint || !ctx.chargesMember) return { access: false, reason: 'denied', jointData: null };
+  const { id, members, updatedAt, ...jointData } = ctx.joint;
+  return { access: true, reason: null, jointData };
+}
+
+// --- Les charges à COPIER dans un filet, si tant est qu'on va les écraser ---
+//  Si le fichier n'en porte pas, rien ne sera écrasé : rien à sauvegarder.
+function readSharedChargesForBackup(ctx, data) {
+  if (!data || !data.joint) return { access: false, reason: null, jointData: null };
+  return sharedChargesFrom(ctx);
 }
 
 // --- Charges partagées : LA seule écriture du document `joint/main` ---
@@ -93,9 +121,13 @@ async function readSharedChargesForBackup(data) {
 //  `members` n'est JAMAIS renvoyé (les règles refusent sa modification) :
 //  déjà retiré à la lecture, retiré une seconde fois ici — la garde ne
 //  coûte rien et ce document verrouille l'accès des deux comptes.
-async function writeSharedCharges(jointDuFichier, access, ask, showToast, filet) {
-  if (!access) {
-    showToast("Charges non remplacées — pas d'accès au document partagé", 'error');
+//  `charges` = le retour de `sharedChargesFrom` : on s'en sert pour dire
+//  le BON refus (cf. `reason`), pas un refus générique.
+async function writeSharedCharges(jointDuFichier, charges, ask, showToast, filet) {
+  if (!charges.access) {
+    showToast(charges.reason === 'loading'
+      ? "Charges non remplacées — pas encore chargées, réessaie dans un instant"
+      : "Charges non remplacées — pas d'accès au document partagé", 'error');
     return false;
   }
   if (!ask(CHARGES_CONFIRM(filet))) return false;
@@ -426,9 +458,10 @@ async function importPatrimoineData(ctx, data, io = {}) {
   if (!ok) throw new Error("Fichier invalide :\n• " + errors.join('\n• '));
   if (!ask(IMPORT_CONFIRM)) return false;
 
-  // Les charges COURANTES sont lues AVANT le filet, pour y entrer — et
-  // avant toute écriture, pour que ce soit bien l'état d'origine.
-  const { access, jointData } = await readSharedChargesForBackup(data);
+  // Les charges COURANTES, prises dans l'abonnement (aucun aller-retour
+  // réseau — cf. le pavé de `sharedChargesFrom`, c'est ce qui bloquait
+  // l'import sur iPhone). Lues avant le filet, pour y entrer.
+  const charges = readSharedChargesForBackup(ctx, data);
 
   // Filet de sécurité (v565) : sauvegarde « avant import » de l'état
   // ACTUEL avant d'écraser. NON BLOQUANT — si elle échoue, on poursuit
@@ -438,7 +471,7 @@ async function importPatrimoineData(ctx, data, io = {}) {
   try {
     await Adapter.createBackup(user.uid, {
       type: 'pre-import', at: new Date().toISOString(),
-      payload: buildBackupPayload(ctx, jointData),
+      payload: buildBackupPayload(ctx, charges.jointData),
     });
     await Adapter.pruneBackups(user.uid, BACKUP_KEEP);
   } catch (e) {
@@ -451,7 +484,7 @@ async function importPatrimoineData(ctx, data, io = {}) {
   // Charges (doc PARTAGÉ) : à part, car elles valent pour les DEUX
   // comptes. Voir writeSharedCharges pour la double garde.
   if (data.joint) {
-    await writeSharedCharges(data.joint, access, ask, showToast, 'avant import');
+    await writeSharedCharges(data.joint, charges, ask, showToast, 'avant import');
   }
   return true;
 }
@@ -696,12 +729,12 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
     if (!check.ok) return;
     setBusy(true);
     try {
-      // Les charges courantes d'abord : elles entrent dans le filet, et il
-      // faut les lire avant toute écriture. Ne lit rien si la sauvegarde
-      // restaurée n'en porte pas — rien ne sera alors écrasé.
-      const { access, jointData } = await readSharedChargesForBackup(payload);
+      // Les charges courantes d'abord : elles entrent dans le filet. Prises
+      // dans l'abonnement, sans aller-retour réseau (cf. `sharedChargesFrom`).
+      // Rien si la sauvegarde restaurée n'en porte pas : rien ne sera écrasé.
+      const charges = readSharedChargesForBackup(ctx, payload);
       // Filet de sécurité : sauvegarde manuelle de l'état ACTUEL avant écrasement.
-      const curPayload = buildBackupPayload(ctx, jointData);
+      const curPayload = buildBackupPayload(ctx, charges.jointData);
       await Adapter.createBackup(user.uid, {
         type: 'pre-restore', at: new Date().toISOString(), payload: curPayload,
       });
@@ -716,7 +749,7 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
       // secours qui ne restaure pas est le défaut déjà rencontré sur
       // `firestore.rules` (CLAUDE.md §5). Même double garde qu'à l'import.
       if (payload.joint) {
-        await writeSharedCharges(payload.joint, access, (m) => confirm(m), showToast, 'avant restauration');
+        await writeSharedCharges(payload.joint, charges, (m) => confirm(m), showToast, 'avant restauration');
       }
       showToast('Restauration réussie — rechargement…', 'success');
       setTimeout(() => window.location.reload(), 900);
