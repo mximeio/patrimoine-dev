@@ -365,6 +365,32 @@ function App() {
     maybeAutoBackup(user, { profile, checkingAccounts, savings, portfolios, physical });
   }, [dataLoaded, user, profile]);
 
+  // ============================================================
+  //  REPRISE D'IMPORT après rechargement — cf. `reprendreImportEnAttente`
+  //  (backups.js). Ne fait rien s'il n'y a pas de dépôt en attente, donc sans
+  //  effet dans la quasi-totalité des ouvertures. Une seule tentative par
+  //  session, comme l'auto-sauvegarde : c'est ce qui interdit toute boucle.
+  //
+  //  🔴 CE HOOK DOIT RESTER ICI, AVANT le retour anticipé de l'écran de
+  //  chargement (`if (!dataLoaded || !profile) return …`, plus bas).
+  //  Déplacé après — pour le rapprocher de `ctx`, qu'il utilise — il a provoqué
+  //  l'**erreur React #310** (« plus de hooks qu'au rendu précédent ») : pendant
+  //  le chargement le composant retourne tôt, le hook n'est pas déclaré, puis il
+  //  l'est une fois les données là. Vécu le 31/07/2026, sur le site déposé.
+  //  ⚠️ Référencer `ctx` ici est sûr bien qu'il soit déclaré PLUS BAS : le
+  //  callback s'exécute après le corps du composant, et la garde `dataLoaded`
+  //  garantit qu'on n'y touche que sur un rendu qui n'est PAS retourné tôt —
+  //  donc où `ctx` est initialisé.
+  //  ⚠️ Aucun test unitaire ne peut attraper ça : le harnais ne rend rien
+  //  (useEffect y est un noop). Seul un rendu réel le révèle.
+  // ============================================================
+  useEffect(() => {
+    if (!dataLoaded || !user || !profile) return;
+    if (repriseFaite.current) return;
+    repriseFaite.current = true;
+    reprendreImportEnAttente(ctx);
+  }, [dataLoaded, user, profile]);
+
 
   // Flush immédiat du snapshot en attente quand la page passe en
   // arrière-plan ou se ferme. La persistance offline de Firestore met
@@ -496,21 +522,6 @@ function App() {
       catch (e) { showToast('Erreur de sauvegarde des charges', 'error'); }
     },
   };
-
-  // ⚠️ REPRISE D'IMPORT après rechargement — cf. `reprendreImportEnAttente`
-  // (backups.js). Placée ICI, juste après `ctx`, à dessein : l'import a besoin
-  // du contexte COMPLET (profil, comptes, charges) pour bâtir son filet, et la
-  // proximité rend la dépendance évidente à la lecture.
-  // Gardée par `dataLoaded` et par un drapeau : **une seule tentative par
-  // session**, comme l'auto-sauvegarde. C'est ce qui interdit toute boucle de
-  // rechargement. Ne fait rien s'il n'y a pas de dépôt en attente, donc sans
-  // effet dans la quasi-totalité des ouvertures.
-  useEffect(() => {
-    if (!dataLoaded || !user || !profile) return;
-    if (repriseFaite.current) return;
-    repriseFaite.current = true;
-    reprendreImportEnAttente(ctx);
-  }, [dataLoaded, user, profile]);
 
   const modulesEnabled = profile.modulesEnabled;
   // `short` = libellé court pour la barre de navigation basse (mobile).
