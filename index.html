@@ -33,22 +33,34 @@
        test) ou en localhost, on charge manifest-dev.json ("Patrimoine DEV")
        pour distinguer les deux PWA installées sur l'écran d'accueil.
        Même critère pathname que le switch Firebase de config.js. -->
+  <!-- Version de build — PLACEHOLDER réécrit par le workflow GitHub à chaque
+       publication (VERSION_BASE + n° de run), comme tous les `?v=` de ce
+       fichier et de sw.js. Ne pas la maintenir à la main.
+       ⚠️ Elle vit dans cette balise, et NON dans le script ci-dessous, à dessein :
+       le script est destiné à être autorisé par EMPREINTE sha256 dans un
+       Content-Security-Policy, et une empreinte ne vaut que si le contenu ne
+       change pas. Y laisser un `?v=` la ferait changer à CHAQUE déploiement,
+       donc bloquer le script — et avec lui le numéro de version affiché et la
+       sélection du manifest. Cf. CLAUDE.md §11. -->
+  <meta name="app-build" content="?v=614" />
   <script>
     (function () {
-      // Version de build. La chaîne de version ci-dessous est un PLACEHOLDER :
-      // le workflow GitHub la réécrit à chaque publication (VERSION_BASE +
-      // n° de run), partout dans ce fichier et dans sw.js. Ne pas la maintenir
-      // à la main — et depuis la v615 il n'y a PLUS de sed de bump local.
+      // Version lue dans la balise <meta app-build> ci-dessus : ce script ne
+      // contient donc AUCUN `?v=` et son contenu est stable d'une version à
+      // l'autre (cf. le commentaire ci-dessus — ne pas y réintroduire de
+      // littéral de version).
+      var m = document.querySelector('meta[name="app-build"]');
+      var v = (m && m.getAttribute('content')) || '';
       // Affichée en pied du menu « ⋯ » et loguée en console : permet de
       // vérifier d'un coup d'œil quelle version tourne réellement sur
       // l'appareil (cache Safari, déploiement Pages…).
-      window.APP_BUILD = '?v=614'.replace('?v=', 'v');
+      window.APP_BUILD = v.replace('?v=', 'v');
       var isDev = location.pathname.indexOf('/patrimoine-dev') === 0
                || location.hostname === 'localhost'
                || location.hostname === '127.0.0.1';
       var link = document.createElement('link');
       link.rel = 'manifest';
-      link.href = (isDev ? 'manifest-dev.json' : 'manifest.json') + '?v=614';
+      link.href = (isDev ? 'manifest-dev.json' : 'manifest.json') + v;
       document.head.appendChild(link);
       if (isDev) {
         // Titre iOS (Ajouter à l'écran d'accueil) + titre d'onglet distincts
