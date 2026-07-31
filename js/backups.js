@@ -513,13 +513,21 @@ async function importPatrimoineData(ctx, data, io = {}) {
   // l'utilisateur de son propre import.
   showToast('Import en cours…');
 
-  // Connexion NEUVE avant d'écrire : automatisation du « tuer la PWA et
-  // rouvrir » qui débloquait l'import sur iPhone (cf. Adapter.resetConnection).
-  // Bornée et silencieuse : si elle n'aboutit pas, la sonde du filet juste
-  // en dessous refusera l'import proprement. On ne dépend donc pas d'elle.
-  if (Adapter.resetConnection) {
-    await ackOuDelai(Adapter.resetConnection(), io.resetMs || 5000);
-  }
+  // ⚠️ NE PAS remettre de « rétablissement de connexion » ici — c'est-à-dire
+  // un `disableNetwork()` suivi d'un `enableNetwork()` avant d'écrire.
+  // Ajouté le 31/07/2026 pour automatiser le « tuer la PWA et rouvrir » qui
+  // débloquait l'import sur iPhone, puis RETIRÉ le même jour :
+  //  - il n'a jamais été démontré qu'il aide (ajouté avant qu'on trouve la
+  //    vraie cause, le bail multi-onglets — corrigé autrement depuis) ;
+  //  - c'était la SEULE chose que l'import faisait et que rien d'autre ne
+  //    faisait, alors que l'import était la seule opération à échouer sur
+  //    iPhone (les sauvegardes manuelles, elles, passaient) ;
+  //  - son mode de panne correspond exactement au symptôme observé : borné à
+  //    5 s, un `enableNetwork()` plus lent laissait le réseau COUPÉ, donc le
+  //    filet jamais acquitté, l'import annulé, et le 2ᵉ essai identique —
+  //    seule la relance de l'application réparait.
+  // ⇒ Toute manipulation du réseau Firestore sur ce chemin doit être PROUVÉE
+  //   sur l'appareil réel avant d'être remise, pas supposée utile.
 
   // Les charges COURANTES, prises dans l'abonnement (aucun aller-retour
   // réseau — cf. le pavé de `sharedChargesFrom`, c'est ce qui bloquait

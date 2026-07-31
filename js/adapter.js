@@ -880,37 +880,18 @@ const Adapter = {
     );
   },
 
-  // ============================================================
-  //  Forcer une connexion Firestore NEUVE.
+  // 🔴 `resetConnection()` — AJOUTÉE PUIS RETIRÉE le 31/07/2026.
+  // NE PAS LA RECRÉER sans preuve sur l'appareil réel.
   //
-  //  C'est l'automatisation d'un contournement trouvé à la main : sur
-  //  iPhone, un import restait muet, et « tuer la PWA puis la rouvrir » le
-  //  débloquait. Ce qui change au relancement, c'est la connexion.
-  //  Pourquoi elle se fige : choisir un fichier met la PWA en
-  //  arrière-plan, iOS la suspend, et au retour la connexion peut être
-  //  morte sans que le SDK le sache encore. Une écriture partie dans cet
-  //  état n'est jamais acquittée (elle est appliquée localement et mise en
-  //  file) — cf. le pavé d'`ackOuDelai`, backups.js.
-  //
-  //  ⚠️ Appelée UNIQUEMENT en tête des chemins destructeurs (import,
-  //  restauration), qui sont rares et déjà lents. Ne pas en parsemer
-  //  l'application : couper puis rétablir fait momentanément servir les
-  //  abonnements depuis le cache.
-  //  Les écritures en file d'attente survivent au cycle et repartent
-  //  ensuite : couper le réseau ne les annule pas.
-  //  Silencieuse et non bloquante — si ça échoue, la sonde du filet
-  //  prendra le relais et refusera l'import proprement.
-  // ============================================================
-  async resetConnection() {
-    try {
-      await fbDb.disableNetwork();
-      await fbDb.enableNetwork();
-      return true;
-    } catch (e) {
-      console.warn('Rétablissement de connexion impossible', e);
-      return false;
-    }
-  },
+  // Elle faisait `disableNetwork()` puis `enableNetwork()` en tête d'import,
+  // pour automatiser le « tuer la PWA et rouvrir » qui débloquait l'import sur
+  // iPhone. Retirée parce qu'elle n'a jamais été démontrée utile, et parce
+  // qu'elle est devenue le principal suspect d'une régression : bornée à 5 s
+  // par son appelant, un `enableNetwork()` plus lent laissait le réseau COUPÉ,
+  // donc l'écriture suivante jamais acquittée. Détail dans backups.js, à
+  // l'endroit où elle était appelée.
+  // Mesuré sur desktop : disableNetwork 2 ms, enableNetwork 5 ms — inoffensif
+  // là où ce n'était pas le problème. Sur iOS après suspension, non mesurable.
 
   // 🔴 `getJoint()` — SUPPRIMÉE le 31/07/2026. NE PAS LA RECRÉER.
   //
