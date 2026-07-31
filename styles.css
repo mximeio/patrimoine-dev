@@ -2490,6 +2490,24 @@ input[type="month"] {
 .offline-tag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
 /* Variante menu desktop : pleine largeur du dropdown, un peu d'air autour. */
 .offline-tag--menu { margin: 2px 4px 6px; }
+/* ------------------------------------------------------------
+   « Pas de cache dans cet onglet » (31/07/2026, option C de la maquette
+   `_maquettes/indicateur-cache-hors-ligne.html`). Même motif que le tag
+   hors ligne, code couleur --danger. Le texte peut passer à la ligne :
+   il est plus long que « Hors ligne — modifications en attente », et il
+   doit rester lisible dans les dialogues étroits d'iOS comme dans le
+   dropdown desktop. ⚠️ Ne pas le rendre alarmant : l'onglet FONCTIONNE,
+   il n'a simplement pas de cache durable.
+   ------------------------------------------------------------ */
+.offline-tag--cache {
+  background: var(--danger-light); border-color: #fecaca; color: #991b1b;
+  white-space: normal; text-align: center; line-height: 1.35;
+}
+.offline-tag--cache .offline-tag-dot { background: var(--danger); }
+/* Pastille du « ⋯ » : rouge UNIQUEMENT hors ligne ET sans cache — le seul
+   état réellement problématique (un rechargement perdrait l'affichage).
+   En ligne sans cache, la pastille reste absente : cf. la maquette. */
+.net-dot--grave { background: var(--danger); }
 
 /* ============================================================
    SAUVEGARDES (v552) — carte Paramètres + confirmation de

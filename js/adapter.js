@@ -273,7 +273,18 @@ const Adapter = {
     //  son utilisateur, surtout sur son chemin le plus destructeur.
     // ============================================================
     if (!usedNewCacheAPI) {
-      fbDb.enablePersistence().catch(() => {});
+      // ⚠️ On CAPTE le résultat au lieu de l'ignorer : c'est ce qui permet de
+      // dire à l'utilisateur que CET onglet n'a pas de cache hors ligne
+      // (§11 « Signaler l'onglet SANS cache »). L'échec le plus courant est
+      // `failed-precondition` — un autre contexte de la même origine a déjà
+      // pris la persistance. Ce n'est PAS une panne : l'onglet fonctionne, il
+      // n'a simplement pas de cache durable. D'où un ton neutre côté interface.
+      // Reste non bloquant : on ne rejette rien, on mémorise.
+      Adapter.persistenceOk = fbDb.enablePersistence()
+        .then(() => true)
+        .catch(() => false);
+    } else {
+      Adapter.persistenceOk = Promise.resolve(true);
     }
   },
 
@@ -311,6 +322,11 @@ const Adapter = {
   _portfoliosCol(uid) { return this._userDoc(uid).collection('portfolios'); },
   _physicalCol(uid) { return this._userDoc(uid).collection('physical'); },
   _snapshotsCol(uid) { return this._userDoc(uid).collection('snapshots'); },
+  // Promesse résolue à true/false selon que la persistance hors ligne est
+  // active DANS CE CONTEXTE (cf. init()). Lue par app.js pour l'indicateur.
+  // Jamais rejetée.
+  persistenceOk: Promise.resolve(true),
+
   // Données partagées (compte joint) — un seul doc partagé entre membres.
   _jointRef() { return fbDb.collection('joint').doc('main'); },
 

@@ -77,6 +77,15 @@ function App() {
   // Canal séparé des toasts : aucun écrasement mutuel possible avec les
   // confirmations d'action. Tout est superposé : zéro décalage de layout.
   const [netOnline, setNetOnline] = useState(() => navigator.onLine !== false);
+  // Cet onglet a-t-il le cache hors ligne ? Depuis le passage en persistance
+  // MONO-CONTEXTE (adapter.js), un 2e contexte ouvert sur le même appareil n'en
+  // a pas. `true` par défaut : on n'affiche jamais d'alerte avant de savoir.
+  const [cacheOk, setCacheOk] = useState(true);
+  useEffect(() => {
+    let vivant = true;
+    Promise.resolve(Adapter.persistenceOk).then(ok => { if (vivant) setCacheOk(ok !== false); });
+    return () => { vivant = false; };
+  }, []);
   const [netPill, setNetPill] = useState(null); // { text, color }
   const netPillTimer = useRef(null);
   useEffect(() => {
@@ -506,6 +515,7 @@ function App() {
         onSelectModule={selectModule}
         onOpenSearch={() => setShowSearch(true)}
         onOpenSettings={() => setShowSettings(true)}
+        cacheOk={cacheOk}
         online={netOnline}
       />
       <main className="main-container">
@@ -540,6 +550,7 @@ function App() {
         onSelect={selectModule}
         onMore={() => setShowSheet(true)}
         online={netOnline}
+        cacheOk={cacheOk}
       />
       {/* Menu « ⋯ » mobile : bottom sheet avec recherche + actions du kebab.
           onSignOut = signOut DIRECT (pas handleSignOut) : la confirmation
@@ -550,6 +561,7 @@ function App() {
           onClose={() => setShowSheet(false)}
           onSearch={() => setShowSearch(true)}
           onSettings={() => setShowSettings(true)}
+          cacheOk={cacheOk}
           onSignOut={() => Adapter.signOut()}
           online={netOnline}
         />
@@ -757,7 +769,7 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
   }, deps); // eslint-disable-line
 }
 
-function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSearch, onOpenSettings, online = true }) {
+function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSearch, onOpenSettings, online = true, cacheOk = true }) {
   // Segmented control : la pastille foncée glisse entre les onglets.
   const railRef = useRef(null);
   const indRef = useRef(null);
@@ -802,7 +814,7 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
           <span className="user-email">{user.email}</span>
           {/* Point ambre réseau (v523) : superposé au coin du « ⋯ »,
               visible tant que l'app est hors ligne. */}
-          <Dropdown trigger={<button className="btn-icon" style={{ position: 'relative' }} aria-label="Menu">⋯{!online && <span className="net-dot" />}</button>}>
+          <Dropdown trigger={<button className="btn-icon" style={{ position: 'relative' }} aria-label="Menu">⋯{!online && <span className={`net-dot${cacheOk ? '' : ' net-dot--grave'}`} />}</button>}>
             {/* v584 : bloc identité (avatar + email) aligné à gauche — pendant
                 desktop de .sheet-id de la feuille mobile. */}
             <div className="dropdown-id">
@@ -816,6 +828,14 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
             {/* Tag hors-ligne (v549) : explique le point ambre du « ⋯ ». */}
             {!online && (
               <div className="offline-tag offline-tag--menu"><span className="offline-tag-dot" /> Hors ligne — modifications en attente</div>
+            )}
+            {/* Option C (maquette du 31/07/2026) : le tag « pas de cache » est
+                affiché EN PERMANENCE quand il manque — c'est une propriété de
+                l'onglet, pas de l'instant. La pastille, elle, ne passe au rouge
+                que si l'on est AUSSI hors ligne : un onglet en ligne sans cache
+                fonctionne, une alerte permanente n'alerterait plus. */}
+            {!cacheOk && (
+              <div className="offline-tag offline-tag--cache offline-tag--menu"><span className="offline-tag-dot" /> Pas de cache dans cet onglet — ne le recharge pas hors ligne</div>
             )}
             <button
               className="dropdown-item"
@@ -848,7 +868,7 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
 // Fixée en bas, jamais masquée : au scroll vers le bas elle se RÉTRACTE en
 // icônes seules (mode mini), au scroll vers le haut elle se redéploie.
 // Affichée uniquement sur mobile (CSS).
-function MobileTabBar({ tabs, current, onSelect, onMore, online = true }) {
+function MobileTabBar({ tabs, current, onSelect, onMore, online = true, cacheOk = true }) {
   const wrapRef = useRef(null);
   const barRef = useRef(null);
   const indRef = useRef(null);
@@ -1112,7 +1132,7 @@ function MobileTabBar({ tabs, current, onSelect, onMore, online = true }) {
         onPointerCancel={(e) => { e.currentTarget.classList.remove('more-pressed'); }}
         onPointerLeave={(e) => { e.currentTarget.classList.remove('more-pressed'); }}
         aria-label="Menu"
-      >⋯{!online && <span className="net-dot" />}</button>
+      >⋯{!online && <span className={`net-dot${cacheOk ? '' : ' net-dot--grave'}`} />}</button>
     </div>
   );
 }
@@ -1126,7 +1146,7 @@ function MobileTabBar({ tabs, current, onSelect, onMore, online = true }) {
 // (theme-color dynamique) a été MESURÉ SANS EFFET et retiré. Palliatif v525 :
 // les fondus du backdrop passent à 0,4 s — la bascule système tombe PENDANT
 // l'animation au lieu d'après, le décalage se fond dans le mouvement.
-function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = true }) {
+function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = true, cacheOk = true }) {
   // Fermeture ANIMÉE : le backdrop s'estompe pendant 400 ms (v525) AVANT le
   // démontage ; la sheet, elle, glisse en 240 ms (sheetDown, `forwards` la
   // fige hors écran le temps que le fondu se termine). L'action éventuelle
@@ -1273,6 +1293,9 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
             explique le point ambre du « ⋯ » quand le menu est ouvert. */}
         {!online && (
           <div className="offline-tag"><span className="offline-tag-dot" /> Hors ligne — modifications en attente</div>
+        )}
+        {!cacheOk && (
+          <div className="offline-tag offline-tag--cache"><span className="offline-tag-dot" /> Pas de cache dans cet onglet — ne le recharge pas hors ligne</div>
         )}
         {/* Zone basculante actions ⇄ confirmation : glissement latéral
             croisé + hauteur animée, l'identité reste visible au-dessus
