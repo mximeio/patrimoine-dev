@@ -362,8 +362,14 @@ function App() {
     if (!dataLoaded || !user || !profile) return;
     if (autoBackupTried.current) return;
     autoBackupTried.current = true;
-    maybeAutoBackup(user, { profile, checkingAccounts, savings, portfolios, physical });
-  }, [dataLoaded, user, profile]);
+    // ⚠️ `joint` et `chargesMember` sont passés pour que la sauvegarde auto
+    // contienne AUSSI les charges (cf. l'en-tête de backups.js). Et l'effet
+    // attend que `joint` soit tranché — comme la reprise d'import juste en
+    // dessous — sinon une course le ferait sauvegarder sans les charges.
+    if (joint === undefined) return;
+    maybeAutoBackup(user, { profile, checkingAccounts, savings, portfolios, physical,
+      joint, chargesMember: !!(joint && Array.isArray(joint.members) && joint.members.includes(user.uid)) });
+  }, [dataLoaded, user, profile, joint]);
 
   // ============================================================
   //  REPRISE D'IMPORT après rechargement — cf. `reprendreImportEnAttente`

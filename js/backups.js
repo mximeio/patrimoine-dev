@@ -15,14 +15,24 @@
 //  recréer de copie.
 //
 //  🔴 LES CHARGES (doc PARTAGÉ `joint/main`) — lire avant de toucher.
-//  Elles restent hors du périmètre des sauvegardes auto et manuelles,
-//  mais PLUS hors de celui des deux sauvegardes « pre- » : jusqu'au
-//  31/07/2026, écraser les charges à l'import était la SEULE écriture
-//  IRRÉVERSIBLE de l'application, alors que le dialogue promettait un
-//  retour arrière. `buildBackupPayload` accepte donc un 2ᵉ argument, que
-//  seuls les filets « avant import » et « avant restauration »
-//  renseignent — et `writeSharedCharges` est le seul endroit qui écrit
-//  ce document, sous double garde (accès membre + confirmation).
+//  Elles sont incluses dans **TOUTES** les sauvegardes depuis le
+//  31/07/2026 : auto, manuelles, et les deux filets « pre- ».
+//  ⚠️ Ça n'a pas toujours été le cas, et le chemin de cette décision
+//  vaut d'être connu :
+//   - jusqu'au 31/07/2026 elles étaient hors périmètre partout, parce que
+//     RIEN ne savait les restaurer. Écraser les charges à l'import était
+//     alors la seule écriture IRRÉVERSIBLE de l'app, alors que le
+//     dialogue promettait un retour arrière ;
+//   - le même jour, elles ont d'abord été ajoutées aux SEULS filets
+//     « avant import » / « avant restauration ». Erreur de conception :
+//     la restauration savait désormais les remettre, mais une sauvegarde
+//     MANUELLE n'en contenait pas — donc « je sauvegarde, je modifie mes
+//     charges, je restaure » ne les ramenait pas, **sans le moindre
+//     avertissement**. Trouvé par l'utilisateur en testant précisément ça.
+//  ⇒ Règle : « sauvegarder » veut dire TOUT, « restaurer » remet TOUT.
+//    Coût mesuré : +5 Ko par sauvegarde (148 au lieu de 143).
+//  `writeSharedCharges` reste le seul endroit qui écrit ce document, sous
+//  double garde (accès membre + confirmation explicite).
 // ============================================================
 
 const BACKUP_KEEP = 10;               // nombre de sauvegardes conservées
@@ -718,11 +728,11 @@ async function maybeAutoBackup(user, dataObj) {
       || (dataObj.portfolios || []).length
       || (dataObj.physical || []).length;
     if (!hasData) return;
-    const payload = {
-      version: 4, exportedAt: new Date().toISOString(),
-      profile: dataObj.profile, checkingAccounts: dataObj.checkingAccounts,
-      savings: dataObj.savings, portfolios: dataObj.portfolios, physical: dataObj.physical,
-    };
+    // ⚠️ On passe par `buildBackupPayload` — source unique de cette forme — au
+    // lieu de la reconstruire ici : c'est cette duplication qui avait fait
+    // oublier les charges dans les sauvegardes automatiques.
+    // `dataObj` porte `joint` et `chargesMember` (cf. l'appel dans app.js).
+    const payload = buildBackupPayload(dataObj, sharedChargesFrom(dataObj).jointData);
     await Adapter.createBackup(user.uid, {
       type: 'auto', at: new Date().toISOString(), payload,
     });
@@ -780,7 +790,9 @@ function BackupsCard({ ctx }) {
   const doManualBackup = async () => {
     setBusy(true);
     try {
-      const payload = buildBackupPayload(ctx);
+      // Les charges sont incluses ici aussi (cf. l'en-tête) : sans elles, une
+      // restauration depuis cette sauvegarde ne les ramènerait pas.
+      const payload = buildBackupPayload(ctx, sharedChargesFrom(ctx).jointData);
       await Adapter.createBackup(user.uid, {
         type: 'manual', at: new Date().toISOString(), payload,
       });
@@ -1055,6 +1067,16 @@ function RestoreConfirmModal({ ctx, backup, onClose }) {
             <div className="rc-safe">
               <Icon name="check" size={15} />
               <span>Une sauvegarde de ton état <b>actuel</b> est créée automatiquement juste avant — tu pourras revenir en arrière.</span>
+            </div>
+            {/* ⚠️ Les sauvegardes antérieures au 31/07/2026 — et toutes les
+                manuelles/auto d'avant ce jour — ne contiennent PAS les charges.
+                Le dire évite la surprise vécue par l'utilisateur : restaurer
+                sans que les charges reviennent, et sans aucun message. */}
+            <div className={`rc-safe rc-charges${payload.joint ? '' : ' absentes'}`}>
+              <Icon name={payload.joint ? 'check' : 'info'} size={15} />
+              <span>{payload.joint
+                ? <>Elle contient aussi la <b>répartition des charges</b> — une confirmation à part te sera demandée.</>
+                : <>Elle ne contient <b>pas</b> la répartition des charges : elles ne seront pas modifiées.</>}</span>
             </div>
           </>
         )}

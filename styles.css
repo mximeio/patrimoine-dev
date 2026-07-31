@@ -2648,6 +2648,12 @@ input[type="month"] {
    constaté le 31/07/2026 en lisant la couleur calculée dans le navigateur
    (`rgb(245,158,11)` au lieu du rouge attendu). */
 .net-dot--grave { background: var(--danger); }
+
+/* Mention « charges incluses / absentes » dans la confirmation de restauration
+   (31/07/2026). Même motif que .rc-safe ; la variante « absentes » est neutre
+   et NON alarmante : une sauvegarde sans charges n'est pas un défaut, c'est
+   simplement une sauvegarde d'avant ce jour. */
+.rc-charges.absentes { background: var(--surface-hover); border-color: var(--border); color: var(--text-light); }
 .tabbar-more { position: relative; }
 /* Header desktop : bouton 36px plus petit que le cercle mobile → point
    réduit et rentré pour rester DANS l'empreinte du bouton. */
