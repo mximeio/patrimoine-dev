@@ -139,6 +139,36 @@ function migrateCheckingShape(data) {
 //  silencieuse au chargement.
 // ============================================================
 
+// ============================================================
+//  🔴 UN VIDE VENANT DU CACHE N'EST PAS UN VIDE.
+//
+//  Chaque instantané Firestore porte `metadata.fromCache`. Hors ligne — ou
+//  avant la première réponse du serveur — un document absent et une
+//  collection vide sont indiscernables d'un « je ne sais pas encore ».
+//  Le code ne le regardait NULLE PART (0 occurrence de `fromCache` avant le
+//  31/07/2026), et trois endroits ÉCRIVAIENT sur cette base.
+//
+//  ⚠️ INCIDENT DU 31/07/2026, sur DEV, données réellement détruites.
+//  Deux onglets ouverts sur le même appareil ; le second, sans cache et mis
+//  hors ligne, a reçu une collection de comptes VIDE. `subscribeCheckingAccounts`
+//  en a conclu « nouvel utilisateur » et a fait un `set()` sur `doc('main')` —
+//  donc **écrasé les 31 mois**. Le retour en ligne a poussé ce vide au serveur,
+//  et l'auto-sauvegarde hebdomadaire en a même pris une copie.
+//  Récupéré grâce aux sauvegardes « avant import » (9 en portaient 31 mois).
+//
+//  ⇒ RÈGLE : ne JAMAIS créer, semer ni réparer quoi que ce soit à partir d'un
+//    instantané dont `fromCache` est vrai. On peut l'AFFICHER, jamais en tirer
+//    une écriture.
+//  Effet de bord assumé : un vrai nouvel utilisateur ouvrant l'app hors ligne
+//  n'aura pas de compte créé tant qu'il n'est pas en ligne. C'est voulu — mieux
+//  vaut ne rien créer que créer sur une supposition.
+// ============================================================
+function vientDuCache(snap) {
+  // Absence de `metadata` = doublure de test ou SDK inattendu : on considère
+  // que ça vient du cache, donc on n'écrit pas. Le défaut le plus prudent.
+  return !snap || !snap.metadata || snap.metadata.fromCache !== false;
+}
+
 const DEFAULT_PORTFOLIO_DATA = {
   etfs: [],
   operations: [],
@@ -287,6 +317,11 @@ const Adapter = {
   async loadProfile(uidStr) {
     const snap = await this._profileRef(uidStr).get();
     if (!snap.exists) {
+      // 🔴 cf. `vientDuCache` : un profil « absent » lu depuis le cache ne doit
+      // PAS être remplacé par le profil par défaut — ça effacerait les modules
+      // activés (dont `multiCheckingAccounts`, absent de DEFAULT_PROFILE, donc
+      // la perte serait invisible).
+      if (vientDuCache(snap)) return { ...DEFAULT_PROFILE };
       await this._profileRef(uidStr).set({
         ...DEFAULT_PROFILE,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -638,8 +673,12 @@ const Adapter = {
   subscribeProfile(uidStr, onChange) {
     return this._profileRef(uidStr).onSnapshot(async (snap) => {
       if (!snap.exists) {
-        // 1er login : on initialise le profil par défaut. Le set
-        // déclenchera un nouveau snapshot qui notifiera l'app.
+        // 🔴 cf. `vientDuCache` : tant que le serveur n'a pas confirmé
+        // l'absence, on ne sème rien. On propage tout de même le profil par
+        // défaut pour que l'app démarre (affichage), sans rien écrire.
+        if (vientDuCache(snap)) { onChange({ ...DEFAULT_PROFILE }); return; }
+        // 1er login CONFIRMÉ par le serveur : on initialise le profil par
+        // défaut. Le set déclenchera un nouveau snapshot qui notifiera l'app.
         try {
           await this._profileRef(uidStr).set({
             ...DEFAULT_PROFILE,
@@ -678,21 +717,62 @@ const Adapter = {
         onChange([]);
         return;
       }
-      // Premier snapshot vide → cold boot d'un utilisateur sans compte courant :
-      // auto-création du « Compte principal » par défaut. (v583 : l'ancienne
-      // migration depuis `checking/main` a été retirée — plus aucun doc legacy
-      // n'existe, la lecture retournait toujours "absent" ; on sème donc
-      // directement depuis DEFAULT_CHECKING, comportement identique.)
+      // 🔴 LA GARDE — cf. `vientDuCache`. C'est ICI que les données ont été
+      // détruites le 31/07/2026 : une collection vide venant du cache était
+      // prise pour un cold boot, et le `set()` sur `doc('main')` écrasait les
+      // 31 mois. On affiche le vide, on n'écrit rien.
+      if (vientDuCache(snap)) { onChange([]); return; }
+      // Premier snapshot vide CONFIRMÉ PAR LE SERVEUR → cold boot d'un
+      // utilisateur sans compte courant : auto-création du « Compte principal »
+      // par défaut. (v583 : l'ancienne migration depuis `checking/main` a été
+      // retirée — plus aucun doc legacy n'existe.)
       try {
-        await this._checkingAccountsCol(uidStr).doc('main').set({
-          name: 'Compte principal',
-          ...DEFAULT_CHECKING,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+        await this._seedDefaultCheckingAccount(uidStr);
         seenAnyAccount = true; // le set déclenchera un autre snapshot
       } catch (e) { console.warn('[subscribeCheckingAccounts] auto-create failed', e); }
     }, (err) => console.error('[subscribeCheckingAccounts]', err));
+  },
+
+  // ============================================================
+  //  🔴 CEINTURE — semer le compte par défaut dans une TRANSACTION.
+  //
+  //  ⚠️ NE PAS SURESTIMER CETTE CEINTURE — mesuré le 31/07/2026 sur la base
+  //  DEV, et contraire à ce que ce commentaire affirmait d'abord :
+  //  **une transaction Firestore NE protège PAS du hors ligne.** Une
+  //  transaction qui écrit, lancée après `disableNetwork()`, se RÉSOUT : elle
+  //  s'applique localement et se synchronise ensuite, exactement comme un
+  //  `set()`. (Vérifié sur un document sonde : l'écriture hors ligne était bien
+  //  présente à la lecture suivante.)
+  //
+  //  Ce qu'elle apporte réellement, et c'est modeste : `tx.get()` puis
+  //  `if (d.exists) return` évite d'écraser un document **présent dans le
+  //  cache local**. Un `set()` direct écrasait sans rien regarder. Mais si le
+  //  cache est VIDE — le cas de l'incident — `d.exists` est faux et la ceinture
+  //  ne protège pas.
+  //
+  //  ⇒ **C'est la garde `vientDuCache` qui protège**, pas cette transaction.
+  //    Ne pas relâcher l'une en croyant que l'autre couvre.
+  //    Une vraie protection indépendante ne peut venir que du SERVEUR :
+  //    une règle Firestore refusant un `update` qui ramènerait `months` de
+  //    non-vide à vide. Cf. §11 du CLAUDE.md.
+  // ============================================================
+  //  `runner` n'existe que pour les TESTS : sans lui, le corps de la
+  //  transaction ne serait jamais exercé (le harnais n'a pas de vrai
+  //  `runTransaction`), et une mutation qui retirerait le `d.exists` passerait
+  //  inaperçue — constaté en posant ces tests. En production il est absent.
+  async _seedDefaultCheckingAccount(uidStr, runner) {
+    const run = runner || ((fn) => fbDb.runTransaction(fn));
+    const ref = this._checkingAccountsCol(uidStr).doc('main');
+    await run(async (tx) => {
+      const d = await tx.get(ref);
+      if (d.exists) return;   // déjà là → ne RIEN écraser
+      tx.set(ref, {
+        name: 'Compte principal',
+        ...DEFAULT_CHECKING,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
   },
 
   subscribeSavings(uidStr, onChange) {
