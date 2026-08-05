@@ -1169,9 +1169,16 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
           {estImport
             ? <>Importer <b>{label || 'ce fichier'}</b> ?</>
             : <>Restaurer la sauvegarde du <b>{backupDateLabel(backup.at)}</b> ?</>}
-          {changedCount > 0
+          {/* ⚠️ La phrase de comparaison n'a de sens QUE si le fichier est
+              exploitable : en mode bloqué elle promettait une comparaison
+              affichée juste en dessous… qui n'existe pas, à l'endroit même où
+              l'on annonce un refus. Défaut ANTÉRIEUR au chantier (la
+              restauration l'avait aussi avec une sauvegarde incompatible),
+              rendu visible parce que l'import tombe en mode bloqué dès qu'un
+              fichier est mauvais. Vu sur capture iPhone le 05/08/2026. */}
+          {check.ok && (changedCount > 0
             ? <> Comparaison avec ton état actuel — seules les rubriques « modifié » changent.</>
-            : <> Aucune différence avec ton état actuel : rien ne changera.</>}
+            : <> Aucune différence avec ton état actuel : rien ne changera.</>)}
         </p>
 
         {!check.ok ? (
