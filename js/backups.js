@@ -274,6 +274,39 @@ function computeRubriqueTotals(d) {
 //  ⚠️ Ne signale QUE les pertes, jamais les gains : un fichier qui AJOUTE des
 //  livrets n'a pas à s'annoncer en rouge.
 // ============================================================
+// Une rubrique VIDÉE DE SA VALEUR : elle valait quelque chose, elle ne vaut plus
+// rien. Second déclencheur du rouge, ajouté le 05/08/2026 à la demande de
+// l'utilisateur — il bouche le cas symétrique de `countLossLabel` : garder les
+// 2 livrets mais mettre leurs soldes à zéro ne fait baisser AUCUN comptage.
+// ⚠️ Volontairement « tombe à ZÉRO », pas « baisse ». Une baisse ordinaire
+// arrive à presque CHAQUE restauration d'une sauvegarde ancienne : en faire un
+// signal rouge le rendrait permanent, donc muet. Tomber à zéro, en revanche,
+// n'arrive jamais par accident. C'est la fréquence qui a tranché, pas la gravité.
+// ⚠️ Le négatif compte aussi : un compte courant à −147 € qui passe à 0 € a bien
+// perdu sa valeur.
+function valueWiped(cur, snap) {
+  return r2(cur) !== 0 && r2(snap) === 0;
+}
+
+// ============================================================
+//  🔴 « CETTE RUBRIQUE EST-ELLE ROUGE ? » — décision SORTIE DE LA VUE.
+//
+//  Pourquoi elle n'est pas restée dans le JSX : le harnais de test ne rend pas
+//  React (cf. §8 de CLAUDE.md), donc toute logique laissée dans la vue n'est
+//  couverte par AUCUN test. Constaté par mutation le 05/08/2026 — neutraliser
+//  le rouge dans le JSX laissait les 418 tests VERTS. Les deux fonctions pures
+//  étaient testées, leur branchement ne l'était pas.
+//  ⇒ Ne pas réinliner cette condition dans le composant.
+//
+//  La règle, en une phrase : ROUGE = quelque chose disparaît — un ÉLÉMENT retiré
+//  de la liste (`countLossLabel`), ou une rubrique VIDÉE de sa valeur
+//  (`valueWiped`). Une simple baisse d'euros n'est PAS rouge.
+// ============================================================
+function rubriqueRouge(current, snap, key) {
+  return !!countLossLabel(current.counts, snap.counts, key)
+      || valueWiped(current[key], snap[key]);
+}
+
 const NOMS_COMPTAGE = {
   savings:     { u: 'livret',    p: 'livrets',    rien: 'aucun' },
   investments: { u: 'enveloppe', p: 'enveloppes', rien: 'aucune' },
@@ -1019,19 +1052,27 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
   const rows = RUBRIQUES
     .filter(r => current.modules[r.key] || snap.modules[r.key])
     .map(r => {
-      // ⚠️ `perte` vient des COMPTAGES, pas des euros : une rubrique peut être
-      // modifiée sans qu'un centime bouge (cf. `countLossLabel`). C'est pour ça
-      // que `changed` teste les deux — ne pas le réduire au seul euro.
+      // DEUX déclencheurs du rouge, et ils sont indépendants :
+      //  · `perte`  — un ÉLÉMENT est retiré de la liste (comptages), visible même
+      //               quand les euros ne bougent pas (cf. `countLossLabel`) ;
+      //  · `videe`  — la rubrique est VIDÉE DE SA VALEUR, sans qu'aucun comptage
+      //               ne baisse (cf. `valueWiped`).
+      // ⚠️ `changed` teste les deux PLUS l'écart en euros — ne pas le réduire au
+      // seul euro, une rubrique peut être modifiée sans qu'un centime bouge.
       const perte = countLossLabel(current.counts, snap.counts, r.key);
+      // ⚠️ La décision du rouge vit dans `rubriqueRouge` (fonction pure, testée) —
+      // ne pas la réinliner ici, la vue n'est pas couverte par les tests.
+      const rouge = rubriqueRouge(current, snap, r.key);
       return {
-        ...r, perte,
+        ...r, perte, rouge,
         cur: current[r.key], snap: snap[r.key],
-        changed: r2(current[r.key]) !== r2(snap[r.key]) || !!perte,
+        changed: r2(current[r.key]) !== r2(snap[r.key]) || rouge,
       };
     });
   const changedCount = rows.filter(r => r.changed).length;
-  // Au moins une rubrique perd quelque chose ⇒ bouton rouge et « quand même ».
-  const aPerte = rows.some(r => r.perte);
+  // Au moins une rubrique perd quelque chose — élément retiré OU valeur anéantie
+  // ⇒ bouton rouge, « quand même », et le total suit.
+  const aPerte = rows.some(r => r.rouge);
 
   // Détail par ligne (dépliant) : union des ids courant/sauvegarde.
   const detailRows = (key) => {
@@ -1155,8 +1196,10 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
                 <React.Fragment key={r.key}>
                   {/* ⚠️ `chgd-count` (liseré ROUGE) plutôt que `chgd` (indigo) dès
                       qu'il y a une PERTE : une valeur qui change n'est pas une
-                      valeur qui disparaît, et les deux ne se disent pas pareil. */}
-                  <div className={`rc-r${r.perte ? ' chgd-count' : (r.changed ? ' chgd' : ' eq')}`}>
+                      valeur qui disparaît, et les deux ne se disent pas pareil.
+                      La règle tient en une phrase : ROUGE = quelque chose
+                      disparaît — un élément retiré, ou une rubrique vidée. */}
+                  <div className={`rc-r${r.rouge ? ' chgd-count' : (r.changed ? ' chgd' : ' eq')}`}>
                     <span className="gl">{r.label}</span>
                     <span className="ga">{euro(r.cur)}</span>
                     <span className="gb">{r2(r.cur) !== r2(r.snap) ? euro(r.snap) : '='}</span>
@@ -1175,7 +1218,13 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
                   ))}
                 </React.Fragment>
               ))}
-              <div className={`rc-r total${r2(current.net) !== r2(snap.net) ? ' chgd' : ''}`}>
+              {/* ⚠️ Le TOTAL suit le rouge des rubriques : sans ça il restait en indigo
+                  « ça change » pendant que les quatre lignes au-dessus étaient en
+                  rouge « ça disparaît » — la ligne la plus grave était la seule à
+                  ne pas alarmer. Défaut vu sur capture iPhone le 05/08/2026, que
+                  la vérification desktop avait manqué (je regardais les comptages,
+                  pas la couleur du total). */}
+              <div className={`rc-r total${aPerte ? ' chgd-count' : (r2(current.net) !== r2(snap.net) ? ' chgd' : '')}`}>
                 <span className="gl">Patrimoine net</span>
                 <span className="ga">{euro(current.net)}</span>
                 <span className="gb">{r2(current.net) !== r2(snap.net) ? euro(snap.net) : '='}</span>
