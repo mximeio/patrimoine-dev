@@ -783,6 +783,19 @@ function SearchModal({ ctx, onClose, onNavigate }) {
               {filtreActif && total !== totalBrut
                 ? <><strong>{total}</strong> sur {totalBrut}</>
                 : `${total} résultat${total > 1 ? 's' : ''}`}
+              {/* ⚠️ `title` HTML, donc INVISIBLE au tactile — l'explication
+                  n'existe pas sur iPhone, seule la mention reste lisible.
+                  Un InfoTip a été essayé le 07/08/2026 puis ABANDONNÉ : son
+                  déclencheur est calé pour une icône (`inline-flex`,
+                  `vertical-align: -2px`), et sur du texte il avalait l'espace
+                  avant le « · » et désalignait la mention (+2 px de hauteur,
+                  −3 px de largeur, mesurés). Et surtout, sa BULLE DÉBORDAIT de
+                  l'écran : elle se positionne par rapport à une icône centrée,
+                  or ici le déclencheur est un texte collé au bord droit, et le
+                  recadrage au viewport n'y suffit pas.
+                  ⇒ Ne pas le reproposer sans revoir d'abord `.infotip` pour un
+                  déclencheur TEXTUEL — style ET positionnement. C'est un
+                  chantier à part, pas une ligne. */}
               {sansDateMasques > 0 && (
                 <span className="search-meta-exclus"> · {sansDateMasques} sans date</span>
               )}
