@@ -3008,6 +3008,18 @@ input[type="month"] {
 .infotip { position: relative; display: inline-flex; align-items: center; cursor: pointer; vertical-align: -2px; }
 .infotip-ico { display: inline-flex; color: var(--text-subtle); }
 .infotip:hover .infotip-ico, .infotip:focus-visible .infotip-ico { color: var(--text-muted); }
+/* 07/08/2026 : déclencheur TEXTUEL (prop `children` d'InfoTip). Délibérément
+   NU — `.infotip` juste au-dessus est calé pour une ICÔNE (`inline-flex`,
+   `vertical-align: -2px`) et, sur du texte, son inline-flex avale l'espace qui
+   précède la mention et la fait descendre d'un pixel (mesuré au banc
+   `_maquettes/2026-08-07-tooltip-tactile-banc.html` : −3,2 px de largeur,
+   +2 px de hauteur). Pas de `position: relative` non plus : la bulle est en
+   `position: fixed` dans un portal, celui de `.infotip` est vestigial.
+   Le padding VERTICAL porte la cible au doigt de 12 à 30 px SANS rien
+   déplacer : sur une boîte inline, il ne contribue pas à la hauteur de ligne.
+   L'horizontal reste à 0 — lui, il décalerait le texte.
+   Les trois interdits sont verrouillés par un test. */
+.infotip-txt { cursor: pointer; padding: 9px 0; }
 /* v593/v595 : tooltip BLANC (aligné sur CustomTooltip). Rendu en position
    FIXE dans document.body (via portal) pour ne pas être rogné par un parent
    overflow:hidden (ex. .support-sub en portrait). left/top posés en inline

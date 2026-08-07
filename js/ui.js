@@ -231,7 +231,18 @@ function Dropdown({ trigger, children, align = 'right', portal = false }) {
 // v592 : petite pastille d'info (icône) avec bulle au SURVOL (desktop) et au
 // TAP (mobile, fermeture au clic extérieur). Générique — sert l'icône cible des
 // supports, réutilisable ailleurs (ex. commentaire d'opération).
-function InfoTip({ iconName = 'target', size = 13, label, className = '', popClassName = '' }) {
+//
+// 07/08/2026 : `children` permet un déclencheur QUELCONQUE — un texte, par
+// exemple — à la place de l'icône. La racine prend alors `.infotip-txt` et
+// NON `.infotip`, qui est calé pour une icône et déplacerait le texte
+// (mesuré : −3,2 px de largeur, +2 px de hauteur). Toute la mécanique reste
+// ICI : une seconde implémentation divergerait en silence (§10).
+// ⚠️ Sur un déclencheur textuel, penser à `popClassName="infotip-pop--wrap"`.
+// La bulle est en `white-space: nowrap` par défaut : un libellé de phrase sort
+// de sa boîte plafonnée à 220 px, donc de l'écran — 220 px dehors sur un
+// viewport de 390, et encore 195 px sur un viewport de 766. Le recadrage au
+// viewport n'y peut rien, il place la BOÎTE, pas le contenu qui en sort.
+function InfoTip({ iconName = 'target', size = 13, label, className = '', popClassName = '', children = null }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
   const ref = useRef(null);
@@ -289,7 +300,7 @@ function InfoTip({ iconName = 'target', size = 13, label, className = '', popCla
   return (
     <span
       ref={ref}
-      className={`infotip ${className}`}
+      className={`${children ? 'infotip-txt' : 'infotip'} ${className}`}
       role="button"
       tabIndex={0}
       aria-label={label}
@@ -298,7 +309,7 @@ function InfoTip({ iconName = 'target', size = 13, label, className = '', popCla
       onMouseLeave={() => { if (hoverable()) scheduleClose(); }}
       onClick={(e) => { e.stopPropagation(); open ? setOpen(false) : openTip(); }}
     >
-      <span className="infotip-ico"><Icon name={iconName} size={size} /></span>
+      {children || <span className="infotip-ico"><Icon name={iconName} size={size} /></span>}
       {open && pos && ReactDOM.createPortal(
         <span
           className={`infotip-pop ${popClassName}`}
