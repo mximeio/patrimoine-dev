@@ -1880,7 +1880,16 @@ input[type="month"] {
   cursor: pointer; font-family: inherit;
   font-size: 13px; font-weight: 600;
   color: var(--text-muted); text-transform: capitalize;
-  transition: all 0.15s; position: relative;
+  /* ⚠️ PAS `transition: all` — 07/08/2026. `all` embarque les propriétés
+     GÉOMÉTRIQUES (padding, border-width, top…) : sur iPhone en PWA, chaque
+     ouverture du sélecteur monte douze cellules neuves et les cadenas des
+     mois figés, en position:absolute et sans transition, « sautaient »
+     (furtif, invisible sur ordinateur). Ces trois couleurs sont EXACTEMENT
+     ce que les règles :hover changent — `border-style` (pointillé → plein)
+     n'est pas animable, `all` ne l'animait donc déjà pas : le survol est
+     inchangé. Verrouillé par un test qui lit styles.css. */
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  position: relative;
 }
 .month-cell:hover {
   border-color: var(--text-light); color: var(--text);
