@@ -492,6 +492,35 @@ function itemsAffiches(allItems, query, du, au) {
   return filtrerParPeriode(base, du, au);
 }
 
+// Ordre d'un groupe de résultats. Fonction PURE : elle renvoie une nouvelle
+// liste et ne touche jamais l'entrée (§10 — `Array.sort` mute en place).
+//
+//  - requête NUMÉRIQUE  → on ne touche à RIEN : `filterItems` a déjà classé
+//    par proximité, qui EST la pertinence dans ce cas (calibrage v617).
+//  - requête TEXTUELLE  → date décroissante, les items SANS date en TÊTE.
+//    C'est la convention historique, et elle est bonne : quand on tape
+//    « livret », on veut le livret avant ses opérations.
+//  - AUCUNE requête (période seule) → date décroissante, les sans-date à la
+//    FIN. 🔴 Sans terme de recherche la pertinence n'existe pas, donc la date
+//    est le seul critère qui ait du sens. Garder la convention affichait les
+//    douze récurrents AVANT les opérations de la période — l'inverse exact de
+//    ce qu'on demande en filtrant par date. Constaté à l'écran le 07/08/2026,
+//    invisible pour les tests unitaires.
+function trierGroupe(items, query) {
+  const liste = [...(items || [])];
+  if (searchAsNumber(query) !== null) return liste;
+  const sansRequete = !String(query || '').trim();
+  liste.sort((a, b) => {
+    const aHas = !!a.monthKey;
+    const bHas = !!b.monthKey;
+    if (!aHas && !bHas) return 0;
+    if (!aHas) return sansRequete ? 1 : -1;
+    if (!bHas) return sansRequete ? -1 : 1;
+    return b.monthKey.localeCompare(a.monthKey); // décroissant (YYYY-MM)
+  });
+  return liste;
+}
+
 function SearchModal({ ctx, onClose, onNavigate }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
@@ -545,20 +574,10 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     // recherches textuelles, où le score n'a que 5 paliers et où la date est
     // un départage utile. Cf. CLAUDE.md §10 et §11 LOT 1 point 2.
     const isNumericQuery = searchAsNumber(query) !== null;
-    if (!isNumericQuery) {
-      // Tri stable : on garde l'ordre relatif des items sans date entre eux,
-      // et l'ordre des dates pour ceux qui en ont (récents → anciens).
-      for (const m of Object.keys(groups)) {
-        groups[m].sort((a, b) => {
-          const aHas = !!a.monthKey;
-          const bHas = !!b.monthKey;
-          if (!aHas && !bHas) return 0;
-          if (!aHas) return -1; // sans date d'abord
-          if (!bHas) return 1;
-          return b.monthKey.localeCompare(a.monthKey); // décroissant (YYYY-MM)
-        });
-      }
-    }
+    // Le tri vit dans `trierGroupe` (fonction pure, testable) — pas ici : le
+    // harnais ne rend rien, donc un tri écrit dans le composant est un tri
+    // sans test.
+    for (const m of Object.keys(groups)) groups[m] = trierGroupe(groups[m], query);
     const order = ['checking', 'savings', 'investments', 'physical'];
     // v617 — PAGINATION. Sans borne au premier rendu, taper une seule lettre
     // construisait 1 695 boutons dans le DOM à CHAQUE frappe (tout l'index :
