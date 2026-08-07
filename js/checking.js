@@ -1217,6 +1217,52 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
 //     mise en page mais du RENDU (couche de composition), autre famille et
 //     autre correctif (cf. le piège iOS/transform du §10).
 // ============================================================
+// Le mode d'essai, gardé en localStorage : il doit survivre à la fermeture du
+// popover, puisqu'on le choisit AVANT d'ouvrir.
+// ⚠️ Modes recentrés le 07/08/2026 sur l'observation de l'utilisateur :
+//  « SEULS les cadenas bougent » — ni les bordures des cellules, ni le
+//  « 2026 » de l'en-tête. Le popover ne se déplaçant pas, le recaler ne
+//  pouvait rien changer : les deux modes qui le visaient sont abandonnés.
+//  Reste l'hypothèse du DEMI-PIXEL, la seule anomalie que la mesure montre :
+//  le cadenas est à y=117.5, soit 352,5 pixels PHYSIQUES à dpr 3. Il chevauche
+//  donc un pixel réel, et WebKit peut le peindre d'abord aligné puis à sa
+//  vraie place — un décalage d'un demi-pixel physique, « discret mais réel ».
+const SONDE_MODES = [
+  { id: '0', nom: 'témoin', aide: 'aucun correctif' },
+  { id: '1', nom: 'cadenas entier', aide: 'chaque cadenas recalé sur un pixel ENTIER' },
+  { id: '2', nom: 'cadenas promus', aide: 'translateZ(0) sur chaque cadenas' },
+  { id: '3', nom: 'popover promu', aide: 'translateZ(0) sur le popover (témoin de la théorie des couches)' },
+];
+const lireModeSonde = () => { try { return localStorage.getItem('sondeMode') || '0'; } catch (e) { return '0'; } };
+
+// Applique le correctif à l'essai. En `useLayoutEffect` : avant la peinture,
+// sinon on introduirait soi-même le sursaut qu'on cherche à supprimer.
+function useEssaiCadenas(refPopover, actif, mode) {
+  useLayoutEffect(() => {
+    if (!actif || !refPopover.current) return;
+    const pop = refPopover.current;
+    const cadenas = [...pop.querySelectorAll('.month-cell-lock')];
+    // remise à zéro avant d'appliquer, pour qu'un changement de mode soit propre
+    pop.style.transform = ''; pop.style.marginTop = '';
+    cadenas.forEach((c) => { c.style.transform = ''; });
+    if (mode === '1') {
+      // On annule la partie fractionnaire de CHAQUE cadenas, pour qu'il tombe
+      // sur une frontière de pixel physique. `dpr` compte : à dpr 3, ce qui
+      // doit être entier, c'est la position en pixels de l'APPAREIL.
+      const dpr = window.devicePixelRatio || 1;
+      cadenas.forEach((c) => {
+        const t = c.getBoundingClientRect().top * dpr;
+        const frac = t - Math.round(t);
+        if (frac) c.style.transform = `translateY(${(-frac / dpr).toFixed(4)}px)`;
+      });
+    } else if (mode === '2') {
+      cadenas.forEach((c) => { c.style.transform = 'translateZ(0)'; });
+    } else if (mode === '3') {
+      pop.style.transform = 'translateZ(0)';
+    }
+  }, [actif, mode]);
+}
+
 function useSondeCadenas(refPopover, actif) {
   const [releve, setReleve] = useState(null);
   const avantPeinture = useRef(null);
@@ -1304,27 +1350,51 @@ function useSondeCadenas(refPopover, actif) {
   return releve;
 }
 
-function PanneauSonde({ releve }) {
-  if (!releve) return null;
+function PanneauSonde({ releve, mode, setMode }) {
+  const actuel = SONDE_MODES.find((m) => m.id === mode) || SONDE_MODES[0];
   const l = (nom, o) => `${nom.padEnd(5)} amp ${String(o.amp).padStart(6)}  ${o.chg.map(([ms, v]) => `${ms}:${v}`).join(' ')}`;
   return ReactDOM.createPortal(
     // Rendu dans document.body, en position fixe : la sonde ne doit RIEN
     // ajouter à la mise en page du popover, sinon elle perturbe ce qu'elle mesure.
-    <pre style={{
+    <div style={{
       position: 'fixed', bottom: 4, left: 4, right: 4, zIndex: 99999,
-      margin: 0, padding: '6px 8px', background: 'rgba(15,23,42,0.94)', color: '#86efac',
+      padding: '6px 8px', background: 'rgba(15,23,42,0.96)', color: '#86efac',
       font: '600 9.5px/1.35 "SF Mono", Monaco, Consolas, monospace',
-      borderRadius: 6, whiteSpace: 'pre-wrap', pointerEvents: 'none',
+      borderRadius: 6, whiteSpace: 'pre-wrap',
     }}>
-      {`🔬 SONDE v2 — dpr ${releve.dpr} · ${releve.n} img / ${releve.ms} ms\n`}
-      {`ms −2 = AVANT peinture · −1 = juste après · puis chaque CHANGEMENT\n`}
-      {`layout (pop cell cadA cadZ) : ${releve.layout}\n`}
-      {`css top|bordure|padding  av: ${releve.cssAvant || '—'}  ap: ${releve.cssApres || '—'}${releve.cssAvant !== releve.cssApres ? '   ⚠️ DIFFÈRENT' : '  (identique)'}\n`}
-      {l('pop', releve.pop) + '\n'}
-      {l('cell', releve.cell) + '\n'}
-      {l('cadA', releve.cadA) + '\n'}
-      {l('cadZ', releve.cadZ)}
-    </pre>,
+      <div style={{ display: 'flex', gap: 4, marginBottom: 5, flexWrap: 'wrap' }}>
+        {SONDE_MODES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); try { localStorage.setItem('sondeMode', m.id); } catch (err) {} setMode(m.id); }}
+            style={{
+              flex: '1 1 auto', minHeight: 30, padding: '4px 6px', borderRadius: 5,
+              border: m.id === mode ? '1px solid #86efac' : '1px solid #475569',
+              background: m.id === mode ? '#166534' : 'transparent',
+              color: m.id === mode ? '#dcfce7' : '#94a3b8',
+              font: 'inherit', fontSize: 10,
+            }}
+          >{m.id} · {m.nom}</button>
+        ))}
+      </div>
+      <div style={{ color: '#fbbf24', marginBottom: 3 }}>{`mode ${actuel.id} — ${actuel.aide}`}</div>
+      <div style={{ color: '#94a3b8', marginBottom: 3 }}>
+        {`Changer de mode, FERMER le calendrier, le RÉOUVRIR : le défaut naît au montage.`}
+      </div>
+      {releve ? (
+        <>
+          {`🔬 dpr ${releve.dpr} · ${releve.n} img / ${releve.ms} ms — 1re mesure prise AVANT la 1re image affichée\n`}
+          {`layout (pop cell cadA cadZ) : ${releve.layout}\n`}
+          {`css av: ${releve.cssAvant || '—'} · ap: ${releve.cssApres || '—'}${releve.cssAvant !== releve.cssApres ? '  ⚠️ DIFFÈRENT' : '  (identique)'}\n`}
+          {l('pop', releve.pop) + '\n'}
+          {l('cell', releve.cell) + '\n'}
+          {l('cadA', releve.cadA) + '\n'}
+          {l('cadZ', releve.cadZ)}
+        </>
+      ) : 'mesure en cours…'}
+    </div>,
     document.body
   );
 }
@@ -1332,7 +1402,10 @@ function PanneauSonde({ releve }) {
 function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, simple = false, anchorRect = null, zIndex = 2000 }) {
   const ref = useRef(null);
   // 🔬 sonde temporaire (DEV seulement) — à retirer avant le dépôt PROD
-  const releveSonde = useSondeCadenas(ref, !simple && window.FIREBASE_ENV === 'dev');
+  const sondeActive = !simple && window.FIREBASE_ENV === 'dev';
+  const [modeSonde, setModeSonde] = useState(lireModeSonde);
+  useEssaiCadenas(ref, sondeActive, modeSonde);
+  const releveSonde = useSondeCadenas(ref, sondeActive);
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     setTimeout(() => document.addEventListener('mousedown', handler), 0);
@@ -1410,7 +1483,7 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, sim
       {/* 🔬 sonde temporaire — à RETIRER avant le dépôt PROD. Rendue dans
           document.body par portal : elle n'ajoute rien à la mise en page
           de ce popover, donc elle ne perturbe pas ce qu'elle mesure. */}
-      <PanneauSonde releve={releveSonde} />
+      {sondeActive && <PanneauSonde releve={releveSonde} mode={modeSonde} setMode={setModeSonde} />}
     </div>
   );
 }
