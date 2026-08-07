@@ -862,6 +862,11 @@ function DayInputPicker({ value, onChange }) {
         type="button"
         className="input"
         style={{ textAlign: 'left', cursor: 'pointer', background: 'var(--surface)' }}
+        // ⚠️ OBLIGATOIRE, cf. le pavé de MonthChip (checking.js) : sans ce
+        // stopPropagation, le handler de clic extérieur du popover (document,
+        // mousedown) ferme la fenêtre juste avant que le click ne rappelle
+        // handleOpen, qui la rouvre. Le re-clic ne fermait jamais (07/08/2026).
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
       >
         {value ? `Le ${value}` : 'Choisir un jour'}
@@ -894,6 +899,11 @@ function DayChip({ value, onChange }) {
         ref={btnRef}
         type="button"
         className="recurring-day-chip"
+        // ⚠️ Le stopPropagation de `handleOpen` est sur le CLICK — trop tard pour
+        // le handler de clic extérieur du popover, qui écoute `mousedown`. Il en
+        // faut un second, ici : malgré l'apparence, ce ne sont pas la même
+        // parade. Cf. le pavé de MonthChip (checking.js), 07/08/2026.
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
         title={value ? `Jour du mois : ${value}` : 'Définir un jour'}
       >

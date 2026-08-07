@@ -1196,8 +1196,99 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
 // au-dessus d'une modale ordinaire (1000). La fenêtre de RECHERCHE est à 3000
 // (cf. §7) : elle doit donc passer une valeur supérieure, sinon le popover
 // s'ouvre DERRIÈRE elle et paraît ne pas s'ouvrir du tout.
+// ============================================================
+//  🔬 SONDE TEMPORAIRE — « le sursaut des cadenas » (07/08/2026)
+//
+//  🔴 À RETIRER AVANT LE DÉPÔT PROD. Ne vit que sur DEV (FIREBASE_ENV).
+//
+//  Pourquoi elle existe : le défaut n'apparaît QUE sur l'iPhone de
+//  l'utilisateur, en PWA. Il n'est reproductible ni au navigateur ni en
+//  émulateur, et une capture vidéo de l'écran est en résolution LOGIQUE
+//  (384×848 pour un écran 3×) — donc incapable de montrer un déplacement
+//  de moins d'un pixel CSS. Deux hypothèses ont déjà été fausses faute de
+//  mesure : « la police arrive après le premier rendu », puis « transition:
+//  all étire les cellules » (corrigé en v944 : le défaut persiste).
+//  Cette sonde fait mesurer l'appareil lui-même, au centième de pixel.
+//
+//  Ce qu'elle sépare, et c'est tout son intérêt :
+//   - le `top` du CADENAS bouge et celui de sa CELLULE aussi → mise en page ;
+//   - le cadenas bouge SEUL → son propre positionnement ;
+//   - RIEN ne bouge alors que l'œil voit un mouvement → ce n'est pas de la
+//     mise en page mais du RENDU (couche de composition), autre famille et
+//     autre correctif (cf. le piège iOS/transform du §10).
+// ============================================================
+function useSondeCadenas(refPopover, actif) {
+  const [releve, setReleve] = useState(null);
+  useEffect(() => {
+    if (!actif || !refPopover.current) return;
+    const pop = refPopover.current;
+    const cible = () => ({
+      pop: pop.getBoundingClientRect().top,
+      cell: pop.querySelector('.month-cell')?.getBoundingClientRect().top ?? null,
+      cadA: pop.querySelector('.month-cell-lock')?.getBoundingClientRect().top ?? null,
+      cadZ: [...pop.querySelectorAll('.month-cell-lock')].pop()?.getBoundingClientRect().top ?? null,
+    });
+    const serie = [];
+    let brut = null, t0 = null, arret = false;
+    const tic = (t) => {
+      if (arret) return;
+      if (t0 === null) t0 = t;
+      // ⚠️ On ignore les images où le popover est de taille NULLE : deux chips
+      // coexistent (hero desktop / titre mobile) et le CSS en masque une. Un
+      // `getBoundingClientRect()` d'élément caché rend des zéros, qui
+      // s'afficheraient comme une mesure valide « rien ne bouge ».
+      if (pop.getBoundingClientRect().width > 0) serie.push({ ms: Math.round(t - t0), ...cible() });
+      if (t - t0 < 700) brut = requestAnimationFrame(tic);
+      else if (!serie.length) { /* chip masquée : cette instance ne mesure rien */ }
+      else {
+        // On ne garde que les CHANGEMENTS : si rien ne bouge, une seule valeur.
+        const clefs = ['pop', 'cell', 'cadA', 'cadZ'];
+        const out = { dpr: window.devicePixelRatio, n: serie.length, ms: serie[serie.length - 1].ms };
+        clefs.forEach((k) => {
+          const chg = [];
+          serie.forEach((s, i) => {
+            const v = s[k] === null ? null : Math.round(s[k] * 100) / 100;
+            if (!chg.length || chg[chg.length - 1][1] !== v) chg.push([s.ms, v]);
+          });
+          const vals = serie.map((s) => s[k]).filter((v) => v !== null);
+          out[k] = { chg: chg.slice(0, 10), amp: vals.length ? Math.round((Math.max(...vals) - Math.min(...vals)) * 100) / 100 : null };
+        });
+        setReleve(out);
+      }
+    };
+    brut = requestAnimationFrame(tic);
+    return () => { arret = true; if (brut) cancelAnimationFrame(brut); };
+  }, [actif]);
+  return releve;
+}
+
+function PanneauSonde({ releve }) {
+  if (!releve) return null;
+  const l = (nom, o) => `${nom.padEnd(5)} amp ${String(o.amp).padStart(6)}  ${o.chg.map(([ms, v]) => `${ms}:${v}`).join(' ')}`;
+  return ReactDOM.createPortal(
+    // Rendu dans document.body, en position fixe : la sonde ne doit RIEN
+    // ajouter à la mise en page du popover, sinon elle perturbe ce qu'elle mesure.
+    <pre style={{
+      position: 'fixed', bottom: 4, left: 4, right: 4, zIndex: 99999,
+      margin: 0, padding: '6px 8px', background: 'rgba(15,23,42,0.94)', color: '#86efac',
+      font: '600 9.5px/1.35 "SF Mono", Monaco, Consolas, monospace',
+      borderRadius: 6, whiteSpace: 'pre-wrap', pointerEvents: 'none',
+    }}>
+      {`🔬 SONDE CADENAS — dpr ${releve.dpr} · ${releve.n} images / ${releve.ms} ms\n`}
+      {`amp = amplitude du \`top\` en px CSS ; puis ms:valeur à chaque CHANGEMENT\n`}
+      {l('pop', releve.pop) + '\n'}
+      {l('cell', releve.cell) + '\n'}
+      {l('cadA', releve.cadA) + '\n'}
+      {l('cadZ', releve.cadZ)}
+    </pre>,
+    document.body
+  );
+}
+
 function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, simple = false, anchorRect = null, zIndex = 2000 }) {
   const ref = useRef(null);
+  // 🔬 sonde temporaire (DEV seulement) — à retirer avant le dépôt PROD
+  const releveSonde = useSondeCadenas(ref, !simple && window.FIREBASE_ENV === 'dev');
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     setTimeout(() => document.addEventListener('mousedown', handler), 0);
@@ -1272,6 +1363,10 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, sim
           )}
         </div>
       )}
+      {/* 🔬 sonde temporaire — à RETIRER avant le dépôt PROD. Rendue dans
+          document.body par portal : elle n'ajoute rien à la mise en page
+          de ce popover, donc elle ne perturbe pas ce qu'elle mesure. */}
+      <PanneauSonde releve={releveSonde} />
     </div>
   );
 }
@@ -1304,6 +1399,8 @@ function DateInputPicker({ value, onChange }) {
         type="button"
         className="input"
         style={{ textAlign: 'left', cursor: 'pointer', background: 'var(--surface)' }}
+        // ⚠️ OBLIGATOIRE, cf. le pavé de MonthChip (même défaut, 07/08/2026).
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
       >
         {value ? fmtDateLong(value) : 'Choisir une date'}
@@ -1490,6 +1587,13 @@ function MonthInputPicker({ value, onChange, placeholder = 'Choisir un mois', cl
         type="button"
         className={className}
         style={style || { textAlign: 'left', cursor: 'pointer', background: 'var(--surface)' }}
+        // ⚠️ OBLIGATOIRE, cf. le pavé de MonthChip : sans ce stopPropagation, le
+        // handler de « clic extérieur » du popover (document, mousedown) ferme le
+        // calendrier juste avant que le click ne rappelle handleOpen — qui le
+        // rouvre aussitôt, `open` étant déjà repassé à false. Le re-clic ne
+        // fermait donc JAMAIS (signalé par l'utilisateur le 07/08/2026 sur les
+        // bornes « début » / « fin » de la recherche). Seul le toggle décide.
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
       >
         {value ? monthLabel(value) : placeholder}
@@ -2271,6 +2375,12 @@ function DateChip({ value, mKey, onChange }) {
         ref={btnRef}
         type="button"
         className="tx-date-chip"
+        // ⚠️ Le stopPropagation de `handleOpen` est sur le CLICK — il empêche la
+        // ligne de s'ouvrir, et il arrive TROP TARD pour le handler de clic
+        // extérieur du popover, qui écoute `mousedown`. Il en faut donc un
+        // second, ici. Malgré l'apparence, ce ne sont pas la même parade.
+        // Cf. le pavé de MonthChip (même défaut, 07/08/2026).
+        onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
         title={value ? `Date : ${formatDayMonth(value)}` : 'Définir une date'}
       >
