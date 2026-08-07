@@ -419,6 +419,56 @@ const MODULE_ICONS_NAMES = {
   physical: 'coin',
 };
 
+// ============================================================
+//  FILTRE PAR PÉRIODE — le filtre RETIRE, il ne RÉORDONNE PAS
+//
+//  🔴 Invariant posé par l'utilisateur, et c'est le point qui compte :
+//  l'ordre relatif des résultats conservés est IDENTIQUE avec et sans
+//  filtre. `Array.filter` le garantit par construction — ne jamais
+//  remplacer ce filtrage par un tri, un `sort` ou une reconstruction.
+//  Le classement des recherches TEXTUELLES (par date décroissante) et
+//  celui des NUMÉRIQUES (par proximité, trois rangs, tolérance ±3 % et
+//  plancher 0,20 € — calibrage v617, cf. CLAUDE.md §10) restent intacts
+//  parce qu'on ne les touche pas.
+//
+//  ⚠️ Granularité au MOIS, pas au jour : les opérations sont rangées par
+//  mois (`months["2026-08"]`) et leur champ `date` est OPTIONNEL. Un
+//  filtre au jour écarterait celles qui n'en ont pas, sans prévenir.
+//
+//  ⚠️ Les items SANS `monthKey` (récurrents, comptes, livrets, supports,
+//  actifs) ne sont JAMAIS masqués : ils ne sont pas concernés par une
+//  période. Les masquer ferait disparaître un livret qu'on cherchait,
+//  sous un filtre parfois oublié. Ils gardent leur place en tête de
+//  groupe, comme aujourd'hui.
+// ============================================================
+
+// Les mois réellement présents dans les résultats, du plus ancien au plus
+// récent. Les clés "YYYY-MM" se trient en ordre lexicographique.
+function moisDisponibles(items) {
+  const vus = new Set();
+  for (const it of (items || [])) if (it && it.monthKey) vus.add(it.monthKey);
+  return [...vus].sort();
+}
+
+// `du` et `au` sont des clés "YYYY-MM", ou '' pour une borne ouverte.
+// Bornes INCLUSES. Une seule borne suffit à filtrer.
+function filtrerParPeriode(items, du, au) {
+  const liste = items || [];
+  if (!du && !au) return liste;
+  let d = du || '';
+  let a = au || '';
+  // Filet : si les bornes sont inversées malgré la correction de l'IHM, on
+  // les remet dans l'ordre plutôt que de renvoyer une liste vide, qui
+  // ressemblerait à « aucun résultat » et non à une saisie incohérente.
+  if (d && a && d > a) { const t = d; d = a; a = t; }
+  return liste.filter((it) => {
+    if (!it || !it.monthKey) return true;
+    if (d && it.monthKey < d) return false;
+    if (a && it.monthKey > a) return false;
+    return true;
+  });
+}
+
 function SearchModal({ ctx, onClose, onNavigate }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
@@ -426,11 +476,31 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // chaque clic sur "Afficher 50 de plus", et repart à une page dès que la
   // requête change (effet plus bas, à côté du reset de `focused`).
   const [shown, setShown] = useState(SEARCH_PAGE_SIZE);
+  // Filtre par période. Volontairement NON persisté : la modale est démontée à
+  // la fermeture, donc le filtre repart à zéro à chaque ouverture. C'est la
+  // parade la plus sûre contre le « filtre oublié » qui ferait conclure à des
+  // résultats manquants trois jours plus tard.
+  const [du, setDu] = useState('');
+  const [au, setAu] = useState('');
+  const [filtreOuvert, setFiltreOuvert] = useState(false);
 
   const allItems = useMemo(() => collectSearchItems(ctx), [
     ctx.checkingAccounts, ctx.savings, ctx.portfolios, ctx.physical, ctx.profile,
   ]);
-  const results = useMemo(() => filterItems(allItems, query), [allItems, query]);
+  const mois = useMemo(() => moisDisponibles(allItems), [allItems]);
+  // Deux étapes DISTINCTES, et l'ordre importe : `filterItems` classe (par
+  // score, ou par proximité sur un montant), `filtrerParPeriode` ne fait que
+  // retirer. Le filtre s'applique donc AVANT le groupement — donc avant la
+  // pagination, comme le veut la fiche — et sans toucher au classement.
+  const resultsBruts = useMemo(() => filterItems(allItems, query), [allItems, query]);
+  const results = useMemo(() => filtrerParPeriode(resultsBruts, du, au), [resultsBruts, du, au]);
+  const filtreActif = !!(du || au);
+
+  // Correction automatique : choisir un « du » postérieur au « au » pousse
+  // l'autre borne, plutôt que d'afficher zéro résultat sans expliquer pourquoi.
+  const changerDu = (v) => { setDu(v); if (v && au && v > au) setAu(v); };
+  const changerAu = (v) => { setAu(v); if (v && du && v < du) setDu(v); };
+  const effacerPeriode = () => { setDu(''); setAu(''); };
 
   // Grouper par module dans l'ordre fixe, puis trier chaque groupe par date
   // décroissante. Les items sans monthKey (récurrents, comptes/portefeuilles
@@ -501,7 +571,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   const flat = useMemo(() => grouped.flatMap(g => g.items), [grouped]);
 
   // Reset le focus ET la pagination quand la query change
-  useEffect(() => { setFocused(0); setShown(SEARCH_PAGE_SIZE); }, [query]);
+  useEffect(() => { setFocused(0); setShown(SEARCH_PAGE_SIZE); }, [query, du, au]);
 
   // Navigation clavier
   useEffect(() => {
@@ -576,6 +646,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   }, [focused, query]);
 
   const total = results.length;
+  const totalBrut = resultsBruts.length;
   const hasQuery = query.trim().length > 0;
 
   return (
@@ -605,8 +676,25 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             autoFocus
           />
           {hasQuery && (
-            <span className="search-input-meta">{total} résultat{total > 1 ? 's' : ''}</span>
+            <span className="search-input-meta">
+              {filtreActif && total !== totalBrut
+                ? <><strong>{total}</strong> sur {totalBrut}</>
+                : `${total} résultat${total > 1 ? 's' : ''}`}
+            </span>
           )}
+          <button
+            type="button"
+            className={`search-periode-btn${(filtreOuvert || filtreActif) ? ' on' : ''}`}
+            onClick={() => setFiltreOuvert((o) => !o)}
+            aria-label="Filtrer par période"
+            aria-expanded={filtreOuvert}
+            title="Filtrer par période"
+          >
+            <Icon name="calendar" size={16} />
+            {/* La pastille survit au repli : c'est elle qui empêche le filtre
+                oublié, quand la barre est refermée mais le filtre encore actif. */}
+            {filtreActif && <span className="search-periode-pastille" />}
+          </button>
           <button
             type="button"
             className="search-close"
@@ -615,6 +703,36 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             title="Fermer (Échap)"
           >×</button>
         </div>
+
+        {filtreOuvert && (
+          <div className="search-periode">
+            <span className="search-periode-lab">du</span>
+            <select
+              className={`search-periode-sel${du ? '' : ' vide'}`}
+              value={du}
+              onChange={(e) => changerDu(e.target.value)}
+              aria-label="Début de la période"
+            >
+              <option value="">début</option>
+              {mois.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+            </select>
+            <span className="search-periode-lab">au</span>
+            <select
+              className={`search-periode-sel${au ? '' : ' vide'}`}
+              value={au}
+              onChange={(e) => changerAu(e.target.value)}
+              aria-label="Fin de la période"
+            >
+              <option value="">aujourd'hui</option>
+              {mois.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+            </select>
+            {filtreActif && (
+              <button type="button" className="search-periode-clear" onClick={effacerPeriode}>
+                Effacer
+              </button>
+            )}
+          </div>
+        )}
 
         {!hasQuery && (
           <div className="search-empty">
