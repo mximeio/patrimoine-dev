@@ -1129,10 +1129,10 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
   // ou de titre), via ResizeObserver sur la ligne (resize, rotation) et
   // au chargement de la police — même mécanique éprouvée que la goutte
   // de la barre d'onglets.
-  // Majuscule posée en JS : FRENCH_MONTHS_SHORT est en minuscules et le
-  // `text-transform: capitalize` du CSS n'est pas réappliqué par WebKit
-  // sur un span rendu visible par rotation (« août 26 » sans majuscule).
-  const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+  // Majuscule posée en JS via `capFirst` (utils.js), qui porte le pourquoi :
+  // WebKit ne réapplique pas `text-transform: capitalize` sur un span rendu
+  // visible par rotation. Helper PARTAGÉ depuis le 07/08/2026 — la barre de
+  // période de la recherche affiche le même libellé court.
   const [useShort, setUseShort] = useState(false);
   const rootRef = useRef(null);
   const measureRef = useRef(null);
@@ -1489,7 +1489,12 @@ function DatePickerPopover({ year, month, setYear, setMonth, selectedDate, onPic
 
 // Bouton-input qui ouvre un MonthPicker en mode simple — pour les formulaires
 // qui ont besoin de choisir un mois (ex: "Mois de référence" du Solde initial)
-function MonthInputPicker({ value, onChange, placeholder = 'Choisir un mois', className = 'input', style = null, zIndex = 2000 }) {
+// `formatLabel` : comment écrire le mois sur le bouton. Par défaut `monthLabel`
+// (« Septembre 2026 »), donc les appelants existants ne changent pas d'un
+// caractère. La barre de période de la recherche y passe `monthLabelShort` quand
+// la place manque (07/08/2026) — c'est l'appelant qui décide, pas le composant :
+// lui n'a aucun moyen de connaître la largeur dont il dispose.
+function MonthInputPicker({ value, onChange, placeholder = 'Choisir un mois', className = 'input', style = null, zIndex = 2000, formatLabel = null }) {
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState(null);
   const btnRef = useRef(null);
@@ -1516,7 +1521,7 @@ function MonthInputPicker({ value, onChange, placeholder = 'Choisir un mois', cl
         onMouseDown={(e) => e.stopPropagation()}
         onClick={handleOpen}
       >
-        {value ? monthLabel(value) : placeholder}
+        {value ? (formatLabel || monthLabel)(value) : placeholder}
       </button>
       {open && ReactDOM.createPortal(
         <MonthPicker

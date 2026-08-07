@@ -96,6 +96,12 @@ const monthLabelDe = (key) => {
   const l = monthLabel(key);
   return /^[AÂEÉÈÊIÎOÔUÙÛ]/.test(l) ? `d'${l}` : `de ${l}`;
 };
+// Majuscule initiale, posée en JS et NON par `text-transform: capitalize`.
+// ⚠️ Raison iOS, découverte sur la chip de mois : WebKit ne RÉAPPLIQUE pas
+// `capitalize` sur un span rendu visible par une rotation ou un changement de
+// media-query — on obtenait « août 26 » sans majuscule. `FRENCH_MONTHS_SHORT`
+// étant en minuscules, tout affichage d'un libellé court passe par ici.
+const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const prevMonthKey = (key) => { const { year, monthIdx } = parseMonth(key); return monthIdx === 0 ? monthKey(year - 1, 11) : monthKey(year, monthIdx - 1); };
 const nextMonthKey = (key) => { const { year, monthIdx } = parseMonth(key); return monthIdx === 11 ? monthKey(year + 1, 0) : monthKey(year, monthIdx + 1); };
 const currentMonthKey = () => { const d = new Date(); return monthKey(d.getFullYear(), d.getMonth()); };

@@ -610,6 +610,65 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   const changerAu = (v) => { const b = corrigerBornes('au', v, du, au); setDu(b.du); setAu(b.au); };
   const effacerPeriode = () => { setDu(''); setAu(''); };
 
+  // ============================================================
+  //  Libellés de mois ADAPTATIFS dans la barre de période (07/08/2026).
+  //
+  //  Le problème, signalé par l'utilisateur et déjà prévu au CHANGELOG de la
+  //  PROD v630 : avec deux mois longs, la barre passe à la ligne. Mesuré à
+  //  375 px, pire cas « Septembre → Septembre » : il faut 373 px pour 335
+  //  disponibles.
+  //  ⚠️ Et le raccourci ne doit PAS être permanent : sur un grand écran la
+  //  place est là (dès ~430 px, et largement sur desktop où la fenêtre fait
+  //  600 px), donc raccourcir tout le temps priverait ces écrans du libellé
+  //  complet pour un problème qu'ils n'ont pas.
+  //
+  //  🔴 La décision se prend sur la largeur qu'exigerait le libellé LONG,
+  //  jamais sur ce qui est affiché — sinon on oscille : on raccourcit parce que
+  //  ça débordait, donc ça ne déborde plus, donc on rallonge… D'où le clone
+  //  invisible dans le rendu. Même mécanique que la chip de mois du compte
+  //  courant (`mc-measure`, checking.js), dont le pavé porte le détail.
+  //  ⚠️ Une seule décision pour LES DEUX bornes : l'une longue et l'autre
+  //  courte serait plus laid que les deux courtes.
+  //  ⚠️ `useLayoutEffect` et non `useEffect` : la correction se fait AVANT la
+  //  peinture, sinon la barre s'affiche débordante pendant une image.
+  //  ⚠️ Hors couverture des tests unitaires : c'est une mesure du DOM, et le
+  //  harnais ne rend rien (§10). Vérifié au navigateur, à six largeurs.
+  // ============================================================
+  const barreRef = useRef(null);
+  const mesureRef = useRef(null);
+  const [moisCourts, setMoisCourts] = useState(false);
+  const mesurerBarre = () => {
+    const barre = barreRef.current, mes = mesureRef.current;
+    if (!barre || !mes || barre.clientWidth === 0) return;
+    // `.search-periode` porte `padding: 11px 20px` → la place utile est
+    // clientWidth moins les 40 px de padding horizontal.
+    // ⚠️ `getBoundingClientRect()` et non `offsetWidth`, PLUS 1 px de marge
+    //  d'arrondi — comme le fait `MonthChip`. `offsetWidth` rend un ENTIER
+    //  alors que la mise en page travaille en sous-pixels : à l'égalité
+    //  apparente (295 pour 295) le besoin réel valait 295,4, le test `>`
+    //  répondait faux, et la barre passait à la ligne en gardant le libellé
+    //  long. Trouvé le 07/08/2026 en balayant les paires de mois — seule la
+    //  paire « Mars → Août » tombait pile sur la frontière.
+    setMoisCourts(mes.getBoundingClientRect().width + 1 > barre.clientWidth - 40);
+  };
+  // À chaque rendu : capte le changement de bornes (donc de longueur de
+  // libellé). `setState` à valeur identique ne re-rend pas → ça converge.
+  useLayoutEffect(mesurerBarre);
+  useEffect(() => {
+    const barre = barreRef.current;
+    let ro;
+    if (barre && window.ResizeObserver) { ro = new ResizeObserver(mesurerBarre); ro.observe(barre); }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(mesurerBarre);
+    window.addEventListener('orientationchange', mesurerBarre);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('orientationchange', mesurerBarre);
+    };
+  }, [filtreOuvert]);
+  // `capFirst` (utils.js) : `FRENCH_MONTHS_SHORT` est en minuscules, et le CSS
+  // ne peut pas s'en charger — voir le pavé du helper, c'est un piège iOS.
+  const libelleMois = moisCourts ? (k) => capFirst(monthLabelShort(k)) : monthLabel;
+
   // Grouper par module dans l'ordre fixe, puis trier chaque groupe par date
   // décroissante. Les items sans monthKey (récurrents, comptes/portefeuilles
   // globaux…) restent en tête du groupe, dans leur ordre de pertinence initial.
@@ -832,8 +891,28 @@ function SearchModal({ ctx, onClose, onNavigate }) {
         </div>
 
         {filtreOuvert && (
-          <div className="search-periode">
-            <span className="search-periode-lab">du</span>
+          <div className="search-periode" ref={barreRef}>
+            {/* Clone INVISIBLE de la barre en libellés LONGS. Il donne la largeur
+                qu'elle occuperait en mode complet, mesurée avec les vraies règles
+                CSS — donc quelle que soit la valeur affichée.
+                🔴 C'est lui qui rend la décision STABLE : mesurer le rendu courant
+                ferait osciller (on raccourcit parce que ça débordait, donc ça ne
+                déborde plus, donc on rallonge, donc ça déborde…). Même mécanique
+                que le clone `mc-measure` de la chip de mois (checking.js), dont le
+                pavé porte le raisonnement complet. */}
+            <span className="search-periode-measure" aria-hidden="true" ref={mesureRef}>
+              {/* Fidèle au rendu réel : une borne vide affiche son placeholder,
+                  pas un mois — le clone doit dire la même chose. */}
+              <span className="search-periode-lab">de</span>
+              <span className="search-periode-sel">{du ? monthLabel(du) : 'début'}</span>
+              <span className="search-periode-lab">à</span>
+              <span className="search-periode-sel">{au ? monthLabel(au) : 'fin'}</span>
+              {filtreActif && <span className="btn btn-secondary btn-sm">Effacer</span>}
+            </span>
+            {/* « de … à … » et non « du … au … » : on dit « de septembre 2026 à
+                juillet 2026 ». Corrigé le 07/08/2026 — « du Septembre 2026 » était
+                un solécisme, et « de/à » gagne 10 px au passage. */}
+            <span className="search-periode-lab">de</span>
             {/* Le MÊME sélecteur que le compte courant, plutôt qu'une liste
                 déroulante de 31 entrées : le geste est déjà connu.
                 ⚠️ `zIndex` 3100 est indispensable — la fenêtre de recherche est
@@ -846,8 +925,9 @@ function SearchModal({ ctx, onClose, onNavigate }) {
               className={`search-periode-sel${du ? '' : ' vide'}`}
               style={{ cursor: 'pointer' }}
               zIndex={3100}
+              formatLabel={libelleMois}
             />
-            <span className="search-periode-lab">au</span>
+            <span className="search-periode-lab">à</span>
             <MonthInputPicker
               value={au}
               onChange={changerAu}
@@ -855,9 +935,15 @@ function SearchModal({ ctx, onClose, onNavigate }) {
               className={`search-periode-sel${au ? '' : ' vide'}`}
               style={{ cursor: 'pointer' }}
               zIndex={3100}
+              formatLabel={libelleMois}
             />
             {filtreActif && (
-              <button type="button" className="search-periode-clear" onClick={effacerPeriode}>
+              /* `btn btn-secondary btn-sm` : le secondaire STANDARD de l'app —
+                 celui du pied de calendrier, qui porte déjà le mot « Effacer ».
+                 L'ancien `.search-periode-clear` était la SEULE règle de toute la
+                 feuille à combiner fond transparent et texte en couleur d'accent,
+                 donc un style unique au monde. Retiré le 07/08/2026. */
+              <button type="button" className="btn btn-secondary btn-sm" onClick={effacerPeriode}>
                 Effacer
               </button>
             )}
