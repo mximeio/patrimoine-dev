@@ -469,6 +469,29 @@ function filtrerParPeriode(items, du, au) {
   });
 }
 
+// Ce que la fenêtre doit afficher, selon la requête ET la période.
+//
+//  ⚠️ Sortie de la vue à dessein (§10) : « faut-il afficher quelque chose ? »
+//  est une DÉCISION, et une condition écrite dans le JSX est une condition
+//  sans test — le harnais ne rend rien.
+//
+//  Trois cas, et le troisième est celui qu'on a ajouté :
+//   - une requête          → `filterItems` classe, puis la période retire ;
+//   - rien du tout         → liste vide, l'écran d'accueil s'affiche ;
+//   - SEULEMENT une période → **tous** les items, filtrés par la période.
+//     C'est une vue transverse — « qu'est-ce qui s'est passé en mars 2025 ? »,
+//     tous modules confondus — que le compte courant ne sait pas donner.
+//
+//  ⚠️ `filterItems` renvoie [] sur une requête vide : d'où le passage direct
+//  par `allItems`. Sans danger, elle ne fait qu'ajouter `_amountRank` aux
+//  items d'une recherche par montant, inutile ici.
+function itemsAffiches(allItems, query, du, au) {
+  const liste = allItems || [];
+  const q = String(query || '').trim();
+  const base = q ? filterItems(liste, query) : ((du || au) ? liste : []);
+  return filtrerParPeriode(base, du, au);
+}
+
 function SearchModal({ ctx, onClose, onNavigate }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
@@ -492,9 +515,12 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // score, ou par proximité sur un montant), `filtrerParPeriode` ne fait que
   // retirer. Le filtre s'applique donc AVANT le groupement — donc avant la
   // pagination, comme le veut la fiche — et sans toucher au classement.
-  const resultsBruts = useMemo(() => filterItems(allItems, query), [allItems, query]);
-  const results = useMemo(() => filtrerParPeriode(resultsBruts, du, au), [resultsBruts, du, au]);
   const filtreActif = !!(du || au);
+  const resultsBruts = useMemo(
+    () => (query.trim() ? filterItems(allItems, query) : (filtreActif ? allItems : [])),
+    [allItems, query, filtreActif],
+  );
+  const results = useMemo(() => itemsAffiches(allItems, query, du, au), [allItems, query, du, au]);
 
   // Correction automatique : choisir un « du » postérieur au « au » pousse
   // l'autre borne, plutôt que d'afficher zéro résultat sans expliquer pourquoi.
@@ -648,6 +674,8 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   const total = results.length;
   const totalBrut = resultsBruts.length;
   const hasQuery = query.trim().length > 0;
+  // Une période seule suffit désormais à afficher des résultats.
+  const aQuelqueChoseAMontrer = hasQuery || filtreActif;
 
   return (
     // ⚠️ Fermeture au clic sur le fond : le test `target === currentTarget` ne
@@ -675,7 +703,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
           />
-          {hasQuery && (
+          {aQuelqueChoseAMontrer && (
             <span className="search-input-meta">
               {filtreActif && total !== totalBrut
                 ? <><strong>{total}</strong> sur {totalBrut}</>
@@ -737,7 +765,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
           </div>
         )}
 
-        {!hasQuery && (
+        {!aQuelqueChoseAMontrer && (
           <div className="search-empty">
             <div className="search-empty-icon"><Icon name="search" size={20} /></div>
             <div className="search-empty-title">Recherche cross-application</div>
@@ -748,7 +776,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
           </div>
         )}
 
-        {hasQuery && total === 0 && (
+        {aQuelqueChoseAMontrer && total === 0 && (
           <div className="search-empty">
             <div className="search-empty-icon">∅</div>
             <div className="search-empty-title">Aucun résultat pour "{query}"</div>
@@ -759,7 +787,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
           </div>
         )}
 
-        {hasQuery && total > 0 && (
+        {aQuelqueChoseAMontrer && total > 0 && (
           <div className="search-results" ref={resultsRef}>
             {grouped.map(g => {
               const startIdx = flat.findIndex(it => it === g.items[0]);
