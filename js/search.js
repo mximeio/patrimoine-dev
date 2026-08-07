@@ -479,6 +479,17 @@ function filtrerParPeriode(items, du, au) {
   });
 }
 
+// Le texte de l'infobulle du compteur. Fonction pure — un accord se teste,
+// alors qu'écrit dans le JSX il ne se voit qu'à l'usage : « 1 élément(s) …
+// sont écartés » a survécu jusqu'à ce que l'utilisateur le lise à l'écran.
+// Renvoie `undefined` quand rien n'est masqué : pas d'infobulle vide.
+function libelleSansDateMasques(n) {
+  if (!n) return undefined;
+  return n > 1
+    ? `${n} éléments sans date (récurrents, livrets, supports, actifs) sont écartés par la période`
+    : '1 élément sans date (récurrent, livret, support ou actif) est écarté par la période';
+}
+
 // Combien d'éléments sans date une période écarterait-elle ? Sert à la mention
 // du compteur. Renvoie 0 quand aucune borne n'est posée : rien n'est masqué.
 function nbSansDateMasques(items, du, au) {
@@ -767,9 +778,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
           {aQuelqueChoseAMontrer && (
             <span
               className="search-input-meta"
-              title={sansDateMasques
-                ? `${sansDateMasques} élément(s) sans date (récurrents, livrets, supports, actifs) sont écartés par la période`
-                : undefined}
+              title={libelleSansDateMasques(sansDateMasques)}
             >
               {filtreActif && total !== totalBrut
                 ? <><strong>{total}</strong> sur {totalBrut}</>
