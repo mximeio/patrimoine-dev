@@ -160,6 +160,24 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
   const [initialBalanceMonth, setInitialBalanceMonth] = useState(currentMonthKey());
   const [error, setError] = useState('');
 
+  // Détection de modification pour la confirmation de fermeture du Modal.
+  // 🔴 OBLIGATOIRE dès qu'un formulaire porte un contrôle à CLIC : le « mois de
+  // référence » est un `MonthInputPicker`, donc un `<button>` — il n'émet ni
+  // `input` ni `change`, et l'heuristique générique du Modal est aveugle.
+  // Défaut déjà trouvé et corrigé en v535 sur la modale Réglages (dont le
+  // commentaire le décrit), jamais généralisé ; relevé par l'utilisateur le
+  // 07/08/2026 sur l'épargne.
+  // ⚠️ `error` est EXCLU des dépendances : un refus de validation n'est pas une
+  // modification de l'utilisateur, et l'y mettre marquerait « modifié » sur une
+  // simple tentative d'enregistrement.
+  // On ignore le 1er rendu pour ne pas marquer « modifié » à la simple ouverture.
+  const markDirty = React.useContext(ModalDirtyContext);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (markDirty) markDirty();
+  }, [name, initialBalance, initialBalanceMonth]);
+
   // Normalisation pour comparaison : trim + lowercase. Évite les noms
   // doublons à la casse / espaces près ("Boursorama" vs "boursorama  ").
   const normalize = (s) => (s || '').trim().toLowerCase();
