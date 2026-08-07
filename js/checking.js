@@ -1134,11 +1134,6 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
   // visible par rotation. Helper PARTAGÉ depuis le 07/08/2026 — la barre de
   // période de la recherche affiche le même libellé court.
   const [useShort, setUseShort] = useState(false);
-  // 🔬 sonde temporaire (DEV) — À RETIRER une fois la question tranchée.
-  //  `cleDiag` garde la sérialisation du dernier relevé : sans elle, un objet
-  //  neuf à chaque appel fait boucler React à l'infini (#185).
-  const [diag, setDiag] = useState(null);
-  const cleDiag = useRef('');
   const rootRef = useRef(null);
   const measureRef = useRef(null);
 
@@ -1151,44 +1146,6 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
     // gap flex de 8px entre titre et slot + 1px de marge d'arrondi
     const needed = title.scrollWidth + 8 + meas.offsetWidth + 1;
     setUseShort(needed > row.clientWidth);
-    // 🔬 SONDE TEMPORAIRE (DEV seulement) — À RETIRER. Elle répond à UNE
-    //  question : `title.scrollWidth` rend-il la largeur INTRINSÈQUE du titre,
-    //  ou seulement sa largeur visible quand il est tronqué à l'ellipse ?
-    //  Sur Chromium elle rend l'intrinsèque ; si WebKit rendait la visible, la
-    //  règle sous-estimerait d'exactement ce qui est tronqué, conclurait « ça
-    //  tient » et laisserait le titre tronqué — un cercle vicieux qui explique
-    //  la capture de l'utilisateur (17 Pro Max, titre tronqué ET mois complet).
-    //  Le CLONE DU TITRE est la mesure de contrôle : hors flux et en `nowrap`,
-    //  il donne la largeur vraie quel que soit le moteur.
-    if (window.FIREBASE_ENV === 'dev') {
-      const cs = getComputedStyle(title);
-      const t = document.createElement('span');
-      t.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font:${cs.font};letter-spacing:${cs.letterSpacing}`;
-      t.textContent = title.textContent;
-      document.body.appendChild(t);
-      const vraieLargeurTitre = t.getBoundingClientRect().width;
-      t.remove();
-      const d = {
-        vp: window.innerWidth,
-        portrait: !!(window.matchMedia && window.matchMedia('(orientation: portrait)').matches),
-        titreScroll: title.scrollWidth,
-        titreClient: title.clientWidth,
-        titreClone: Math.round(vraieLargeurTitre * 10) / 10,
-        chipClone: meas.offsetWidth,
-        cadenas: !!meas.querySelector('.mc-lock'),
-        ligne: row.clientWidth,
-        besoin: needed,
-        besoinAvecCloneTitre: Math.round(vraieLargeurTitre) + 8 + meas.offsetWidth + 1,
-        court: needed > row.clientWidth,
-      };
-      // 🔴 NE METTRE À JOUR QUE SI LE CONTENU A CHANGÉ. `setDiag` avec un objet
-      //  NEUF à chaque appel ne peut pas court-circuiter le rendu : React
-      //  re-rend, `useLayoutEffect` rappelle `compute`, qui rappelle `setDiag`…
-      //  → React #185, boucle infinie, écran blanc. Vécu à l'instant. Le
-      //  `setUseShort` voisin, lui, converge parce qu'il porte un BOOLÉEN.
-      const cle = JSON.stringify(d);
-      if (cleDiag.current !== cle) { cleDiag.current = cle; setDiag(d); }
-    }
   };
   // À chaque rendu : capte les changements de mois ET de titre (renommage
   // de compte). setState à valeur identique = pas de re-render → converge.
@@ -1263,24 +1220,6 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
         {pickerOpen === id && popover}
       </span>
       <button className="mc-chev" onClick={onNext} disabled={nextDisabled} aria-label="Mois suivant">›</button>
-      {/* 🔬 SONDE TEMPORAIRE — À RETIRER. Rendue par PORTAL dans document.body,
-          en position fixe et sans événements : elle ne doit rien ajouter à la
-          ligne de titre, sinon elle perturberait la mesure qu'elle rapporte. */}
-      {diag && ReactDOM.createPortal(
-        <pre style={{
-          position: 'fixed', bottom: 4, left: 4, right: 4, zIndex: 99999, margin: 0,
-          padding: '6px 8px', background: 'rgba(15,23,42,0.96)', color: '#86efac',
-          font: '600 10px/1.4 "SF Mono", Monaco, Consolas, monospace',
-          borderRadius: 6, whiteSpace: 'pre-wrap', pointerEvents: 'none',
-        }}>
-          {`🔬 CHIP — ${diag.vp}px ${diag.portrait ? 'portrait' : 'paysage'} · cadenas ${diag.cadenas ? 'OUI' : 'non'}\n`}
-          {`titre  scrollWidth ${diag.titreScroll}  clientWidth ${diag.titreClient}  CLONE ${diag.titreClone}\n`}
-          {`       ${diag.titreScroll === diag.titreClient ? '⚠️ scrollWidth = clientWidth (titre tronqué ? scrollWidth MENT)' : 'scrollWidth ≠ clientWidth (il dit la vraie largeur)'}\n`}
-          {`chip   clone ${diag.chipClone}   ligne ${diag.ligne}\n`}
-          {`besoin ${diag.besoin}  (via clone du titre : ${diag.besoinAvecCloneTitre})  → ${diag.court ? 'COURT' : 'LONG'}`}
-        </pre>,
-        document.body
-      )}
     </span>
   );
 }
