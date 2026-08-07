@@ -932,36 +932,29 @@ function DayPickerPopover({ selectedDay, onPick, onClose, anchorRect = null }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Mêmes constantes que DatePickerPopover, mais hauteur moindre car
-  // on n'a pas d'entête semaine ni de footer.
-  const POPOVER_HEIGHT = 290;
-  const POPOVER_WIDTH = 300;
   const MARGIN = 8;
-  const fixedStyle = (() => {
-    if (!anchorRect) return null;
-    const viewportH = window.innerHeight;
-    const viewportW = window.innerWidth;
-    let top = anchorRect.bottom + MARGIN;
-    const fitsBelow = top + POPOVER_HEIGHT + MARGIN <= viewportH;
-    const fitsAbove = anchorRect.top - POPOVER_HEIGHT - MARGIN >= MARGIN;
-    if (!fitsBelow && fitsAbove) {
-      top = anchorRect.top - POPOVER_HEIGHT - MARGIN;
-    }
-    top = Math.max(MARGIN, Math.min(top, viewportH - POPOVER_HEIGHT - MARGIN));
-    const centerX = anchorRect.left + anchorRect.width / 2;
-    const halfW = POPOVER_WIDTH / 2;
-    const left = Math.max(MARGIN + halfW, Math.min(centerX, viewportW - halfW - MARGIN));
-    return {
-      position: 'fixed',
-      top, left,
-      transform: 'translateX(-50%)',
-      zIndex: 2000,
-    };
-  })();
+  // 🔴 PLUS AUCUNE HAUTEUR DEVINÉE (07/08/2026) : ce bloc estimait
+  //  `POPOVER_HEIGHT = 290`, et son commentaire disait « mêmes constantes que
+  //  DatePickerPopover, mais hauteur moindre » — deux estimations qui devaient
+  //  rester d'accord avec deux mises en page qu'elles ne mesuraient pas.
+  //  Même défaut et même correctif que les deux autres calendriers : cf. le
+  //  pavé de `DatePickerPopover` (checking.js) et `placerPopover` (utils.js),
+  //  fonction pure et testée.
+  const styleInitial = anchorRect ? {
+    position: 'fixed',
+    top: anchorRect.bottom + MARGIN,
+    left: MARGIN,
+    maxWidth: `calc(100vw - ${2 * MARGIN}px)`,
+    zIndex: 2000,
+  } : null;
+  const refPlacement = (node) => {
+    ref.current = node;
+    appliquerPlacement(node, anchorRect);
+  };
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
   const content = (
-    <div ref={ref} className="date-picker-popover day-picker-popover" style={fixedStyle || undefined}>
+    <div ref={refPlacement} className="date-picker-popover day-picker-popover" style={styleInitial || undefined}>
       <div className="year-nav" style={{ justifyContent: 'center' }}>
         <span style={{ width: 28 }} />
         <div className="year-label">Jour du mois</div>
@@ -986,7 +979,7 @@ function DayPickerPopover({ selectedDay, onPick, onClose, anchorRect = null }) {
       </div>
     </div>
   );
-  if (fixedStyle && typeof ReactDOM !== 'undefined' && ReactDOM.createPortal) {
+  if (styleInitial && typeof ReactDOM !== 'undefined' && ReactDOM.createPortal) {
     return ReactDOM.createPortal(content, document.body);
   }
   return content;

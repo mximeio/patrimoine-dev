@@ -687,3 +687,25 @@ function SignedAmountField({ value, onChange, naturalExpense = true, isTR = fals
     </div>
   );
 }
+
+// Adaptateur DOM de `placerPopover` (utils.js) : mesure le nœud, puis applique.
+// La DÉCISION reste dans la fonction pure, testable ; ici il n'y a que la
+// lecture du DOM et l'écriture des styles (§10).
+// ⚠️ À appeler depuis un `ref` callback : React les exécute pendant le commit,
+// donc AVANT la peinture — le popover n'est jamais vu à sa position provisoire.
+// C'est le motif d'`InfoTip`, généralisé aux trois calendriers le 07/08/2026.
+function appliquerPlacement(node, ancre, ancrage = 'centre') {
+  if (!node || !ancre) return;
+  const r = node.getBoundingClientRect();
+  const p = placerPopover({
+    ancre,
+    taille: { largeur: r.width, hauteur: r.height },
+    viewport: { largeur: window.innerWidth, hauteur: window.innerHeight },
+    ancrage,
+  });
+  node.style.top = p.top + 'px';
+  node.style.left = p.left + 'px';
+  node.style.transform = 'none';
+  node.style.maxHeight = p.maxHeight ? p.maxHeight + 'px' : '';
+  node.style.overflowY = p.maxHeight ? 'auto' : '';
+}

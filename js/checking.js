@@ -1209,22 +1209,24 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, sim
   // l'écran (largeur + centrage bornés), ouverture vers le haut si pas la
   // place en bas. Rendu via portal (cf. MonthInputPicker) pour échapper aux
   // overflow/contextes de la modale.
-  const fixedStyle = anchorRect ? (() => {
-    const w = Math.min(360, window.innerWidth - 16);
-    const half = w / 2;
-    let cx = anchorRect.left + anchorRect.width / 2;
-    cx = Math.max(half + 8, Math.min(cx, window.innerWidth - half - 8));
-    const estH = 260;
-    const openUp = anchorRect.bottom + estH > window.innerHeight && anchorRect.top > estH;
-    return {
-      position: 'fixed',
-      top: openUp ? Math.max(8, anchorRect.top - estH) : anchorRect.bottom + 8,
-      left: cx, transform: 'translateX(-50%)',
-      width: w, zIndex,
-    };
-  })() : null;
+  // 🔴 PLUS AUCUNE HAUTEUR DEVINÉE (07/08/2026) : ce bloc estimait `estH = 260`,
+  //  d'où une bascule vers le haut décidée sur une hauteur fausse. Même défaut
+  //  et même correctif que `DatePickerPopover` — cf. son pavé, et `placerPopover`
+  //  (utils.js), pure et testée. La LARGEUR, elle, reste bornée ici : c'est une
+  //  contrainte qu'on impose, pas une estimation qu'on devine.
+  const styleInitial = anchorRect ? {
+    position: 'fixed',
+    top: anchorRect.bottom + 8,
+    left: 8,
+    width: Math.min(360, window.innerWidth - 16),
+    zIndex,
+  } : null;
+  const refPlacement = (node) => {
+    ref.current = node;
+    appliquerPlacement(node, anchorRect);
+  };
   return (
-    <div ref={ref} className="month-picker-popover" style={fixedStyle || undefined}>
+    <div ref={refPlacement} className="month-picker-popover" style={styleInitial || undefined}>
       <div className="year-nav">
         <button className="btn-icon" type="button" onClick={() => setYear(year - 1)}>‹</button>
         <div className="year-label">{year}</div>
@@ -1342,37 +1344,32 @@ function DatePickerPopover({ year, month, setYear, setMonth, selectedDate, onPic
   //     position de scroll de la page.
   //  4. Idem horizontalement : on clampe `left` pour qu'il ne sorte pas
   //     par les bords gauche/droit.
-  const POPOVER_HEIGHT = 340;
-  const POPOVER_WIDTH = 300;
   const MARGIN = 8;
-  const fixedStyle = (() => {
-    if (!anchorRect) return null;
-    const viewportH = window.innerHeight;
-    const viewportW = window.innerWidth;
-
-    // Position verticale
-    let top = anchorRect.bottom + MARGIN;
-    const fitsBelow = top + POPOVER_HEIGHT + MARGIN <= viewportH;
-    const fitsAbove = anchorRect.top - POPOVER_HEIGHT - MARGIN >= MARGIN;
-    if (!fitsBelow && fitsAbove) {
-      top = anchorRect.top - POPOVER_HEIGHT - MARGIN;
-    }
-    // Clamp final pour garantir la visibilité quoi qu'il arrive
-    top = Math.max(MARGIN, Math.min(top, viewportH - POPOVER_HEIGHT - MARGIN));
-
-    // Position horizontale : centrée sur l'ancre, clampée aux bords du viewport
-    const centerX = anchorRect.left + anchorRect.width / 2;
-    const halfW = POPOVER_WIDTH / 2;
-    const left = Math.max(MARGIN + halfW, Math.min(centerX, viewportW - halfW - MARGIN));
-
-    return {
-      position: 'fixed',
-      top,
-      left,
-      transform: 'translateX(-50%)',
-      zIndex: 2000,
-    };
-  })();
+  // 🔴 PLUS AUCUNE HAUTEUR DEVINÉE (07/08/2026). Ce bloc calculait sa position
+  //  à partir d'un `POPOVER_HEIGHT = 340` écrit en dur : le recadrage
+  //  garantissait donc que 340 px restaient à l'écran, pas la VRAIE hauteur.
+  //  Un mois à 6 rangées plus le pied « Aujourd'hui » dépasse l'estimation, et
+  //  le calendrier sortait de l'écran — signalé par l'utilisateur sur la modale
+  //  d'une opération d'épargne. D'où le « parfois » : seuls les mois qui
+  //  commencent tard débordaient.
+  //  ⚠️ Et il manquait la TROISIÈME branche : quand ça ne tient ni dessous ni
+  //  dessus, l'ancien code restait dessous et débordait. Voir `placerPopover`
+  //  (utils.js), fonction pure et testée, et `appliquerPlacement` (ui.js) qui
+  //  mesure le nœud avant la peinture.
+  const styleInitial = anchorRect ? {
+    position: 'fixed',
+    top: anchorRect.bottom + MARGIN,
+    left: MARGIN,
+    maxWidth: `calc(100vw - ${2 * MARGIN}px)`,
+    zIndex: 2000,
+  } : null;
+  // Le `ref` fait DEUX choses : garder le nœud pour le test de clic extérieur,
+  // et poser le placement mesuré. React l'appelle pendant le commit, donc avant
+  // la peinture : le popover n'est jamais vu à sa position provisoire.
+  const refPlacement = (node) => {
+    ref.current = node;
+    appliquerPlacement(node, anchorRect);
+  };
   const prevMonth = () => {
     if (lockedMonth) return;
     if (month === 0) { setMonth(11); setYear(year - 1); }
@@ -1416,7 +1413,7 @@ function DatePickerPopover({ year, month, setYear, setMonth, selectedDate, onPic
     });
   }
   const content = (
-    <div ref={ref} className="date-picker-popover" style={fixedStyle || undefined}>
+    <div ref={refPlacement} className="date-picker-popover" style={styleInitial || undefined}>
       <div className="year-nav">
         {lockedMonth ? <span style={{ width: 28 }} /> : <button className="btn-icon" type="button" onClick={prevMonth}>‹</button>}
         <div className="year-label" style={{ textTransform: 'capitalize' }}>{FRENCH_MONTHS[month]} {year}</div>
@@ -1466,7 +1463,7 @@ function DatePickerPopover({ year, month, setYear, setMonth, selectedDate, onPic
   // problématiques (transform, overflow:hidden, etc.) — notamment la
   // .modal qui clippait le calendrier en bas. Sans anchor (fallback CSS
   // absolute), on garde le rendu inline classique.
-  if (fixedStyle && typeof ReactDOM !== 'undefined' && ReactDOM.createPortal) {
+  if (styleInitial && typeof ReactDOM !== 'undefined' && ReactDOM.createPortal) {
     return ReactDOM.createPortal(content, document.body);
   }
   return content;

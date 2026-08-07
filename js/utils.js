@@ -302,3 +302,64 @@ function sortItemsBySortKey(items, getKey) {
   const undated = indexed.filter(x => !has(x.k));
   return [...dated, ...undated].map(x => x.it);
 }
+
+// ============================================================
+//  placerPopover — où poser un popover par rapport à son ancre.
+//
+//  PURE : ne touche pas au DOM, ne lit ni `window` ni un élément. Toutes les
+//  tailles arrivent en argument, MESURÉES par l'appelant.
+//
+//  🔴 Pourquoi cette fonction existe (07/08/2026). Les trois popovers de
+//  l'app — calendrier de date, sélecteur de mois, sélecteur de jour —
+//  devinaient leur hauteur avec une CONSTANTE écrite en dur (340, 260, 290).
+//  Leur recadrage garantissait donc que *cette* hauteur restait à l'écran,
+//  pas la vraie : un mois à 6 rangées dépasse l'estimation et le pied du
+//  calendrier sortait de l'écran. Signalé par l'utilisateur sur la modale
+//  d'une opération d'épargne. D'où le « parfois » du symptôme — seuls les
+//  mois qui commencent tard débordent.
+//  ⚠️ Et il leur manquait TOUS LES TROIS la troisième branche : quand ça ne
+//  tient ni dessous ni dessus, ils restaient dessous et débordaient.
+//  `InfoTip` (ui.js) faisait déjà les choses correctement — mesurer puis
+//  recadrer, avec épinglage et défilement interne. C'est son motif qui est
+//  généralisé ici.
+//  ⚠️ Sortie de la vue à dessein (§10) : « si une condition décide quelque
+//  chose, elle sort de la vue ». Le placement est une DÉCISION, et aucune des
+//  trois n'était testable tant qu'elle vivait dans un composant.
+//
+//  ancre    : { top, bottom, left, width }  — le rect du déclencheur
+//  taille   : { largeur, hauteur }          — MESURÉE, jamais devinée
+//  viewport : { largeur, hauteur }
+//  ancrage  : 'centre' (les calendriers) | 'droite' (bord droit aligné)
+//  Renvoie  : { top, left, maxHeight, place }
+//             place = 'dessous' | 'dessus' | 'epingle'
+//             maxHeight vaut null sauf en 'epingle' (défilement interne)
+// ============================================================
+function placerPopover({ ancre, taille, viewport, marge = 8, ancrage = 'centre' }) {
+  const placeDessous = viewport.hauteur - ancre.bottom - marge;
+  const placeDessus = ancre.top - marge;
+
+  let top, place, maxHeight = null;
+  if (taille.hauteur <= placeDessous) {
+    top = ancre.bottom + marge;
+    place = 'dessous';
+  } else if (taille.hauteur <= placeDessus) {
+    top = ancre.top - taille.hauteur - marge;
+    place = 'dessus';
+  } else {
+    // Ne tient nulle part : épinglé en haut, hauteur bornée, défilement
+    // interne. C'est la branche qui manquait — sans elle on débordait.
+    top = marge;
+    maxHeight = Math.max(0, viewport.hauteur - 2 * marge);
+    place = 'epingle';
+  }
+
+  // Horizontal. Si le popover est plus large que l'écran, on le colle à la
+  // marge gauche : mieux vaut tronquer à droite que le centrer hors cadre.
+  let left = ancrage === 'droite'
+    ? ancre.left + ancre.width - taille.largeur
+    : ancre.left + ancre.width / 2 - taille.largeur / 2;
+  const maxLeft = viewport.largeur - taille.largeur - marge;
+  left = maxLeft < marge ? marge : Math.max(marge, Math.min(left, maxLeft));
+
+  return { top, left, maxHeight, place };
+}
