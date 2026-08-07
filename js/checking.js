@@ -1219,6 +1219,30 @@ function MonthChip({ id, variant, label, labelShort, onPrev, onNext, prevDisable
 // ============================================================
 function useSondeCadenas(refPopover, actif) {
   const [releve, setReleve] = useState(null);
+  const avantPeinture = useRef(null);
+  // 🔴 LE POINT QUI MANQUAIT À LA v1 (07/08/2026, relevé par l'utilisateur) :
+  //  `useEffect` + `requestAnimationFrame` ne donnent leur 1er échantillon
+  //  qu'à la DEUXIÈME image. Si le cadenas descend entre la 1re et la 2e
+  //  peinture, la sonde ne voyait que la valeur stabilisée — d'où un
+  //  `amp 0` parfaitement exact et parfaitement inutile.
+  //  `useLayoutEffect` mesure AVANT que le navigateur ne peigne : c'est la
+  //  géométrie telle que la mise en page vient de la calculer. Comparée à la
+  //  série qui suit, elle tranche enfin entre mise en page et rendu.
+  useLayoutEffect(() => {
+    if (!actif || !refPopover.current) { avantPeinture.current = null; return; }
+    const pop = refPopover.current;
+    const l = pop.querySelector('.month-cell-lock');
+    const c = pop.querySelector('.month-cell');
+    avantPeinture.current = {
+      pop: pop.getBoundingClientRect().top,
+      cell: c?.getBoundingClientRect().top ?? null,
+      cadA: l?.getBoundingClientRect().top ?? null,
+      cadZ: [...pop.querySelectorAll('.month-cell-lock')].pop()?.getBoundingClientRect().top ?? null,
+      // le style CALCULÉ au moment du layout : si la mise en page changeait,
+      // l'une de ces valeurs bougerait aussi
+      css: l && c ? [getComputedStyle(l).top, getComputedStyle(c).borderTopWidth, getComputedStyle(c).paddingTop].join('|') : null,
+    };
+  }, [actif]);
   useEffect(() => {
     if (!actif || !refPopover.current) return;
     const pop = refPopover.current;
@@ -1229,6 +1253,9 @@ function useSondeCadenas(refPopover, actif) {
       cadZ: [...pop.querySelectorAll('.month-cell-lock')].pop()?.getBoundingClientRect().top ?? null,
     });
     const serie = [];
+    // On mesure AUSSI tout de suite, avant le 1er rAF : ça comble le trou
+    // entre la peinture initiale et l'image suivante.
+    if (pop.getBoundingClientRect().width > 0) serie.push({ ms: -1, ...cible() });
     let brut = null, t0 = null, arret = false;
     const tic = (t) => {
       if (arret) return;
@@ -1238,19 +1265,34 @@ function useSondeCadenas(refPopover, actif) {
       // `getBoundingClientRect()` d'élément caché rend des zéros, qui
       // s'afficheraient comme une mesure valide « rien ne bouge ».
       if (pop.getBoundingClientRect().width > 0) serie.push({ ms: Math.round(t - t0), ...cible() });
-      if (t - t0 < 700) brut = requestAnimationFrame(tic);
+      // Fenêtre portée à 1500 ms : l'utilisateur a signalé que le sursaut
+      // semblait coïncider avec l'apparition du panneau (~700 ms). Il faut
+      // donc mesurer BIEN au-delà pour l'exclure ou le confirmer.
+      if (t - t0 < 1500) brut = requestAnimationFrame(tic);
       else if (!serie.length) { /* chip masquée : cette instance ne mesure rien */ }
       else {
-        // On ne garde que les CHANGEMENTS : si rien ne bouge, une seule valeur.
+        // ⚠️ La mesure AVANT PEINTURE entre dans la série, en tête : c'est elle
+        // qui tranche. Si elle diffère du reste, la mise en page a bougé entre
+        // le calcul et la première image affichée.
+        const av = avantPeinture.current;
+        const tout = av ? [{ ms: -2, ...av }, ...serie] : serie;
         const clefs = ['pop', 'cell', 'cadA', 'cadZ'];
-        const out = { dpr: window.devicePixelRatio, n: serie.length, ms: serie[serie.length - 1].ms };
+        const out = {
+          dpr: window.devicePixelRatio, n: serie.length, ms: serie[serie.length - 1].ms,
+          layout: av ? clefs.map((k) => (av[k] === null ? '—' : Math.round(av[k] * 100) / 100)).join(' ') : 'non mesuré',
+          cssAvant: av ? av.css : null,
+          cssApres: (() => {
+            const l2 = pop.querySelector('.month-cell-lock'), c2 = pop.querySelector('.month-cell');
+            return l2 && c2 ? [getComputedStyle(l2).top, getComputedStyle(c2).borderTopWidth, getComputedStyle(c2).paddingTop].join('|') : null;
+          })(),
+        };
         clefs.forEach((k) => {
           const chg = [];
-          serie.forEach((s, i) => {
+          tout.forEach((s) => {
             const v = s[k] === null ? null : Math.round(s[k] * 100) / 100;
             if (!chg.length || chg[chg.length - 1][1] !== v) chg.push([s.ms, v]);
           });
-          const vals = serie.map((s) => s[k]).filter((v) => v !== null);
+          const vals = tout.map((s) => s[k]).filter((v) => v !== null);
           out[k] = { chg: chg.slice(0, 10), amp: vals.length ? Math.round((Math.max(...vals) - Math.min(...vals)) * 100) / 100 : null };
         });
         setReleve(out);
@@ -1274,8 +1316,10 @@ function PanneauSonde({ releve }) {
       font: '600 9.5px/1.35 "SF Mono", Monaco, Consolas, monospace',
       borderRadius: 6, whiteSpace: 'pre-wrap', pointerEvents: 'none',
     }}>
-      {`🔬 SONDE CADENAS — dpr ${releve.dpr} · ${releve.n} images / ${releve.ms} ms\n`}
-      {`amp = amplitude du \`top\` en px CSS ; puis ms:valeur à chaque CHANGEMENT\n`}
+      {`🔬 SONDE v2 — dpr ${releve.dpr} · ${releve.n} img / ${releve.ms} ms\n`}
+      {`ms −2 = AVANT peinture · −1 = juste après · puis chaque CHANGEMENT\n`}
+      {`layout (pop cell cadA cadZ) : ${releve.layout}\n`}
+      {`css top|bordure|padding  av: ${releve.cssAvant || '—'}  ap: ${releve.cssApres || '—'}${releve.cssAvant !== releve.cssApres ? '   ⚠️ DIFFÈRENT' : '  (identique)'}\n`}
       {l('pop', releve.pop) + '\n'}
       {l('cell', releve.cell) + '\n'}
       {l('cadA', releve.cadA) + '\n'}
