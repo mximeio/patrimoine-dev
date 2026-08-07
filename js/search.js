@@ -776,28 +776,36 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             autoFocus
           />
           {aQuelqueChoseAMontrer && (
-            <span
-              className="search-input-meta"
-              title={libelleSansDateMasques(sansDateMasques)}
-            >
+            <span className="search-input-meta">
               {filtreActif && total !== totalBrut
                 ? <><strong>{total}</strong> sur {totalBrut}</>
                 : `${total} résultat${total > 1 ? 's' : ''}`}
-              {/* ⚠️ `title` HTML, donc INVISIBLE au tactile — l'explication
-                  n'existe pas sur iPhone, seule la mention reste lisible.
-                  Un InfoTip a été essayé le 07/08/2026 puis ABANDONNÉ : son
-                  déclencheur est calé pour une icône (`inline-flex`,
-                  `vertical-align: -2px`), et sur du texte il avalait l'espace
-                  avant le « · » et désalignait la mention (+2 px de hauteur,
-                  −3 px de largeur, mesurés). Et surtout, sa BULLE DÉBORDAIT de
-                  l'écran : elle se positionne par rapport à une icône centrée,
-                  or ici le déclencheur est un texte collé au bord droit, et le
-                  recadrage au viewport n'y suffit pas.
-                  ⇒ Ne pas le reproposer sans revoir d'abord `.infotip` pour un
-                  déclencheur TEXTUEL — style ET positionnement. C'est un
-                  chantier à part, pas une ligne. */}
+              {/* La mention EST le déclencheur de son explication : un `title`
+                  HTML n'existe pas au tactile, or c'est sur iPhone qu'on en a
+                  besoin. Déclencheur TEXTUEL d'`InfoTip` (`children`, classe
+                  `.infotip-txt`) — surtout pas `.infotip`, calé pour une icône :
+                  son inline-flex mange l'espace avant le « · » (mesuré au banc
+                  du 07/08/2026 : −3,2 px de largeur, +2 px de hauteur).
+                  ⚠️ `infotip-pop--wrap` est OBLIGATOIRE, et c'est ce qui avait
+                  manqué au premier essai. Sans lui la bulle est en
+                  `white-space: nowrap` : les 448 px du libellé sortent d'une
+                  boîte plafonnée à 220 px et finissent 220 px HORS ÉCRAN. Le
+                  recadrage de `ui.js` n'y peut rien — il place la BOÎTE, qui
+                  tient (bord droit à 382 px sur 390), pas le contenu qui en
+                  sort. Mesuré aussi sur un viewport de 766 px (195 px dehors) :
+                  ce n'est donc PAS un défaut mobile.
+                  ⚠️ L'espace avant le « · » est à l'INTÉRIEUR du span, et il y
+                  reste : c'est lui que `.infotip` avalait.
+                  Le `title` du compteur a disparu : `InfoTip` pose `title=""`
+                  depuis la v599, la bulle blanche est la seule explication —
+                  c'est le choix déjà fait pour les 4 autres usages. */}
               {sansDateMasques > 0 && (
-                <span className="search-meta-exclus"> · {sansDateMasques} sans date</span>
+                <InfoTip
+                  label={libelleSansDateMasques(sansDateMasques)}
+                  popClassName="infotip-pop--wrap"
+                >
+                  <span className="search-meta-exclus"> · {sansDateMasques} sans date</span>
+                </InfoTip>
               )}
             </span>
           )}
