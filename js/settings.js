@@ -839,13 +839,13 @@ function SimpleRecurringRow({ item, scope, list, index, onUpdate, onRemove, onEd
   );
 }
 
-// Étiquette compacte pour le jour du mois (1-31) d'une ligne récurrente.
-// Cliquable, ouvre un DayPickerPopover (même style/comportement que le
+// Champ pleine largeur pour le jour du mois (1-31) d'une ligne récurrente —
+// calqué sur DateInputPicker, pour un rendu cohérent avec le champ Date
+// d'OperationForm. Ouvre un DayPickerPopover (même style/comportement que le
 // DatePickerPopover des opérations, mais avec une grille 1-31 sans mois).
-// Affiche "Le 5" ou "—" si pas encore défini.
-// Variante "input pleine largeur" du DayChip — calquée sur DateInputPicker.
-// Sert dans la modale RecurringForm pour un rendu cohérent avec le champ
-// Date d'OperationForm. Ouvre le même DayPickerPopover que DayChip.
+// Affiche "Le 5" ou "Choisir un jour" si pas encore défini.
+// ⚠️ Il existait une variante compacte `DayChip` pour les LIGNES de la liste :
+// supprimée le 07/08/2026, elle était du code mort (définie, jamais rendue).
 function DayInputPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState(null);
@@ -880,44 +880,6 @@ function DayInputPicker({ value, onChange }) {
         />
       )}
     </div>
-  );
-}
-
-function DayChip({ value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState(null);
-  const btnRef = useRef(null);
-  const handleOpen = (e) => {
-    e.stopPropagation();
-    if (open) { setOpen(false); return; }
-    if (btnRef.current) setAnchorRect(btnRef.current.getBoundingClientRect());
-    setOpen(true);
-  };
-  return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        className="recurring-day-chip"
-        // ⚠️ Le stopPropagation de `handleOpen` est sur le CLICK — trop tard pour
-        // le handler de clic extérieur du popover, qui écoute `mousedown`. Il en
-        // faut un second, ici : malgré l'apparence, ce ne sont pas la même
-        // parade. Cf. le pavé de MonthChip (checking.js), 07/08/2026.
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={handleOpen}
-        title={value ? `Jour du mois : ${value}` : 'Définir un jour'}
-      >
-        {value ? `Le ${value}` : '—'}
-      </button>
-      {open && (
-        <DayPickerPopover
-          selectedDay={value}
-          onPick={(d) => { onChange(d); setOpen(false); }}
-          onClose={() => setOpen(false)}
-          anchorRect={anchorRect}
-        />
-      )}
-    </>
   );
 }
 

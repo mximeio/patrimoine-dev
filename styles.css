@@ -1096,27 +1096,6 @@ input[type="month"] {
 .tx-check.checked { background: var(--accent); border-color: var(--accent); color: white; }
 .tx-check.checked::after { content: '✓'; font-size: 12px; font-weight: bold; }
 
-/* Étiquette compacte JJ/MM cliquable, affichée à gauche du libellé
-   uniquement quand le toggle "Gestion des dates" est actif. */
-.tx-date-chip {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 22px; min-width: 50px; width: 50px;
-  padding: 0 6px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 4px;
-  background: var(--surface-alt);
-  cursor: pointer;
-  flex-shrink: 0;
-  font-family: inherit;
-  transition: border-color 0.15s, background 0.15s;
-}
-.tx-date-chip:hover { border-color: var(--accent); background: var(--accent-light); }
-.tx-date-chip-label {
-  font-size: 11px; font-weight: 500;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
 
 /* Variante de la grille .tx-row quand le mode "dates" est actif :
    on insère une 3ème colonne pour la chip JJ/MM, sans casser le reste. */
@@ -1145,37 +1124,6 @@ input[type="month"] {
   grid-template-columns: 28px 24px 56px 1fr var(--amt-w, 130px) 24px;
 }
 
-/* Étiquette "Le X" pour les récurrents (jour du mois 1-31), strictement
-   alignée sur .tx-date-chip pour la cohérence visuelle. */
-.recurring-day-chip {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 22px; min-width: 50px; width: 50px;
-  padding: 0 6px;
-  border: 1px dashed var(--border-strong);
-  border-radius: 4px;
-  background: var(--surface-alt);
-  cursor: pointer; flex-shrink: 0;
-  font-size: 11px; font-weight: 500;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  transition: border-color 0.15s, background 0.15s;
-}
-.recurring-day-chip:hover { border-color: var(--accent); background: var(--accent-light); }
-.recurring-day-input {
-  width: 50px; height: 22px;
-  padding: 0 6px;
-  border: 1px solid var(--accent);
-  border-radius: 4px;
-  background: white;
-  font-size: 11px; font-family: inherit;
-  text-align: center;
-  outline: none;
-  flex-shrink: 0;
-}
-/* Sur mobile, le chip est légèrement plus compact pour s'adapter à la grille. */
-@media (max-width: 640px) {
-  .recurring-day-chip, .recurring-day-input { min-width: 44px; width: 44px; }
-}
 
 .tx-label, .tx-amount {
   background: transparent; border: none; outline: none;
@@ -3112,8 +3060,6 @@ input[type="month"] {
   .tx-row.with-edit.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px) 22px; }
   .tx-row.composite-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px) 22px; }
   .tx-row.composite-row.with-edit.with-date { grid-template-columns: 20px 20px 44px 1fr var(--amt-w, 96px) 22px; }
-  /* Chip date plus compacte sur mobile pour économiser l'espace. */
-  .tx-date-chip { min-width: 44px; width: 44px; }
   .tx-icon { width: 20px; height: 20px; }
   /* Récurrents (modales Entrées/Sorties dans le menu ⋯) : mêmes colonnes et paddings que tx-row */
   .recurring-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); gap: 6px; padding: 8px 10px; }
@@ -3445,7 +3391,6 @@ input[type="month"] {
      la case, sans liseré. */
   background: rgba(79, 70, 229, 0.5); border-color: transparent; color: white;
 }
-.frozen-month .tx-date-chip { cursor: default; }
 .frozen-month .tx-icon { cursor: default; }
 /* Cadenas de la chip de mois (hero + titre mobile) — icône vectorielle
    en currentColor : blanche sur la variante hero, ardoise sur la light.

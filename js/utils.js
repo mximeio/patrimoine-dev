@@ -195,14 +195,6 @@ function checkingModuleLabel(profile) {
   return profile?.modulesEnabled?.multiCheckingAccounts ? 'Comptes courants' : 'Compte courant';
 }
 
-// Format compact "JJ/MM" à partir d'une date ISO YYYY-MM-DD.
-// Renvoie '' si la date est absente ou invalide.
-function formatDayMonth(iso) {
-  if (!iso || typeof iso !== 'string') return '';
-  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return '';
-  return `${m[3]}/${m[2]}`;
-}
 
 // Le toggle "Gestion des dates" est-il activé sur le profil ?
 function checkingDatesEnabled(profile) {
@@ -335,21 +327,46 @@ function sortItemsBySortKey(items, getKey) {
 //             maxHeight vaut null sauf en 'epingle' (défilement interne)
 // ============================================================
 function placerPopover({ ancre, taille, viewport, marge = 8, ancrage = 'centre' }) {
-  const placeDessous = viewport.hauteur - ancre.bottom - marge;
-  const placeDessus = ancre.top - marge;
+  // 🔴 ON RAMÈNE D'ABORD L'ANCRE DANS L'ÉCRAN. Trouvé le 07/08/2026 par le
+  //  balayage exhaustif des tests, et manqué par les douze cas écrits à la
+  //  main : une ancre située AU-DESSUS de l'écran (page défilée après la
+  //  capture du rect) donne un `bottom` NÉGATIF, ce qui gonfle la place
+  //  « disponible dessous » au-delà de la hauteur de l'écran — et le popover
+  //  débordait par le bas. Contre-exemple : écran 420, popover 500,
+  //  ancre à −150 → la place calculée valait 532, donc « ça tient dessous ».
+  //  Borner l'ancre AVANT tout calcul ferme le cas à la racine, plutôt que de
+  //  rattraper chaque branche après coup.
+  const bas = Math.min(Math.max(ancre.bottom, marge), viewport.hauteur - marge);
+  const placeDessous = viewport.hauteur - bas - marge;
+  const hauteurUtile = viewport.hauteur - 2 * marge;
 
   let top, place, maxHeight = null;
   if (taille.hauteur <= placeDessous) {
-    top = ancre.bottom + marge;
+    top = bas + marge;
     place = 'dessous';
-  } else if (taille.hauteur <= placeDessus) {
-    top = ancre.top - taille.hauteur - marge;
-    place = 'dessus';
+  } else if (taille.hauteur <= hauteurUtile) {
+    // 🔴 ON REMONTE DU STRICT MINIMUM, on ne BASCULE PAS au-dessus.
+    //  Décision de l'utilisateur, 07/08/2026, après avoir vu le résultat à
+    //  l'écran. La bascule complète (`flip` de Floating UI) est pensée pour des
+    //  menus COURTS ; ici les trois popovers font 227, 297 et 367 px, soit la
+    //  moitié de la hauteur utile d'une modale sur iPhone — les basculer les
+    //  envoie d'autant plus loin du champ qu'ils sont grands. Mesuré sur le cas
+    //  signalé : la bascule posait le calendrier à 35 px du haut alors que son
+    //  champ était à 410, donc collé en haut de l'écran et visuellement
+    //  détaché. En remontant du minimum, il reste au contact du champ.
+    //  ⚠️ Contrepartie ASSUMÉE : le popover peut recouvrir son propre champ.
+    //  C'est sans conséquence sur un sélecteur de date ou de mois — la valeur
+    //  courante est déjà montrée DANS le popover. Ne pas généraliser cette
+    //  règle à un menu d'actions, où le champ recouvert porterait une
+    //  information qu'on perdrait.
+    top = Math.max(marge, viewport.hauteur - taille.hauteur - marge);
+    place = 'remonte';
   } else {
-    // Ne tient nulle part : épinglé en haut, hauteur bornée, défilement
-    // interne. C'est la branche qui manquait — sans elle on débordait.
+    // Plus haut que l'écran : là seulement on épingle, avec défilement
+    // interne. Il n'y a pas d'autre choix, et c'est la branche qui manquait
+    // aux trois popovers — sans elle, on débordait.
     top = marge;
-    maxHeight = Math.max(0, viewport.hauteur - 2 * marge);
+    maxHeight = Math.max(0, hauteurUtile);
     place = 'epingle';
   }
 
