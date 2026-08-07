@@ -538,6 +538,28 @@ function trierGroupe(items, query) {
   return liste;
 }
 
+// Que devient le couple de bornes quand l'une rend l'autre incohérente ?
+//
+//  🔴 Règle retenue (option C, décidée le 07/08/2026) : **la borne qu'on
+//  vient de TOUCHER fait foi, l'autre s'OUVRE.** Choisir « au 2024 » alors
+//  que « du » vaut 2026 donne « début → 2024 », pas « 2024 → 2024 ».
+//
+//  ⚠️ Deux autres règles ont été écartées, et le cas MIROIR est ce qui les
+//  départage — le vérifier avant de reproposer l'une d'elles :
+//   - « recaler l'autre borne » (l'ancien comportement) ÉCRASE une saisie :
+//     on avait dit 2026, il devient 2024 sans l'avoir demandé ;
+//   - « inverser les deux » paraît meilleur sur cet exemple, mais sur le
+//     miroir — avoir « du 2024 au 2026 » et choisir « du 2027 » — la valeur
+//     qu'on vient de saisir atterrit dans **l'autre champ** (« du 2026 au
+//     2027 »). La borne touchée cesse d'être celle qu'on a remplie.
+//  ⇒ C est la seule des trois où ce qu'on clique fait ce qu'on lui demande.
+function corrigerBornes(champ, valeur, du, au) {
+  if (champ === 'du') {
+    return { du: valeur, au: (valeur && au && valeur > au) ? '' : au };
+  }
+  return { du: (valeur && du && valeur < du) ? '' : du, au: valeur };
+}
+
 function SearchModal({ ctx, onClose, onNavigate }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(0);
@@ -571,10 +593,10 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // que rien ne disparaisse en silence.
   const sansDateMasques = useMemo(() => nbSansDateMasques(resultsBruts, du, au), [resultsBruts, du, au]);
 
-  // Correction automatique : choisir un « du » postérieur au « au » pousse
-  // l'autre borne, plutôt que d'afficher zéro résultat sans expliquer pourquoi.
-  const changerDu = (v) => { setDu(v); if (v && au && v > au) setAu(v); };
-  const changerAu = (v) => { setAu(v); if (v && du && v < du) setDu(v); };
+  // Bornes incohérentes : cf. `corrigerBornes` — la borne touchée fait foi,
+  // l'autre s'ouvre. La décision vit dans la fonction pure, pas ici.
+  const changerDu = (v) => { const b = corrigerBornes('du', v, du, au); setDu(b.du); setAu(b.au); };
+  const changerAu = (v) => { const b = corrigerBornes('au', v, du, au); setDu(b.du); setAu(b.au); };
   const effacerPeriode = () => { setDu(''); setAu(''); };
 
   // Grouper par module dans l'ordre fixe, puis trier chaque groupe par date
