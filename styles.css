@@ -2355,6 +2355,10 @@ input[type="month"] {
    Replié par défaut : au repos, la fenêtre est celle d'avant, à une icône
    près. La pastille reste visible une fois la barre refermée — c'est ce qui
    évite de chercher en vain sous un filtre oublié. */
+/* Ce que la période écarte faute de date. Discret, mais jamais absent :
+   masquer sans le dire serait une perte silencieuse. */
+.search-meta-exclus { color: var(--text-subtle); }
+
 .search-periode-btn {
   width: 28px; height: 28px; padding: 0;
   border: 1px solid transparent; background: transparent;

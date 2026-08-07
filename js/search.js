@@ -435,11 +435,21 @@ const MODULE_ICONS_NAMES = {
 //  mois (`months["2026-08"]`) et leur champ `date` est OPTIONNEL. Un
 //  filtre au jour écarterait celles qui n'en ont pas, sans prévenir.
 //
-//  ⚠️ Les items SANS `monthKey` (récurrents, comptes, livrets, supports,
-//  actifs) ne sont JAMAIS masqués : ils ne sont pas concernés par une
-//  période. Les masquer ferait disparaître un livret qu'on cherchait,
-//  sous un filtre parfois oublié. Ils gardent leur place en tête de
-//  groupe, comme aujourd'hui.
+//  🔴 Les items SANS `monthKey` (récurrents, comptes, livrets, supports,
+//  actifs) sont MASQUÉS dès qu'une borne est posée — décision de
+//  l'utilisateur le 07/08/2026, après un premier arbitrage inverse.
+//  Motif : poser une période, c'est exprimer une intention temporelle ;
+//  ce qui n'a pas de date n'y répond pas. Vu à l'écran, la règle
+//  précédente affichait les douze récurrents AVANT les opérations de la
+//  période — l'inverse exact du besoin.
+//  ⚠️ Le risque assumé est le « filtre oublié » : chercher « livret »
+//  sous une période active ne le trouve plus. Deux garde-fous le
+//  couvrent, et ils n'existaient pas au premier arbitrage — la PASTILLE
+//  sur l'icône, visible même barre repliée, et la MENTION dans le
+//  compteur (« 5 sans date »), qui dit ce qui a été écarté.
+//  ⇒ **Ne jamais masquer sans cette mention** : ce serait une perte
+//  silencieuse, exactement ce que le §10 reproche à une comparaison en
+//  euros aveugle à un historique détruit.
 // ============================================================
 
 // Les mois réellement présents dans les résultats, du plus ancien au plus
@@ -462,11 +472,18 @@ function filtrerParPeriode(items, du, au) {
   // ressemblerait à « aucun résultat » et non à une saisie incohérente.
   if (d && a && d > a) { const t = d; d = a; a = t; }
   return liste.filter((it) => {
-    if (!it || !it.monthKey) return true;
+    if (!it || !it.monthKey) return false; // sans date → hors période
     if (d && it.monthKey < d) return false;
     if (a && it.monthKey > a) return false;
     return true;
   });
+}
+
+// Combien d'éléments sans date une période écarterait-elle ? Sert à la mention
+// du compteur. Renvoie 0 quand aucune borne n'est posée : rien n'est masqué.
+function nbSansDateMasques(items, du, au) {
+  if (!du && !au) return 0;
+  return (items || []).filter((it) => !it || !it.monthKey).length;
 }
 
 // Ce que la fenêtre doit afficher, selon la requête ET la période.
@@ -550,6 +567,9 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     [allItems, query, filtreActif],
   );
   const results = useMemo(() => itemsAffiches(allItems, query, du, au), [allItems, query, du, au]);
+  // Ce que la période écarte faute de date — annoncé dans le compteur, pour
+  // que rien ne disparaisse en silence.
+  const sansDateMasques = useMemo(() => nbSansDateMasques(resultsBruts, du, au), [resultsBruts, du, au]);
 
   // Correction automatique : choisir un « du » postérieur au « au » pousse
   // l'autre borne, plutôt que d'afficher zéro résultat sans expliquer pourquoi.
@@ -723,10 +743,18 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             autoFocus
           />
           {aQuelqueChoseAMontrer && (
-            <span className="search-input-meta">
+            <span
+              className="search-input-meta"
+              title={sansDateMasques
+                ? `${sansDateMasques} élément(s) sans date (récurrents, livrets, supports, actifs) sont écartés par la période`
+                : undefined}
+            >
               {filtreActif && total !== totalBrut
                 ? <><strong>{total}</strong> sur {totalBrut}</>
                 : `${total} résultat${total > 1 ? 's' : ''}`}
+              {sansDateMasques > 0 && (
+                <span className="search-meta-exclus"> · {sansDateMasques} sans date</span>
+              )}
             </span>
           )}
           <button
