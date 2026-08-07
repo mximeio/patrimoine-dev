@@ -707,25 +707,28 @@ function SearchModal({ ctx, onClose, onNavigate }) {
         {filtreOuvert && (
           <div className="search-periode">
             <span className="search-periode-lab">du</span>
-            <select
-              className={`search-periode-sel${du ? '' : ' vide'}`}
+            {/* Le MÊME sélecteur que le compte courant, plutôt qu'une liste
+                déroulante de 31 entrées : le geste est déjà connu.
+                ⚠️ `zIndex` 3100 est indispensable — la fenêtre de recherche est
+                à 3000, et le popover s'ouvrirait DERRIÈRE elle avec sa valeur
+                par défaut (2000), en paraissant ne pas s'ouvrir du tout. */}
+            <MonthInputPicker
               value={du}
-              onChange={(e) => changerDu(e.target.value)}
-              aria-label="Début de la période"
-            >
-              <option value="">début</option>
-              {mois.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
-            </select>
+              onChange={changerDu}
+              placeholder="début"
+              className={`search-periode-sel${du ? '' : ' vide'}`}
+              style={{ cursor: 'pointer' }}
+              zIndex={3100}
+            />
             <span className="search-periode-lab">au</span>
-            <select
-              className={`search-periode-sel${au ? '' : ' vide'}`}
+            <MonthInputPicker
               value={au}
-              onChange={(e) => changerAu(e.target.value)}
-              aria-label="Fin de la période"
-            >
-              <option value="">aujourd'hui</option>
-              {mois.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
-            </select>
+              onChange={changerAu}
+              placeholder="fin"
+              className={`search-periode-sel${au ? '' : ' vide'}`}
+              style={{ cursor: 'pointer' }}
+              zIndex={3100}
+            />
             {filtreActif && (
               <button type="button" className="search-periode-clear" onClick={effacerPeriode}>
                 Effacer

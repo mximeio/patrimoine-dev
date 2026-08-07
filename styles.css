@@ -2384,12 +2384,17 @@ input[type="month"] {
   flex-shrink: 0;
 }
 .search-periode-lab { color: var(--text-muted); flex: 0 0 auto; }
+/* Bouton du sélecteur de mois — c'est le MÊME composant que le compte
+   courant (MonthInputPicker), pas une liste déroulante : le geste est déjà
+   connu, et une grille par année bat 31 entrées à dérouler. */
 .search-periode-sel {
   border: 1px solid var(--border-strong); border-radius: 7px;
-  background: #fff; padding: 5px 9px;
+  background: #fff; padding: 5px 10px;
   font-family: inherit; font-size: 12.5px; color: var(--text);
-  cursor: pointer; min-width: 0;
+  cursor: pointer; min-width: 0; white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
 }
+.search-periode-sel:hover { border-color: var(--accent); background: var(--accent-soft); }
 /* Une borne ouverte s'affiche en gris : « début » et « aujourd'hui » disent
    l'absence de borne mieux qu'un champ vide. */
 .search-periode-sel.vide { color: var(--text-subtle); }
