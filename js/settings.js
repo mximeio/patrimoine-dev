@@ -158,7 +158,7 @@ function PasswordChangeCard({ ctx }) {
     <div className="settings-card">
       <h2>Mot de passe</h2>
       <p className="muted">Modifie ton mot de passe de connexion.</p>
-      <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 380 }}>
+      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 380 }}>
         {error && <div style={{ padding: 10, background: 'var(--danger-light)', color: COLORS.danger, fontSize: 13, borderRadius: 8 }}>{error}</div>}
         <div>
           <label className="label">Mot de passe actuel</label>
@@ -662,7 +662,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
   ];
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {types.map((t) => {
