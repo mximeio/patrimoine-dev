@@ -1177,8 +1177,18 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     onClose();
   };
 
-  const pied = (
-    <>
+  // Zone d'actions EN FIN DE CORPS, comme les 27 autres modales de l'app.
+  // *Un PIED FIGÉ a été livré ici du 09/08/2026 (v957) au même jour (v965), puis
+  // retiré — décision de l'utilisateur. Motif : sur des données réelles la
+  // fenêtre NE DÉFILE PAS (corps 635 px pour 683 disponibles), donc le pied ne
+  // rendait le bouton ni plus ni moins atteignable ; il ne restait qu'un motif
+  // unique sur 28 modales, c'est-à-dire la sous-généralisation que le §10
+  // reproche au projet. ⚠️ La prop `footer` de `Modal` est CONSERVÉE et testée :
+  // le chantier « calculer un versement » en aura besoin, lui dont le
+  // récapitulatif et le message d'état n'ont d'intérêt que visibles en
+  // permanence. C'est là que le motif se décidera pour de bon.*
+  const actions = (
+    <div className="maj-actions">
       <div className="maj-total"><span>Total général</span><b className="num">{fmt(totalGeneral)} €</b></div>
       <button type="button" className="btn btn-accent btn-lg" disabled={!modifiees.length || busy} onClick={enregistrer}>
         {busy ? 'Enregistrement…'
@@ -1190,13 +1200,13 @@ function UpdateAllValuesModal({ ctx, onClose }) {
           ? 'Seules les enveloppes modifiées seront écrites et redatées.'
           : "Aucune modification : rien ne sera écrit, aucune date rafraîchie."}
       </div>
-    </>
+    </div>
   );
 
   return (
     // dirty CONTRÔLÉ : il retombe à faux si l'on retape la valeur d'origine,
     // ce que l'heuristique générique de Modal ne sait pas faire.
-    <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose} footer={pied}>
+    <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose}>
       {ordonnees.map((p, i) => {
         const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
         const etfs = (p.data && p.data.etfs) || [];
@@ -1262,6 +1272,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
           </div>
         );
       })}
+      {actions}
     </Modal>
   );
 }

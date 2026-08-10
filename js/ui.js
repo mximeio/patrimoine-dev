@@ -23,6 +23,14 @@ const ModalDirtyContext = React.createContext(null);
 // pas rend exactement le même DOM qu'avant (28 appelants au 09/08/2026, aucun
 // touché). Ne jamais en faire le défaut : c'est ce qui garantit qu'on ne migre
 // que ce qu'on a éprouvé.
+// 🔴 AUCUN APPELANT AUJOURD'HUI, ET C'EST DÉLIBÉRÉ — ne pas retirer cette prop.
+// La mise à jour groupée l'a utilisée le 09/08/2026 (v957) puis y a renoncé le
+// même jour (v965) : sur des données réelles sa fenêtre NE DÉFILE PAS, le pied
+// ne rendait donc le bouton ni plus ni moins atteignable, et il ne restait qu'un
+// motif unique sur 28 modales. La prop reste parce que le chantier « calculer un
+// versement » en aura besoin — son récapitulatif et son message d'état n'ont
+// d'intérêt que visibles en permanence. ⚠️ Le motif est ÉPROUVÉ, y compris le
+// verdict iPhone (§10) : ce qui a été retiré est son usage, pas sa validité.
 // 🔴 UN PIÈGE À CONNAÎTRE AVANT D'Y METTRE UN BOUTON DE SOUMISSION : le pied est
 // un FRÈRE de `children`, donc un `type="submit"` posé dedans est HORS du
 // <form> qui vit dans `children` — il ne soumet rien, sans erreur ni message

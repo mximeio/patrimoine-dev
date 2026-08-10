@@ -247,6 +247,15 @@ input[type="month"] {
 /* Pied FIGÉ optionnel (prop `footer` de Modal, 09/08/2026) : symétrique de
    .modal-header — même flex-shrink, même fond, un liseré côté corps. Il n'existe
    que si la prop est passée, donc aucune modale existante n'est affectée.
+   🔴 AUCUN APPELANT AUJOURD'HUI — ET C'EST VOULU : ne pas la supprimer.
+   La seule modale qui la passait (mise à jour groupée) est revenue à une zone
+   d'actions en fin de corps le 09/08/2026, la fenêtre ne défilant pas sur des
+   données réelles. La prop et cette règle sont CONSERVÉES pour le chantier
+   « calculer un versement », dont le récapitulatif et le message d'état n'ont
+   d'intérêt que visibles en permanence — c'est lui qui décidera du motif.
+   ⚠️ Un balayage de classes mortes la trouvera et la croira supprimable : elle
+   ne l'est pas. La retirer casserait ce chantier EN SILENCE, la prop continuant
+   d'exister sans sa mise en forme. Cf. la fiche « le pied figé » de BACKLOG.md.
    ⚠️ Pas de safe-area en bas, et c'est VÉRIFIÉ, pas oublié : en portrait
    l'overlay pose 14px tout autour, la modale flotte et ne touche jamais le home
    indicator (voir le commentaire de .modal-body en media-query 768px). */
@@ -3415,6 +3424,10 @@ input[type="month"] {
    motif que l'en-tête replié : identité à gauche, montant à droite. */
 .maj-sup-lbl .maj-delta { margin-left: auto; flex: none; white-space: nowrap; }
 .maj-vide { color: var(--muted); font-style: italic; font-size: 12.5px; padding: 4px 0 2px; }
+/* Zone d'actions en FIN DE CORPS (total, bouton, note) — la convention des
+   27 autres modales de l'app. Pas de liseré : `.form-actions` n'en a pas non
+   plus, l'espacement suffit à séparer. */
+.maj-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .maj-total { display: flex; justify-content: space-between; align-items: center;
   font-size: 12.5px; color: var(--muted); }
 .maj-total b { font-size: 17px; color: var(--text); }
