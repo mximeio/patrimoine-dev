@@ -1049,6 +1049,23 @@ function nettoyerMontant(brut) {
   return String(brut).replace(/[^\d.,]/g, '');
 }
 
+// Delta d'un montant, dans le langage de couleur de l'app : VERT en hausse,
+// ROUGE en baisse (.value-positive / .value-negative). ⚠️ Choix révisé le
+// 09/08/2026 sur remarque de l'utilisateur : il était en indigo, c'est-à-dire
+// « non enregistré » — l'accent du liseré .maj-env--modifiee. Mais l'app a déjà
+// une convention pour les montants SIGNÉS, et un troisième langage n'avait pas
+// lieu d'être. Le « non enregistré » reste porté par le liseré et par le libellé
+// du bouton. *Pas de pourcentage ici, contrairement à SupportRow : il coûterait
+// la largeur qu'on vient de récupérer.*
+function DeltaMontant({ valeur }) {
+  if (valeur === null || valeur === undefined) return null;
+  return (
+    <span className={`maj-delta num ${valeur >= 0 ? 'value-positive' : 'value-negative'}`}>
+      {valeur >= 0 ? '+' : '−'}{fmt(Math.abs(valeur))} €
+    </span>
+  );
+}
+
 // Libellé d'un support pour les fenêtres de valorisation : NOM COMPLET quand il
 // y a la place, nom court sur téléphone en portrait. La bascule est faite en CSS
 // (.support-name-full / .support-name-short, §9) : les deux sont rendus, la
@@ -1122,6 +1139,16 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     const source = modif ? modif.currentValues : cur;
     return ((p.data && p.data.etfs) || []).reduce((a, e) => a + (Number(source[e.id]) || 0), 0);
   };
+  // Delta d'UN support : null s'il n'a pas changé. Sert à montrer, sur la ligne
+  // elle-même, laquelle a bougé — le sous-total seul ne le disait pas (relevé par
+  // l'utilisateur le 09/08/2026 : sur trois supports ça se devine, sur huit non).
+  const deltaDuSupport = (p, etf) => {
+    const v = valeurSaisie((saisie[p.id] || {})[etf.id]);
+    if (v === null) return null;
+    const avant = Number((p.data && p.data.currentValues || {})[etf.id]);
+    if (Number.isFinite(avant) && r2(avant) === r2(v)) return null;
+    return r2(v - (Number.isFinite(avant) ? avant : 0));
+  };
   const sousTotalInitial = (p) => {
     const cur = (p.data && p.data.currentValues) || {};
     return ((p.data && p.data.etfs) || []).reduce((a, e) => a + (Number(cur[e.id]) || 0), 0);
@@ -1176,9 +1203,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
         const ouverte = !!ouvertes[p.id];
         const modifiee = estModifiee(p.id);
         const delta = r2(sousTotal(p) - sousTotalInitial(p));
-        const deltaNode = modifiee
-          ? <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>
-          : null;
+        const deltaNode = modifiee ? <DeltaMontant valeur={delta} /> : null;
 
         return (
           <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
@@ -1217,6 +1242,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                       <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
                       <b>{supportName(e)}</b>
                       <LibelleSupport etf={e} />
+                      <DeltaMontant valeur={deltaDuSupport(p, e)} />
                     </span>
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
                       value={valeurAffichee(p, e)}
@@ -1277,6 +1303,14 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
     const v = (data.currentValues || {})[etf.id];
     return v === undefined || v === null ? '' : String(v);
   };
+  // Même règle que la fenêtre groupée, sur une seule enveloppe.
+  const deltaDuSupportSeul = (etf) => {
+    const v = valeurSaisie(saisie[etf.id]);
+    if (v === null) return null;
+    const avant = Number((data.currentValues || {})[etf.id]);
+    if (Number.isFinite(avant) && r2(avant) === r2(v)) return null;
+    return r2(v - (Number.isFinite(avant) ? avant : 0));
+  };
   const sommeDe = (src) => (data.etfs || []).reduce((a, e) => a + (Number(src[e.id]) || 0), 0);
   const totalSupports = sommeDe(change ? modifiees[0].currentValues : (data.currentValues || {}));
   const deltaSupports = r2(totalSupports - sommeDe(data.currentValues || {}));
@@ -1304,6 +1338,7 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
               <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
               <b>{supportName(e)}</b>
               <LibelleSupport etf={e} />
+              <DeltaMontant valeur={deltaDuSupportSeul(e)} />
             </span>
             <input
               className="input num" inputMode="decimal"
@@ -1327,7 +1362,7 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
           <div className="maj-sous-total">
             <span>Total des supports</span>
             <b className="num">{fmt(totalSupports)} €
-              {change && <span className="maj-delta">{deltaSupports > 0 ? '+' : '−'}{fmt(Math.abs(deltaSupports))} €</span>}
+              {change && <DeltaMontant valeur={deltaSupports} />}
             </b>
           </div>
         )}

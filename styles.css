@@ -3401,7 +3401,19 @@ input[type="month"] {
 .maj-sous-total { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);
   border-top: 1px dashed var(--border); margin-top: 7px; padding-top: 7px; }
 .maj-sous-total b { color: var(--text); }
-.maj-delta { color: var(--accent); font-weight: 700; margin-left: 4px; }
+/* ⚠️ AUCUNE couleur ici : elle vient de .value-positive / .value-negative, la
+   convention de l'app pour les montants signés (09/08/2026 — l'indigo précédent
+   était un troisième langage). Cette classe ne porte que la typographie. */
+/* Taille et graisse alignées sur `.support-gain` (12 px / 400), la référence de
+   l'app pour un montant SIGNÉ secondaire — face à `.support-name` en 14 px / 600.
+   ⚠️ Il était en 13,5 px hérité et en 700 : plus gros ET plus gras que
+   l'identifiant qu'il accompagne, soit l'inverse de la hiérarchie de l'app.
+   Relevé par l'utilisateur le 09/08/2026 (« 250 et 80 ont l'air écrits en très
+   gros »). La couleur suffit à le faire remarquer, le gras n'y ajoutait rien. */
+.maj-delta { font-size: 12px; font-weight: 400; margin-left: 4px; }
+/* Sur une ligne de support, le delta est repoussé à DROITE du libellé — même
+   motif que l'en-tête replié : identité à gauche, montant à droite. */
+.maj-sup-lbl .maj-delta { margin-left: auto; flex: none; white-space: nowrap; }
 .maj-vide { color: var(--muted); font-style: italic; font-size: 12.5px; padding: 4px 0 2px; }
 .maj-total { display: flex; justify-content: space-between; align-items: center;
   font-size: 12.5px; color: var(--muted); }
