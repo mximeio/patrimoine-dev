@@ -1226,7 +1226,13 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                 <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
                 <span className="maj-env-nom">{p.name}</span>
               </span>
-              {!ouverte && <span className="maj-env-montant num">{fmt(sousTotal(p))} €</span>}
+              {/* Repliée, la ligne porte le montant ET son delta — comme le
+                  sous-total le fait dépliée, et comme la carte à un support le
+                  fait sur sa ligne de support. Oublié en retirant les dates le
+                  09/08/2026 : le delta vivait sur la ligne de meta supprimée.
+                  La carte n'ayant plus qu'un étage, l'ensemble est centré en
+                  hauteur sans rien demander. */}
+              {!ouverte && <span className="maj-env-montant num">{fmt(sousTotal(p))} €{deltaNode}</span>}
               <span className={`maj-chev${ouverte ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
             </button>
             {ouverte && (
