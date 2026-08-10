@@ -3367,7 +3367,27 @@ input[type="month"] {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .maj-env-meta { font-size: 11px; color: var(--muted); text-align: right; flex: none; }
 .maj-env-maj { color: var(--subtle); }
-.maj-chev { font-size: 12px; color: var(--subtle); flex: none; width: 12px; text-align: center; }
+/* Chevron VECTORIEL, pas un caractère texte : les glyphes « ⌄ » et « › »
+   s'asseyaient bas dans leur ligne et paraissaient décentrés (relevé par
+   l'utilisateur le 09/08/2026). Même motif que .evo-chev (v530) — rotation
+   portée par la classe, trait 2.4, display:block sur le svg. */
+.maj-chev {
+  display: inline-flex; align-items: center; color: var(--text-subtle); flex: none;
+  transition: transform 0.2s ease;
+}
+.maj-chev.open { transform: rotate(180deg); }
+.maj-chev svg { stroke-width: 2.4; display: block; }
+/* Carte d'une enveloppe à UN SEUL support : pas de ligne de support séparée, pas
+   de sous-total, pas de chevron — le nom du support passe sous celui de
+   l'enveloppe et le champ vient à droite. Proposé par l'utilisateur le
+   09/08/2026 : « une card avec uniquement 1 support pourrait être plus petite ».
+   Gain mesuré : 3 lignes au lieu de 6. */
+.maj-env--solo { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; }
+.maj-env--solo .maj-solo-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.maj-env--solo .maj-solo-sup { font-size: 12px; color: var(--muted); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maj-env--solo .maj-env-meta { text-align: left; margin-top: 3px; }
+@media (max-width: 400px) { .maj-env--solo { grid-template-columns: 1fr 100px; } }
 .maj-sup { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; padding: 6px 0; }
 .maj-sup-lbl { display: flex; align-items: center; gap: 7px; font-size: 13.5px; min-width: 0; }
 .maj-sup-lbl .maj-sup-court { color: var(--muted); font-size: 12px;

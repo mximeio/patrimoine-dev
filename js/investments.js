@@ -1175,32 +1175,63 @@ function UpdateAllValuesModal({ ctx, onClose }) {
         const ouverte = !!ouvertes[p.id];
         const modifiee = estModifiee(p.id);
         const delta = r2(sousTotal(p) - sousTotalInitial(p));
+        const meta = (
+          <>
+            <span className="maj-env-maj">MaJ {p.data && p.data.currentValuesDate ? fmtDateNumeric(p.data.currentValuesDate) : '—'}</span>
+            {ancienne && <span className="stale-tag">{jours} j</span>}
+          </>
+        );
+        const deltaNode = modifiee
+          ? <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>
+          : null;
+
+        // ── UN SEUL SUPPORT : carte compacte, sans ligne de support, sans
+        // sous-total et sans chevron — il n'y a rien à replier. Proposé par
+        // l'utilisateur le 09/08/2026. Le nom du support passe sous celui de
+        // l'enveloppe, le champ vient à droite : 3 lignes au lieu de 6.
+        if (etfs.length === 1) {
+          const e = etfs[0];
+          return (
+            <div key={p.id} className={`maj-env maj-env--solo${modifiee ? ' maj-env--modifiee' : ''}`}>
+              <div style={{ minWidth: 0 }}>
+                <div className="maj-solo-id">
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
+                  <span className="maj-env-nom">{p.name}</span>
+                </div>
+                <div className="maj-solo-sup">
+                  {supportName(e)}{(e.ticker || '').trim() && (e.label || '').trim() && <> · {e.label}</>}
+                </div>
+                <div className="maj-env-meta num">{meta}{deltaNode}</div>
+              </div>
+              <input className="input num" inputMode="decimal" enterKeyHint="next"
+                value={valeurAffichee(p, e)}
+                onChange={(ev) => setChamp(p.id, e.id, ev.target.value)}
+                onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }} />
+            </div>
+          );
+        }
+
         return (
           <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
             <button type="button" className="maj-env-head" aria-expanded={ouverte}
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
               <span className="maj-env-nom">{p.name}</span>
-              {/* Le montant n'apparaît QUE replié : déplié, le sous-total le
-                  redit trois lignes plus bas. Relevé par l'utilisateur le
-                  09/08/2026. La DATE, elle, reste toujours visible — c'est le
-                  signal qui dit où porter l'attention. Et replié, l'en-tête
-                  emporte le delta, sinon une enveloppe modifiée mais fermée
-                  n'aurait que son liseré pour le dire. */}
+              {/* Le montant n'apparaît QUE replié : déplié, le sous-total le redit
+                  trois lignes plus bas (relevé par l'utilisateur le 09/08/2026).
+                  La DATE reste toujours visible — c'est le signal qui dit où
+                  porter l'attention. Et replié, l'en-tête emporte le delta, sinon
+                  une enveloppe modifiée mais fermée n'aurait que son liseré. */}
               <span className="maj-env-meta num">
-                {!ouverte && <>
-                  {fmt(sousTotal(p))} €
-                  {modifiee && <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>}
-                  <br />
-                </>}
-                <span className="maj-env-maj">MaJ {p.data && p.data.currentValuesDate ? fmtDateNumeric(p.data.currentValuesDate) : '—'}</span>
-                {ancienne && <span className="stale-tag">{jours} j</span>}
+                {!ouverte && <>{fmt(sousTotal(p))} €{deltaNode}<br /></>}
+                {meta}
               </span>
-              <span className="maj-chev">{ouverte ? '⌄' : '›'}</span>
+              {/* Chevron VECTORIEL (motif .evo-chev, v530) : les glyphes texte
+                  s'asseyaient bas dans leur ligne et paraissaient décentrés. */}
+              <span className={`maj-chev${ouverte ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
             </button>
             {ouverte && (
               <div style={{ marginTop: 6 }}>
-                {!etfs.length && <div className="maj-vide">Aucun support</div>}
                 {etfs.map(e => (
                   <div key={e.id} className="maj-sup">
                     <span className="maj-sup-lbl">
@@ -1211,22 +1242,14 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
                       value={valeurAffichee(p, e)}
                       onChange={(ev) => setChamp(p.id, e.id, ev.target.value)}
-                      /* Sélection au focus : taper REMPLACE la valeur pré-remplie
-                         au lieu de l'allonger. Motif repris d'AmountInput (ui.js)
-                         et de SupportForm (settings.js) — le setTimeout(0) est
-                         nécessaire sur iOS Safari, où le tap désélectionne juste
-                         après le onFocus synchrone. En passant à un champ nu pour
-                         éviter le 0-au-blur d'AmountInput, on avait perdu ce
-                         comportement : c'est l'utilisateur qui l'a relevé. */
                       onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }} />
                   </div>
                 ))}
+                {!etfs.length && <div className="maj-vide">Aucun support</div>}
                 {!!etfs.length && (
                   <div className="maj-sous-total">
                     <span>Sous-total</span>
-                    <b className="num">{fmt(sousTotal(p))} €
-                      {modifiee && <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>}
-                    </b>
+                    <b className="num">{fmt(sousTotal(p))} €{deltaNode}</b>
                   </div>
                 )}
               </div>
