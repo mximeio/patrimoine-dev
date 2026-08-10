@@ -212,7 +212,12 @@ function NewSavingsForm({ onSubmit }) {
         <AmountInput value={balance} onChange={(n) => setBalance(n)} className="input" placeholder="0.00" />
         <div className="field-hint">Le solde affiché sera calculé : ce solde initial + tes opérations (versements, retraits, intérêts).</div>
       </div>
-      <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>{busy ? 'Création…' : 'Créer'}</button>
+      {/* Grisé tant que le nom est vide — aligné sur la création d'un compte
+          courant (`!trimmed || isDuplicate`), la référence de l'app. Sans ça le
+          bouton restait plein alors que le submit ne pouvait pas aboutir.
+          Pas de phrase : un champ « Nom » vide en face d'un bouton gris se
+          comprend seul, et la référence n'en a pas non plus. */}
+      <button type="submit" className="btn btn-accent btn-lg" disabled={busy || !name.trim()}>{busy ? 'Création…' : 'Créer'}</button>
     </form>
   );
 }

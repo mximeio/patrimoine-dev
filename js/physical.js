@@ -191,7 +191,7 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
         <div className="field-hint">Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</div>
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={inchange}>{initial ? 'Mettre à jour' : 'Créer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={inchange || !name.trim()}>{initial ? 'Mettre à jour' : 'Créer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
