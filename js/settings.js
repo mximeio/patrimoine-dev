@@ -300,20 +300,23 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange }) {
   // Modifications non enregistrées → alimente la prop `dirty` de la Modale
   // (confirmation avant fermeture, comme le reste de l'app). On compare chaque
   // champ à sa valeur d'origine.
+  // Calculé AU RENDU (et non plus seulement dans l'effet) : il sert désormais à
+  // deux choses — la confirmation de fermeture, et le grisé du bouton. Un
+  // formulaire dont rien n'a bougé ne doit pas proposer d'enregistrer (09/08/2026).
+  const norm = (v) => (v || '').trim();
+  const origTarget = etf.target != null && etf.target !== '' ? String(etf.target) : '';
+  const dirty =
+    kind !== (etf.kind === 'distributing' ? 'distributing' : 'capitalizing')
+    || norm(ticker) !== norm(etf.ticker)
+    || norm(label) !== norm(etf.label)
+    || norm(fullName) !== norm(etf.fullName)
+    || norm(isin) !== norm(etf.isin)
+    || color !== (etf.color || PORTFOLIO_PALETTE[0])
+    || (target || '').trim() !== origTarget;
   useEffect(() => {
     if (!onDirtyChange) return;
-    const norm = (s) => (s || '').trim();
-    const origTarget = etf.target != null && etf.target !== '' ? String(etf.target) : '';
-    const dirty =
-      kind !== (etf.kind === 'distributing' ? 'distributing' : 'capitalizing')
-      || norm(ticker) !== norm(etf.ticker)
-      || norm(label) !== norm(etf.label)
-      || norm(fullName) !== norm(etf.fullName)
-      || norm(isin) !== norm(etf.isin)
-      || color !== (etf.color || PORTFOLIO_PALETTE[0])
-      || (target || '').trim() !== origTarget;
     onDirtyChange(dirty);
-  }, [kind, ticker, label, fullName, isin, color, target]); // eslint-disable-line
+  }, [dirty]); // eslint-disable-line
 
   const submit = () => {
     const tk = (ticker || '').trim().toUpperCase();
@@ -776,7 +779,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       )}
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg">{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={isEdit && !dirty}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer

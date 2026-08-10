@@ -888,20 +888,22 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
 
   // Détection des changements non sauvegardés. Le parent l'utilise pour
   // demander confirmation à la fermeture de la modale.
+  // Calculé AU RENDU : il sert à la confirmation de fermeture ET au grisé du
+  // bouton — un formulaire dont rien n'a bougé ne propose pas d'enregistrer.
+  const trimmedName = (name || '').trim();
+  const dirty = !!(
+    (trimmedName && trimmedName !== (checking.name || ''))
+    || r2(parseFloat(initVal) || 0) !== r2(checking.initialBalance || 0)
+    || initMonth !== (checking.initialBalanceMonth || currentMonthKey())
+    || enabled !== (checking.settings.trEnabled !== false)
+    || r2(parseFloat(face) || 0) !== r2(checking.settings.trFaceValue || 0)
+    || r2(parseFloat(own) || 0) !== r2(checking.settings.trOwnShare || 0)
+    || since !== (checking.settings.trRateSince || '')
+  );
   useEffect(() => {
     if (!onDirtyChange) return;
-    const trimmedName = (name || '').trim();
-    const dirty = (
-      (trimmedName && trimmedName !== (checking.name || ''))
-      || r2(parseFloat(initVal) || 0) !== r2(checking.initialBalance || 0)
-      || initMonth !== (checking.initialBalanceMonth || currentMonthKey())
-      || enabled !== (checking.settings.trEnabled !== false)
-      || r2(parseFloat(face) || 0) !== r2(checking.settings.trFaceValue || 0)
-      || r2(parseFloat(own) || 0) !== r2(checking.settings.trOwnShare || 0)
-      || since !== (checking.settings.trRateSince || '')
-    );
     onDirtyChange(dirty);
-  }, [name, initVal, initMonth, enabled, face, own, since]); // eslint-disable-line
+  }, [dirty]); // eslint-disable-line
 
   const toggleEnabled = (checked) => {
     if (!checked && enabled) {
@@ -1085,7 +1087,8 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
         )}
       </div>
 
-      <button type="submit" className="btn btn-accent btn-lg" disabled={isDuplicateName}>Enregistrer</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={isDuplicateName || !dirty}>Enregistrer</button>
+      {!dirty && !isDuplicateName && <div className="field-hint">Aucune modification à enregistrer.</div>}
 
       {/* Zone de danger : suppression du compte (mode multi uniquement) */}
       {isMultiMode && onDelete && (

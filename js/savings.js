@@ -417,15 +417,17 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
 
   // Détection des changements non sauvegardés (cf. Compte courant) : le parent
   // l'utilise pour demander confirmation à la fermeture de la modale.
+  // Calculé AU RENDU : il sert à la confirmation de fermeture ET au grisé du
+  // bouton — un formulaire dont rien n'a bougé ne propose pas d'enregistrer.
+  const trimmedName = (name || '').trim();
+  const dirty = !!(
+    (trimmedName && trimmedName !== (saving.name || ''))
+    || r2(parseFloat(initialBalance) || 0) !== r2(initial || 0)
+  );
   useEffect(() => {
     if (!onDirtyChange) return;
-    const trimmed = (name || '').trim();
-    const dirty = (
-      (trimmed && trimmed !== (saving.name || ''))
-      || r2(parseFloat(initialBalance) || 0) !== r2(initial || 0)
-    );
     onDirtyChange(dirty);
-  }, [name, initialBalance]); // eslint-disable-line
+  }, [dirty]); // eslint-disable-line
 
   const submit = (e) => {
     e.preventDefault();
@@ -449,7 +451,8 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
           Point de départ pour le calcul du solde affiché. Toutes les opérations enregistrées s'y ajoutent.
         </div>
       </div>
-      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={!dirty}>Enregistrer</button>
+      {!dirty && <div className="field-hint">Aucune modification à enregistrer.</div>}
 
       {/* Zone supprimer */}
       <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />

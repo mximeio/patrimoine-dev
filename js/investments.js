@@ -626,6 +626,8 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
   const [draft, setDraft] = useState(data);
   const [name, setName] = useState(portfolioName || '');
 
+  // Hissé au rendu : sert à la confirmation de fermeture ET au grisé du bouton.
+  const nameDirty = !!((name || '').trim() && (name || '').trim() !== portfolioName);
   useEffect(() => {
     if (!onDirtyChange) return;
     // v590 : les supports persistent immédiatement (onPersistData) → le
@@ -634,10 +636,8 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
     // brouillon/donnée pour les supports : cette comparaison donnait un faux
     // positif après édition d'un support (la relecture Firestore re-normalise
     // l'objet → JSON différent alors que tout est sauvé).
-    const trimmed = (name || '').trim();
-    const nameDirty = !!(trimmed && trimmed !== portfolioName);
     onDirtyChange(nameDirty);
-  }, [name]); // eslint-disable-line
+  }, [nameDirty]); // eslint-disable-line
 
   const submit = (e) => {
     e.preventDefault();
@@ -665,7 +665,13 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
         <EtfsList data={draft} onUpdate={setDraft} onPersist={onPersistData} />
       </div>
 
-      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={!nameDirty}>Enregistrer</button>
+      {/* 🔴 PHRASE INDISPENSABLE ICI, et pas la même qu'ailleurs. Sur cet écran le
+          bouton ne sauve QUE le nom : depuis la v590 les supports persistent au
+          fil de la saisie (onPersistData). Griser sans expliquer ferait croire
+          qu'une modification de support n'a pas été prise, alors qu'elle est
+          déjà en base. La phrase transforme le piège en information. */}
+      {!nameDirty && <div className="field-hint">Les supports sont enregistrés au fil de la saisie. Ce bouton n'enregistre que le nom.</div>}
 
       {/* Zone de danger : suppression du portefeuille */}
       <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
@@ -877,6 +883,21 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
     if (markDirty) markDirty();
   }, [opType, date, amount, marketValue, costBasis, etf]);
 
+  // Comparaison EXACTE avec l'opération d'origine, pour griser le bouton en
+  // édition (09/08/2026). ⚠️ Distincte de `markDirty` juste au-dessus, qui est à
+  // SENS UNIQUE (une fois marqué, toujours marqué) et ne sait donc pas dire
+  // « on est revenu aux valeurs de départ ». Les montants sont comparés arrondis
+  // au centime : sans ça, `12` et `12.00` compteraient comme un changement.
+  const memeMontant = (a, b) => r2(parseFloat(a) || 0) === r2(parseFloat(b) || 0);
+  const opDirty = !editing || (
+    opType !== (initial.type || 'deposit')
+    || date !== (initial.date || today)
+    || !memeMontant(amount, initial.amount)
+    || !memeMontant(marketValue, initial.marketValue)
+    || !memeMontant(costBasis, initial.costBasis)
+    || etf !== (initial.etf || data.etfs[0]?.id || '')
+  );
+
   // Liste des supports distribuants pour le filtre "dividende"
   const distributingEtfs = (data.etfs || []).filter(e => (e.kind || 'capitalizing') === 'distributing');
 
@@ -1044,7 +1065,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
       )}
 
       <div className="form-actions" style={{ marginTop: 4 }}>
-        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf}>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf || (editing && !opDirty)}>
           {editing ? 'Modifier' : 'Enregistrer'}
         </button>
         {editing && onDelete && (
