@@ -158,7 +158,6 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
   const [name, setName] = useState('');
   const [initialBalance, setInitialBalance] = useState('');
   const [initialBalanceMonth, setInitialBalanceMonth] = useState(currentMonthKey());
-  const [error, setError] = useState('');
 
   // Détection de modification pour la confirmation de fermeture du Modal.
   // 🔴 OBLIGATOIRE dès qu'un formulaire porte un contrôle à CLIC : le « mois de
@@ -194,8 +193,11 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (!trimmed) { setError('Le nom est obligatoire.'); return; }
-        if (isDuplicate) { setError(`Le nom "${trimmed}" est déjà utilisé par un autre compte.`); return; }
+        // Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js). Ces deux messages
+        // EXISTAIENT déjà ici, mais le bouton grisé les rendait INATTEIGNABLES : ses
+        // prédicats étaient les mêmes que ceux-ci. Ils reprennent vie en toast.
+        if (!trimmed) return refuser(showToast, REFUS.nomObligatoire);
+        if (isDuplicate) return refuser(showToast, REFUS.nomDejaUtilise(trimmed));
         onSubmit({
           name: trimmed,
           initialBalance: parseFloat(initialBalance) || 0,
@@ -209,14 +211,16 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setError(''); }}
+          onChange={(e) => setName(e.target.value)}
           className="input"
           placeholder="ex: Boursorama, BNP, ING…"
           required
         />
-        {(error || isDuplicate) && (
+        {/* Avertissement de CHAMP, conservé : il paraît pendant la frappe, à côté
+            du champ concerné — ce n'est pas le refus du bouton, qui passe par un toast. */}
+        {isDuplicate && (
           <div className="field-hint" style={{ color: COLORS.danger, marginTop: 4 }}>
-            {error || `Le nom "${trimmed}" est déjà utilisé.`}
+            {`Le nom "${trimmed}" est déjà utilisé.`}
           </div>
         )}
       </div>
@@ -233,7 +237,7 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
       <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>
         Tu pourras configurer les récurrents et réglages TR depuis le compte créé.
       </p>
-      <button type="submit" className="btn btn-accent btn-lg" disabled={!trimmed || isDuplicate}>Créer</button>
+      <button type="submit" className="btn btn-accent btn-lg">Créer</button>
     </form>
   );
 }
@@ -730,6 +734,7 @@ function CheckingView({ ctx, onBack }) {
         } : undefined}
       >
       <OpsSection
+        showToast={showToast}
         items={m.operations || []}
         onChange={(newItems) => updateMonth({ ...m, operations: newItems })}
         mKey={curKey}
@@ -783,6 +788,7 @@ function CheckingView({ ctx, onBack }) {
               </div>
             </div>
             <TrSection
+              showToast={showToast}
               items={m.tr || []}
               trStats={{ total: stats.trTotal, userShare: stats.trUserShare, employerShare: stats.trEmployerShare }}
               onChange={(newTr) => updateMonth({ ...m, tr: newTr })}
@@ -805,6 +811,7 @@ function CheckingView({ ctx, onBack }) {
           </p>
 
           <RecurringList
+            showToast={showToast}
             items={checking.settings.recurringOperations || []}
             onChange={(list) => updateCheckingData({ ...checking, settings: { ...checking.settings, recurringOperations: list } })}
             trEnabled={checking.settings.trEnabled !== false}
@@ -816,6 +823,7 @@ function CheckingView({ ctx, onBack }) {
       {showReglages && (
         <Modal title="Réglages" dirty={reglagesDirty} onClose={closeReglages}>
           <ReglagesForm
+            showToast={showToast}
             checking={checking}
             isMultiMode={isMultiMode}
             otherAccountNames={checkingAccounts.filter(a => a.id !== checking.id).map(a => a.name)}
@@ -851,7 +859,7 @@ function CheckingView({ ctx, onBack }) {
 //  Regroupe : solde initial + tickets restaurants.
 //  À l'avenir : toggle multi-comptes courants.
 // ============================================================
-function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete, otherAccountNames = [], renameAccount }) {
+function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete, otherAccountNames = [], renameAccount, showToast }) {
   // Nom du compte (uniquement en mode multi-comptes)
   const [name, setName] = useState(checking.name || '');
   // Unicité du nom vs autres comptes (case-insensitive, trim)
@@ -920,11 +928,11 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
 
   const submit = (e) => {
     e.preventDefault();
-    // Blocage si nom en doublon avec un autre compte.
-    if (isDuplicateName) {
-      alert(`Le nom "${trimmedNameNow}" est déjà utilisé par un autre compte. Choisis un nom différent.`);
-      return;
-    }
+    // Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js) — remplace un `alert`
+    // dont la formulation divergeait de celle du formulaire de création.
+    // ⚠️ « rien n'a changé » d'abord : c'est le seul cas où l'on n'a rien à corriger.
+    if (!dirty) return refuser(showToast, REFUS.rienChange);
+    if (isDuplicateName) return refuser(showToast, REFUS.nomDejaUtilise(trimmedNameNow));
     // Nom : si l'utilisateur l'a effectivement modifié (mono OU multi),
     // on déclenche un rename PARTIEL séparé (via Adapter.renameCheckingAccount
     // qui utilise .update() au lieu de .set()). Ça évite les courses avec
@@ -1091,8 +1099,7 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
         )}
       </div>
 
-      <button type="submit" className="btn btn-accent btn-lg" disabled={isDuplicateName || !dirty}>Enregistrer</button>
-      {!dirty && !isDuplicateName && <div className="field-hint">Aucune modification à enregistrer.</div>}
+      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
 
       {/* Zone de danger : suppression du compte (mode multi uniquement) */}
       {isMultiMode && onDelete && (
@@ -1626,7 +1633,7 @@ function amountColVar(items) {
   return `clamp(64px, ${px}px, 200px)`;
 }
 
-function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmount = 0, openCreateSignal = 0, onAddTr, onMoveToTr, noDrag = false, frozen = false, hidePointed = false, onHidePointedChange }) {
+function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmount = 0, openCreateSignal = 0, onAddTr, onMoveToTr, noDrag = false, frozen = false, hidePointed = false, onHidePointedChange, showToast }) {
   const [expanded, setExpanded] = useState({});
 
   // ============================================================
@@ -1898,6 +1905,7 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
       {showForm && (
         <Modal title={editing ? 'Modifier une opération' : 'Nouvelle opération'} onClose={() => { setShowForm(false); setEditing(null); }}>
           <OperationForm
+            showToast={showToast}
             initial={editing}
             onSubmit={submitForm}
             trEnabled={trEnabled}
@@ -1930,7 +1938,10 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
 //  toggle "Ligne composite". En composite, liste éditable de
 //  composantes (label + montant) avec total calculé.
 // ============================================================
-function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefund, trRefundAmount = 0, datesMode, mKey, initialType = 'out', allowTr = false }) {
+// ⚠️ `showToast` est requis depuis le 10/08/2026 : c'est par lui que passent les
+// refus de saisie (cf. `REFUS` dans utils.js). Il descend de `CheckingView` via
+// `OpsSection`/`TrSection` — deux niveaux, aucun n'en disposait avant.
+function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefund, trRefundAmount = 0, datesMode, mKey, initialType = 'out', allowTr = false, showToast }) {
   const isEdit = !!initial;
   const isTRAuto = isEdit && initial.isTRRefund && !initial.isComposite;
   const initIsComposite = !!(initial?.isComposite || (initial?.components || []).length > 0);
@@ -2031,6 +2042,17 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
 
   const submit = (e) => {
     e.preventDefault();
+    // 🔴 REFUS ANNONCÉS (chantier du 10/08/2026, cf. `REFUS` dans utils.js). Le
+    // bouton reste ACTIF : on refuse ici, par un toast, plutôt que de griser.
+    // ⚠️ L'ORDRE compte : « rien n'a changé » d'abord, parce que c'est le seul cas
+    // où l'on n'a rien à corriger — annoncer « un libellé est obligatoire » sur un
+    // formulaire qu'on vient d'ouvrir sans y toucher serait à côté.
+    if (isEdit && !opDirty) return refuser(showToast, REFUS.rienChange);
+    if (isComposite) {
+      if (compositeVide) return refuser(showToast, REFUS.composanteVide);
+    } else if (videDePorteur) {
+      return refuser(showToast, REFUS.libelleOuMontant);
+    }
     const cleanDate = datesMode ? (date || '') : '';
     if (isTr) {
       // Paiement TR : ligne simple, aiguillée vers la liste des tickets resto
@@ -2048,7 +2070,10 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       const cleanComps = components
         .filter(c => (c.label || '').trim() || (parseFloat(c.amount) || 0) !== 0 || c.isTRRefund)
         .map(c => ({ id: c.id || uid(), label: (c.label || '').trim(), amount: r2(parseFloat(c.amount) || 0), ...(c.isTRRefund ? { isTRRefund: true } : {}) }));
-      if (cleanComps.length === 0) return;
+      // Filet : `compositeVide` a déjà refusé plus haut avec son message. Ce
+      // `return` nu ne peut donc plus être atteint — on le garde par sécurité,
+      // les deux prédicats devant rester d'accord.
+      if (cleanComps.length === 0) return refuser(showToast, REFUS.composanteVide);
       onSubmit({ type, label: (label || '').trim(), isComposite: true, components: cleanComps, date: cleanDate, note: (note || '').trim() });
     } else {
       // Montant vide → 0 (au lieu de bloquer silencieusement le submit).
@@ -2259,18 +2284,13 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !opDirty) || compositeVide || videDePorteur}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg">{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
-      {compositeVide
-        ? <div className="field-hint">Ajoute au moins une composante, avec un libellé ou un montant.</div>
-        : videDePorteur
-        ? <div className="field-hint">Renseigne au moins un libellé ou un montant.</div>
-        : (isEdit && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }
@@ -2447,7 +2467,7 @@ function CompositeComponentRow({ c, parent, variant, scope, list, index, onDrop,
   );
 }
 
-function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal = 0, onAddOperation, onMoveToOps, noDrag = false }) {
+function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal = 0, onAddOperation, onMoveToOps, noDrag = false, showToast }) {
   const scope = `tr-${mKey}`;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -2537,6 +2557,7 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
       {showForm && (
         <Modal title={editing ? 'Modifier une opération' : 'Nouvelle opération'} onClose={() => { setShowForm(false); setEditing(null); }}>
           <OperationForm
+            showToast={showToast}
             initial={editing ? { ...editing, type: 'tr' } : null}
             onSubmit={submitForm}
             trEnabled={true}

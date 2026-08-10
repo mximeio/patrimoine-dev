@@ -82,12 +82,13 @@ function PhysicalView({ ctx }) {
 
       {showNew && (
         <Modal title="Nouvel actif physique" onClose={() => setShowNew(false)}>
-          <PhysicalForm onSubmit={handleCreate} />
+          <PhysicalForm showToast={showToast} onSubmit={handleCreate} />
         </Modal>
       )}
       {editing && (
         <Modal title="Modifier l'actif" onClose={() => setEditId(null)}>
           <PhysicalForm
+            showToast={showToast}
             initial={editing}
             onSubmit={(p) => handleUpdate(editing.id, p)}
             onDelete={async () => { if (await handleDelete(editing.id)) setEditId(null); }}
@@ -125,7 +126,7 @@ function PhysicalRow({ item, onEdit, onDelete }) {
   );
 }
 
-function PhysicalForm({ initial, onSubmit, onDelete }) {
+function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
   const [name, setName] = useState(initial?.name || '');
   const [quantity, setQuantity] = useState(initial?.quantity ?? 1);
   const [unitPurchasePrice, setPurchase] = useState(initial?.unitPurchasePrice ?? '');
@@ -170,7 +171,16 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
   const inchange = !!initial && !formDirty;
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (!name.trim() || inchange) return; onSubmit(aEnvoyer); }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      // 🔴 Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js) : le bouton reste
+      // actif, c'est le toast qui dit pourquoi. Avant, ce `return` était nu et le
+      // bouton grisé — d'où une fenêtre qui bougeait au premier caractère tapé.
+      // ⚠️ « rien n'a changé » d'abord : c'est le seul cas où l'on n'a rien à corriger.
+      if (inchange) return refuser(showToast, REFUS.rienChange);
+      if (!name.trim()) return refuser(showToast, REFUS.nomObligatoire);
+      onSubmit(aEnvoyer);
+    }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <label className="label">Nom</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: 20 Francs - Napoléon" required />
@@ -191,17 +201,13 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
         <div className="field-hint">Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</div>
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={inchange || !name.trim()}>{initial ? 'Mettre à jour' : 'Créer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Mettre à jour' : 'Créer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
-      {/* La phrase n'apparaît QUE quand le bouton est grisé : un bouton inerte
-          sans explication est le « clic sans effet » que le §10 refuse. Quand il
-          est actif, annoncer qu'il va enregistrer n'apprendrait rien. */}
-      {inchange && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }

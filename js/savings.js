@@ -58,7 +58,7 @@ function SavingsView({ ctx }) {
         </div>
         {showCreate && (
           <Modal title="Nouveau compte d'épargne" onClose={() => setShowCreate(false)}>
-            <NewSavingsForm onSubmit={handleCreate} />
+            <NewSavingsForm showToast={showToast} onSubmit={handleCreate} />
           </Modal>
         )}
       </div>
@@ -92,7 +92,7 @@ function SavingsView({ ctx }) {
 //  VUE LISTE CONSOLIDÉE
 // ============================================================
 function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCreate }) {
-  const { savings } = ctx;
+  const { savings, showToast } = ctx;
   const totalBalance = savings.reduce((s, a) => s + computeSavingsBalance(a), 0);
   const totalInterest = savings.reduce((s, a) => s + computeSavingsStats(a).interets, 0);
 
@@ -150,7 +150,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
 
       {showCreate && (
         <Modal title="Nouveau compte d'épargne" onClose={() => setShowCreate(false)}>
-          <NewSavingsForm onSubmit={onCreate} />
+          <NewSavingsForm showToast={showToast} onSubmit={onCreate} />
         </Modal>
       )}
     </div>
@@ -191,7 +191,7 @@ function SavingsListRow({ saving, colorIndex, onClick }) {
 }
 
 // Formulaire de création d'un livret (nom + solde initial).
-function NewSavingsForm({ onSubmit }) {
+function NewSavingsForm({ onSubmit, showToast }) {
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
   const [busy, setBusy] = useState(false);
@@ -208,7 +208,8 @@ function NewSavingsForm({ onSubmit }) {
   useEffect(() => { if (markDirty) markDirty(formDirty); }, [formDirty]); // eslint-disable-line
   const submit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    // Refus ANNONCÉ (10/08/2026, cf. `REFUS` dans utils.js) : bouton actif, toast au clic.
+    if (!name.trim()) return refuser(showToast, REFUS.nomObligatoire);
     setBusy(true);
     try { await onSubmit(name.trim(), parseFloat(balance) || 0); } finally { setBusy(false); }
   };
@@ -228,7 +229,7 @@ function NewSavingsForm({ onSubmit }) {
           bouton restait plein alors que le submit ne pouvait pas aboutir.
           Pas de phrase : un champ « Nom » vide en face d'un bouton gris se
           comprend seul, et la référence n'en a pas non plus. */}
-      <button type="submit" className="btn btn-accent btn-lg" disabled={busy || !name.trim()}>{busy ? 'Création…' : 'Créer'}</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>{busy ? 'Création…' : 'Créer'}</button>
     </form>
   );
 }
@@ -387,7 +388,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
 
       {modal === 'add' && (
         <Modal title="Nouvelle opération" onClose={() => setModal(null)}>
-          <SavingsOperationForm defaultType="in" onSubmit={handleAddOp} />
+          <SavingsOperationForm showToast={showToast} defaultType="in" onSubmit={handleAddOp} />
         </Modal>
       )}
       {modal === 'history-ops' && (
@@ -402,6 +403,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
       {editingOp && (
         <Modal title="Modifier l'opération" onClose={() => setEditingOpId(null)}>
           <SavingsOperationForm
+            showToast={showToast}
             initial={editingOp}
             onSubmit={(patch) => handleUpdateOp(editingOp.id, patch)}
             onDelete={async () => { if (await handleDeleteOp(editingOp)) setEditingOpId(null); }}
@@ -411,6 +413,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
       {modal === 'configure' && (
         <Modal title="Réglages" onClose={closeReglages}>
           <SavingsConfigureForm
+            showToast={showToast}
             saving={saving}
             onUpdateName={handleRename}
             onUpdateInitial={handleUpdateInitial}
@@ -426,7 +429,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
 // Nom du livret éditable in-place dans la hero card.
 
 // Formulaire Réglages d'un livret : nom + solde initial + zone supprimer.
-function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyChange, onDelete }) {
+function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyChange, onDelete, showToast }) {
   const [name, setName] = useState(saving.name || '');
   const initial = saving.initialBalance ?? saving.balance ?? 0;
   const [initialBalance, setInitialBalance] = useState(initial);
@@ -447,7 +450,10 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
 
   const submit = (e) => {
     e.preventDefault();
+    // Refus ANNONCÉS (10/08/2026). « rien n'a changé » d'abord : rien à corriger.
+    if (!dirty) return refuser(showToast, REFUS.rienChange);
     const trimmed = (name || '').trim();
+    if (!trimmed) return refuser(showToast, REFUS.nomObligatoire);
     if (trimmed && trimmed !== saving.name) onUpdateName(trimmed);
     const parsed = parseFloat(initialBalance);
     if (Number.isFinite(parsed) && parsed !== initial) onUpdateInitial(r2(parsed));
@@ -467,8 +473,7 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
           Point de départ pour le calcul du solde affiché. Toutes les opérations enregistrées s'y ajoutent.
         </div>
       </div>
-      <button type="submit" className="btn btn-accent btn-lg" disabled={!dirty}>Enregistrer</button>
-      {!dirty && <div className="field-hint">Aucune modification à enregistrer.</div>}
+      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
 
       {/* Zone supprimer */}
       <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
@@ -567,7 +572,7 @@ function SavingsHistoryOpsTable({ ops, onEdit, onDelete }) {
 // Style aligné sur AddOperationForm des Investissements : grand sélecteur
 // de type (icône colorée + libellé + description), suivi de la date,
 // du libellé et du montant.
-function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
+function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete, showToast }) {
   const [type, setType] = useState(initial?.type || defaultType || 'in');
   const [date, setDate] = useState(initial?.date || todayIso());
   const [label, setLabel] = useState(initial?.label || '');
@@ -612,8 +617,11 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
     // compte courant et les récurrents. Seul un montant négatif est refusé.
     const a = parseFloat(amount);
     const safeAmount = Number.isFinite(a) ? r2(a) : 0;
-    if (safeAmount < 0) return;
-    if (!date) return;
+    // Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js).
+    if (!!initial && !opDirty) return refuser(showToast, REFUS.rienChange);
+    if (videDePorteur) return refuser(showToast, REFUS.libelleOuMontant);
+    if (safeAmount < 0) return refuser(showToast, REFUS.montantNegatif);
+    if (!date) return refuser(showToast, REFUS.dateObligatoire);
     onSubmit({ type, date, label: (label || '').trim(), amount: safeAmount });
   };
 
@@ -673,19 +681,13 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
         <AmountInput value={amount} onChange={setAmount} className="input" placeholder="0.00" />
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={(!!initial && !opDirty) || videDePorteur}>{initial ? 'Modifier' : 'Enregistrer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Modifier' : 'Enregistrer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
-      {/* §10 : « Toujours accompagner le grisé d'une phrase ». La seconde branche
-          comble un manque ANTÉRIEUR à ce chantier — ce bouton se grisait déjà en
-          édition sans rien expliquer. */}
-      {videDePorteur
-        ? <div className="field-hint">Renseigne au moins un libellé ou un montant.</div>
-        : (!!initial && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }

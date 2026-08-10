@@ -264,6 +264,68 @@ function confirmZeroAmount(label, contexte, montant, montantVerrouillé) {
   );
 }
 
+// ============================================================
+//  REFUS DE SAISIE — source unique des textes et du canal
+// ============================================================
+// Chantier du 10/08/2026, arbitré par l'utilisateur : un formulaire qui ne peut
+// pas enregistrer garde son bouton ACTIF et le dit par un TOAST au clic. Le
+// bouton grisé (chantiers des 09 et 10/08) est abandonné, pour deux raisons
+// données par l'utilisateur : il « apporte un point de crispation » visuel, et sa
+// phrase explicative apparaissait/disparaissait, donc la fenêtre bougeait — dès
+// l'ouverture d'un formulaire d'édition, au premier caractère tapé.
+//
+// 🔴 LES TEXTES VIVENT ICI, PAS CHEZ LES 14 APPELANTS. Même raison que
+// `ZERO_AMOUNT_CONTEXTS` juste au-dessus : un message qui diverge d'un formulaire
+// à l'autre apprend à ne pas faire confiance au signal. Et c'est la seule façon de
+// tenir l'exigence d'UNIFORMITÉ posée par l'utilisateur sur toute l'application.
+//
+// ⚠️ REGISTRE IMPERSONNEL, décidé le 10/08 : une erreur énonce un fait, elle ne
+// donne pas d'instruction. Les trois messages d'erreur qui préexistaient dans
+// l'app (connexion, mot de passe, création de compte) sont déjà ainsi. **Ne pas y
+// mêler de tutoiement** — celui-ci est réservé aux phrases d'AIDE.
+const REFUS = {
+  rienChange:         'Aucune modification à enregistrer.',
+  libelleOuMontant:   'Un libellé ou un montant est obligatoire.',
+  composanteVide:     'Au moins une composante doit porter un libellé ou un montant.',
+  nomObligatoire:     'Le nom est obligatoire.',
+  supportObligatoire: 'Un support est obligatoire.',
+  montantNegatif:     'Le montant ne peut pas être négatif.',
+  dateObligatoire:    'Une date est obligatoire.',
+  tickerOuNom:        'Un ticker ou un nom court est obligatoire.',
+  trDejaPresent:      'Un remboursement de tickets resto existe déjà.',
+  supportUtilise:     'Ce support est utilisé dans des opérations : il ne peut pas être supprimé.',
+  // Nuance arbitrée (§10) : un simple « rien n'a changé » ferait croire qu'une
+  // modification de support a été perdue, alors qu'elles persistent au fil de la saisie.
+  nomEnveloppeInchange: 'Aucune modification du nom. Les supports sont enregistrés au fil de la saisie.',
+  // UN seul texte pour les DEUX fenêtres de valorisation, qui en avaient deux
+  // variantes (« aucune date rafraîchie » / « la date ne sera pas rafraîchie »).
+  valorisationsInchangees: 'Aucune modification : rien ne sera écrit, aucune date ne sera rafraîchie.',
+  nomDejaUtilise:     (nom) => `Le nom "${nom}" est déjà utilisé par un autre compte.`,
+  // Le champ montant n'a pas le même nom selon l'écran (« Montant reçu »,
+  // « Valeur de marché à la réception »…). On réutilise le libellé AFFICHÉ, ce qui
+  // donne un seul texte pour les 7 types d'opération d'investissement — et fait
+  // disparaître le cas particulier de `gift`, dont le champ est `marketValue`.
+  champObligatoire:   (libelle) => `${String(libelle).replace(/\s*\(€\)\s*$/, '')} est obligatoire.`,
+};
+
+// ⚠️ Durée volontairement plus longue que les 2 500 ms par défaut : le toast paraît
+// en HAUT de l'écran (`top: 20px`) alors que le bouton pressé est en bas d'une
+// modale. Mesure de prudence, pas de confort.
+const DUREE_REFUS = 4000;
+
+// Le canal unique. À appeler en tête de submit : `if (…) return refuser(showToast,
+// REFUS.x);` — la valeur de retour n'a pas de sens pour un gestionnaire
+// d'événement, elle sert seulement à écrire le refus sur une ligne.
+// ⚠️ `showToast` est une PROP des formulaires : aucun ne le recevait avant ce
+// chantier. Sans lui le refus serait SILENCIEUX, c'est-à-dire le « clic sans effet
+// ni explication » que le §10 refuse — d'où le repli sur `alert`, qui est laid mais
+// jamais muet.
+function refuser(showToast, message) {
+  if (typeof showToast === 'function') showToast(message, 'error', DUREE_REFUS);
+  else alert(message);
+  return false;
+}
+
 // Les récurrents NON composites dont le montant est nul — ils naîtront à 0 €
 // dans le prochain mois créé (instantiateRecurring recopie fidèlement le
 // modèle). Sert à prévenir dans le confirm() de createMonth : c'est la seule

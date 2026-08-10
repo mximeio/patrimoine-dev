@@ -62,7 +62,7 @@ function InvestmentsView({ ctx }) {
         </div>
         {showCreate && (
           <Modal title="Nouvelle enveloppe" onClose={() => setShowCreate(false)}>
-            <NewPortfolioForm onSubmit={handleCreate} />
+            <NewPortfolioForm showToast={showToast} onSubmit={handleCreate} />
           </Modal>
         )}
       </div>
@@ -98,7 +98,7 @@ function InvestmentsView({ ctx }) {
 //  VUE LISTE CONSOLIDÉE
 // ============================================================
 function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCreate }) {
-  const { portfolios } = ctx;
+  const { portfolios, showToast } = ctx;
   // Mise à jour groupée des valorisations (09/08/2026). Hook déclaré ici, en
   // tête : ce composant n'a aucun retour anticipé, et le §8 exige que tout hook
   // précède le premier (erreur React #310 déposée le 31/07/2026).
@@ -257,7 +257,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
 
       {showCreate && (
         <Modal title="Nouvelle enveloppe" onClose={() => setShowCreate(false)}>
-          <NewPortfolioForm onSubmit={onCreate} />
+          <NewPortfolioForm showToast={showToast} onSubmit={onCreate} />
         </Modal>
       )}
 
@@ -306,7 +306,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
   );
 }
 
-function NewPortfolioForm({ onSubmit }) {
+function NewPortfolioForm({ onSubmit, showToast }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   // Garde « modifications non enregistrées » — TROISIÈME famille du §10, celle
@@ -323,7 +323,8 @@ function NewPortfolioForm({ onSubmit }) {
   useEffect(() => { if (markDirty) markDirty(formDirty); }, [formDirty]); // eslint-disable-line
   const submit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    // Refus ANNONCÉ (10/08/2026, cf. `REFUS` dans utils.js) : bouton actif, toast au clic.
+    if (!name.trim()) return refuser(showToast, REFUS.nomObligatoire);
     setBusy(true);
     try { await onSubmit(name.trim()); } finally { setBusy(false); }
   };
@@ -339,7 +340,7 @@ function NewPortfolioForm({ onSubmit }) {
           bouton restait plein alors que le submit ne pouvait pas aboutir.
           Pas de phrase : un champ « Nom » vide en face d'un bouton gris se
           comprend seul, et la référence n'en a pas non plus. */}
-      <button type="submit" className="btn btn-accent btn-lg" disabled={busy || !name.trim()}>{busy ? '…' : 'Créer'}</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>{busy ? '…' : 'Créer'}</button>
     </form>
   );
 }
@@ -556,7 +557,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
       {/* MODALES */}
       {modal === 'add' && (
         <Modal title="Nouvelle opération" onClose={() => setModal(null)}>
-          <AddOperationForm data={data} onSubmit={async (newData) => {
+          <AddOperationForm showToast={showToast} data={data} onSubmit={async (newData) => {
             if (await handleUpdateData(newData)) { setModal(null); showToast('Opération ajoutée', 'success'); }
           }} />
         </Modal>
@@ -565,6 +566,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         <Modal title="Mettre à jour les valeurs" dirty={valuesDirty}
           onClose={() => { setValuesDirty(false); setModal(null); }}>
           <UpdateValuesForm
+            showToast={showToast}
             data={data}
             onDirtyChange={setValuesDirty}
             onSubmit={async (newData) => {
@@ -594,6 +596,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         return (
           <Modal title="Modifier l'opération" onClose={() => setEditingOpId(null)}>
             <AddOperationForm
+              showToast={showToast}
               data={data}
               initial={opToEdit}
               onSubmit={async (newData) => {
@@ -613,6 +616,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
       {modal === 'configure' && (
         <Modal title="Réglages" dirty={configureDirty} onClose={closeConfigure} size="lg">
           <PortfolioConfigureForm
+            showToast={showToast}
             data={data}
             portfolioName={portfolio.name}
             onDirtyChange={setConfigureDirty}
@@ -639,7 +643,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
 // Épargne) : nom + supports édités sur une copie locale, commit uniquement au
 // clic sur « Enregistrer ». La fermeture avec modifications non enregistrées
 // déclenche une confirmation (via onDirtyChange côté parent).
-function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, onDelete, onPersistData }) {
+function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, onDelete, onPersistData, showToast }) {
   const [draft, setDraft] = useState(data);
   const [name, setName] = useState(portfolioName || '');
 
@@ -660,7 +664,10 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
     e.preventDefault();
     // Chaque support doit avoir au moins un ticker OU un libellé.
     const orphan = (draft.etfs || []).find(x => !(x.ticker || '').trim() && !(x.label || '').trim());
-    if (orphan) { alert('Chaque support doit avoir au moins un ticker ou un libellé.'); return; }
+    // Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js) — `alert` remplacé, et
+    // son texte divergeait de celui du formulaire de support (« nom court »).
+    if (!nameDirty) return refuser(showToast, REFUS.nomEnveloppeInchange);
+    if (orphan) return refuser(showToast, REFUS.tickerOuNom);
     onSubmit(draft, (name || '').trim());
   };
 
@@ -679,16 +686,15 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
 
       <div>
         <h3 className="settings-group-title">Supports</h3>
-        <EtfsList data={draft} onUpdate={setDraft} onPersist={onPersistData} />
+        <EtfsList data={draft} onUpdate={setDraft} onPersist={onPersistData} showToast={showToast} />
       </div>
 
-      <button type="submit" className="btn btn-accent btn-lg" disabled={!nameDirty}>Enregistrer</button>
+      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
       {/* 🔴 PHRASE INDISPENSABLE ICI, et pas la même qu'ailleurs. Sur cet écran le
           bouton ne sauve QUE le nom : depuis la v590 les supports persistent au
           fil de la saisie (onPersistData). Griser sans expliquer ferait croire
           qu'une modification de support n'a pas été prise, alors qu'elle est
           déjà en base. La phrase transforme le piège en information. */}
-      {!nameDirty && <div className="field-hint">Les supports sont enregistrés au fil de la saisie. Ce bouton n'enregistre que le nom.</div>}
 
       {/* Zone de danger : suppression du portefeuille */}
       <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
@@ -872,7 +878,7 @@ function OperationsJournal({ stats, onShowAll, onAdd, onEdit, onDelete }) {
 //    - dividend : support distribuant + montant reçu
 //    - sale     : support + montant récupéré + coût d'acquisition vendu
 // ============================================================
-function AddOperationForm({ data, initial, onSubmit, onDelete }) {
+function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
   const today = todayIso();
   // editing=true → on remplace l'opération existante au submit (par id).
   // currentValues ne sont PAS ajustées en édition (l'utilisateur peut
@@ -950,6 +956,14 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
 
   const submit = (e) => {
     e.preventDefault();
+    // 🔴 REFUS ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js). Ce formulaire n'a
+    // PAS de libellé : le montant y est le seul porteur d'information, donc il est
+    // obligatoire. ⚠️ `montantVide` interroge `marketValue` pour « Réception » et
+    // `amount` pour les six autres types — son message NOMME le champ affiché, ce
+    // qui donne un seul texte pour les 7 types.
+    if (editing && !opDirty) return refuser(showToast, REFUS.rienChange);
+    if (montantVide) return refuser(showToast, REFUS.champObligatoire(nomDuMontant));
+    if (needsEtf && !etf) return refuser(showToast, REFUS.supportObligatoire);
     // En édition : on garde l'id existant et on remplace l'op par id.
     // En ajout : nouvel id + append à la liste.
     const op = { id: editing ? initial.id : uid(), date, type: opType };
@@ -1010,6 +1024,12 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
   // ⚠️ Exclu quand `dividendNoEtf` : le champ montant n'est alors même pas rendu, le
   // bouton est déjà grisé, et son bandeau orange explique déjà quoi faire. Ajouter
   // une seconde phrase contredirait la première.
+  // Nom du champ montant, ARTICULÉ pour entrer dans « … est obligatoire. » : les
+  // libellés d'écran sont sans article (« Montant reçu »), et « Réception » a un
+  // féminin (« La valeur de marché… »). Sans ça la phrase serait bancale.
+  const nomDuMontant = needsAmount
+    ? 'Le ' + amountLabel.replace(/\s*\(€\)\s*$/, '').toLowerCase()
+    : 'La valeur de marché à la réception';
   const montantVide = !dividendNoEtf && (needsAmount
     ? (parseFloat(amount) || 0) === 0
     : (parseFloat(marketValue) || 0) === 0);
@@ -1101,7 +1121,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
       )}
 
       <div className="form-actions" style={{ marginTop: 4 }}>
-        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf || (editing && !opDirty) || montantVide}>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf}>
           {editing ? 'Modifier' : 'Enregistrer'}
         </button>
         {editing && onDelete && (
@@ -1110,12 +1130,6 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
           </button>
         )}
       </div>
-      {/* §10 : « Toujours accompagner le grisé d'une phrase ». La seconde branche
-          comble un manque ANTÉRIEUR à ce chantier. Le cas `dividendNoEtf`, lui, a
-          déjà son bandeau orange plus haut — d'où son absence ici. */}
-      {montantVide
-        ? <div className="field-hint">Renseigne un montant : c'est la seule information que porte cette opération.</div>
-        : (editing && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }
@@ -1236,7 +1250,9 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   const totalGeneral = ordonnees.reduce((a, p) => a + sousTotal(p), 0);
 
   const enregistrer = async () => {
-    if (!modifiees.length || busy) return;
+    if (busy) return;
+    // Refus ANNONCÉ (10/08/2026) : remplace un `return` nu, donc un clic mort.
+    if (!modifiees.length) return refuser(showToast, REFUS.valorisationsInchangees);
     setBusy(true);
     // Une écriture par enveloppe, puis UN SEUL refreshPortfolios (spec §1.4).
     // On continue après un échec et on NOMME l'enveloppe fautive : pas d'échec
@@ -1274,16 +1290,13 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   const actions = (
     <div className="maj-actions">
       <div className="maj-total"><span>Total général</span><b className="num">{fmt(totalGeneral)} €</b></div>
-      <button type="button" className="btn btn-accent btn-lg" disabled={!modifiees.length || busy} onClick={enregistrer}>
+      <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={enregistrer}>
         {busy ? 'Enregistrement…'
           : modifiees.length ? `Enregistrer ${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''}`
           : 'Enregistrer'}
       </button>
-      <div className="maj-note">
-        {modifiees.length
-          ? 'Seules les enveloppes modifiées seront écrites et redatées.'
-          : "Aucune modification : rien ne sera écrit, aucune date rafraîchie."}
-      </div>
+      {/* Note PERMANENTE — indépendante de l'état du bouton, donc sans mouvement. */}
+      <div className="maj-note">Seules les enveloppes modifiées seront écrites et redatées.</div>
     </div>
   );
 
@@ -1381,7 +1394,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
 // le même geste, c'est exactement ce que cet alignement corrige. On passe donc au
 // champ contrôlé en chaîne, avec le même filtre de frappe et la même sélection au
 // focus.
-function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
+function UpdateValuesForm({ data, onSubmit, onDirtyChange, showToast }) {
   const [saisie, setSaisie] = useState({});
   const [busy, setBusy] = useState(false);
   // MÊME fonction pure que la fenêtre groupée (compute.js), sur une liste d'un
@@ -1411,9 +1424,9 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
   const deltaSupports = r2(totalSupports - sommeDe(data.currentValues || {}));
   const submit = (e) => {
     e.preventDefault();
-    // Garde en profondeur : le bouton est déjà désactivé, mais un submit peut
-    // aussi partir à la touche Entrée.
-    if (!change || busy) return;
+    if (busy) return;
+    // Refus ANNONCÉ (10/08/2026) : remplace un `return` nu, donc un clic mort.
+    if (!change) return refuser(showToast, REFUS.valorisationsInchangees);
     setBusy(true);
     onSubmit({ ...data, currentValues: modifiees[0].currentValues, currentValuesDate: todayIso() });
   };
@@ -1462,14 +1475,11 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
           </div>
         )}
       </div>
-      <button type="submit" className="btn btn-accent btn-lg" disabled={!change || busy}>Enregistrer</button>
-      {/* 🔴 Cette note accompagne OBLIGATOIREMENT le bouton désactivé : grisé
-          seul, ce serait le « clic sans effet ni explication » que le §10 refuse. */}
-      <div className="maj-note">
-        {change
-          ? 'La valorisation et sa date seront enregistrées.'
-          : "Aucune modification : rien ne sera écrit, la date ne sera pas rafraîchie."}
-      </div>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>Enregistrer</button>
+      {/* Note PERMANENTE : elle décrit ce que fera l'enregistrement, elle ne dépend
+          plus de l'état du bouton — donc elle ne fait plus bouger la fenêtre. Le refus,
+          lui, passe par un toast (cf. `REFUS` dans utils.js). */}
+      <div className="maj-note">La valorisation et sa date seront enregistrées si une valeur a changé.</div>
     </form>
   );
 }
