@@ -300,7 +300,12 @@ const REFUS = {
   // ⚠️ Le prédicat de `plusieursComptes` repose sur `accountsCount`, dont le défaut
   // est au RANG 2 du backlog (`?.length || 1` vaut 1 sur une liste non chargée).
   // On change le CANAL, jamais le prédicat : le corriger relève de ce chantier.
-  plusieursComptes:   (n) => `${n} comptes courants existent. Il faut n'en garder qu'un seul avant de désactiver cette option.`,
+  // ⚠️ Formulation NEUTRE : ce message sert à la fois au MODULE « Compte courant »
+  // et à l'OPTION « Plusieurs comptes courants ». La première rédaction disait
+  // « avant de désactiver cette option », ce qui était faux pour le module —
+  // relevé en éprouvant les 4 refus au navigateur le 10/08/2026. Les deux `alert`
+  // d'origine avaient deux variantes ; les unifier a fait perdre cette nuance.
+  plusieursComptes:   (n) => `${n} comptes courants existent. Il faut n'en garder qu'un seul d'abord.`,
   compteCourantRequis: "Le module Compte courant doit être activé d'abord.",
   // Nuance arbitrée (§10) : un simple « rien n'a changé » ferait croire qu'une
   // modification de support a été perdue, alors qu'elles persistent au fil de la saisie.
