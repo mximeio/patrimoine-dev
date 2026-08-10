@@ -130,13 +130,33 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
   const [quantity, setQuantity] = useState(initial?.quantity ?? 1);
   const [unitPurchasePrice, setPurchase] = useState(initial?.unitPurchasePrice ?? '');
   const [unitCurrentPrice, setCurrent] = useState(initial?.unitCurrentPrice ?? '');
+
+  // Ce que le submit enverrait, construit une seule fois et réutilisé pour la
+  // comparaison : sans ça, « 1 » et « 1.0 » compteraient comme un changement.
+  const aEnvoyer = {
+    name: name.trim(),
+    quantity: parseFloat(quantity) || 0,
+    unitPurchasePrice: parseFloat(unitPurchasePrice) || 0,
+    unitCurrentPrice: parseFloat(unitCurrentPrice) || 0,
+  };
+  // 🔴 EN ÉDITION, on n'enregistre pas une non-modification — et ce n'est pas
+  // cosmétique : `Adapter.updatePhysical` pose `priceUpdatedAt = todayIso()` dès
+  // que le champ est présent dans le patch, or ce formulaire l'envoie TOUJOURS.
+  // Rouvrir un actif et valider le REDATAIT donc, sans que rien n'ait changé —
+  // exactement le défaut corrigé le même jour sur les enveloppes.
+  // ⚠️ Jamais en création : il n'y a pas d'état « inchangé » quand on part de
+  // rien, et la garde utile y est le nom vide (déjà présente).
+  // ⚠️ Les DEUX côtés sont normalisés pareil, ce qui neutralise au passage le
+  // 0-au-blur d'`AmountInput` (§10) : un prix absent qu'on effleure devient 0
+  // des deux côtés, donc « inchangé ».
+  const inchange = !!initial
+    && aEnvoyer.name === String(initial.name || '').trim()
+    && aEnvoyer.quantity === (parseFloat(initial.quantity) || 0)
+    && aEnvoyer.unitPurchasePrice === (parseFloat(initial.unitPurchasePrice) || 0)
+    && aEnvoyer.unitCurrentPrice === (parseFloat(initial.unitCurrentPrice) || 0);
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (!name.trim()) return; onSubmit({
-      name: name.trim(),
-      quantity: parseFloat(quantity) || 0,
-      unitPurchasePrice: parseFloat(unitPurchasePrice) || 0,
-      unitCurrentPrice: parseFloat(unitCurrentPrice) || 0,
-    }); }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <form onSubmit={(e) => { e.preventDefault(); if (!name.trim() || inchange) return; onSubmit(aEnvoyer); }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <label className="label">Nom</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: 20 Francs - Napoléon" required />
@@ -157,13 +177,17 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
         <div className="field-hint">Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</div>
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Mettre à jour' : 'Créer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={inchange}>{initial ? 'Mettre à jour' : 'Créer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
+      {/* La phrase n'apparaît QUE quand le bouton est grisé : un bouton inerte
+          sans explication est le « clic sans effet » que le §10 refuse. Quand il
+          est actif, annoncer qu'il va enregistrer n'apprendrait rien. */}
+      {inchange && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }
