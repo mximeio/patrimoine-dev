@@ -3366,8 +3366,14 @@ input[type="month"] {
 .maj-env-nom { font-weight: 620; font-size: 14px; flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Montant d'une enveloppe repliée : à droite, là où la carte solo met son champ. */
+/* Montant d'une enveloppe repliée, et son delta SOUS lui plutôt qu'à côté :
+   côte à côte, les deux mangeaient la largeur du nom, qui se faisait tronquer
+   (relevé par l'utilisateur le 09/08/2026 sur « PEI (Crédit Agricole) »).
+   ⚠️ La carte gagne une ligne quand elle est repliée ET modifiée — sans
+   conséquence : on ne replie une carte qu'après y avoir saisi, jamais pendant. */
 .maj-env-montant { font-size: 13px; font-weight: 620; color: var(--text); flex: none;
-  text-align: right; white-space: nowrap; }
+  display: flex; flex-direction: column; align-items: flex-end; white-space: nowrap; }
+.maj-env-montant .maj-delta { margin-left: 0; }
 /* Chevron VECTORIEL, pas un caractère texte : les glyphes « ⌄ » et « › »
    s'asseyaient bas dans leur ligne et paraissaient décentrés (relevé par
    l'utilisateur le 09/08/2026). Même motif que .evo-chev (v530) — rotation

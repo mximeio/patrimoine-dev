@@ -1201,7 +1201,12 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   09/08/2026 : le delta vivait sur la ligne de meta supprimée.
                   La carte n'ayant plus qu'un étage, l'ensemble est centré en
                   hauteur sans rien demander. */}
-              {!ouverte && <span className="maj-env-montant num">{fmt(sousTotal(p))} €{deltaNode}</span>}
+              {!ouverte && (
+                <span className="maj-env-montant num">
+                  <span>{fmt(sousTotal(p))} €</span>
+                  {deltaNode}
+                </span>
+              )}
               <span className={`maj-chev${ouverte ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
             </button>
             {ouverte && (
@@ -1286,9 +1291,6 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
 
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <p style={{ fontSize: 13, color: COLORS.muted, margin: 0 }}>
-        La date du jour sera enregistrée — uniquement si une valeur change.
-      </p>
       {/* MÊME mise en page de ligne que la fenêtre groupée (.maj-sup) : pastille,
           ticker, nom court, champ à droite. Harmonisation demandée par
           l'utilisateur le 09/08/2026 — deux fenêtres qui font le même travail
