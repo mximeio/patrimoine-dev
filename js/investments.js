@@ -1181,8 +1181,18 @@ function UpdateAllValuesModal({ ctx, onClose }) {
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
               <span className="maj-env-nom">{p.name}</span>
+              {/* Le montant n'apparaît QUE replié : déplié, le sous-total le
+                  redit trois lignes plus bas. Relevé par l'utilisateur le
+                  09/08/2026. La DATE, elle, reste toujours visible — c'est le
+                  signal qui dit où porter l'attention. Et replié, l'en-tête
+                  emporte le delta, sinon une enveloppe modifiée mais fermée
+                  n'aurait que son liseré pour le dire. */}
               <span className="maj-env-meta num">
-                {fmt(sousTotal(p))} €<br />
+                {!ouverte && <>
+                  {fmt(sousTotal(p))} €
+                  {modifiee && <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>}
+                  <br />
+                </>}
                 <span className="maj-env-maj">MaJ {p.data && p.data.currentValuesDate ? fmtDateNumeric(p.data.currentValuesDate) : '—'}</span>
                 {ancienne && <span className="stale-tag">{jours} j</span>}
               </span>
@@ -1279,20 +1289,44 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
       <p style={{ fontSize: 13, color: COLORS.muted, margin: 0 }}>
         La date du jour sera enregistrée — uniquement si une valeur change.
       </p>
-      {(data.etfs || []).map(e => (
-        <div key={e.id}>
-          <label className="label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color }} />
-            {supportName(e)}{(e.ticker || '').trim() && (e.label || '').trim() && <> — <span style={{ color: COLORS.muted }}>{e.label}</span></>}
-          </label>
-          <input
-            className="input num" inputMode="decimal"
-            value={valeurAffichee(e)}
-            onChange={(ev) => setSaisie(prev => ({ ...prev, [e.id]: nettoyerMontant(ev.target.value) }))}
-            onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }}
-          />
-        </div>
-      ))}
+      {/* MÊME mise en page de ligne que la fenêtre groupée (.maj-sup) : pastille,
+          ticker, nom court, champ à droite. Harmonisation demandée par
+          l'utilisateur le 09/08/2026 — deux fenêtres qui font le même travail
+          n'ont pas à se présenter autrement. On reprend l'INTÉRIEUR des cartes,
+          pas la carte elle-même : il n'y a qu'une enveloppe ici, l'encadrer
+          serait un cadre autour du cadre. */}
+      <div>
+        {(data.etfs || []).map(e => (
+          <div key={e.id} className="maj-sup">
+            <span className="maj-sup-lbl">
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
+              <b>{supportName(e)}</b>
+              {(e.ticker || '').trim() && (e.label || '').trim() && <span className="maj-sup-court">{e.label}</span>}
+            </span>
+            <input
+              className="input num" inputMode="decimal"
+              value={valeurAffichee(e)}
+              onChange={(ev) => setSaisie(prev => ({ ...prev, [e.id]: nettoyerMontant(ev.target.value) }))}
+              onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }}
+            />
+          </div>
+        ))}
+        {!(data.etfs || []).length && <div className="maj-vide">Aucun support</div>}
+        {/* ⚠️ PAS de ligne de total ici — essayée puis RETIRÉE le 09/08/2026,
+            et la raison vaut d'être connue avant de la reproposer.
+            Premier motif, le mien : la somme des supports (28 170.93 €) tombait
+            à trois centimètres du hero qui annonce 28 171.62 € — 69 centimes
+            d'écart, qui sont le cash non investi.
+            🔴 Second motif, celui de l'utilisateur, et il est plus fort : dès
+            qu'on saisit de nouvelles valeurs, tout total de cette fenêtre
+            DIVERGE du hero par construction — c'est son objet même. Chercher à
+            les réconcilier (en affichant le cash pour boucler la somme) n'a donc
+            pas de sens, et coûterait de la hauteur — surtout dans la fenêtre
+            groupée, qui empile les enveloppes. ⇒ Ici, le hero juste au-dessus
+            donne déjà la valeur de l'enveloppe. La fenêtre GROUPÉE, elle, garde
+            ses sous-totaux : aucun hero ne les redit, et ils situent chaque
+            enveloppe dans le total général. */}
+      </div>
       <button type="submit" className="btn btn-accent btn-lg" disabled={!change || busy}>Enregistrer</button>
       {/* 🔴 Cette note accompagne OBLIGATOIREMENT le bouton désactivé : grisé
           seul, ce serait le « clic sans effet ni explication » que le §10 refuse. */}
