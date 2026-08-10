@@ -3365,18 +3365,9 @@ input[type="month"] {
 }
 .maj-env-nom { font-weight: 620; font-size: 14px; flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Meta (date, ancienneté, delta) alignée à GAUCHE, sous le nom — et c'est la
-   même disposition qu'une enveloppe à un seul support. Demande de l'utilisateur
-   le 09/08/2026 : « une fois repliée, la ligne doit être similaire aux
-   enveloppes avec 1 support ». Avant, la date était à droite près du chevron
-   ici et sous le nom là-bas : deux présentations pour la même information. */
-.maj-env-meta { font-size: 11px; color: var(--muted); text-align: left; }
-/* Colonne de gauche commune aux deux cartes : le nom, puis la meta dessous. */
-.maj-env-col { flex: 1; min-width: 0; }
 /* Montant d'une enveloppe repliée : à droite, là où la carte solo met son champ. */
 .maj-env-montant { font-size: 13px; font-weight: 620; color: var(--text); flex: none;
   text-align: right; white-space: nowrap; }
-.maj-env-maj { color: var(--subtle); }
 /* Chevron VECTORIEL, pas un caractère texte : les glyphes « ⌄ » et « › »
    s'asseyaient bas dans leur ligne et paraissaient décentrés (relevé par
    l'utilisateur le 09/08/2026). Même motif que .evo-chev (v530) — rotation
@@ -3399,9 +3390,18 @@ input[type="month"] {
    couleur s'écrasait à zéro et disparaissait. Invisible à la mesure de position,
    visible sur une capture. */
 .maj-solo-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Ligne du support d'une carte solo : le nom peut se tronquer, le delta reste
+   toujours visible à droite — et il est sur CETTE ligne pour que la carte ne
+   grandisse pas dès la première frappe. */
 .maj-env--solo .maj-solo-sup { font-size: 12px; color: var(--muted); margin-top: 2px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.maj-env--solo .maj-solo-sup-nom { flex: 1; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.maj-env--solo .maj-env-meta { margin-top: 3px; }
+/* ⚠️ `flex: none` sur le delta, sinon il se COMPRIME dans la ligne flex et son
+   texte passe à deux lignes — mesuré : 30 px pour 15, ce qui faisait grandir la
+   carte de 7 px dès la première frappe, exactement ce qu'on voulait éviter.
+   C'est au NOM de se tronquer, jamais au montant. */
+.maj-env--solo .maj-solo-sup .maj-delta { flex: none; white-space: nowrap; margin-left: 0; }
 @media (max-width: 400px) { .maj-env--solo { grid-template-columns: 1fr 100px; } }
 .maj-sup { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; padding: 6px 0; }
 .maj-sup-lbl { display: flex; align-items: center; gap: 7px; font-size: 13.5px; min-width: 0; }

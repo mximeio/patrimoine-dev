@@ -1066,13 +1066,6 @@ function LibelleSupport({ etf }) {
   );
 }
 
-// Âge en jours d'une date ISO, ou null si la date manque. Midi local pour
-// éviter qu'un décalage horaire ne fasse basculer d'un jour.
-function joursDepuisIso(iso) {
-  if (!iso) return null;
-  return Math.max(0, Math.floor((Date.now() - new Date(iso + 'T12:00:00').getTime()) / 86400000));
-}
-
 // ============================================================
 //  MISE À JOUR GROUPÉE DES VALORISATIONS (09/08/2026)
 // ============================================================
@@ -1094,22 +1087,19 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   const ordonnees = sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue);
   const [saisie, setSaisie] = useState({});
   const [busy, setBusy] = useState(false);
-  // Déplié d'office si la valorisation est ANCIENNE (> 30 j, seuil de la carte
-  // « À rafraîchir ») ou absente : c'est la date qui dit où porter l'attention.
-  // Initialiseur paresseux : l'état ne se recalcule pas à chaque rendu, sinon
-  // replier une enveloppe serait annulé au rafraîchissement suivant.
+  // TOUT est déplié à l'ouverture. *La règle « les plus anciennes sont dépliées »
+  // a existé du matin au soir du 09/08/2026, puis a été retirée avec l'affichage
+  // des dates — décision de l'utilisateur. Motif : la date ne servait qu'à
+  // expliquer le repliage, et sur des enveloppes toutes valorisées le même jour
+  // elle n'était que du bruit. ⚠️ Ne pas remettre l'ouverture par ancienneté
+  // SANS remettre la date : c'est la seule combinaison qui laisse un
+  // comportement sans explication visible à l'écran.*
+  // Le repliage MANUEL reste disponible : sur une longue liste, on ferme ce
+  // qu'on a fait. Initialiseur paresseux pour que ce repliage ne soit pas
+  // annulé au rafraîchissement suivant.
   const [ouvertes, setOuvertes] = useState(() => {
     const o = {};
-    ordonnees.forEach(p => {
-      const j = joursDepuisIso(p.data && p.data.currentValuesDate);
-      o[p.id] = j === null || j > 30;
-    });
-    // 🔴 REPLI INDISPENSABLE, trouvé au navigateur sur les données réelles le
-    // 09/08/2026 : quand TOUTES les valorisations sont récentes, la règle
-    // n'ouvre rien et la fenêtre s'affiche sans un seul champ — elle paraît ne
-    // rien proposer. Or la règle sert à HIÉRARCHISER l'attention, pas à cacher
-    // le contenu : s'il n'y a rien à hiérarchiser, on ouvre tout.
-    if (!Object.values(o).some(Boolean)) ordonnees.forEach(p => { o[p.id] = true; });
+    ordonnees.forEach(p => { o[p.id] = true; });
     return o;
   });
 
@@ -1182,22 +1172,13 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose} footer={pied}>
       <div className="field-hint" style={{ marginBottom: 12 }}>
         Enveloppes dans l'ordre de « Mes enveloppes » — valeur décroissante.
-        Les valorisations les plus anciennes sont dépliées.
       </div>
       {ordonnees.map((p, i) => {
         const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
         const etfs = (p.data && p.data.etfs) || [];
-        const jours = joursDepuisIso(p.data && p.data.currentValuesDate);
-        const ancienne = jours !== null && jours > 30;
         const ouverte = !!ouvertes[p.id];
         const modifiee = estModifiee(p.id);
         const delta = r2(sousTotal(p) - sousTotalInitial(p));
-        const meta = (
-          <>
-            <span className="maj-env-maj">MaJ {p.data && p.data.currentValuesDate ? fmtDateNumeric(p.data.currentValuesDate) : '—'}</span>
-            {ancienne && <span className="stale-tag">{jours} j</span>}
-          </>
-        );
         const deltaNode = modifiee
           ? <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>
           : null;
@@ -1216,9 +1197,11 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   <span className="maj-env-nom">{p.name}</span>
                 </div>
                 <div className="maj-solo-sup">
-                  {supportName(e)} <LibelleSupport etf={e} />
+                  <span className="maj-solo-sup-nom">{supportName(e)} <LibelleSupport etf={e} /></span>
+                  {/* Le delta sur CETTE ligne, pas sur une ligne à part : sinon la
+                      carte grandirait dès la première frappe. */}
+                  {deltaNode}
                 </div>
-                <div className="maj-env-meta num">{meta}{deltaNode}</div>
               </div>
               <input className="input num" inputMode="decimal" enterKeyHint="next"
                 value={valeurAffichee(p, e)}
@@ -1230,22 +1213,18 @@ function UpdateAllValuesModal({ ctx, onClose }) {
 
         return (
           <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
-            {/* MÊME disposition que la carte à un seul support : le nom sur
-                la première ligne, la date (et l'ancienneté, et le delta) juste
-                dessous à GAUCHE. À droite, là où la carte solo met son champ de
-                saisie, la carte repliée met son MONTANT — et le chevron ferme la
-                ligne. Demande de l'utilisateur le 09/08/2026 : une même
-                information ne doit pas changer de place selon la carte.
+            {/* MÊME disposition que la carte à un seul support : le nom à gauche,
+                et à droite ce que l'autre met à cette place — son champ de saisie
+                là-bas, le MONTANT ici, le chevron fermant la ligne. Demande de
+                l'utilisateur le 09/08/2026 : une même information ne doit pas
+                changer de place selon la carte.
                 ⚠️ Dépliée, le montant disparaît d'ici : le sous-total le porte,
-                trois lignes plus bas. */}
+                sous les lignes de support. */}
             <button type="button" className="maj-env-head" aria-expanded={ouverte}
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
-              <span className="maj-env-col">
-                <span className="maj-solo-id">
-                  <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
-                  <span className="maj-env-nom">{p.name}</span>
-                </span>
-                <span className="maj-env-meta num" style={{ display: 'block', marginTop: 3 }}>{meta}{deltaNode}</span>
+              <span className="maj-solo-id" style={{ flex: 1 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
+                <span className="maj-env-nom">{p.name}</span>
               </span>
               {!ouverte && <span className="maj-env-montant num">{fmt(sousTotal(p))} €</span>}
               <span className={`maj-chev${ouverte ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
