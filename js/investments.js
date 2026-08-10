@@ -341,6 +341,11 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   const [donutHidden, setDonutHidden] = useState(false);
   // Garde-fou « modifications non enregistrées » de la modale Réglages.
   const [configureDirty, setConfigureDirty] = useState(false);
+  // Idem pour « Mettre à jour les valeurs » (09/08/2026) : garde CONTRÔLÉE, qui
+  // retombe si l'on retape la valeur d'origine. Hook déclaré ici, avec les
+  // autres — ce composant n'a aucun retour anticipé, et le §8 exige que tout
+  // hook précède le premier.
+  const [valuesDirty, setValuesDirty] = useState(false);
   const closeConfigure = () => {
     // Confirmation « modifications non enregistrées » portée par Modal via la
     // prop dirty={configureDirty} (v535) : calcul exact du formulaire, fiable
@@ -528,8 +533,15 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         </Modal>
       )}
       {modal === 'values' && (
-        <Modal title="Mettre à jour les valeurs" onClose={() => setModal(null)}>
-          <UpdateValuesForm data={data} onSubmit={(newData) => { handleUpdateData(newData); setModal(null); showToast('Valeurs mises à jour'); }} />
+        <Modal title="Mettre à jour les valeurs" dirty={valuesDirty}
+          onClose={() => { setValuesDirty(false); setModal(null); }}>
+          <UpdateValuesForm
+            data={data}
+            onDirtyChange={setValuesDirty}
+            onSubmit={(newData) => {
+              setValuesDirty(false); handleUpdateData(newData); setModal(null);
+              showToast('Valeurs mises à jour');
+            }} />
         </Modal>
       )}
       {modal === 'history-ops' && (
@@ -1028,6 +1040,15 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
   );
 }
 
+// Filtre de frappe d'un champ de montant, repris d'AmountInput (ui.js) : on ne
+// garde que chiffres et séparateurs. Le « - » est retiré — une valorisation ne
+// descend pas sous zéro. ⚠️ Sans ce filtre, taper une lettre laissait le champ
+// afficher du texte que la lecture jugeait « illisible », donc « inchangé » :
+// sûr, mais incompréhensible à l'écran.
+function nettoyerMontant(brut) {
+  return String(brut).replace(/[^\d.,]/g, '');
+}
+
 // Âge en jours d'une date ISO, ou null si la date manque. Midi local pour
 // éviter qu'un décalage horaire ne fasse basculer d'un jour.
 function joursDepuisIso(iso) {
@@ -1086,9 +1107,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     return v === undefined || v === null ? '' : String(v);
   };
   const setChamp = (pid, eid, brut) => {
-    // Pas de négatif : une valorisation ne descend pas sous zéro.
-    const propre = String(brut).replace(/-/g, '');
-    setSaisie(prev => ({ ...prev, [pid]: { ...(prev[pid] || {}), [eid]: propre } }));
+    setSaisie(prev => ({ ...prev, [pid]: { ...(prev[pid] || {}), [eid]: nettoyerMontant(brut) } }));
   };
   const sousTotal = (p) => {
     const cur = (p.data && p.data.currentValues) || {};
@@ -1209,29 +1228,79 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   );
 }
 
-function UpdateValuesForm({ data, onSubmit }) {
-  const [values, setValues] = useState(data.currentValues || {});
+// ============================================================
+//  MISE À JOUR DES VALEURS D'UNE SEULE ENVELOPPE
+// ============================================================
+// 🔴 ALIGNÉE SUR LA MODALE GROUPÉE LE 09/08/2026 — décision de l'utilisateur,
+// et l'argument porte sur la DONNÉE, pas sur l'ergonomie. Avant, cet écran
+// redatait `currentValuesDate` dès qu'on validait, même sans avoir rien touché.
+// Le champ voulait donc dire deux choses selon la porte qui l'écrivait : « date
+// de la dernière saisie » par la fenêtre groupée, « date du dernier clic » ici.
+// Or c'est ce champ que lit la carte « À rafraîchir » — et un signal qu'on peut
+// éteindre sans rien faire cesse d'être un signal (même famille que le garde-fou
+// TR corrigé en v621 : un critère qui se dégrade tout seul).
+// ⚠️ L'intention « j'ai vérifié, c'est toujours bon » reste légitime, mais elle
+// mérite son propre geste — pas l'effet de bord d'une validation à vide.
+//
+// 🔴 SAISIE ALIGNÉE AUSSI, et pour le MÊME argument : `AmountInput` transforme
+// un champ vidé en 0 au blur (§10). Vider un champ voulait donc dire « inchangé »
+// dans la fenêtre groupée et « ce support ne vaut plus rien » ici. Deux sens pour
+// le même geste, c'est exactement ce que cet alignement corrige. On passe donc au
+// champ contrôlé en chaîne, avec le même filtre de frappe et la même sélection au
+// focus.
+function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
+  const [saisie, setSaisie] = useState({});
+  const [busy, setBusy] = useState(false);
+  // MÊME fonction pure que la fenêtre groupée (compute.js), sur une liste d'un
+  // seul élément : une seule règle, testée une seule fois.
+  const modifiees = enveloppesModifiees([{ id: 'seule', data }], { seule: saisie });
+  const change = modifiees.length > 0;
+
+  // Garde « modifications non enregistrées » CONTRÔLÉE : elle retombe si l'on
+  // retape la valeur d'origine, ce que l'heuristique générique ne sait pas faire.
+  useEffect(() => { if (onDirtyChange) onDirtyChange(change); }, [change, onDirtyChange]);
+
+  const valeurAffichee = (etf) => {
+    if (saisie[etf.id] !== undefined) return saisie[etf.id];
+    const v = (data.currentValues || {})[etf.id];
+    return v === undefined || v === null ? '' : String(v);
+  };
   const submit = (e) => {
     e.preventDefault();
-    const newCurrentValues = { ...(data.currentValues || {}) };
-    Object.entries(values).forEach(([etf, val]) => {
-      if (val !== '' && val !== null && !isNaN(parseFloat(val))) newCurrentValues[etf] = parseFloat(val);
-    });
-    onSubmit({ ...data, currentValues: newCurrentValues, currentValuesDate: todayIso() });
+    // Garde en profondeur : le bouton est déjà désactivé, mais un submit peut
+    // aussi partir à la touche Entrée.
+    if (!change || busy) return;
+    setBusy(true);
+    onSubmit({ ...data, currentValues: modifiees[0].currentValues, currentValuesDate: todayIso() });
   };
+
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <p style={{ fontSize: 13, color: COLORS.muted, margin: 0 }}>La date du jour sera enregistrée automatiquement.</p>
+      <p style={{ fontSize: 13, color: COLORS.muted, margin: 0 }}>
+        La date du jour sera enregistrée — uniquement si une valeur change.
+      </p>
       {(data.etfs || []).map(e => (
         <div key={e.id}>
           <label className="label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color }} />
             {supportName(e)}{(e.ticker || '').trim() && (e.label || '').trim() && <> — <span style={{ color: COLORS.muted }}>{e.label}</span></>}
           </label>
-          <AmountInput value={values[e.id] ?? ''} onChange={(n) => setValues({ ...values, [e.id]: n })} className="input" />
+          <input
+            className="input num" inputMode="decimal"
+            value={valeurAffichee(e)}
+            onChange={(ev) => setSaisie(prev => ({ ...prev, [e.id]: nettoyerMontant(ev.target.value) }))}
+            onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }}
+          />
         </div>
       ))}
-      <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
+      <button type="submit" className="btn btn-accent btn-lg" disabled={!change || busy}>Enregistrer</button>
+      {/* 🔴 Cette note accompagne OBLIGATOIREMENT le bouton désactivé : grisé
+          seul, ce serait le « clic sans effet ni explication » que le §10 refuse. */}
+      <div className="maj-note">
+        {change
+          ? 'La valorisation et sa date seront enregistrées.'
+          : "Aucune modification : rien ne sera écrit, la date ne sera pas rafraîchie."}
+      </div>
     </form>
   );
 }
