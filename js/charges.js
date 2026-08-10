@@ -300,8 +300,13 @@ function ChargeForm({ initial, people, nets, onSubmit, onDelete, defaultPeriod =
     const est = v.period === 'annual';
     const base = { label: (v.label || '').trim() || 'Charge',
       ...(est ? { period: 'annual', joint: false, provision: v.provision } : { joint: v.mensuel }) };
+    // 🔴 Coercition « vide → 0 » ICI, à l'écriture (chantier du 10/08/2026) :
+    // `AmountInput` propage désormais '' sur un champ vidé, et une CHAÎNE dans un
+    // champ montant de `joint/main` casserait tous les calculs qui le lisent.
+    const montants = {};
+    Object.keys(v.amounts || {}).forEach(k => { montants[k] = r2(parseFloat(v.amounts[k]) || 0); });
     return v.mode === 'perso'
-      ? { ...base, total: 0, split: { mode: 'perso', amounts: v.amounts } }
+      ? { ...base, total: 0, split: { mode: 'perso', amounts: montants } }
       : { ...base, total: Number(v.total) || 0,
           split: v.mode === 'prorata' ? { mode: 'prorata' } : { mode: 'percent', pct: v.pct } };
   };
@@ -450,9 +455,26 @@ function ChargesModal({ ctx, onClose }) {
   useEffect(() => {
     if (skipFirstWrite.current) { skipFirstWrite.current = false; return; }
     const t = setTimeout(() => {
+      // 🔴 COERCITION « vide → 0 » AVANT d'écrire, et c'est le SEUL endroit
+      // possible : ce chemin n'a pas de submit (effet debouncé à 700 ms), et
+      // `AmountInput` propage désormais '' sur un champ vidé (10/08/2026).
+      // Sans ça, la chaîne '' partirait dans le document PARTAGÉ, où tous les
+      // calculs « au prorata des salaires nets » la liraient comme un montant.
+      // ⚠️ Ne PAS remonter cette coercition dans `setIncome` : ce setter nourrit
+      // aussi l'affichage, et le champ se remplirait d'un 0 au blur.
+      const scenarios = (data.scenarios || []).map(sc => {
+        const incomes = {};
+        Object.keys(sc.incomes || {}).forEach(pid => {
+          const src = sc.incomes[pid] || {};
+          const dst = {};
+          Object.keys(src).forEach(k => { dst[k] = r2(parseFloat(src[k]) || 0); });
+          incomes[pid] = dst;
+        });
+        return { ...sc, incomes };
+      });
       ctx.updateJoint({
         people: data.people,
-        scenarios: data.scenarios,
+        scenarios,
         baselineScenarioId: data.baselineScenarioId,
       });
     }, 700);
@@ -502,6 +524,11 @@ function ChargesModal({ ctx, onClose }) {
       ? { ...c, split: { mode: 'perso', amounts: { ...(c.split?.amounts || {}), [personId]: val } } }
       : c));
 
+  // ⚠️ AUCUNE coercition ici, et c'est VOULU : ce setter alimente aussi
+  // l'AFFICHAGE du champ. Y forcer « vide → 0 » remettait « 0 » dans la case dès
+  // le blur (l'effet de resynchronisation d'`AmountInput` relit `value`), donc
+  // ramenait exactement le défaut qu'on corrige. La coercition se fait à
+  // l'ÉCRITURE, dans l'effet debouncé ci-dessous.
   const setIncome = (personId, field, val) =>
     patchActive({ incomes: { ...active.incomes, [personId]: { ...(active.incomes?.[personId] || {}), [field]: val } } });
   const setPersonLabel = (personId, label) =>

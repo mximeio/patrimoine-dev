@@ -575,21 +575,32 @@ function AmountInput({
     if (Number.isFinite(n)) onChange(n, hadMinus);
   };
 
+  // 🔴 UN CHAMP VIDÉ RESTE VIDE — il ne se remplit PLUS d'un 0 (10/08/2026,
+  // relevé par l'utilisateur : « pourquoi est-ce qu'on affiche ça là ? »).
+  // Avant, ce blur faisait `onChange(0)` + `setRaw('0')`, et c'était la cause
+  // directe d'un défaut documenté au §10 : effacer un montant pour retaper le
+  // nouveau prix, puis cliquer ailleurs, ÉCRIVAIT 0. C'est ainsi que le
+  // récurrent `iCloud` est resté à 0 € pendant des semaines, sur PROD et DEV.
+  // ⚠️ La règle est « vide = 0 À LA SAUVEGARDE », pas « vide = valeur
+  // inchangée » — arbitrage de l'utilisateur du 10/08/2026, sans exception :
+  // sinon on ne pourrait plus remettre un montant à zéro en vidant le champ.
+  // ⇒ On propage donc `''`, et c'est à CHAQUE chemin d'écriture de coercer.
+  // La plupart le faisaient déjà (`Number.isFinite(a) ? r2(a) : 0`,
+  // `parseFloat(x) || 0`) ; ceux qui ne le faisaient pas ont été corrigés avec
+  // ce chantier — les chercher au `grep` avant d'ajouter un appelant.
+  // 🔴 Ne JAMAIS écrire `''` dans Firestore : un champ montant doit rester un
+  // nombre. Le seul chemin sans submit (les revenus nets des charges) coerce
+  // donc au moment de l'écriture.
   const handleBlur = (e) => {
     focusedRef.current = false;
     const normalized = raw.replace(',', '.').replace(/\.$/, '');
-    if (normalized === '' || normalized === '-') {
-      onChange(0);
-      setRaw('0');
+    const n = parseFloat(normalized);
+    if (normalized === '' || normalized === '-' || !Number.isFinite(n)) {
+      onChange('');
+      setRaw('');
     } else {
-      const n = parseFloat(normalized);
-      if (Number.isFinite(n)) {
-        onChange(n);
-        setRaw(String(n));
-      } else {
-        onChange(0);
-        setRaw('0');
-      }
+      onChange(n);
+      setRaw(String(n));
     }
     if (onBlur) onBlur(e);
   };

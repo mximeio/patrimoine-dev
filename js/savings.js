@@ -455,8 +455,12 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
     const trimmed = (name || '').trim();
     if (!trimmed) return refuser(showToast, REFUS.nomObligatoire);
     if (trimmed && trimmed !== saving.name) onUpdateName(trimmed);
-    const parsed = parseFloat(initialBalance);
-    if (Number.isFinite(parsed) && parsed !== initial) onUpdateInitial(r2(parsed));
+    // ⚠️ « vide = 0 à la sauvegarde » (arbitrage du 10/08/2026) : sans le `|| 0`,
+    // un champ vidé donnait NaN, donc `Number.isFinite` faux, donc l'appel était
+    // SAUTÉ — c'était la sémantique inverse (« vide = inchangé »), celle que
+    // l'utilisateur a écartée.
+    const parsed = parseFloat(initialBalance) || 0;
+    if (parsed !== initial) onUpdateInitial(r2(parsed));
     if (onDirtyChange) onDirtyChange(false);
   };
 
