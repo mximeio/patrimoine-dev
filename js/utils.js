@@ -294,6 +294,14 @@ const REFUS = {
   tickerOuNom:        'Un ticker ou un nom court est obligatoire.',
   trDejaPresent:      'Un remboursement de tickets resto existe déjà.',
   supportUtilise:     'Ce support est utilisé dans des opérations : il ne peut pas être supprimé.',
+  // Bascules de module (SettingsView) — c'étaient les 4 derniers `alert()` en
+  // tutoiement de l'app, oubliés par le premier inventaire parce qu'ils refusent
+  // une ACTION et non un submit. Relevé par l'utilisateur le 10/08/2026.
+  // ⚠️ Le prédicat de `plusieursComptes` repose sur `accountsCount`, dont le défaut
+  // est au RANG 2 du backlog (`?.length || 1` vaut 1 sur une liste non chargée).
+  // On change le CANAL, jamais le prédicat : le corriger relève de ce chantier.
+  plusieursComptes:   (n) => `${n} comptes courants existent. Il faut n'en garder qu'un seul avant de désactiver cette option.`,
+  compteCourantRequis: "Le module Compte courant doit être activé d'abord.",
   // Nuance arbitrée (§10) : un simple « rien n'a changé » ferait croire qu'une
   // modification de support a été perdue, alors qu'elles persistent au fil de la saisie.
   nomEnveloppeInchange: 'Aucune modification du nom. Les supports sont enregistrés au fil de la saisie.',
@@ -313,6 +321,15 @@ const REFUS = {
 // modale. Mesure de prudence, pas de confort.
 const DUREE_REFUS = 4000;
 
+// 🔴 TOUS les refus ne sont PAS des erreurs — relevé par l'utilisateur le
+// 10/08/2026, et c'est juste : « Aucune modification à enregistrer » ne signale
+// aucune faute, il constate qu'il n'y a rien à faire. Le rouge le surjouerait.
+// ⇒ Ces trois-là passent en toast NEUTRE (fond sombre) ; tous les autres, qui
+// demandent à l'utilisateur de fournir quelque chose, restent en ROUGE.
+// ⚠️ Le ton est déduit du MESSAGE, pas passé par l'appelant : c'est ce qui
+// empêche deux formulaires de choisir des tons différents pour la même phrase.
+const REFUS_NEUTRES = new Set([REFUS.rienChange, REFUS.nomEnveloppeInchange, REFUS.valorisationsInchangees]);
+
 // Le canal unique. À appeler en tête de submit : `if (…) return refuser(showToast,
 // REFUS.x);` — la valeur de retour n'a pas de sens pour un gestionnaire
 // d'événement, elle sert seulement à écrire le refus sur une ligne.
@@ -321,7 +338,8 @@ const DUREE_REFUS = 4000;
 // ni explication » que le §10 refuse — d'où le repli sur `alert`, qui est laid mais
 // jamais muet.
 function refuser(showToast, message) {
-  if (typeof showToast === 'function') showToast(message, 'error', DUREE_REFUS);
+  const ton = REFUS_NEUTRES.has(message) ? 'info' : 'error';
+  if (typeof showToast === 'function') showToast(message, ton, DUREE_REFUS);
   else alert(message);
   return false;
 }

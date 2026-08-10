@@ -345,7 +345,7 @@ function ChargeForm({ initial, people, nets, onSubmit, onDelete, defaultPeriod =
   };
 
   return (
-    <form className="charge-form" onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate className="charge-form" onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <label className="label">Libellé</label>
         <input className="input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ex. Loyer, Internet…" />

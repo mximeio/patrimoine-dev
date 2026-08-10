@@ -329,7 +329,7 @@ function NewPortfolioForm({ onSubmit, showToast }) {
     try { await onSubmit(name.trim()); } finally { setBusy(false); }
   };
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <label className="label">Nom de l'enveloppe</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: PEA (XTB)" required />
@@ -672,7 +672,7 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
   };
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <label className="label">Nom de l'enveloppe</label>
         <input
@@ -1035,7 +1035,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
     : (parseFloat(marketValue) || 0) === 0);
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type — grille 2 cols */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {types.map(t => {
@@ -1432,7 +1432,7 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange, showToast }) {
   };
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* MÊME mise en page de ligne que la fenêtre groupée (.maj-sup) : pastille,
           ticker, nom court, champ à droite. Harmonisation demandée par
           l'utilisateur le 09/08/2026 — deux fenêtres qui font le même travail

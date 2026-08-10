@@ -191,6 +191,7 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         // Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js). Ces deux messages
@@ -1012,7 +1013,7 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
   };
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Section : Nom du compte (toujours visible — par défaut "Compte
           principal" en mono-compte, libre en multi avec contrainte
           d'unicité). */}
@@ -2104,7 +2105,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type : grille 2 colonnes (Entrée/Sortie), « Paiement TR »
           en pleine largeur sur sa propre ligne. */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>

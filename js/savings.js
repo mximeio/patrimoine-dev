@@ -214,7 +214,7 @@ function NewSavingsForm({ onSubmit, showToast }) {
     try { await onSubmit(name.trim(), parseFloat(balance) || 0); } finally { setBusy(false); }
   };
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <label className="label">Nom du compte d'épargne</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: Livret A (Boursorama)" required />
@@ -461,7 +461,7 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
   };
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <label className="label">Nom du compte d'épargne</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" required />
@@ -631,7 +631,7 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete, showTo
                          : 'ex: Versement depuis le compte courant';
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type — grille 2 colonnes, mimétique avec
           AddOperationForm des Investissements. Avec 3 items, le dernier
           (Intérêts) prend toute la largeur via grid-column: span 2. */}

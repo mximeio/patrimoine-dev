@@ -171,7 +171,7 @@ function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
   const inchange = !!initial && !formDirty;
 
   return (
-    <form onSubmit={(e) => {
+    <form noValidate onSubmit={(e) => {
       e.preventDefault();
       // 🔴 Refus ANNONCÉS (10/08/2026, cf. `REFUS` dans utils.js) : le bouton reste
       // actif, c'est le toast qui dit pourquoi. Avant, ce `return` était nu et le

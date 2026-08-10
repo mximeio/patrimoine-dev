@@ -3,7 +3,7 @@
 // ============================================================
 
 function SettingsView({ ctx }) {
-  const { profile, updateProfile, checkingAccounts, renameCheckingAccount } = ctx;
+  const { profile, updateProfile, checkingAccounts, renameCheckingAccount, showToast } = ctx;
   const modules = profile.modulesEnabled;
   const setModule = (key, val) => updateProfile({ modulesEnabled: { ...modules, [key]: val } });
   // Par défaut, le compte courant est activé (compatibilité avec l'ancien
@@ -19,8 +19,7 @@ function SettingsView({ ctx }) {
 
   const toggleChecking = (checked) => {
     if (!checked && accountsCount > 1) {
-      alert(`Tu as actuellement ${accountsCount} comptes courants. Supprime-les pour ne garder qu'un seul compte avant de désactiver le module.`);
-      return;
+      return refuser(showToast, REFUS.plusieursComptes(accountsCount));
     }
     if (!confirmToggle(checked, 'Compte courant')) return;
     if (!checked) {
@@ -35,12 +34,10 @@ function SettingsView({ ctx }) {
 
   const toggleMulti = (checked) => {
     if (!checkingEnabled) {
-      alert("Active d'abord le module Compte courant.");
-      return;
+      return refuser(showToast, REFUS.compteCourantRequis);
     }
     if (!checked && accountsCount > 1) {
-      alert(`Tu as actuellement ${accountsCount} comptes courants. Supprime-les pour ne garder qu'un seul compte avant de désactiver cette option.`);
-      return;
+      return refuser(showToast, REFUS.plusieursComptes(accountsCount));
     }
     if (!confirmToggle(checked, 'Plusieurs comptes courants')) return;
     // À l'activation : si l'utilisateur a un compte unique sans nom,
@@ -95,8 +92,7 @@ function SettingsView({ ctx }) {
             enabled={!!modules.checkingDates}
             onChange={(v) => {
               if (!checkingEnabled) {
-                alert("Active d'abord le module Compte courant.");
-                return;
+                return refuser(showToast, REFUS.compteCourantRequis);
               }
               if (!confirmToggle(v, 'Gestion des dates sur le compte courant')) return;
               setModule('checkingDates', v);
@@ -162,7 +158,7 @@ function PasswordChangeCard({ ctx }) {
     <div className="settings-card">
       <h2>Mot de passe</h2>
       <p className="muted">Modifie ton mot de passe de connexion.</p>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 380 }}>
+      <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 380 }}>
         {error && <div style={{ padding: 10, background: 'var(--danger-light)', color: COLORS.danger, fontSize: 13, borderRadius: 8 }}>{error}</div>}
         <div>
           <label className="label">Mot de passe actuel</label>
