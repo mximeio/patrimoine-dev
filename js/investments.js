@@ -1181,7 +1181,15 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                     </span>
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
                       value={valeurAffichee(p, e)}
-                      onChange={(ev) => setChamp(p.id, e.id, ev.target.value)} />
+                      onChange={(ev) => setChamp(p.id, e.id, ev.target.value)}
+                      /* Sélection au focus : taper REMPLACE la valeur pré-remplie
+                         au lieu de l'allonger. Motif repris d'AmountInput (ui.js)
+                         et de SupportForm (settings.js) — le setTimeout(0) est
+                         nécessaire sur iOS Safari, où le tap désélectionne juste
+                         après le onFocus synchrone. En passant à un champ nu pour
+                         éviter le 0-au-blur d'AmountInput, on avait perdu ce
+                         comportement : c'est l'utilisateur qui l'a relevé. */
+                      onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }} />
                   </div>
                 ))}
                 {!!etfs.length && (
