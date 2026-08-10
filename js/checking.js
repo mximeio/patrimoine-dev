@@ -144,6 +144,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
       {showCreate && (
         <Modal title="Nouveau compte courant" onClose={() => setShowCreate(false)}>
           <NewCheckingAccountForm
+            showToast={showToast}
             onSubmit={handleCreate}
             existingNames={checkingAccounts.map(a => a.name)}
           />
@@ -154,7 +155,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
 }
 
 // Formulaire de création — pattern aligné sur SavingsForm
-function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
+function NewCheckingAccountForm({ onSubmit, existingNames = [], showToast }) {
   const [name, setName] = useState('');
   const [initialBalance, setInitialBalance] = useState('');
   const [initialBalanceMonth, setInitialBalanceMonth] = useState(currentMonthKey());
