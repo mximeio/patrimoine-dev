@@ -309,6 +309,18 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
 function NewPortfolioForm({ onSubmit }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  // Garde « modifications non enregistrées » — TROISIÈME famille du §10, celle
+  // qui ne se voit pas à la lecture : ce formulaire ne signalait RIEN, donc il
+  // retombait sur l'heuristique générique de `Modal`, qui passe à « modifié » au
+  // premier input et n'en revient JAMAIS. Taper un nom puis l'effacer réclamait
+  // donc une confirmation alors qu'il n'y avait plus rien à perdre — le bouton,
+  // lui, se grisait correctement, les deux mécanismes étant indépendants.
+  // Relevé par l'utilisateur le 10/08/2026 ; même défaut que `PhysicalForm` le
+  // 09/08, resté ici faute d'avoir cherché les frères au grep.
+  // On compare donc à l'état de DÉPART — ici le champ vide.
+  const markDirty = React.useContext(ModalDirtyContext);
+  const formDirty = name.trim() !== '';
+  useEffect(() => { if (markDirty) markDirty(formDirty); }, [formDirty]); // eslint-disable-line
   const submit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;

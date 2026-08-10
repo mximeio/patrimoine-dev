@@ -195,6 +195,17 @@ function NewSavingsForm({ onSubmit }) {
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
   const [busy, setBusy] = useState(false);
+  // Garde « modifications non enregistrées » — même défaut, à la ligne près, que
+  // `NewPortfolioForm` (cf. son commentaire) : aucun signalement, donc repli
+  // silencieux sur l'heuristique générique de `Modal`, qui ne sait pas se
+  // démarquer. On compare à l'état de DÉPART.
+  // ⚠️ Le solde se compare NUMÉRIQUEMENT, et ce n'est pas un détail de style :
+  // `AmountInput` écrit `onChange(0)` au blur d'un champ vidé (§10), donc un
+  // champ seulement VISITÉ passe de '' à 0. Un `balance !== ''` salirait le
+  // formulaire sans qu'on ait rien saisi.
+  const markDirty = React.useContext(ModalDirtyContext);
+  const formDirty = name.trim() !== '' || (parseFloat(balance) || 0) !== 0;
+  useEffect(() => { if (markDirty) markDirty(formDirty); }, [formDirty]); // eslint-disable-line
   const submit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
