@@ -360,11 +360,20 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   const etfCount = (data.etfs || []).length;
   const showDonut = SHOW_ALLOCATION_DONUT && etfCount >= ALLOCATION_MIN_SUPPORTS && !donutHidden;
 
+  // 🔴 REND un verdict — et ses appelants DOIVENT l'attendre. Avant le
+  // 09/08/2026 il avalait l'erreur et ne renvoyait rien : les appelants
+  // fermaient la modale et posaient leur toast de succès **sans attendre**, si
+  // bien qu'un échec produisait « Valeurs mises à jour » PUIS « Erreur de
+  // sauvegarde », la saisie étant perdue entre les deux. Reproduit en simulant
+  // une panne d'Adapter. ⇒ Le succès ne s'annonce qu'une fois l'écriture faite,
+  // et **on ne ferme pas** en cas d'échec : la saisie reste à l'écran, donc
+  // rejouable.
   const handleUpdateData = async (newData) => {
     try {
       await Adapter.updatePortfolioData(user.uid, portfolio.id, newData);
       await refreshPortfolios();
-    } catch (e) { console.error(e); showToast('Erreur de sauvegarde', 'error'); }
+      return true;
+    } catch (e) { console.error(e); showToast('Erreur de sauvegarde', 'error'); return false; }
   };
 
   const handleRename = async (newName) => {
@@ -520,16 +529,19 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         onShowAll={() => setModal('history-ops')}
         onAdd={() => setModal('add')}
         onEdit={(op) => setEditingOpId(op.id)}
-        onDelete={(id) => {
-          handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== id) });
-          showToast('Opération supprimée');
+        onDelete={async (id) => {
+          if (await handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== id) })) {
+            showToast('Opération supprimée');
+          }
         }}
       />
 
       {/* MODALES */}
       {modal === 'add' && (
         <Modal title="Nouvelle opération" onClose={() => setModal(null)}>
-          <AddOperationForm data={data} onSubmit={(newData) => { handleUpdateData(newData); setModal(null); showToast('Opération ajoutée', 'success'); }} />
+          <AddOperationForm data={data} onSubmit={async (newData) => {
+            if (await handleUpdateData(newData)) { setModal(null); showToast('Opération ajoutée', 'success'); }
+          }} />
         </Modal>
       )}
       {modal === 'values' && (
@@ -538,9 +550,10 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
           <UpdateValuesForm
             data={data}
             onDirtyChange={setValuesDirty}
-            onSubmit={(newData) => {
-              setValuesDirty(false); handleUpdateData(newData); setModal(null);
-              showToast('Valeurs mises à jour');
+            onSubmit={async (newData) => {
+              if (await handleUpdateData(newData)) {
+                setValuesDirty(false); setModal(null); showToast('Valeurs mises à jour');
+              }
             }} />
         </Modal>
       )}
@@ -550,9 +563,10 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             stats={stats}
             data={data}
             onEdit={(op) => setEditingOpId(op.id)}
-            onDelete={(id) => {
-              handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== id) });
-              showToast('Opération supprimée');
+            onDelete={async (id) => {
+              if (await handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== id) })) {
+                showToast('Opération supprimée');
+              }
             }}
           />
         </Modal>
@@ -565,12 +579,15 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             <AddOperationForm
               data={data}
               initial={opToEdit}
-              onSubmit={(newData) => { handleUpdateData(newData); setEditingOpId(null); showToast('Opération modifiée'); }}
-              onDelete={() => {
+              onSubmit={async (newData) => {
+                if (await handleUpdateData(newData)) { setEditingOpId(null); showToast('Opération modifiée'); }
+              }}
+              onDelete={async () => {
                 if (!confirm('Supprimer cette opération ?')) return;
-                handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== opToEdit.id) });
-                setEditingOpId(null);
-                showToast('Opération supprimée');
+                if (await handleUpdateData({ ...data, operations: data.operations.filter(o => o.id !== opToEdit.id) })) {
+                  setEditingOpId(null);
+                  showToast('Opération supprimée');
+                }
               }}
             />
           </Modal>
@@ -583,8 +600,8 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             portfolioName={portfolio.name}
             onDirtyChange={setConfigureDirty}
             onPersistData={handleUpdateData}
-            onSubmit={(draftData, draftName) => {
-              handleUpdateData(draftData);
+            onSubmit={async (draftData, draftName) => {
+              if (!(await handleUpdateData(draftData))) return;
               if (draftName && draftName !== portfolio.name) handleRename(draftName);
               setConfigureDirty(false);
               setModal(null);
@@ -1172,8 +1189,12 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     }
     await refreshPortfolios();
     setBusy(false);
-    if (echecs.length) showToast(`Échec sur : ${echecs.join(', ')}`, 'error');
-    else showToast(`${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''} mise${modifiees.length > 1 ? 's' : ''} à jour`, 'success');
+    // ⚠️ On ne ferme QUE si tout est passé : sinon la saisie des enveloppes en
+    // échec resterait perdue. Celles qui ont réussi cessent d'elles-mêmes d'être
+    // « modifiées » (l'abonnement temps réel remonte leur nouvelle valeur), donc
+    // la fenêtre ne montre plus que ce qui reste à enregistrer.
+    if (echecs.length) { showToast(`Échec sur : ${echecs.join(', ')}`, 'error'); return; }
+    showToast(`${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''} mise${modifiees.length > 1 ? 's' : ''} à jour`, 'success');
     onClose();
   };
 
