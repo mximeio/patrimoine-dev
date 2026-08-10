@@ -875,28 +875,32 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
   // la date, on fermait, et la saisie était jetée SANS AUCUNE CONFIRMATION.
   // Défaut déjà trouvé et corrigé en v535 sur la modale Réglages, jamais
   // généralisé ; relevé par l'utilisateur le 07/08/2026 sur l'épargne.
-  // On ignore le 1er rendu pour ne pas marquer « modifié » à la simple ouverture.
+  // 🔴 COMPARAISON EXACTE, et non plus un marquage à sens unique. Avant le
+  // 09/08/2026 ce formulaire appelait `markDirty()` sans jamais pouvoir se
+  // démarquer : on modifiait, on revenait à la valeur d'origine, et la
+  // confirmation de fermeture se déclenchait quand même — alors qu'il n'y avait
+  // plus rien à perdre. Relevé par l'utilisateur.
+  // ⚠️ L'état de DÉPART est l'opération d'origine en édition, et les valeurs par
+  // défaut en création : sans ça, une création intacte serait vue comme modifiée.
+  // ⚠️ Les montants se comparent ARRONDIS AU CENTIME — sinon `12` et `12.00`
+  // compteraient comme un changement.
   const markDirty = React.useContext(ModalDirtyContext);
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (markDirty) markDirty();
-  }, [opType, date, amount, marketValue, costBasis, etf]);
-
-  // Comparaison EXACTE avec l'opération d'origine, pour griser le bouton en
-  // édition (09/08/2026). ⚠️ Distincte de `markDirty` juste au-dessus, qui est à
-  // SENS UNIQUE (une fois marqué, toujours marqué) et ne sait donc pas dire
-  // « on est revenu aux valeurs de départ ». Les montants sont comparés arrondis
-  // au centime : sans ça, `12` et `12.00` compteraient comme un changement.
   const memeMontant = (a, b) => r2(parseFloat(a) || 0) === r2(parseFloat(b) || 0);
-  const opDirty = !editing || (
-    opType !== (initial.type || 'deposit')
-    || date !== (initial.date || today)
-    || !memeMontant(amount, initial.amount)
-    || !memeMontant(marketValue, initial.marketValue)
-    || !memeMontant(costBasis, initial.costBasis)
-    || etf !== (initial.etf || data.etfs[0]?.id || '')
-  );
+  const depart = {
+    type: editing ? (initial.type || 'deposit') : 'deposit',
+    date: editing ? (initial.date || today) : today,
+    amount: editing ? initial.amount : '',
+    marketValue: editing ? initial.marketValue : '',
+    costBasis: editing ? initial.costBasis : '',
+    etf: editing ? (initial.etf || data.etfs[0]?.id || '') : (data.etfs[0]?.id || ''),
+  };
+  const opDirty = opType !== depart.type
+    || date !== depart.date
+    || !memeMontant(amount, depart.amount)
+    || !memeMontant(marketValue, depart.marketValue)
+    || !memeMontant(costBasis, depart.costBasis)
+    || etf !== depart.etf;
+  useEffect(() => { if (markDirty) markDirty(opDirty); }, [opDirty]); // eslint-disable-line
 
   // Liste des supports distribuants pour le filtre "dividende"
   const distributingEtfs = (data.etfs || []).filter(e => (e.kind || 'capitalizing') === 'distributing');

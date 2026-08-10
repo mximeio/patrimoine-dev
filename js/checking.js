@@ -171,12 +171,16 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [] }) {
   // modification de l'utilisateur, et l'y mettre marquerait « modifié » sur une
   // simple tentative d'enregistrement.
   // On ignore le 1er rendu pour ne pas marquer « modifié » à la simple ouverture.
+  // 🔴 COMPARAISON EXACTE plutôt qu'un marquage à SENS UNIQUE (09/08/2026) :
+  // formulaire de CRÉATION, donc l'état de départ est le formulaire vide. Taper
+  // un nom puis l'effacer redevient « rien à perdre », et la confirmation de
+  // fermeture ne se déclenche plus. *Le bouton, lui, garde sa garde propre —
+  // nom vide ou doublon — il n'y a pas d'état « inchangé » à la création.*
   const markDirty = React.useContext(ModalDirtyContext);
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (markDirty) markDirty();
-  }, [name, initialBalance, initialBalanceMonth]);
+  const creaDirty = (name || '').trim() !== ''
+    || String(initialBalance || '').trim() !== ''
+    || initialBalanceMonth !== currentMonthKey();
+  useEffect(() => { if (markDirty) markDirty(creaDirty); }, [creaDirty]); // eslint-disable-line
 
   // Normalisation pour comparaison : trim + lowercase. Évite les noms
   // doublons à la casse / espaces près ("Boursorama" vs "boursorama  ").
@@ -1961,14 +1965,30 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
 
   // Détection de modification pour la confirmation de fermeture du Modal : couvre
   // aussi les changements non captés par input/change (sélecteur de type, date,
-  // ajout/suppression de composante…). On ignore le 1er rendu (montage) pour ne
-  // pas marquer « modifié » à la simple ouverture.
+  // ajout/suppression de composante…).
+  // 🔴 COMPARAISON EXACTE plutôt qu'un marquage à SENS UNIQUE (09/08/2026) :
+  // avant, revenir aux valeurs d'origine laissait la confirmation de fermeture
+  // se déclencher quand même. C'est le formulaire le plus riche de l'app — type,
+  // libellé, montant, date, note, et des COMPOSANTES.
+  // ⚠️ Les composantes se comparent par une sérialisation qui EXCLUT leur `id` :
+  // celui d'une composante neuve est un `uid()` aléatoire, donc le comparer
+  // rendrait le formulaire « modifié » dès l'ouverture. Montants au centime.
   const markDirty = React.useContext(ModalDirtyContext);
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (markDirty) markDirty();
-  }, [type, label, amount, date, isComposite, components, note]);
+  const serieComposantes = (arr) => JSON.stringify((arr || []).map(c => ({
+    label: (c.label || '').trim(),
+    amount: r2(parseFloat(c.amount) || 0),
+    isTRRefund: !!c.isTRRefund,
+  })));
+  const departComposantes = (initIsComposite && initial.components)
+    ? initial.components : [{ label: '', amount: '' }];
+  const opDirty = type !== (initial?.type || initialType)
+    || (label || '').trim() !== (initial?.label || '').trim()
+    || r2(parseFloat(amount) || 0) !== r2(parseFloat(initial?.amount) || 0)
+    || date !== (initial?.date || '')
+    || (note || '').trim() !== (initial?.note || '').trim()
+    || isComposite !== initIsComposite
+    || serieComposantes(components) !== serieComposantes(departComposantes);
+  useEffect(() => { if (markDirty) markDirty(opDirty); }, [opDirty]); // eslint-disable-line
 
   const compTotal = r2(components.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
   const hasTRInComponents = components.some(c => c.isTRRefund);
@@ -2213,7 +2233,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg">{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={isEdit && !opDirty}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer

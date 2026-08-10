@@ -149,11 +149,25 @@ function PhysicalForm({ initial, onSubmit, onDelete }) {
   // ⚠️ Les DEUX côtés sont normalisés pareil, ce qui neutralise au passage le
   // 0-au-blur d'`AmountInput` (§10) : un prix absent qu'on effleure devient 0
   // des deux côtés, donc « inchangé ».
-  const inchange = !!initial
-    && aEnvoyer.name === String(initial.name || '').trim()
-    && aEnvoyer.quantity === (parseFloat(initial.quantity) || 0)
-    && aEnvoyer.unitPurchasePrice === (parseFloat(initial.unitPurchasePrice) || 0)
-    && aEnvoyer.unitCurrentPrice === (parseFloat(initial.unitCurrentPrice) || 0);
+  // État de DÉPART : l'actif d'origine en édition, le formulaire vide en création.
+  const depart = {
+    name: String(initial?.name || '').trim(),
+    quantity: initial ? (parseFloat(initial.quantity) || 0) : 1,
+    unitPurchasePrice: initial ? (parseFloat(initial.unitPurchasePrice) || 0) : 0,
+    unitCurrentPrice: initial ? (parseFloat(initial.unitCurrentPrice) || 0) : 0,
+  };
+  const formDirty = aEnvoyer.name !== depart.name
+    || aEnvoyer.quantity !== depart.quantity
+    || aEnvoyer.unitPurchasePrice !== depart.unitPurchasePrice
+    || aEnvoyer.unitCurrentPrice !== depart.unitCurrentPrice;
+  // 🔴 On alimente la garde de fermeture avec cette comparaison EXACTE. Sans ça,
+  // ce formulaire retombait sur l'heuristique générique du Modal (onInput), qui
+  // est à SENS UNIQUE : taper puis effacer laissait la confirmation se
+  // déclencher. Troisième famille du même défaut, trouvée au navigateur le
+  // 09/08/2026 — les deux autres étaient `markDirty()` et l'absence de détection.
+  const markDirty = React.useContext(ModalDirtyContext);
+  useEffect(() => { if (markDirty) markDirty(formDirty); }, [formDirty]); // eslint-disable-line
+  const inchange = !!initial && !formDirty;
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (!name.trim() || inchange) return; onSubmit(aEnvoyer); }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

@@ -381,7 +381,7 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange }) {
         </div>
       </div>
       <div className="form-actions">
-        <button type="button" className="btn btn-accent btn-lg" onClick={submit}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="button" className="btn btn-accent btn-lg" onClick={submit} disabled={isEdit && !recDirty}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
@@ -572,14 +572,28 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
 
   // Détection de modification pour la confirmation de fermeture du Modal : couvre
   // aussi les changements non captés par input/change (sélecteur de type, jour du
-  // mois, ajout/suppression de composante…). On ignore le 1er rendu (montage)
-  // pour ne pas marquer « modifié » à la simple ouverture.
+  // mois, ajout/suppression de composante…).
+  // 🔴 COMPARAISON EXACTE plutôt qu'un marquage à SENS UNIQUE (09/08/2026) :
+  // avant, revenir aux valeurs d'origine laissait la confirmation de fermeture
+  // se déclencher quand même.
+  // ⚠️ Les COMPOSANTES se comparent par une sérialisation qui EXCLUT leur `id` :
+  // celui d'une composante neuve est un `uid()` aléatoire, donc le comparer
+  // rendrait le formulaire « modifié » dès l'ouverture. Montants au centime.
   const markDirty = React.useContext(ModalDirtyContext);
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (markDirty) markDirty();
-  }, [type, label, amount, dayOfMonth, isComposite, components]);
+  const serieComposantes = (arr) => JSON.stringify((arr || []).map(c => ({
+    label: (c.label || '').trim(),
+    amount: r2(parseFloat(c.amount) || 0),
+    isTRRefund: !!c.isTRRefund,
+  })));
+  const departComposantes = (initIsComposite && initial.components)
+    ? initial.components : [{ label: '', amount: '' }];
+  const recDirty = type !== (initial?.type || 'out')
+    || (label || '').trim() !== (initial?.label || '').trim()
+    || r2(parseFloat(amount) || 0) !== r2(parseFloat(initial?.amount) || 0)
+    || (dayOfMonth || null) !== (initial?.dayOfMonth || null)
+    || isComposite !== initIsComposite
+    || serieComposantes(components) !== serieComposantes(departComposantes);
+  useEffect(() => { if (markDirty) markDirty(recDirty); }, [recDirty]); // eslint-disable-line
 
   const compTotal = r2(components.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
   const hasTRInComponents = components.some(c => c.isTRRefund);

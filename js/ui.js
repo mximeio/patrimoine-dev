@@ -54,7 +54,13 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const downOnBackdropRef = useRef(false);
   // Stable (deps []) : sûr à utiliser comme valeur de contexte et en dépendance
   // de useEffect côté formulaires sans provoquer de re-déclenchements.
-  const markDirty = useCallback(() => { dirtyRef.current = true; }, []);
+  // markDirty() marque « modifié ». markDirty(false) DÉMARQUE — ajouté le
+  // 09/08/2026 : sans ça un formulaire ne pouvait que se salir, jamais se
+  // nettoyer. Revenir à la valeur d'origine laissait donc la confirmation de
+  // fermeture se déclencher alors qu'il n'y avait plus rien à perdre (relevé par
+  // l'utilisateur sur la modification d'une opération). Les appelants historiques
+  // écrivent `markDirty()` sans argument et gardent exactement leur comportement.
+  const markDirty = useCallback((v = true) => { dirtyRef.current = v !== false; }, []);
   const attemptClose = () => {
     // noDirtyGuard : modales en auto-enregistrement (ex. Paramètres) où il n'y a
     // jamais de « modifications non enregistrées » à abandonner.

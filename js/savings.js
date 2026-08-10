@@ -564,13 +564,17 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
   // la date, on fermait, et la saisie était jetée SANS AUCUNE CONFIRMATION
   // (signalé par l'utilisateur le 07/08/2026). Le même défaut avait déjà été
   // trouvé et corrigé en v535 sur la modale Réglages, sans être généralisé.
-  // On ignore le 1er rendu pour ne pas marquer « modifié » à la simple ouverture.
+  // 🔴 COMPARAISON EXACTE plutôt qu'un marquage à SENS UNIQUE (09/08/2026) :
+  // avant, revenir aux valeurs d'origine laissait la confirmation de fermeture
+  // se déclencher quand même. L'état de DÉPART est l'opération d'origine en
+  // édition, les valeurs par défaut en création. Montants comparés au centime.
   const markDirty = React.useContext(ModalDirtyContext);
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (markDirty) markDirty();
-  }, [type, date, label, amount]);
+  const memeMontant = (a, b) => r2(parseFloat(a) || 0) === r2(parseFloat(b) || 0);
+  const opDirty = type !== (initial?.type || defaultType || 'in')
+    || date !== (initial?.date || todayIso())
+    || (label || '').trim() !== (initial?.label || '').trim()
+    || !memeMontant(amount, initial?.amount);
+  useEffect(() => { if (markDirty) markDirty(opDirty); }, [opDirty]); // eslint-disable-line
 
   const types = [
     { id: 'in',       label: 'Versement', icon: 'arrowDown', color: COLORS.success, bg: 'var(--success-light)', desc: 'Cash entrant' },
@@ -645,7 +649,7 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
         <AmountInput value={amount} onChange={setAmount} className="input" placeholder="0.00" />
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Modifier' : 'Enregistrer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={!!initial && !opDirty}>{initial ? 'Modifier' : 'Enregistrer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
