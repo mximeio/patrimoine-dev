@@ -169,11 +169,15 @@ input[type="month"] {
    droite à sa largeur de contenu. */
 /* 🔴 AUCUN style de bouton DÉSACTIVÉ n'existait avant le 09/08/2026 — constaté
    au navigateur : `disabled` était posé, et le bouton gardait l'apparence exacte
-   d'un bouton actif (fond plein, curseur main). Les 7 `disabled` de l'app en
+   d'un bouton actif (fond plein, curseur main). Les 9 `disabled` de l'app en
    dépendaient donc pour rien, sauf auth.js qui pose une opacité EN LIGNE.
-   ⚠️ Conséquence à connaître : cette règle change aussi l'apparence de ces 7
-   boutons existants — c'est voulu, un bouton qui ne réagit pas doit le dire. */
-.btn:disabled, .btn[disabled] { opacity: 0.45; cursor: default; }
+   ⚠️ Conséquence à connaître : cette règle change aussi l'apparence de ces
+   boutons existants — c'est voulu, un bouton qui ne réagit pas doit le dire.
+   *Variante écartée le 09/08/2026, décision de l'utilisateur : atténuer le seul
+   FOND en indigo 50 %, comme les cases de pointage en mois figé (v576). Elle
+   gardait le libellé net ; celle-ci est retenue pour sa simplicité.* */
+.btn:disabled, .btn[disabled] { opacity: 0.45; cursor: default; box-shadow: none; }
+.btn:disabled:hover, .btn[disabled]:hover { box-shadow: none; }
 .form-actions { display: flex; gap: 8px; align-items: stretch; }
 .form-actions > .btn { flex: 1; }
 .form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
