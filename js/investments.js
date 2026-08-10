@@ -1183,34 +1183,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
           ? <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>
           : null;
 
-        // ── UN SEUL SUPPORT : carte compacte, sans ligne de support, sans
-        // sous-total et sans chevron — il n'y a rien à replier. Proposé par
-        // l'utilisateur le 09/08/2026. Le nom du support passe sous celui de
-        // l'enveloppe, le champ vient à droite : 3 lignes au lieu de 6.
-        if (etfs.length === 1) {
-          const e = etfs[0];
-          return (
-            <div key={p.id} className={`maj-env maj-env--solo${modifiee ? ' maj-env--modifiee' : ''}`}>
-              <div style={{ minWidth: 0 }}>
-                <div className="maj-solo-id">
-                  <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
-                  <span className="maj-env-nom">{p.name}</span>
-                </div>
-                <div className="maj-solo-sup">
-                  <span className="maj-solo-sup-nom">{supportName(e)} <LibelleSupport etf={e} /></span>
-                  {/* Le delta sur CETTE ligne, pas sur une ligne à part : sinon la
-                      carte grandirait dès la première frappe. */}
-                  {deltaNode}
-                </div>
-              </div>
-              <input className="input num" inputMode="decimal" enterKeyHint="next"
-                value={valeurAffichee(p, e)}
-                onChange={(ev) => setChamp(p.id, e.id, ev.target.value)}
-                onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }} />
-            </div>
-          );
-        }
-
         return (
           <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
             {/* MÊME disposition que la carte à un seul support : le nom à gauche,
@@ -1222,7 +1194,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                 sous les lignes de support. */}
             <button type="button" className="maj-env-head" aria-expanded={ouverte}
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
-              <span className="maj-solo-id" style={{ flex: 1 }}>
+              <span className="maj-env-id" style={{ flex: 1 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
                 <span className="maj-env-nom">{p.name}</span>
               </span>

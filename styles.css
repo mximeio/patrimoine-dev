@@ -3378,31 +3378,16 @@ input[type="month"] {
 }
 .maj-chev.open { transform: rotate(180deg); }
 .maj-chev svg { stroke-width: 2.4; display: block; }
-/* Carte d'une enveloppe à UN SEUL support : pas de ligne de support séparée, pas
-   de sous-total, pas de chevron — le nom du support passe sous celui de
-   l'enveloppe et le champ vient à droite. Proposé par l'utilisateur le
-   09/08/2026 : « une card avec uniquement 1 support pourrait être plus petite ».
-   Gain mesuré : 3 lignes au lieu de 6. */
-.maj-env--solo { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; }
-/* ⚠️ NON scopée à .maj-env--solo, et c'est nécessaire : les DEUX cartes s'en
-   servent depuis l'alignement du 09/08/2026. Scopée, la carte repliée gardait un
-   span INLINE, sur lequel width/height ne s'appliquent pas — sa pastille de
-   couleur s'écrasait à zéro et disparaissait. Invisible à la mesure de position,
-   visible sur une capture. */
-.maj-solo-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
-/* Ligne du support d'une carte solo : le nom peut se tronquer, le delta reste
-   toujours visible à droite — et il est sur CETTE ligne pour que la carte ne
-   grandisse pas dès la première frappe. */
-.maj-env--solo .maj-solo-sup { font-size: 12px; color: var(--muted); margin-top: 2px;
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.maj-env--solo .maj-solo-sup-nom { flex: 1; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* ⚠️ `flex: none` sur le delta, sinon il se COMPRIME dans la ligne flex et son
-   texte passe à deux lignes — mesuré : 30 px pour 15, ce qui faisait grandir la
-   carte de 7 px dès la première frappe, exactement ce qu'on voulait éviter.
-   C'est au NOM de se tronquer, jamais au montant. */
-.maj-env--solo .maj-solo-sup .maj-delta { flex: none; white-space: nowrap; margin-left: 0; }
-@media (max-width: 400px) { .maj-env--solo { grid-template-columns: 1fr 100px; } }
+/* Identité d'une enveloppe : pastille + nom, dans l'en-tête de la carte.
+   *Une carte compacte pour les enveloppes à UN SEUL support a existé le
+   09/08/2026, puis a été retirée — décision de l'utilisateur : « même s'il n'y a
+   qu'un support, on fait comme pour les autres, ce sera plus harmonisé ». Elle
+   gagnait de la place mais introduisait trois désalignements mesurés avec la
+   carte ordinaire (colonne de valeur décalée de 20 px par le chevron, delta à
+   une autre place, 2e ligne partant 16 px à gauche du nom). Une seule forme de
+   carte les supprime tous les trois. ⚠️ Ne pas la réintroduire sans reprendre
+   ces trois mesures.* */
+.maj-env-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .maj-sup { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; padding: 6px 0; }
 .maj-sup-lbl { display: flex; align-items: center; gap: 7px; font-size: 13.5px; min-width: 0; }
 .maj-sup-lbl .maj-sup-court { color: var(--muted); font-size: 12px;
