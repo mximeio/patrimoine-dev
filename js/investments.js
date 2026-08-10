@@ -998,6 +998,21 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
                       : opType === 'fee' ? 'Montant des frais (€)'
                       : 'Montant (€)';
   const dividendNoEtf  = opType === 'dividend' && distributingEtfs.length === 0;
+  // 🔴 RÈGLE DU CHAMP PORTEUR (arbitrage de l'utilisateur, 10/08/2026). Ce
+  // formulaire N'A PAS DE LIBELLÉ — ni champ, ni état : le montant y est donc le
+  // SEUL porteur d'information, et il devient obligatoire. Ce n'est pas une règle
+  // plus dure que celle des autres formulaires, c'est la même appliquée à un écran
+  // qui n'a qu'un porteur.
+  // ⚠️ LE CHAMP MONTANT DE « Réception » (`gift`) EST `marketValue`, PAS `amount` —
+  // c'est ce que dit `needsAmount` juste au-dessus. Les 7 types affichent bien un
+  // montant à l'écran ; c'est la variable derrière qui change. Une garde écrite sur
+  // `amount` seul laisserait « Réception » grisé EN PERMANENCE.
+  // ⚠️ Exclu quand `dividendNoEtf` : le champ montant n'est alors même pas rendu, le
+  // bouton est déjà grisé, et son bandeau orange explique déjà quoi faire. Ajouter
+  // une seconde phrase contredirait la première.
+  const montantVide = !dividendNoEtf && (needsAmount
+    ? (parseFloat(amount) || 0) === 0
+    : (parseFloat(marketValue) || 0) === 0);
 
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1086,7 +1101,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
       )}
 
       <div className="form-actions" style={{ marginTop: 4 }}>
-        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf || (editing && !opDirty)}>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf || (editing && !opDirty) || montantVide}>
           {editing ? 'Modifier' : 'Enregistrer'}
         </button>
         {editing && onDelete && (
@@ -1095,6 +1110,12 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
           </button>
         )}
       </div>
+      {/* §10 : « Toujours accompagner le grisé d'une phrase ». La seconde branche
+          comble un manque ANTÉRIEUR à ce chantier. Le cas `dividendNoEtf`, lui, a
+          déjà son bandeau orange plus haut — d'où son absence ici. */}
+      {montantVide
+        ? <div className="field-hint">Renseigne un montant : c'est la seule information que porte cette opération.</div>
+        : (editing && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }

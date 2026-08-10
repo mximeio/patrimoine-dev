@@ -605,6 +605,13 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
   const composantesUtiles = (components || []).filter(
     c => (c.label || '').trim() || (parseFloat(c.amount) || 0) !== 0 || c.isTRRefund).length;
   const compositeVide = isComposite && composantesUtiles === 0;
+  // 🔴 RÈGLE DU CHAMP PORTEUR (arbitrage de l'utilisateur, 10/08/2026) — mêmes
+  // raisons, mêmes exclusions que dans `OperationForm` (checking.js), où le
+  // commentaire complet vit : le libellé seul reste suffisant, le composite est
+  // jugé par `compositeVide`, et `isTRAuto` est exclu (montant `readOnly`, un 0
+  // y est légitime).
+  const videDePorteur = !isTRAuto && !isComposite
+    && !(label || '').trim() && (parseFloat(amount) || 0) === 0;
   const compTotal = r2(components.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
   const hasTRInComponents = components.some(c => c.isTRRefund);
   // Le bouton "+ Tickets resto (auto)" s'affiche dans la section composantes
@@ -803,7 +810,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       )}
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !recDirty) || compositeVide}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !recDirty) || compositeVide || videDePorteur}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
@@ -812,6 +819,8 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       </div>
       {compositeVide
         ? <div className="field-hint">Ajoute au moins une composante, avec un libellé ou un montant.</div>
+        : videDePorteur
+        ? <div className="field-hint">Renseigne au moins un libellé ou un montant.</div>
         : (isEdit && !recDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );

@@ -592,6 +592,14 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
     || !memeMontant(amount, initial?.amount);
   useEffect(() => { if (markDirty) markDirty(opDirty); }, [opDirty]); // eslint-disable-line
 
+  // 🔴 RÈGLE DU CHAMP PORTEUR (arbitrage de l'utilisateur, 10/08/2026) — commentaire
+  // complet dans `OperationForm` (checking.js). Ici il n'y a ni composite ni TR auto,
+  // donc le critère est direct : ni libellé, ni montant ⇒ la ligne serait vide.
+  // ⚠️ Le libellé est marqué « (optionnel) » sur cet écran, ce qui dit bien que le
+  // montant est le porteur habituel — mais l'inverse reste permis, et c'est le sens
+  // de la règle : on exige l'un OU l'autre.
+  const videDePorteur = !(label || '').trim() && (parseFloat(amount) || 0) === 0;
+
   const types = [
     { id: 'in',       label: 'Versement', icon: 'arrowDown', color: COLORS.success, bg: 'var(--success-light)', desc: 'Cash entrant' },
     { id: 'out',      label: 'Retrait',   icon: 'arrowUp',   color: COLORS.danger,  bg: 'var(--danger-light)',  desc: 'Cash sortant' },
@@ -665,13 +673,19 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete }) {
         <AmountInput value={amount} onChange={setAmount} className="input" placeholder="0.00" />
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={!!initial && !opDirty}>{initial ? 'Modifier' : 'Enregistrer'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={(!!initial && !opDirty) || videDePorteur}>{initial ? 'Modifier' : 'Enregistrer'}</button>
         {initial && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
+      {/* §10 : « Toujours accompagner le grisé d'une phrase ». La seconde branche
+          comble un manque ANTÉRIEUR à ce chantier — ce bouton se grisait déjà en
+          édition sans rien expliquer. */}
+      {videDePorteur
+        ? <div className="field-hint">Renseigne au moins un libellé ou un montant.</div>
+        : (!!initial && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }

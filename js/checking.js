@@ -1999,6 +1999,23 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
   const composantesUtiles = (components || []).filter(
     c => (c.label || '').trim() || (parseFloat(c.amount) || 0) !== 0 || c.isTRRefund).length;
   const compositeVide = isComposite && composantesUtiles === 0;
+  // 🔴 RÈGLE DU CHAMP PORTEUR (arbitrage de l'utilisateur, 10/08/2026) : une ligne
+  // sans libellé ET sans montant ne porte aucune information — elle s'afficherait
+  // « — · 0,00 € ». On grise, et on dit pourquoi.
+  // ⚠️ Ce n'est PAS le critère « rien n'a changé », dont le §10 dit qu'il ne
+  // s'applique jamais en création. Celui-ci dit « la ligne serait vide », et vaut
+  // donc aussi en ÉDITION — vider les deux champs d'une ligne existante produirait
+  // la même ligne creuse. Ne pas fondre les deux critères.
+  // ⚠️ Le libellé SEUL reste suffisant : c'est un choix délibéré du code (« Montant
+  // vide → 0 … permet de créer une ligne uniquement avec un libellé »). On exige
+  // l'un OU l'autre, jamais les deux.
+  // ⚠️ En composite, le montant du parent est DÉRIVÉ des composantes : c'est
+  // `compositeVide` qui juge, jamais le montant du parent — d'où le `!isComposite`.
+  // ⚠️ `isTRAuto` est EXCLU, même exception que `confirmZeroAmount` : son montant est
+  // `readOnly` et un 0 y est légitime (mois précédent sans ticket). Griser
+  // proposerait de corriger un champ verrouillé.
+  const videDePorteur = !isTRAuto && !isComposite
+    && !(label || '').trim() && (parseFloat(amount) || 0) === 0;
   const compTotal = r2(components.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
   const hasTRInComponents = components.some(c => c.isTRRefund);
   // Bouton "+ Tickets resto (auto)" : visible quand on est en composite,
@@ -2242,7 +2259,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !opDirty) || compositeVide}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !opDirty) || compositeVide || videDePorteur}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
@@ -2251,6 +2268,8 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
       {compositeVide
         ? <div className="field-hint">Ajoute au moins une composante, avec un libellé ou un montant.</div>
+        : videDePorteur
+        ? <div className="field-hint">Renseigne au moins un libellé ou un montant.</div>
         : (isEdit && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
