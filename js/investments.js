@@ -1213,21 +1213,24 @@ function UpdateAllValuesModal({ ctx, onClose }) {
 
         return (
           <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
+            {/* MÊME disposition que la carte à un seul support : le nom sur
+                la première ligne, la date (et l'ancienneté, et le delta) juste
+                dessous à GAUCHE. À droite, là où la carte solo met son champ de
+                saisie, la carte repliée met son MONTANT — et le chevron ferme la
+                ligne. Demande de l'utilisateur le 09/08/2026 : une même
+                information ne doit pas changer de place selon la carte.
+                ⚠️ Dépliée, le montant disparaît d'ici : le sous-total le porte,
+                trois lignes plus bas. */}
             <button type="button" className="maj-env-head" aria-expanded={ouverte}
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
-              <span className="maj-env-nom">{p.name}</span>
-              {/* Le montant n'apparaît QUE replié : déplié, le sous-total le redit
-                  trois lignes plus bas (relevé par l'utilisateur le 09/08/2026).
-                  La DATE reste toujours visible — c'est le signal qui dit où
-                  porter l'attention. Et replié, l'en-tête emporte le delta, sinon
-                  une enveloppe modifiée mais fermée n'aurait que son liseré. */}
-              <span className="maj-env-meta num">
-                {!ouverte && <>{fmt(sousTotal(p))} €{deltaNode}<br /></>}
-                {meta}
+              <span className="maj-env-col">
+                <span className="maj-solo-id">
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
+                  <span className="maj-env-nom">{p.name}</span>
+                </span>
+                <span className="maj-env-meta num" style={{ display: 'block', marginTop: 3 }}>{meta}{deltaNode}</span>
               </span>
-              {/* Chevron VECTORIEL (motif .evo-chev, v530) : les glyphes texte
-                  s'asseyaient bas dans leur ligne et paraissaient décentrés. */}
+              {!ouverte && <span className="maj-env-montant num">{fmt(sousTotal(p))} €</span>}
               <span className={`maj-chev${ouverte ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
             </button>
             {ouverte && (
