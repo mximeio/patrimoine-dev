@@ -1049,6 +1049,23 @@ function nettoyerMontant(brut) {
   return String(brut).replace(/[^\d.,]/g, '');
 }
 
+// Libellé d'un support pour les fenêtres de valorisation : NOM COMPLET quand il
+// y a la place, nom court sur téléphone en portrait. La bascule est faite en CSS
+// (.support-name-full / .support-name-short, §9) : les deux sont rendus, la
+// media-query choisit. ⚠️ Motif repris de `SupportRow` — ne pas en réinventer un
+// troisième, c'est le défaut récurrent que décrit le §10.
+function LibelleSupport({ etf }) {
+  const court = (etf.ticker || '').trim() && (etf.label || '').trim() ? etf.label : '';
+  const complet = (etf.fullName || '').trim();
+  if (!complet) return court ? <span className="maj-sup-court">{court}</span> : null;
+  return (
+    <>
+      <span className="maj-sup-court support-name-full">{complet}</span>
+      {court && <span className="maj-sup-court support-name-short">{court}</span>}
+    </>
+  );
+}
+
 // Âge en jours d'une date ISO, ou null si la date manque. Midi local pour
 // éviter qu'un décalage horaire ne fasse basculer d'un jour.
 function joursDepuisIso(iso) {
@@ -1199,7 +1216,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   <span className="maj-env-nom">{p.name}</span>
                 </div>
                 <div className="maj-solo-sup">
-                  {supportName(e)}{(e.ticker || '').trim() && (e.label || '').trim() && <> · {e.label}</>}
+                  {supportName(e)} <LibelleSupport etf={e} />
                 </div>
                 <div className="maj-env-meta num">{meta}{deltaNode}</div>
               </div>
@@ -1240,7 +1257,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                     <span className="maj-sup-lbl">
                       <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
                       <b>{supportName(e)}</b>
-                      {(e.ticker || '').trim() && (e.label || '').trim() && <span className="maj-sup-court">{e.label}</span>}
+                      <LibelleSupport etf={e} />
                     </span>
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
                       value={valeurAffichee(p, e)}
@@ -1330,7 +1347,7 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
             <span className="maj-sup-lbl">
               <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
               <b>{supportName(e)}</b>
-              {(e.ticker || '').trim() && (e.label || '').trim() && <span className="maj-sup-court">{e.label}</span>}
+              <LibelleSupport etf={e} />
             </span>
             <input
               className="input num" inputMode="decimal"
