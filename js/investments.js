@@ -1275,6 +1275,9 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
     const v = (data.currentValues || {})[etf.id];
     return v === undefined || v === null ? '' : String(v);
   };
+  const sommeDe = (src) => (data.etfs || []).reduce((a, e) => a + (Number(src[e.id]) || 0), 0);
+  const totalSupports = sommeDe(change ? modifiees[0].currentValues : (data.currentValues || {}));
+  const deltaSupports = r2(totalSupports - sommeDe(data.currentValues || {}));
   const submit = (e) => {
     e.preventDefault();
     // Garde en profondeur : le bouton est déjà désactivé, mais un submit peut
@@ -1312,20 +1315,23 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange }) {
           </div>
         ))}
         {!(data.etfs || []).length && <div className="maj-vide">Aucun support</div>}
-        {/* ⚠️ PAS de ligne de total ici — essayée puis RETIRÉE le 09/08/2026,
-            et la raison vaut d'être connue avant de la reproposer.
-            Premier motif, le mien : la somme des supports (28 170.93 €) tombait
-            à trois centimètres du hero qui annonce 28 171.62 € — 69 centimes
-            d'écart, qui sont le cash non investi.
-            🔴 Second motif, celui de l'utilisateur, et il est plus fort : dès
-            qu'on saisit de nouvelles valeurs, tout total de cette fenêtre
-            DIVERGE du hero par construction — c'est son objet même. Chercher à
-            les réconcilier (en affichant le cash pour boucler la somme) n'a donc
-            pas de sens, et coûterait de la hauteur — surtout dans la fenêtre
-            groupée, qui empile les enveloppes. ⇒ Ici, le hero juste au-dessus
-            donne déjà la valeur de l'enveloppe. La fenêtre GROUPÉE, elle, garde
-            ses sous-totaux : aucun hero ne les redit, et ils situent chaque
-            enveloppe dans le total général. */}
+        {/* Total des SUPPORTS — et le libellé est précis à dessein : il ne
+            somme pas le cash non investi, donc il ne vaut pas la valeur de
+            l'enveloppe qu'annonce le hero (69 centimes d'écart mesurés sur le
+            PEA le 09/08/2026).
+            ⚠️ Ce n'est PAS un défaut à réconcilier : dès qu'on saisit de
+            nouvelles valeurs, ce total diverge du hero par construction — c'est
+            son objet. Afficher le cash pour boucler la somme a été essayé puis
+            ÉCARTÉ (décision de l'utilisateur) : ça coûtait de la hauteur pour
+            réconcilier des chiffres qui n'ont pas à l'être. */}
+        {!!(data.etfs || []).length && (
+          <div className="maj-sous-total">
+            <span>Total des supports</span>
+            <b className="num">{fmt(totalSupports)} €
+              {change && <span className="maj-delta">{deltaSupports > 0 ? '+' : '−'}{fmt(Math.abs(deltaSupports))} €</span>}
+            </b>
+          </div>
+        )}
       </div>
       <button type="submit" className="btn btn-accent btn-lg" disabled={!change || busy}>Enregistrer</button>
       {/* 🔴 Cette note accompagne OBLIGATOIREMENT le bouton désactivé : grisé
