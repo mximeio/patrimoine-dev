@@ -1990,6 +1990,15 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
     || serieComposantes(components) !== serieComposantes(departComposantes);
   useEffect(() => { if (markDirty) markDirty(opDirty); }, [opDirty]); // eslint-disable-line
 
+  // 🔴 Un composite SANS AUCUNE composante utilisable ne peut pas être soumis :
+  // le submit filtre les composantes vides et fait `return` si la liste est vide
+  // — un refus SILENCIEUX, le « clic sans effet ni explication » que le §10
+  // refuse ailleurs. On grise le bouton et on dit pourquoi. Le filtre est
+  // exactement celui du submit : une composante compte si elle a un libellé, un
+  // montant non nul, ou si c'est un remboursement TR.
+  const composantesUtiles = (components || []).filter(
+    c => (c.label || '').trim() || (parseFloat(c.amount) || 0) !== 0 || c.isTRRefund).length;
+  const compositeVide = isComposite && composantesUtiles === 0;
   const compTotal = r2(components.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
   const hasTRInComponents = components.some(c => c.isTRRefund);
   // Bouton "+ Tickets resto (auto)" : visible quand on est en composite,
@@ -2233,13 +2242,16 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg" disabled={isEdit && !opDirty}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className="btn btn-accent btn-lg" disabled={(isEdit && !opDirty) || compositeVide}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
           </button>
         )}
       </div>
+      {compositeVide
+        ? <div className="field-hint">Ajoute au moins une composante, avec un libellé ou un montant.</div>
+        : (isEdit && !opDirty) && <div className="field-hint">Aucune modification à enregistrer.</div>}
     </form>
   );
 }
