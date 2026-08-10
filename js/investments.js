@@ -99,6 +99,10 @@ function InvestmentsView({ ctx }) {
 // ============================================================
 function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCreate }) {
   const { portfolios } = ctx;
+  // Mise à jour groupée des valorisations (09/08/2026). Hook déclaré ici, en
+  // tête : ce composant n'a aucun retour anticipé, et le §8 exige que tout hook
+  // précède le premier (erreur React #310 déposée le 31/07/2026).
+  const [majGroupee, setMajGroupee] = useState(false);
   const consolidated = computeInvestmentsConsolidated(portfolios);
 
   // Carte « À rafraîchir » (v480, maquette Mockup-Card-Arafraichir) : on
@@ -144,7 +148,15 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
             Valeur totale investissements
           </div>
-          <ModuleBadge module="investments" />
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <ModuleBadge module="investments" />
+            <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+              <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
+                <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
+                Mettre à jour les valeurs
+              </button>
+            </Dropdown>
+          </div>
         </div>
         <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(consolidated.totalValue)} €</div>
         <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
@@ -248,6 +260,8 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           <NewPortfolioForm onSubmit={onCreate} />
         </Modal>
       )}
+
+      {majGroupee && <UpdateAllValuesModal ctx={ctx} onClose={() => setMajGroupee(false)} />}
     </div>
   );
 }
@@ -1011,6 +1025,179 @@ function AddOperationForm({ data, initial, onSubmit, onDelete }) {
         )}
       </div>
     </form>
+  );
+}
+
+// Âge en jours d'une date ISO, ou null si la date manque. Midi local pour
+// éviter qu'un décalage horaire ne fasse basculer d'un jour.
+function joursDepuisIso(iso) {
+  if (!iso) return null;
+  return Math.max(0, Math.floor((Date.now() - new Date(iso + 'T12:00:00').getTime()) / 86400000));
+}
+
+// ============================================================
+//  MISE À JOUR GROUPÉE DES VALORISATIONS (09/08/2026)
+// ============================================================
+// Pourquoi ce composant porte lui-même sa <Modal> : le PIED FIGÉ affiche le
+// total, le bouton et sa note, tous dérivés de la saisie en cours. Laisser
+// l'état dans un formulaire enfant obligerait à le remonter par un callback,
+// donc à poser un state pendant un rendu — la boucle infinie du §10.
+//
+// 🔴 CHAMP CONTRÔLÉ EN CHAÎNE, PAS `AmountInput` — et ce n'est pas une
+// négligence. `AmountInput.handleBlur` transforme un champ VIDÉ en `onChange(0)`
+// (§10). Sur une fenêtre qui affiche neuf champs pré-remplis, vider l'un d'eux
+// pour « ne pas y toucher » écrirait donc 0, c'est-à-dire « ce support ne vaut
+// plus rien ». La règle « champ vide = valeur inchangée » exige de garder la
+// chaîne telle quelle. Le refus du négatif, lui, est repris ici.
+function UpdateAllValuesModal({ ctx, onClose }) {
+  const { user, portfolios, refreshPortfolios, showToast } = ctx;
+  // MÊME expression que la liste « Mes enveloppes » : l'ordre et les couleurs
+  // doivent coïncider avec l'écran du dessous, sinon on lit deux listes.
+  const ordonnees = sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue);
+  const [saisie, setSaisie] = useState({});
+  const [busy, setBusy] = useState(false);
+  // Déplié d'office si la valorisation est ANCIENNE (> 30 j, seuil de la carte
+  // « À rafraîchir ») ou absente : c'est la date qui dit où porter l'attention.
+  // Initialiseur paresseux : l'état ne se recalcule pas à chaque rendu, sinon
+  // replier une enveloppe serait annulé au rafraîchissement suivant.
+  const [ouvertes, setOuvertes] = useState(() => {
+    const o = {};
+    ordonnees.forEach(p => {
+      const j = joursDepuisIso(p.data && p.data.currentValuesDate);
+      o[p.id] = j === null || j > 30;
+    });
+    // 🔴 REPLI INDISPENSABLE, trouvé au navigateur sur les données réelles le
+    // 09/08/2026 : quand TOUTES les valorisations sont récentes, la règle
+    // n'ouvre rien et la fenêtre s'affiche sans un seul champ — elle paraît ne
+    // rien proposer. Or la règle sert à HIÉRARCHISER l'attention, pas à cacher
+    // le contenu : s'il n'y a rien à hiérarchiser, on ouvre tout.
+    if (!Object.values(o).some(Boolean)) ordonnees.forEach(p => { o[p.id] = true; });
+    return o;
+  });
+
+  // LE calcul qui décide des écritures — fonction pure, testée (compute.js).
+  const modifiees = enveloppesModifiees(ordonnees, saisie);
+  const estModifiee = (id) => modifiees.some(m => m.id === id);
+
+  const valeurAffichee = (p, etf) => {
+    const s = saisie[p.id] || {};
+    if (s[etf.id] !== undefined) return s[etf.id];
+    const v = (p.data && p.data.currentValues || {})[etf.id];
+    return v === undefined || v === null ? '' : String(v);
+  };
+  const setChamp = (pid, eid, brut) => {
+    // Pas de négatif : une valorisation ne descend pas sous zéro.
+    const propre = String(brut).replace(/-/g, '');
+    setSaisie(prev => ({ ...prev, [pid]: { ...(prev[pid] || {}), [eid]: propre } }));
+  };
+  const sousTotal = (p) => {
+    const cur = (p.data && p.data.currentValues) || {};
+    const modif = modifiees.find(m => m.id === p.id);
+    const source = modif ? modif.currentValues : cur;
+    return ((p.data && p.data.etfs) || []).reduce((a, e) => a + (Number(source[e.id]) || 0), 0);
+  };
+  const sousTotalInitial = (p) => {
+    const cur = (p.data && p.data.currentValues) || {};
+    return ((p.data && p.data.etfs) || []).reduce((a, e) => a + (Number(cur[e.id]) || 0), 0);
+  };
+  const totalGeneral = ordonnees.reduce((a, p) => a + sousTotal(p), 0);
+
+  const enregistrer = async () => {
+    if (!modifiees.length || busy) return;
+    setBusy(true);
+    // Une écriture par enveloppe, puis UN SEUL refreshPortfolios (spec §1.4).
+    // On continue après un échec et on NOMME l'enveloppe fautive : pas d'échec
+    // silencieux sur un chemin qui écrit.
+    const echecs = [];
+    for (const m of modifiees) {
+      const p = ordonnees.find(x => x.id === m.id);
+      try {
+        await Adapter.updatePortfolioData(user.uid, m.id, {
+          ...(p.data || {}), currentValues: m.currentValues, currentValuesDate: todayIso(),
+        });
+      } catch (e) { console.error(e); echecs.push(p ? p.name : m.id); }
+    }
+    await refreshPortfolios();
+    setBusy(false);
+    if (echecs.length) showToast(`Échec sur : ${echecs.join(', ')}`, 'error');
+    else showToast(`${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''} mise${modifiees.length > 1 ? 's' : ''} à jour`, 'success');
+    onClose();
+  };
+
+  const pied = (
+    <>
+      <div className="maj-total"><span>Total général</span><b className="num">{fmt(totalGeneral)} €</b></div>
+      <button type="button" className="btn btn-accent btn-lg" disabled={!modifiees.length || busy} onClick={enregistrer}>
+        {busy ? 'Enregistrement…'
+          : modifiees.length ? `Enregistrer ${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''}`
+          : 'Enregistrer'}
+      </button>
+      <div className="maj-note">
+        {modifiees.length
+          ? 'Seules les enveloppes modifiées seront écrites et redatées.'
+          : "Aucune modification : rien ne sera écrit, aucune date rafraîchie."}
+      </div>
+    </>
+  );
+
+  return (
+    // dirty CONTRÔLÉ : il retombe à faux si l'on retape la valeur d'origine,
+    // ce que l'heuristique générique de Modal ne sait pas faire.
+    <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose} footer={pied}>
+      <div className="field-hint" style={{ marginBottom: 12 }}>
+        Enveloppes dans l'ordre de « Mes enveloppes » — valeur décroissante.
+        Les valorisations les plus anciennes sont dépliées.
+      </div>
+      {ordonnees.map((p, i) => {
+        const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
+        const etfs = (p.data && p.data.etfs) || [];
+        const jours = joursDepuisIso(p.data && p.data.currentValuesDate);
+        const ancienne = jours !== null && jours > 30;
+        const ouverte = !!ouvertes[p.id];
+        const modifiee = estModifiee(p.id);
+        const delta = r2(sousTotal(p) - sousTotalInitial(p));
+        return (
+          <div key={p.id} className={`maj-env${modifiee ? ' maj-env--modifiee' : ''}`}>
+            <button type="button" className="maj-env-head" aria-expanded={ouverte}
+              onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
+              <span className="maj-env-nom">{p.name}</span>
+              <span className="maj-env-meta num">
+                {fmt(sousTotal(p))} €<br />
+                <span className="maj-env-maj">MaJ {p.data && p.data.currentValuesDate ? fmtDateNumeric(p.data.currentValuesDate) : '—'}</span>
+                {ancienne && <span className="stale-tag">{jours} j</span>}
+              </span>
+              <span className="maj-chev">{ouverte ? '⌄' : '›'}</span>
+            </button>
+            {ouverte && (
+              <div style={{ marginTop: 6 }}>
+                {!etfs.length && <div className="maj-vide">Aucun support</div>}
+                {etfs.map(e => (
+                  <div key={e.id} className="maj-sup">
+                    <span className="maj-sup-lbl">
+                      <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
+                      <b>{supportName(e)}</b>
+                      {(e.ticker || '').trim() && (e.label || '').trim() && <span className="maj-sup-court">{e.label}</span>}
+                    </span>
+                    <input className="input num" inputMode="decimal" enterKeyHint="next"
+                      value={valeurAffichee(p, e)}
+                      onChange={(ev) => setChamp(p.id, e.id, ev.target.value)} />
+                  </div>
+                ))}
+                {!!etfs.length && (
+                  <div className="maj-sous-total">
+                    <span>Sous-total</span>
+                    <b className="num">{fmt(sousTotal(p))} €
+                      {modifiee && <span className="maj-delta">{delta > 0 ? '+' : '−'}{fmt(Math.abs(delta))} €</span>}
+                    </b>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </Modal>
   );
 }
 

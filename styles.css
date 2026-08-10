@@ -167,6 +167,13 @@ input[type="month"] {
 /* Boutons d'action d'un formulaire d'édition sur une seule ligne :
    le bouton principal (Enregistrer/Modifier) prend la place, « Supprimer » à
    droite à sa largeur de contenu. */
+/* 🔴 AUCUN style de bouton DÉSACTIVÉ n'existait avant le 09/08/2026 — constaté
+   au navigateur : `disabled` était posé, et le bouton gardait l'apparence exacte
+   d'un bouton actif (fond plein, curseur main). Les 7 `disabled` de l'app en
+   dépendaient donc pour rien, sauf auth.js qui pose une opacité EN LIGNE.
+   ⚠️ Conséquence à connaître : cette règle change aussi l'apparence de ces 7
+   boutons existants — c'est voulu, un bouton qui ne réagit pas doit le dire. */
+.btn:disabled, .btn[disabled] { opacity: 0.45; cursor: default; }
 .form-actions { display: flex; gap: 8px; align-items: stretch; }
 .form-actions > .btn { flex: 1; }
 .form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
@@ -3337,6 +3344,43 @@ input[type="month"] {
    en ambre (.tr-utensils, réutilisé) et la date porte un compteur.
    ============================================================ */
 .stat-card-icon.stale-neutral { background: #f1f5f9; color: var(--text-muted); }
+/* ---- Mise à jour groupée des valorisations (09/08/2026) --------------
+   Une enveloppe repliable par bloc. Le liseré gauche indigo signale qu'elle
+   a été MODIFIÉE — c'est la seule qui sera écrite et redatée, et la règle
+   est trop conséquente pour ne se lire que dans un mot. */
+.maj-env {
+  border: 1px solid var(--border); border-left: 1px solid var(--border);
+  border-radius: 11px; padding: 10px 11px; margin-bottom: 9px; background: var(--surface);
+}
+.maj-env--modifiee { border-left: 3px solid var(--accent); }
+/* min-height 44px : cible tactile d'Apple, la ligne entière est le bouton. */
+.maj-env-head {
+  width: 100%; background: transparent; border: 0; padding: 0; font: inherit;
+  text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  min-height: 44px; color: var(--text);
+}
+.maj-env-nom { font-weight: 620; font-size: 14px; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maj-env-meta { font-size: 11px; color: var(--muted); text-align: right; flex: none; }
+.maj-env-maj { color: var(--subtle); }
+.maj-chev { font-size: 12px; color: var(--subtle); flex: none; width: 12px; text-align: center; }
+.maj-sup { display: grid; grid-template-columns: 1fr 118px; gap: 9px; align-items: center; padding: 6px 0; }
+.maj-sup-lbl { display: flex; align-items: center; gap: 7px; font-size: 13.5px; min-width: 0; }
+.maj-sup-lbl .maj-sup-court { color: var(--muted); font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.maj-sous-total { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);
+  border-top: 1px dashed var(--border); margin-top: 7px; padding-top: 7px; }
+.maj-sous-total b { color: var(--text); }
+.maj-delta { color: var(--accent); font-weight: 700; margin-left: 4px; }
+.maj-vide { color: var(--muted); font-style: italic; font-size: 12.5px; padding: 4px 0 2px; }
+.maj-total { display: flex; justify-content: space-between; align-items: center;
+  font-size: 12.5px; color: var(--muted); }
+.maj-total b { font-size: 17px; color: var(--text); }
+/* 🔴 Cette note accompagne OBLIGATOIREMENT le bouton grisé : grisé seul, ce
+   serait le « clic sans effet ni explication » que le projet refuse (§10). */
+.maj-note { font-size: 11px; color: var(--subtle); text-align: center; line-height: 1.45; }
+@media (max-width: 400px) { .maj-sup { grid-template-columns: 1fr 100px; } }
+
 .stale-tag {
   display: inline-block; font-size: 10px; font-weight: 700;
   background: var(--warning-light); color: #b45309;
