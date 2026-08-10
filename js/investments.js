@@ -1170,9 +1170,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     // dirty CONTRÔLÉ : il retombe à faux si l'on retape la valeur d'origine,
     // ce que l'heuristique générique de Modal ne sait pas faire.
     <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose} footer={pied}>
-      <div className="field-hint" style={{ marginBottom: 12 }}>
-        Enveloppes dans l'ordre de « Mes enveloppes » — valeur décroissante.
-      </div>
       {ordonnees.map((p, i) => {
         const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
         const etfs = (p.data && p.data.etfs) || [];
