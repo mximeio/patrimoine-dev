@@ -403,15 +403,22 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
     } catch (e) { console.error(e); showToast('Erreur de renommage', 'error'); }
   };
 
+  // 🔴 RENVOIE UN BOOLÉEN, et ce n'est pas cosmétique : l'appelant ne doit fermer la
+  // modale des Réglages QUE si la suppression a réellement eu lieu. Avant le
+  // 10/08/2026 il faisait `setModal(null); handleDelete();` — donc la fenêtre se
+  // fermait AVANT que le `confirm()` ne soit posé, et « Annuler » laissait
+  // l'utilisateur devant un écran vidé de sa fenêtre sans que rien n'ait été
+  // supprimé. Relevé par l'utilisateur sur iPhone. Idiome repris de `physical.js`.
   const handleDelete = async () => {
-    if (!confirm(`Supprimer l'enveloppe « ${portfolio.name} » et toutes ses opérations ?\n\nCette action est irréversible.`)) return;
-    if (!confirm('Vraiment sûr ? Toutes les opérations seront perdues à jamais.')) return;
+    if (!confirm(`Supprimer l'enveloppe « ${portfolio.name} » et toutes ses opérations ?\n\nCette action est irréversible.`)) return false;
+    if (!confirm('Vraiment sûr ? Toutes les opérations seront perdues à jamais.')) return false;
     try {
       await Adapter.deletePortfolio(user.uid, portfolio.id);
       await refreshPortfolios();
       showToast('Enveloppe supprimée');
       onBack();
-    } catch (e) { console.error(e); showToast('Erreur de suppression', 'error'); }
+      return true;
+    } catch (e) { console.error(e); showToast('Erreur de suppression', 'error'); return false; }
   };
 
   return (
@@ -628,7 +635,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
               setModal(null);
               showToast('Réglages enregistrés');
             }}
-            onDelete={() => { setConfigureDirty(false); setModal(null); handleDelete(); }}
+            onDelete={async () => { if (await handleDelete()) { setConfigureDirty(false); setModal(null); } }}
           />
         </Modal>
       )}
