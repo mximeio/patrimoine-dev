@@ -257,7 +257,12 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
             <div key={e.id} className="support-edit-row">
               <span className="support-edit-dot" style={{ background: e.color || COLORS.muted }} />
               <span className="support-edit-name">
-                {supportName(e)}{hasBoth ? <span className="support-edit-lbl"> — {e.label}</span> : null}
+                {/* Nom complet si la place le permet, nom court sinon — motif partagé
+                    (`LibelleSupport`, ui.js). Cette table était le seul endroit à ne
+                    l'avoir jamais employé : elle n'affichait que le nom court, alors
+                    que c'est l'écran où l'on CONFIGURE un support. Relevé par
+                    l'utilisateur le 10/08/2026. */}
+                {supportName(e)}<LibelleSupport etf={e} className="support-edit-lbl" prefixe=" — " />
               </span>
               {e.target != null && e.target !== ''
                 ? <span className="support-edit-cible"><Icon name="target" size={13} /> {e.target} %</span>
