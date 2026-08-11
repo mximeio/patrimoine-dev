@@ -212,6 +212,23 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
 
   const removeEtf = (id) => {
     if ((data.operations || []).some(o => o.etf === id)) return refuser(showToast, REFUS.supportUtilise);
+    // 🔴 CONFIRMATION, alignée sur le reste de l'app (10/08/2026, à la demande de
+    // l'utilisateur). C'était le SEUL chemin destructeur de l'application à ne rien
+    // demander : le support disparaissait au clic, avec sa cible et sa valorisation.
+    // Relevé en auditant les 46 `confirm()` du code — l'audit cherchait un tout
+    // autre défaut, celui de l'ordre confirmation/fermeture.
+    // ⚠️ L'ORDRE des trois étapes n'est pas indifférent, et c'est le défaut du même
+    // jour qui l'a rendu explicite : d'abord la garde « support utilisé » (un refus,
+    // pas une question), PUIS la confirmation, PUIS les mutations. Un
+    // `setEditing(null)` posé avant le `confirm()` ferait disparaître la fenêtre sur
+    // un « Annuler » — c'est exactement ce qui arrivait aux Réglages d'une enveloppe.
+    // ⚠️ Le nom est composé COMME À L'ÉCRAN (`supportName` + le nom court si les deux
+    // existent) : une confirmation qui nomme autrement que la ligne qu'on vient de
+    // toucher fait douter de ce qu'on supprime.
+    const e = (data.etfs || []).find(x => x.id === id);
+    const hasBoth = e && (e.ticker || '').trim() && (e.label || '').trim();
+    const nom = e ? supportName(e) + (hasBoth ? ` — ${e.label}` : '') : 'ce support';
+    if (!confirm(`Supprimer le support « ${nom} » ?\n\nSa cible de répartition et sa valorisation seront perdues.`)) return;
     const cv = { ...data.currentValues }; delete cv[id];
     const newData = { ...data, etfs: (data.etfs || []).filter(e => e.id !== id), currentValues: cv };
     onUpdate(newData);
