@@ -666,6 +666,78 @@ function ajusteLaValorisation(type) {
 //  ⚠️ L'assiette inclut le CASH qui dort déjà dans l'enveloppe : le plan peut
 //  donc dépenser plus que le versement lui-même. Voulu.
 // ============================================================
+// Choix des quantités : la cascade gloutonne SEULE se trompe, et ça se mesure.
+// 🔴 POURQUOI CETTE RECHERCHE EXISTE (12/08/2026, relevé par l'utilisateur sur
+// ses vraies données). La cascade arrondit au plus proche À CHAQUE ÉTAPE, pour
+// elle-même, sans regarder ce que ça coûte en aval. Cas vécu : PAEEM avait un
+// budget de 302,75 € pour une part à 35,56 €, soit 8,514 parts. L'arrondi
+// donnait 9 — une décision jouée à 0,014 part, environ 50 centimes. Or monter à
+// 9 dépense 17,29 € de plus que le budget, et ces 17,29 € sont pris à WPEA, qui
+// était déjà sous sa cible. UN EURO MAL PLACÉ COÛTE DEUX FOIS : il fait dépasser
+// l'un et affame l'autre. Le report transmet bien l'erreur, mais APRÈS la
+// décision : il la constate, il ne l'empêche pas.
+// Mesuré sur ce cas : 107,42 € d'écart aux cibles contre 62,20 € pour le plan
+// que l'utilisateur a trouvé à la main — et 62,20 € est l'optimum EXACT sous la
+// règle « on dépense tout » (vérifié par énumération exhaustive).
+//
+// ⇒ On garde la cascade, et on explore les DEUX arrondis possibles de chaque
+// étape non finale (plancher et plafond de `budget / prix`), la dernière prenant
+// toujours tout le reste. On retient la combinaison qui minimise l'écart TOTAL
+// aux cibles, en euros — la mesure qu'emploie déjà la spec au §2.4.
+// ⚠️ La contrainte « on dépense tout » est respectée PAR CONSTRUCTION, la
+// dernière étape prenant le maximum achetable : le reliquat est donc toujours
+// inférieur au prix de la part la moins chère. *Sans elle, l'optimum du cas réel
+// laissait 19,57 € dormir — près de trois parts — pour gagner 11 € d'écart.*
+// ⚠️ L'arrondi naturel est essayé EN PREMIER : si le plafond de feuilles est
+// atteint, le résultat ne peut donc jamais être pire que la cascade seule.
+// ⚠️ Un support dont la quantité est FORCÉE n'est pas exploré : le choix de
+// l'utilisateur ne se discute pas, on optimise seulement autour de lui.
+function _choisirQuantites(ordre, besoin, available, totalAfter, over) {
+  const PLAFOND_FEUILLES = 4096; // 2^12 — au-delà, on garde le meilleur trouvé
+  let meilleur = null;
+  let feuilles = 0;
+  const coutDe = (s, q) => {
+    const o = over[s.id] || {};
+    return (o.cost === null || o.cost === undefined) ? r2(q * (Number(s.price) || 0)) : r2(Number(o.cost) || 0);
+  };
+  const marcher = (rang, left, carry, qs) => {
+    if (feuilles > PLAFOND_FEUILLES) return;
+    if (rang === ordre.length) {
+      feuilles += 1;
+      const ecart = ordre.reduce((a, s, i) => a + Math.abs(
+        ((Number(s.value) || 0) + coutDe(s, qs[i])) - totalAfter * (Number(s.target) || 0) / 100), 0);
+      if (!meilleur || ecart < meilleur.ecart - 1e-9) meilleur = { qs: qs.slice(), ecart };
+      return;
+    }
+    const s = ordre[rang];
+    const prix = Number(s.price) || 0;
+    const dernier = rang === ordre.length - 1;
+    const budget = besoin[s.id] + carry;
+    const maxAchetable = Math.max(0, Math.floor(Math.max(0, left) / prix + 1e-9));
+    const o = over[s.id] || {};
+    let candidats;
+    if (o.qty !== null && o.qty !== undefined) {
+      candidats = [Math.min(Math.max(0, Math.floor(Number(o.qty) || 0)), maxAchetable)];
+    } else if (dernier) {
+      candidats = [maxAchetable];
+    } else {
+      const ideal = Math.max(0, budget) / prix;
+      const naturel = Math.min(Math.max(0, Math.round(ideal)), maxAchetable);
+      const autre = naturel === Math.min(Math.max(0, Math.floor(ideal)), maxAchetable)
+        ? Math.min(Math.max(0, Math.ceil(ideal)), maxAchetable)
+        : Math.min(Math.max(0, Math.floor(ideal)), maxAchetable);
+      candidats = naturel === autre ? [naturel] : [naturel, autre];
+    }
+    candidats.forEach((q) => {
+      qs.push(q);
+      marcher(rang + 1, r2(left - coutDe(s, q)), budget - coutDe(s, q), qs);
+      qs.pop();
+    });
+  };
+  marcher(0, available, 0, []);
+  return meilleur ? meilleur.qs : ordre.map(() => 0);
+}
+
 function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   const liste = Array.isArray(supports) ? supports : [];
   const over = overrides || {};
@@ -698,6 +770,15 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     (a, b) => (Number(b.price) || 0) - (Number(a.price) || 0) || String(a.id).localeCompare(String(b.id))
   );
 
+  // Les quantités RETENUES (overrides compris) et celles que le calcul
+  // PROPOSE (comme s'il n'y avait aucun ajustement) — deux passes, parce que
+  // « proposition N » doit dire ce que rend le bouton « Réinitialiser », pas ce
+  // que devient la cascade une fois qu'on a forcé une valeur en amont.
+  const retenues = _choisirQuantites(ordre, besoin, available, totalAfter, over);
+  const proposees = Object.keys(over).length
+    ? _choisirQuantites(ordre, besoin, available, totalAfter, {})
+    : retenues;
+
   const steps = [];
   let left = available;
   let carry = 0;
@@ -710,17 +791,12 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     // ⚠️ Le +1e-9 absorbe l'erreur binaire : sans lui, 1200/6 peut valoir
     // 199.99999999999997 et `floor` rend 199 parts au lieu de 200.
     const maxAchetable = Math.max(0, Math.floor(Math.max(0, left) / prix + 1e-9));
-    const suggested = isLast
-      ? maxAchetable
-      : Math.min(Math.max(0, Math.round(Math.max(0, budget) / prix)), maxAchetable);
-
+    // ⚠️ `suggested` vient de la passe SANS override, `qty` de la passe avec —
+    // les deux sont déjà replafonnées par ce qui reste (un override survit à un
+    // changement de versement, mais ne peut pas faire acheter ce qu'on n'a pas).
+    const suggested = Math.min(proposees[rang], isLast ? maxAchetable : proposees[rang]);
     const o = over[s.id] || {};
-    // La quantité forcée est REPLAFONNÉE par ce qui reste réellement : un
-    // override survit à un changement de versement, mais ne peut pas faire
-    // acheter ce qu'on n'a pas.
-    const qty = o.qty === null || o.qty === undefined
-      ? suggested
-      : Math.min(Math.max(0, Math.floor(Number(o.qty) || 0)), maxAchetable);
+    const qty = retenues[rang];
     const costAuto = r2(qty * prix);
     // ⚠️ Le montant forcé n'est JAMAIS plafonné — le brider falsifierait une
     // saisie qui décrit ce que le courtier a réellement débité. Le dépassement
