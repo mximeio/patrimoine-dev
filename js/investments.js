@@ -1798,29 +1798,57 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
             )}
           </div>
 
-          {/* ---- Zone B : le plan, dans l'ordre d'achat ---- */}
-          {plan.steps.map((s, i) => {
-            const e = etfDe(s.id);
+          {/* ---- Zone B : le plan, dans l'ordre d'achat ----
+              🔴 UNE SEULE LISTE POUR TOUS LES SUPPORTS, ET DES CLÉS STABLES.
+              Ce n'était pas le cas au premier jet, et l'utilisateur l'a senti
+              immédiatement sur son iPhone : les supports « sans prix » vivaient
+              dans une seconde liste, donc taper le premier chiffre d'un prix
+              faisait CHANGER DE PARENT au support (il rejoignait le plan).
+              React démontait alors l'`input` en cours de saisie pour en monter
+              un autre ailleurs — et le focus meurt avec le nœud. On perdait la
+              suite de sa frappe à chaque fois.
+              ⇒ Un seul parent, `key={id}` : React DÉPLACE le nœud au lieu de le
+              recréer, le curseur reste dedans, et le réordonnancement par prix
+              décroissant continue de se faire sous les doigts sans rien casser.
+              ⚠️ Ne pas re-scinder cette liste « pour la lisibilité ». */}
+          {[...plan.steps.map((s, i) => ({ id: s.id, step: s, rang: i })),
+            ...plan.excluded.map((x) => ({ id: x.id, reason: x.reason }))].map(({ id, step, rang, reason }) => {
+            const e = etfDe(id);
             const dateP = e.lastUnitPriceDate;
             const ageP = dateP ? Math.floor((Date.now() - new Date(dateP + 'T12:00:00').getTime()) / 86400000) : null;
+
+            // Sans CIBLE, il n'y a rien à saisir ici : ça se règle ailleurs.
+            if (reason === 'no-target') {
+              return (
+                <div key={id} className="cp-exclu-ligne">
+                  <span className="cp-pastille" style={{ background: COLORS.subtle }} />
+                  <b>{supportName(e)}</b>
+                  <span>Aucune cible fixée · Réglages</span>
+                </div>
+              );
+            }
+
+            const sansPrix = reason === 'no-price';
             return (
-              <div key={s.id} className={`cp-etape${(s.qtyAdjusted || s.costForced) ? ' cp-etape--ajustee' : ''}`}>
+              <div key={id} className={`cp-etape${sansPrix ? ' cp-etape--sansprix' : ''}${(!sansPrix && (step.qtyAdjusted || step.costForced)) ? ' cp-etape--ajustee' : ''}`}>
                 <div className="cp-tete">
                   <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
                   <b className="cp-nom">{supportName(e)}</b>
-                  <span className="cp-cible">cible {fmt(s.target)} %</span>
-                  <span className="cp-rang">{i + 1}/{plan.steps.length}{s.isLast ? ' · tout le reliquat' : ''}</span>
+                  <span className="cp-cible">cible {fmt(sansPrix ? (Number(e.target) || 0) : step.target)} %</span>
+                  <span className="cp-rang">
+                    {sansPrix ? 'hors plan' : `${rang + 1}/${plan.steps.length}${step.isLast ? ' · tout le reliquat' : ''}`}
+                  </span>
                 </div>
                 <div className="cp-champs">
                   <div>
                     <label className="label">Valeur actuelle (€)</label>
                     <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
-                      onChange={(ev) => setValeurs((v) => ({ ...v, [s.id]: nettoyerMontant(ev.target.value) }))} />
+                      onChange={(ev) => setValeurs((v) => ({ ...v, [id]: nettoyerMontant(ev.target.value) }))} />
                   </div>
                   <div>
                     <label className="label">Prix d'une part (€)</label>
                     <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
-                      onChange={(ev) => setPrix((p) => ({ ...p, [s.id]: nettoyerMontant(ev.target.value) }))} />
+                      onChange={(ev) => setPrix((p) => ({ ...p, [id]: nettoyerMontant(ev.target.value) }))} />
                     {/* 🔴 La date du prix est OBLIGATOIRE dès lors qu'il est
                         pré-rempli : un prix périmé validé sans être vu fausse
                         tout le plan. Ambre au-delà de 7 jours (spec §2.6). */}
@@ -1831,79 +1859,40 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     )}
                   </div>
                 </div>
-                <div className="cp-achat">
-                  <div className="cp-qty">
-                    <button type="button" className="btn-icon" aria-label="Une part de moins"
-                      onClick={() => poserQty(s.id, s.qty - 1)}>−</button>
-                    <span className="cp-parts num">{s.qty} part{s.qty > 1 ? 's' : ''}</span>
-                    <button type="button" className="btn-icon" aria-label="Une part de plus"
-                      onClick={() => poserQty(s.id, s.qty + 1)}>+</button>
-                  </div>
-                  <div className="cp-cout">
-                    <label className="label">Montant payé (€)</label>
-                    <input type="text" inputMode="decimal" className="input num"
-                      value={(over[s.id] || {}).cost !== undefined && (over[s.id] || {}).cost !== null
-                        ? String((over[s.id] || {}).cost) : String(s.costAuto)}
-                      onChange={(ev) => poserCost(s.id, ev.target.value)} />
-                  </div>
-                </div>
-                <div className="cp-resultat">
-                  → {fmt(s.pctAfter)} % · {s.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(s.gapPts))} pt vs cible
-                  · reste ensuite <b className="num">{fmt(s.leftAfter)} €</b>
-                </div>
-                <div className="cp-detail">
-                  budget {fmt(s.budget)} € (besoin {fmt(s.need)} + report {s.carryIn >= 0 ? '+' : '−'}{fmt(Math.abs(s.carryIn))})
-                  {s.qtyAdjusted ? ` · quantité ajustée, proposition ${s.suggested}` : ''}
-                  {s.costForced ? ` · montant forcé, calculé ${fmt(s.costAuto)} €` : ''}
-                </div>
+                {sansPrix ? (
+                  <div className="cp-detail">Renseigne le prix d'une part pour que ce support entre dans le plan.</div>
+                ) : (
+                  <>
+                    <div className="cp-achat">
+                      <div className="cp-qty">
+                        <button type="button" className="btn-icon" aria-label="Une part de moins"
+                          onClick={() => poserQty(id, step.qty - 1)}>−</button>
+                        <span className="cp-parts num">{step.qty} part{step.qty > 1 ? 's' : ''}</span>
+                        <button type="button" className="btn-icon" aria-label="Une part de plus"
+                          onClick={() => poserQty(id, step.qty + 1)}>+</button>
+                      </div>
+                      <div className="cp-cout">
+                        <label className="label">Montant payé (€)</label>
+                        <input type="text" inputMode="decimal" className="input num"
+                          value={(over[id] || {}).cost !== undefined && (over[id] || {}).cost !== null
+                            ? String((over[id] || {}).cost) : String(step.costAuto)}
+                          onChange={(ev) => poserCost(id, ev.target.value)} />
+                      </div>
+                    </div>
+                    <div className="cp-resultat">
+                      → {fmt(step.pctAfter)} % · {step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt vs cible
+                      · reste ensuite <b className="num">{fmt(step.leftAfter)} €</b>
+                    </div>
+                    <div className="cp-detail">
+                      budget {fmt(step.budget)} € (besoin {fmt(step.need)} + report {step.carryIn >= 0 ? '+' : '−'}{fmt(Math.abs(step.carryIn))})
+                      {step.qtyAdjusted ? ` · quantité ajustée, proposition ${step.suggested}` : ''}
+                      {step.costForced ? ` · montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
-
-          {/* 🔴 UN SUPPORT EXCLU FAUTE DE PRIX GARDE SON CHAMP PRIX — sans ça,
-              la fenêtre est une impasse. Découvert au premier rendu réel le
-              12/08/2026 : `lastUnitPrice` est un champ NEUF, donc vide partout,
-              donc les trois supports étaient exclus… et le champ qui les en
-              sortirait vivait dans une étape qui n'existait pas. La fenêtre
-              s'ouvrait sur un état vide qu'aucun geste ne pouvait quitter.
-              ⚠️ Ne pas « simplifier » en renvoyant ces supports vers la ligne
-              grise ci-dessous : c'est ce que faisait la version qui ne marchait
-              pas. Le renvoi aux Réglages ne vaut que pour l'absence de CIBLE,
-              qui ne se saisit pas ici. */}
-          {plan.excluded.filter((x) => x.reason === 'no-price').map((x) => {
-            const e = etfDe(x.id);
-            return (
-              <div key={x.id} className="cp-etape cp-etape--sansprix">
-                <div className="cp-tete">
-                  <span className="cp-pastille" style={{ background: e.color || COLORS.subtle }} />
-                  <b className="cp-nom">{supportName(e)}</b>
-                  <span className="cp-cible">cible {fmt(Number(e.target) || 0)} %</span>
-                  <span className="cp-rang">hors plan</span>
-                </div>
-                <div className="cp-champs">
-                  <div>
-                    <label className="label">Valeur actuelle (€)</label>
-                    <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
-                      onChange={(ev) => setValeurs((v) => ({ ...v, [x.id]: nettoyerMontant(ev.target.value) }))} />
-                  </div>
-                  <div>
-                    <label className="label">Prix d'une part (€)</label>
-                    <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
-                      onChange={(ev) => setPrix((p) => ({ ...p, [x.id]: nettoyerMontant(ev.target.value) }))} />
-                  </div>
-                </div>
-                <div className="cp-detail">Renseigne le prix d'une part pour que ce support entre dans le plan.</div>
-              </div>
-            );
-          })}
-
-          {plan.excluded.filter((x) => x.reason === 'no-target').map((x) => (
-            <div key={x.id} className="cp-exclu-ligne">
-              <span className="cp-pastille" style={{ background: COLORS.subtle }} />
-              <b>{supportName(etfDe(x.id))}</b>
-              <span>Aucune cible fixée · Réglages</span>
-            </div>
-          ))}
 
           {ajustements > 0 && (
             <div className="cp-reset">
