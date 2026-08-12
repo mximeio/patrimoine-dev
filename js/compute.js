@@ -692,7 +692,7 @@ function ajusteLaValorisation(type) {
 // atteint, le résultat ne peut donc jamais être pire que la cascade seule.
 // ⚠️ Un support dont la quantité est FORCÉE n'est pas exploré : le choix de
 // l'utilisateur ne se discute pas, on optimise seulement autour de lui.
-function _choisirQuantites(ordre, besoin, available, totalAfter, over) {
+function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffective) {
   const PLAFOND_FEUILLES = 4096; // 2^12 — au-delà, on garde le meilleur trouvé
   let meilleur = null;
   let feuilles = 0;
@@ -705,7 +705,7 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over) {
     if (rang === ordre.length) {
       feuilles += 1;
       const ecart = ordre.reduce((a, s, i) => a + Math.abs(
-        ((Number(s.value) || 0) + coutDe(s, qs[i])) - totalAfter * (Number(s.target) || 0) / 100), 0);
+        ((Number(s.value) || 0) + coutDe(s, qs[i])) - totalAfter * cibleEffective(s)), 0);
       if (!meilleur || ecart < meilleur.ecart - 1e-9) meilleur = { qs: qs.slice(), ecart };
       return;
     }
@@ -761,9 +761,22 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // dans T — ils font partie du portefeuille, seulement on ne les alimente pas.
   const totalAfter = liste.reduce((a, s) => a + (Number(s.value) || 0), 0) + available;
 
+  // 🔴 LES CIBLES SONT NORMALISÉES SUR LEUR PROPRE SOMME, et non sur 100 —
+  // arbitrage de l'utilisateur du 12/08/2026. Des cibles à 40/40 se comportent
+  // donc comme 50/50.
+  // Avant : `besoin = T × cible / 100`. Si les cibles ne totalisaient pas 100 %,
+  // la part orpheline n'était attribuée à personne — et comme le dernier support
+  // prend tout le reliquat, elle partait ENTIÈREMENT sur le moins cher. Ce n'était
+  // donc pas « on répartit au prorata », c'était un déversement, et il fallait un
+  // avertissement à l'écran pour le dire.
+  // ⚠️ Somme nulle (aucune cible, ou toutes à 0) : on ne divise pas par zéro et
+  // tous les besoins sont nuls — le dernier support absorbe alors l'assiette,
+  // comme avant.
+  const sommeCibles = dansLePerimetre.reduce((a, s) => a + (Number(s.target) || 0), 0);
   const besoin = {};
   dansLePerimetre.forEach((s) => {
-    besoin[s.id] = Math.max(0, totalAfter * (Number(s.target) || 0) / 100 - (Number(s.value) || 0));
+    const part = sommeCibles > 0 ? (Number(s.target) || 0) / sommeCibles : 0;
+    besoin[s.id] = Math.max(0, totalAfter * part - (Number(s.value) || 0));
   });
 
   const ordre = [...dansLePerimetre].sort(
@@ -774,9 +787,12 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // PROPOSE (comme s'il n'y avait aucun ajustement) — deux passes, parce que
   // « proposition N » doit dire ce que rend le bouton « Réinitialiser », pas ce
   // que devient la cascade une fois qu'on a forcé une valeur en amont.
-  const retenues = _choisirQuantites(ordre, besoin, available, totalAfter, over);
+  // La cible EFFECTIVE, en fraction : c'est elle que l'écart mesure, sinon
+  // l'affichage se contredirait (on lirait « cible 40 % » et « → 50 % »).
+  const cibleEffective = (s) => (sommeCibles > 0 ? (Number(s.target) || 0) / sommeCibles : 0);
+  const retenues = _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffective);
   const proposees = Object.keys(over).length
-    ? _choisirQuantites(ordre, besoin, available, totalAfter, {})
+    ? _choisirQuantites(ordre, besoin, available, totalAfter, {}, cibleEffective)
     : retenues;
 
   const steps = [];
@@ -808,13 +824,13 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     carry = budget - cost;
 
     steps.push({
-      id: s.id, price: prix, target: Number(s.target) || 0,
+      id: s.id, price: prix, target: r2(cibleEffective(s) * 100),
       need: r2(besoin[s.id]), carryIn: r2(carryIn), budget: r2(budget),
       qty, suggested, qtyAdjusted: qty !== suggested,
       cost, costAuto, costForced: cost !== costAuto,
       carryOut: r2(carry), leftAfter: left,
       valueAfter, pctAfter: totalAfter ? r2(valueAfter / totalAfter * 100) : 0,
-      gapPts: totalAfter ? r2(valueAfter / totalAfter * 100 - (Number(s.target) || 0)) : 0,
+      gapPts: totalAfter ? r2(valueAfter / totalAfter * 100 - cibleEffective(s) * 100) : 0,
       isLast,
     });
   });

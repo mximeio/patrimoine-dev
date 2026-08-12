@@ -1681,7 +1681,15 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   const [versement, setVersement] = useState('');
   const [valeurs, setValeurs] = useState({});
   const [prix, setPrix] = useState({});
-  const [over, setOver] = useState({});
+  // 🔴 DEUX ÉTATS SÉPARÉS, ET C'EST LE CŒUR DU PIÈGE. Les quantités forcées sont
+  // des NOMBRES (des parts, entières) ; les montants payés sont des CHAÎNES.
+  // Écrit d'abord en stockant le montant parsé, ce qui rendait la virgule
+  // INTAPABLE : « 284, » se parsait en 284, se réaffichait « 284 », et le
+  // séparateur disparaissait à l'instant où on le tapait. Relevé par
+  // l'utilisateur. Même règle que les fenêtres de valorisation : la chaîne reste
+  // la chaîne, on ne parse QU'À L'USAGE.
+  const [qtysForcees, setQtysForcees] = useState({});
+  const [coutsSaisis, setCoutsSaisis] = useState({});
   const [busy, setBusy] = useState(false);
 
   // Affichage : la saisie si elle existe, sinon la donnée. Même motif que la
@@ -1706,6 +1714,16 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
     target: (e.target === null || e.target === undefined || e.target === '') ? null : Number(e.target),
   }));
 
+  // Les overrides passés au calcul : nombres seulement. Un montant vide vaut
+  // « pas d'override », donc retour au montant théorique — c'est ce qui permet
+  // de relâcher un montant forcé en effaçant le champ.
+  const over = {};
+  Object.keys(qtysForcees).forEach((id) => { over[id] = { qty: qtysForcees[id] }; });
+  Object.keys(coutsSaisis).forEach((id) => {
+    const v = valeurSaisie(coutsSaisis[id]);
+    if (v !== null) over[id] = { ...(over[id] || {}), cost: v };
+  });
+
   const plan = computeContributionPlan({
     amount: valeurSaisie(versement) || 0,
     cash: stats.cashRemaining,
@@ -1715,15 +1733,19 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
   const etfDe = (id) => etfs.find((e) => e.id === id) || {};
   const ajustements = plan.steps.filter((s) => s.qtyAdjusted || s.costForced).length;
-  const aSaisi = versement !== '' || Object.keys(over).length > 0
+  const aSaisi = versement !== '' || Object.keys(qtysForcees).length > 0
+    || Object.keys(coutsSaisis).length > 0
     || Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0;
 
   // Toucher −/+ RELÂCHE le montant forcé de la ligne : sinon on garderait un
   // montant qui ne correspond plus du tout à la quantité affichée (spec §2.6).
-  const poserQty = (id, q) => setOver((o) => ({ ...o, [id]: { qty: Math.max(0, q) } }));
-  const poserCost = (id, brut) => setOver((o) => ({
-    ...o, [id]: { ...(o[id] || {}), cost: nettoyerMontant(brut) === '' ? undefined : valeurSaisie(nettoyerMontant(brut)) },
-  }));
+  const poserQty = (id, q) => {
+    setQtysForcees((o) => ({ ...o, [id]: Math.max(0, q) }));
+    setCoutsSaisis((c) => { const n = { ...c }; delete n[id]; return n; });
+  };
+  // ⚠️ On garde la CHAÎNE telle quelle — pas de parsing ici, sinon la virgule
+  // devient intapable (voir le commentaire des états plus haut).
+  const poserCost = (id, brut) => setCoutsSaisis((c) => ({ ...c, [id]: nettoyerMontant(brut) }));
 
   const enregistrer = async () => {
     if (busy) return;
@@ -1752,9 +1774,29 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
       const p = valeurSaisie(prixAffiche(e));
       return p === null ? e : { ...e, lastUnitPrice: r2(p), lastUnitPriceDate: todayIso() };
     });
+    // 🔴 LA DATE DE VALORISATION NE BOUGE QUE SI UNE VALEUR A RÉELLEMENT ÉTÉ
+    // SAISIE — relevé par l'utilisateur le 12/08/2026, et c'était un défaut.
+    // Cette fenêtre la reposait à chaque enregistrement, ce qui éteignait la
+    // carte « À rafraîchir » sans qu'aucune valorisation ait été relevée.
+    // Deux raisons de ne pas le faire, et elles sont déjà écrites ailleurs :
+    //  • `currentValuesDate` a UN SEUL sens depuis le 09/08 — « date de la
+    //    dernière saisie réelle » (§10) — et c'est pour ça qu'`enveloppesModifiees`
+    //    existe. Un signal qu'on peut éteindre sans rien faire n'est plus un signal ;
+    //  • `AddOperationForm` ne la touche PAS en créant un achat, alors qu'il gonfle
+    //    la valorisation. Le gonflement mécanique d'un achat n'est pas un relevé.
+    // ⚠️ Firestore REFUSE `undefined` (§10) : si le champ n'existait pas et qu'on
+    // n'a rien saisi, il ne faut pas l'écrire du tout.
+    const valorisationSaisie = etfs.some((e) => {
+      const saisie = valeurSaisie(valeurAffichee(e));
+      if (saisie === null) return false;
+      const stockee = Number((data.currentValues || {})[e.id]) || 0;
+      return r2(saisie) !== r2(stockee);
+    });
+    const dateValo = valorisationSaisie ? todayIso() : data.currentValuesDate;
     const ok = await onSubmit({
       ...data, etfs: etfsFinaux, operations: ops,
-      currentValues: valeursFinales, currentValuesDate: todayIso(),
+      currentValues: valeursFinales,
+      ...(dateValo === undefined ? {} : { currentValuesDate: dateValo }),
     });
     setBusy(false);
     if (ok) showToast(`Versement enregistré · ${achats.length} achat${achats.length > 1 ? 's' : ''}`, 'success');
@@ -1792,9 +1834,20 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
               + non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b>
               {' '}={' '}<b className="num">{fmt(plan.available)} €</b> à répartir
             </div>
-            <div className={`cp-cibles${cibleTotale === 100 ? ' cp-cibles--ok' : ''}`}>
-              Total des cibles : {fmt(cibleTotale)} %{cibleTotale === 100 ? '' : ' — à ajuster'}
-            </div>
+            {/* ⚠️ Ligne SUPPRIMÉE quand les cibles font 100 % — c'était un bandeau
+                vert permanent qui n'apprenait rien (relevé par l'utilisateur).
+                Elle ne parle que si une mise à l'échelle a eu lieu, et elle dit
+                alors ce qui se passe : depuis le 12/08/2026 les cibles sont
+                normalisées sur leur somme, donc 40/40 vaut 50/50. */}
+            {cibleTotale !== 100 && (
+              <div className="cp-cibles">
+                Cibles à {fmt(cibleTotale)} % au total : mises à l'échelle pour répartir 100 %.
+              </div>
+            )}
+            {/* La référence des pourcentages, dite UNE fois ici plutôt que répétée
+                sur chaque ligne : ils se lisent sur le total APRÈS versement, ce
+                qui explique qu'un support sans achat voie sa part baisser. */}
+            <div className="cp-exclus">Les pourcentages du plan se lisent sur le total après versement.</div>
             {!!plan.excluded.length && (
               <div className="cp-exclus">
                 {plan.excluded.length} support{plan.excluded.length > 1 ? 's' : ''} hors calcul, listé
@@ -1881,21 +1934,30 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       <div className="cp-cout">
                         <label className="label">Montant payé (€)</label>
                         <input type="text" inputMode="decimal" className="input num"
-                          value={(over[id] || {}).cost !== undefined && (over[id] || {}).cost !== null
-                            ? String((over[id] || {}).cost) : String(step.costAuto)}
+                          value={coutsSaisis[id] !== undefined ? coutsSaisis[id] : String(step.costAuto)}
                           onFocus={selectionnerAuFocus}
                           onChange={(ev) => poserCost(id, ev.target.value)} />
                       </div>
                     </div>
                     <div className="cp-resultat">
-                      → {fmt(step.pctAfter)} % · {step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt vs cible
-                      · reste ensuite <b className="num">{fmt(step.leftAfter)} €</b>
+                      → {fmt(step.pctAfter)} % ({step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt)
+                      · reste <b className="num">{fmt(step.leftAfter)} €</b>
                     </div>
-                    <div className="cp-detail">
-                      budget {fmt(step.budget)} € (besoin {fmt(step.need)} + report {step.carryIn >= 0 ? '+' : '−'}{fmt(Math.abs(step.carryIn))})
-                      {step.qtyAdjusted ? ` · quantité ajustée, proposition ${step.suggested}` : ''}
-                      {step.costForced ? ` · montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
-                    </div>
+                    {/* 🔴 LA LIGNE « budget X (besoin Y + report Z) » A ÉTÉ RETIRÉE le
+                        12/08/2026, et pas seulement pour la place : depuis que le plan
+                        explore les deux arrondis (v993), la quantité retenue n'est PLUS
+                        forcément `budget / prix` arrondi. Cette ligne décrivait donc une
+                        règle qui n'explique plus le résultat — elle invitait à demander
+                        « pourquoi 8 parts alors que le budget en dit 8,5 ? ».
+                        ⚠️ Ce qui reste ici est le seul contenu DÉCISIONNEL : le signalement
+                        d'un ajustement à la main. Ne pas y remettre du diagnostic. */}
+                    {(step.qtyAdjusted || step.costForced) && (
+                      <div className="cp-detail">
+                        {step.qtyAdjusted ? `quantité ajustée, proposition ${step.suggested}` : ''}
+                        {step.qtyAdjusted && step.costForced ? ' · ' : ''}
+                        {step.costForced ? `montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -1904,7 +1966,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
           {ajustements > 0 && (
             <div className="cp-reset">
-              <button type="button" className="btn" onClick={() => setOver({})}>
+              <button type="button" className="btn" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
                 Réinitialiser les propositions ({ajustements})
               </button>
               <div className="cp-reset-note">Le versement, les valeurs actuelles et les prix sont conservés.</div>
