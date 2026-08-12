@@ -1432,7 +1432,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
                       value={valeurAffichee(p, e)}
                       onChange={(ev) => setChamp(p.id, e.id, ev.target.value)}
-                      onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }} />
+                      onFocus={selectionnerAuFocus} />
                   </div>
                 ))}
                 {!etfs.length && <div className="maj-vide">Aucun support</div>}
@@ -1530,7 +1530,7 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange, showToast }) {
               className="input num" inputMode="decimal"
               value={valeurAffichee(e)}
               onChange={(ev) => setSaisie(prev => ({ ...prev, [e.id]: nettoyerMontant(ev.target.value) }))}
-              onFocus={(ev) => { const t = ev.target; setTimeout(() => { try { t.select(); } catch (_) {} }, 0); }}
+              onFocus={selectionnerAuFocus}
             />
           </div>
         ))}
@@ -1782,10 +1782,15 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
             <label className="label">Versement prévu (€)</label>
             <input type="text" inputMode="decimal" className="input num" value={versement}
               onChange={(e) => setVersement(nettoyerMontant(e.target.value))}
-              onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 0); }} />
+              onFocus={selectionnerAuFocus} />
+            {/* ⚠️ Une seule phrase qui COULE, sans flex ni gap. Elle a été
+                construite en deux `<span>` dans un conteneur flex à `gap: 8px`,
+                et l'espace se voyait : le `=` recevait 8 px + une espace à sa
+                gauche, une seule espace à sa droite. Relevé par l'utilisateur.
+                Le retour à la ligne se fait très bien tout seul, aux espaces. */}
             <div className="cp-assiette">
-              <span>+ non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b></span>
-              <span> = <b className="num">{fmt(plan.available)} €</b> à répartir</span>
+              + non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b>
+              {' '}={' '}<b className="num">{fmt(plan.available)} €</b> à répartir
             </div>
             <div className={`cp-cibles${cibleTotale === 100 ? ' cp-cibles--ok' : ''}`}>
               Total des cibles : {fmt(cibleTotale)} %{cibleTotale === 100 ? '' : ' — à ajuster'}
@@ -1843,11 +1848,13 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   <div>
                     <label className="label">Valeur actuelle (€)</label>
                     <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
+                      onFocus={selectionnerAuFocus}
                       onChange={(ev) => setValeurs((v) => ({ ...v, [id]: nettoyerMontant(ev.target.value) }))} />
                   </div>
                   <div>
                     <label className="label">Prix d'une part (€)</label>
                     <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                      onFocus={selectionnerAuFocus}
                       onChange={(ev) => setPrix((p) => ({ ...p, [id]: nettoyerMontant(ev.target.value) }))} />
                     {/* 🔴 La date du prix est OBLIGATOIRE dès lors qu'il est
                         pré-rempli : un prix périmé validé sans être vu fausse
@@ -1876,6 +1883,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         <input type="text" inputMode="decimal" className="input num"
                           value={(over[id] || {}).cost !== undefined && (over[id] || {}).cost !== null
                             ? String((over[id] || {}).cost) : String(step.costAuto)}
+                          onFocus={selectionnerAuFocus}
                           onChange={(ev) => poserCost(id, ev.target.value)} />
                       </div>
                     </div>

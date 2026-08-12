@@ -3725,7 +3725,7 @@ input[type="month"] {
    --text-muted / --text-subtle, jamais --muted (§10, DEV v986).
    ============================================================ */
 .cp-zone { padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); margin-bottom: 14px; }
-.cp-assiette { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
+.cp-assiette { font-size: 12.5px; line-height: 1.6; color: var(--text-muted); margin-top: 8px; }
 .cp-assiette b { color: var(--text); }
 .cp-cibles { font-size: 12.5px; color: var(--warning); margin-top: 6px; font-weight: 600; }
 .cp-cibles--ok { color: var(--success); }
