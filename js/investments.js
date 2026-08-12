@@ -448,6 +448,16 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
                 Mettre à jour les valeurs
               </button>
+              {/* Réglage par ENVELOPPE, absent = éteint : les enveloppes
+                  existantes ne voient donc rien changer. Par enveloppe et non
+                  en réglage général, parce que le calcul n'a de sens que là où
+                  les supports portent des cibles. */}
+              {!!data.contributionPlanner && (
+                <button className="dropdown-item" onClick={() => setModal('contribution')}>
+                  <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="percent" size={14} /></span>
+                  Calculer un versement
+                </button>
+              )}
               <div className="dropdown-separator" />
               <button className="dropdown-item" onClick={() => setModal('configure')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="settings" size={14} /></span>
@@ -583,6 +593,19 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             }} />
         </Modal>
       )}
+      {modal === 'contribution' && (
+        <ContributionPlannerModal
+          data={data}
+          stats={stats}
+          showToast={showToast}
+          onClose={() => setModal(null)}
+          onSubmit={async (newData) => {
+            const ok = await handleUpdateData(newData);
+            if (ok) setModal(null);
+            return ok;
+          }}
+        />
+      )}
       {modal === 'history-ops' && (
         <Modal title="Toutes les opérations" onClose={() => setModal(null)} size="lg">
           <HistoryOpsTable
@@ -713,6 +736,26 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
       <div>
         <h3 className="settings-group-title">Supports</h3>
         <EtfsList data={draft} onUpdate={setDraft} onPersist={onPersistData} showToast={showToast} />
+      </div>
+
+      {/* Réglage d'enveloppe — persistance IMMÉDIATE, comme les supports depuis
+          la v590 et pour la même raison : sur cet écran, seul le NOM peut être
+          « non enregistré » (cf. le commentaire d'`onDirtyChange` plus haut). Le
+          faire passer par le bouton rallumerait le faux positif de garde que cet
+          écran a mis du temps à éteindre. */}
+      <div>
+        <h3 className="settings-group-title">Versements</h3>
+        <ModuleToggleRow
+          icon="percent"
+          label="Calculer mes versements"
+          hint="Ajoute au menu ⋯ un calcul du nombre de parts à acheter pour coller à tes cibles."
+          enabled={!!draft.contributionPlanner}
+          onChange={(v) => {
+            const neuf = { ...draft, contributionPlanner: v };
+            setDraft(neuf);
+            if (onPersistData) onPersistData(neuf);
+          }}
+        />
       </div>
 
       <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
@@ -1610,5 +1653,302 @@ function HistoryOpsTable({ stats, data, onEdit, onDelete }) {
         );
       })}
     </div>
+  );
+}
+
+// ============================================================
+//  CALCULER UN VERSEMENT (12/08/2026) — spec §2.5
+// ============================================================
+// Cette fenêtre porte sa propre <Modal>, comme la mise à jour groupée et pour
+// la même raison : la synthèse dérive de la saisie en cours, la remonter par
+// callback obligerait à poser un state pendant un rendu (§10).
+//
+// 🔴 CHAMPS CONTRÔLÉS EN CHAÎNE, PAS `AmountInput` — même règle que les deux
+// fenêtres de valorisation. Ici un prix VIDE a un sens précis : le support sort
+// du calcul et se voit listé comme exclu (spec §2.8). `AmountInput` le
+// transformerait en 0 à la sauvegarde, donc en « prix nul » — un plan
+// silencieusement faux au lieu d'un support explicitement écarté.
+//
+// 🔴 RIEN N'EST ÉCRIT AVANT LE BOUTON : tout le corps est un brouillon local,
+// et il n'est PAS persisté. Un brouillon repris trois jours plus tard rejouerait
+// des prix périmés en donnant l'illusion d'un plan à jour.
+//
+// ⚠️ Le calcul lui-même vit dans `compute.js` (`computeContributionPlan`),
+// fonction pure et testée. Ne rien recalculer ici : une condition laissée dans
+// une vue est hors couverture du harnais.
+function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast }) {
+  const etfs = data.etfs || [];
+  const [versement, setVersement] = useState('');
+  const [valeurs, setValeurs] = useState({});
+  const [prix, setPrix] = useState({});
+  const [over, setOver] = useState({});
+  const [busy, setBusy] = useState(false);
+
+  // Affichage : la saisie si elle existe, sinon la donnée. Même motif que la
+  // fenêtre groupée — on ne pré-remplit pas le state, sinon tout paraîtrait
+  // « modifié » dès l'ouverture.
+  const valeurAffichee = (e) => {
+    if (valeurs[e.id] !== undefined) return valeurs[e.id];
+    const v = (data.currentValues || {})[e.id];
+    return v === undefined || v === null ? '' : String(v);
+  };
+  const prixAffiche = (e) => {
+    if (prix[e.id] !== undefined) return prix[e.id];
+    return e.lastUnitPrice === undefined || e.lastUnitPrice === null ? '' : String(e.lastUnitPrice);
+  };
+
+  const supports = etfs.map((e) => ({
+    id: e.id,
+    value: valeurSaisie(valeurAffichee(e)) || 0,
+    price: valeurSaisie(prixAffiche(e)) || 0,
+    // ⚠️ `target` non fixée = `null`, et 0 est une VALEUR : un support à 0 %
+    // reste dans le périmètre, avec un besoin nul.
+    target: (e.target === null || e.target === undefined || e.target === '') ? null : Number(e.target),
+  }));
+
+  const plan = computeContributionPlan({
+    amount: valeurSaisie(versement) || 0,
+    cash: stats.cashRemaining,
+    supports,
+    overrides: over,
+  });
+
+  const etfDe = (id) => etfs.find((e) => e.id === id) || {};
+  const ajustements = plan.steps.filter((s) => s.qtyAdjusted || s.costForced).length;
+  const aSaisi = versement !== '' || Object.keys(over).length > 0
+    || Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0;
+
+  // Toucher −/+ RELÂCHE le montant forcé de la ligne : sinon on garderait un
+  // montant qui ne correspond plus du tout à la quantité affichée (spec §2.6).
+  const poserQty = (id, q) => setOver((o) => ({ ...o, [id]: { qty: Math.max(0, q) } }));
+  const poserCost = (id, brut) => setOver((o) => ({
+    ...o, [id]: { ...(o[id] || {}), cost: nettoyerMontant(brut) === '' ? undefined : valeurSaisie(nettoyerMontant(brut)) },
+  }));
+
+  const enregistrer = async () => {
+    if (busy) return;
+    const achats = plan.steps.filter((s) => s.qty > 0);
+    if (!achats.length) return refuser(showToast, REFUS.aucuneQuantite);
+    setBusy(true);
+    const montantVersement = valeurSaisie(versement) || 0;
+    const ops = [...(data.operations || [])];
+    if (montantVersement > 0) {
+      // ⚠️ Le `deposit` porte le VERSEMENT SEUL, jamais l'assiette : le cash non
+      // investi était déjà dans l'enveloppe, le compter deux fois gonflerait le
+      // « versé » d'un argent déjà versé (spec §2.7).
+      ops.push({ id: uid(), type: 'deposit', date: todayIso(), amount: r2(montantVersement) });
+    }
+    const valeursFinales = { ...(data.currentValues || {}) };
+    etfs.forEach((e) => {
+      const saisie = valeurSaisie(valeurAffichee(e));
+      if (saisie !== null) valeursFinales[e.id] = r2(saisie);
+    });
+    achats.forEach((s) => {
+      ops.push({ id: uid(), type: 'purchase', date: todayIso(), etf: s.id, amount: r2(s.cost) });
+      // Convention d'`AddOperationForm` : un achat GONFLE la valorisation.
+      valeursFinales[s.id] = r2((valeursFinales[s.id] || 0) + s.cost);
+    });
+    const etfsFinaux = etfs.map((e) => {
+      const p = valeurSaisie(prixAffiche(e));
+      return p === null ? e : { ...e, lastUnitPrice: r2(p), lastUnitPriceDate: todayIso() };
+    });
+    const ok = await onSubmit({
+      ...data, etfs: etfsFinaux, operations: ops,
+      currentValues: valeursFinales, currentValuesDate: todayIso(),
+    });
+    setBusy(false);
+    if (ok) showToast(`Versement enregistré · ${achats.length} achat${achats.length > 1 ? 's' : ''}`, 'success');
+  };
+
+  const cibleTotale = plan.targetSum;
+  const ecartMax = plan.steps.reduce((m, s) => Math.max(m, Math.abs(s.gapPts)), 0);
+  const moinsCher = plan.steps.length ? Math.min(...plan.steps.map((s) => s.price)) : 0;
+
+  return (
+    <Modal title="Calculer un versement" size="lg" dirty={aSaisi} onClose={onClose}>
+      {/* ⚠️ L'état vide ne se déclenche que si RIEN n'est saisissable — un
+          support sans prix garde ses champs plus bas, donc la fenêtre reste
+          utile même quand le plan est vide. Tester `plan.steps.length` seul
+          affichait un état vide définitif au premier usage. */}
+      {!plan.steps.length && !plan.excluded.some((x) => x.reason === 'no-price') && (
+        <EmptyState icon="percent" title="Aucun support à répartir"
+          hint="Fixe une cible et un prix d'une part dans les Réglages de l'enveloppe." />
+      )}
+
+      {(!!plan.steps.length || plan.excluded.some((x) => x.reason === 'no-price')) && (
+        <>
+          {/* ---- Zone A : paramètres ---- */}
+          <div className="cp-zone">
+            <label className="label">Versement prévu (€)</label>
+            <input type="text" inputMode="decimal" className="input num" value={versement}
+              onChange={(e) => setVersement(nettoyerMontant(e.target.value))}
+              onFocus={(e) => { const el = e.target; setTimeout(() => el.select(), 0); }} />
+            <div className="cp-assiette">
+              <span>+ non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b></span>
+              <span> = <b className="num">{fmt(plan.available)} €</b> à répartir</span>
+            </div>
+            <div className={`cp-cibles${cibleTotale === 100 ? ' cp-cibles--ok' : ''}`}>
+              Total des cibles : {fmt(cibleTotale)} %{cibleTotale === 100 ? '' : ' — à ajuster'}
+            </div>
+            {!!plan.excluded.length && (
+              <div className="cp-exclus">
+                {plan.excluded.length} support{plan.excluded.length > 1 ? 's' : ''} hors calcul, listé
+                {plan.excluded.length > 1 ? 's' : ''} dans le plan.
+              </div>
+            )}
+          </div>
+
+          {/* ---- Zone B : le plan, dans l'ordre d'achat ---- */}
+          {plan.steps.map((s, i) => {
+            const e = etfDe(s.id);
+            const dateP = e.lastUnitPriceDate;
+            const ageP = dateP ? Math.floor((Date.now() - new Date(dateP + 'T12:00:00').getTime()) / 86400000) : null;
+            return (
+              <div key={s.id} className={`cp-etape${(s.qtyAdjusted || s.costForced) ? ' cp-etape--ajustee' : ''}`}>
+                <div className="cp-tete">
+                  <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
+                  <b className="cp-nom">{supportName(e)}</b>
+                  <span className="cp-cible">cible {fmt(s.target)} %</span>
+                  <span className="cp-rang">{i + 1}/{plan.steps.length}{s.isLast ? ' · tout le reliquat' : ''}</span>
+                </div>
+                <div className="cp-champs">
+                  <div>
+                    <label className="label">Valeur actuelle (€)</label>
+                    <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
+                      onChange={(ev) => setValeurs((v) => ({ ...v, [s.id]: nettoyerMontant(ev.target.value) }))} />
+                  </div>
+                  <div>
+                    <label className="label">Prix d'une part (€)</label>
+                    <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                      onChange={(ev) => setPrix((p) => ({ ...p, [s.id]: nettoyerMontant(ev.target.value) }))} />
+                    {/* 🔴 La date du prix est OBLIGATOIRE dès lors qu'il est
+                        pré-rempli : un prix périmé validé sans être vu fausse
+                        tout le plan. Ambre au-delà de 7 jours (spec §2.6). */}
+                    {!!dateP && (
+                      <div className={`cp-date-prix${ageP > 7 ? ' cp-date-prix--vieux' : ''}`}>
+                        dernier prix connu le {fmtDateNumeric(dateP)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="cp-achat">
+                  <div className="cp-qty">
+                    <button type="button" className="btn-icon" aria-label="Une part de moins"
+                      onClick={() => poserQty(s.id, s.qty - 1)}>−</button>
+                    <span className="cp-parts num">{s.qty} part{s.qty > 1 ? 's' : ''}</span>
+                    <button type="button" className="btn-icon" aria-label="Une part de plus"
+                      onClick={() => poserQty(s.id, s.qty + 1)}>+</button>
+                  </div>
+                  <div className="cp-cout">
+                    <label className="label">Montant payé (€)</label>
+                    <input type="text" inputMode="decimal" className="input num"
+                      value={(over[s.id] || {}).cost !== undefined && (over[s.id] || {}).cost !== null
+                        ? String((over[s.id] || {}).cost) : String(s.costAuto)}
+                      onChange={(ev) => poserCost(s.id, ev.target.value)} />
+                  </div>
+                </div>
+                <div className="cp-resultat">
+                  → {fmt(s.pctAfter)} % · {s.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(s.gapPts))} pt vs cible
+                  · reste ensuite <b className="num">{fmt(s.leftAfter)} €</b>
+                </div>
+                <div className="cp-detail">
+                  budget {fmt(s.budget)} € (besoin {fmt(s.need)} + report {s.carryIn >= 0 ? '+' : '−'}{fmt(Math.abs(s.carryIn))})
+                  {s.qtyAdjusted ? ` · quantité ajustée, proposition ${s.suggested}` : ''}
+                  {s.costForced ? ` · montant forcé, calculé ${fmt(s.costAuto)} €` : ''}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* 🔴 UN SUPPORT EXCLU FAUTE DE PRIX GARDE SON CHAMP PRIX — sans ça,
+              la fenêtre est une impasse. Découvert au premier rendu réel le
+              12/08/2026 : `lastUnitPrice` est un champ NEUF, donc vide partout,
+              donc les trois supports étaient exclus… et le champ qui les en
+              sortirait vivait dans une étape qui n'existait pas. La fenêtre
+              s'ouvrait sur un état vide qu'aucun geste ne pouvait quitter.
+              ⚠️ Ne pas « simplifier » en renvoyant ces supports vers la ligne
+              grise ci-dessous : c'est ce que faisait la version qui ne marchait
+              pas. Le renvoi aux Réglages ne vaut que pour l'absence de CIBLE,
+              qui ne se saisit pas ici. */}
+          {plan.excluded.filter((x) => x.reason === 'no-price').map((x) => {
+            const e = etfDe(x.id);
+            return (
+              <div key={x.id} className="cp-etape cp-etape--sansprix">
+                <div className="cp-tete">
+                  <span className="cp-pastille" style={{ background: e.color || COLORS.subtle }} />
+                  <b className="cp-nom">{supportName(e)}</b>
+                  <span className="cp-cible">cible {fmt(Number(e.target) || 0)} %</span>
+                  <span className="cp-rang">hors plan</span>
+                </div>
+                <div className="cp-champs">
+                  <div>
+                    <label className="label">Valeur actuelle (€)</label>
+                    <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
+                      onChange={(ev) => setValeurs((v) => ({ ...v, [x.id]: nettoyerMontant(ev.target.value) }))} />
+                  </div>
+                  <div>
+                    <label className="label">Prix d'une part (€)</label>
+                    <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                      onChange={(ev) => setPrix((p) => ({ ...p, [x.id]: nettoyerMontant(ev.target.value) }))} />
+                  </div>
+                </div>
+                <div className="cp-detail">Renseigne le prix d'une part pour que ce support entre dans le plan.</div>
+              </div>
+            );
+          })}
+
+          {plan.excluded.filter((x) => x.reason === 'no-target').map((x) => (
+            <div key={x.id} className="cp-exclu-ligne">
+              <span className="cp-pastille" style={{ background: COLORS.subtle }} />
+              <b>{supportName(etfDe(x.id))}</b>
+              <span>Aucune cible fixée · Réglages</span>
+            </div>
+          ))}
+
+          {ajustements > 0 && (
+            <div className="cp-reset">
+              <button type="button" className="btn" onClick={() => setOver({})}>
+                Réinitialiser les propositions ({ajustements})
+              </button>
+              <div className="cp-reset-note">Le versement, les valeurs actuelles et les prix sont conservés.</div>
+            </div>
+          )}
+
+          {/* ---- Zone C : synthèse — seulement s'il y a un plan à synthétiser ---- */}
+          {!!plan.steps.length && (<>
+          <div className="cp-synthese">
+            <div><span>Investi</span><b className="num">{fmt(plan.invested)} €</b></div>
+            <div><span>Reliquat non investi</span><b className="num">{fmt(plan.left)} €</b></div>
+            <div><span>Écart maximal</span><b className="num">{fmt(ecartMax)} pt</b></div>
+          </div>
+
+          {/* Ordre de PRIORITÉ imposé par la spec : le dépassement passe devant
+              tout, et « c'est fini » ne se dit jamais quand il reste de quoi
+              acheter une part. */}
+          {plan.left < 0 ? (
+            <div className="cp-etat cp-etat--rouge">
+              Les montants payés dépassent l'assiette de <b className="num">{fmt(Math.abs(plan.left))} €</b> :
+              le cash de l'enveloppe passera en négatif.
+            </div>
+          ) : plan.complete ? (
+            <div className="cp-etat cp-etat--vert">
+              Assiette entièrement utilisée — il reste <b className="num">{fmt(plan.left)} €</b>,
+              moins que la part la moins chère ({fmt(moinsCher)} €).
+            </div>
+          ) : (
+            <div className="cp-etat cp-etat--ambre">
+              Il reste <b className="num">{fmt(plan.left)} €</b>, de quoi acheter encore
+              {' '}{Math.floor(plan.left / moinsCher)} part{Math.floor(plan.left / moinsCher) > 1 ? 's' : ''}
+              {' '}de {supportName(etfDe(plan.steps[plan.steps.length - 1].id))}.
+            </div>
+          )}
+
+          <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={enregistrer}>
+            {busy ? 'Enregistrement…' : 'Enregistrer le versement et les achats'}
+          </button>
+          </>)}
+        </>
+      )}
+    </Modal>
   );
 }

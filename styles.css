@@ -3718,3 +3718,53 @@ input[type="month"] {
   margin-top: 8px; font-size: 10.5px; line-height: 1.5;
   color: rgba(255, 255, 255, 0.4);
 }
+
+/* ============================================================
+   CALCULER UN VERSEMENT (12/08/2026)
+   ⚠️ Les noms de variables CSS ne sont PAS ceux du JS : ici c'est
+   --text-muted / --text-subtle, jamais --muted (§10, DEV v986).
+   ============================================================ */
+.cp-zone { padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); margin-bottom: 14px; }
+.cp-assiette { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
+.cp-assiette b { color: var(--text); }
+.cp-cibles { font-size: 12.5px; color: var(--warning); margin-top: 6px; font-weight: 600; }
+.cp-cibles--ok { color: var(--success); }
+.cp-exclus { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+.cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; position: relative; }
+.cp-etape--ajustee { border-color: #c7d2fe; background: var(--accent-soft); }
+.cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+.cp-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.cp-pastille { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.cp-nom { font-size: 14px; }
+.cp-cible, .cp-rang { font-size: 12px; color: var(--text-muted); }
+.cp-rang { margin-left: auto; }
+.cp-champs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cp-date-prix { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+.cp-date-prix--vieux { color: var(--warning); font-weight: 600; }
+.cp-achat { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; margin-top: 10px; }
+.cp-qty { display: flex; align-items: center; gap: 8px; }
+.cp-qty .btn-icon { width: 32px; height: 32px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 16px; line-height: 1; }
+.cp-parts { font-size: 13.5px; font-weight: 600; min-width: 68px; text-align: center; }
+.cp-resultat { font-size: 12.5px; color: var(--text-light); margin-top: 10px; }
+.cp-detail { font-size: 11.5px; color: var(--text-subtle); margin-top: 3px; }
+
+.cp-exclu-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 10px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-md); font-size: 12.5px; color: var(--text-muted); }
+.cp-reset { margin: 4px 0 14px; }
+.cp-reset-note { font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 5px; }
+.cp-synthese { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px;
+  background: var(--surface-alt); border-radius: var(--radius-md); margin-top: 4px; }
+.cp-synthese span { display: block; font-size: 11.5px; color: var(--text-muted); }
+.cp-synthese b { font-size: 14px; }
+.cp-etat { font-size: 12.5px; padding: 10px 12px; border-radius: var(--radius-md); margin: 10px 0 14px; }
+.cp-etat--rouge { background: var(--danger-light); color: #b91c1c; }
+.cp-etat--vert { background: var(--success-light); color: #047857; }
+.cp-etat--ambre { background: var(--warning-light); color: #b45309; }
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .cp-champs { grid-template-columns: 1fr; }
+  .cp-achat { grid-template-columns: 1fr; align-items: stretch; }
+  .cp-synthese { grid-template-columns: 1fr; }
+}
+.cp-etape--sansprix { border-style: dashed; background: var(--surface-alt); }

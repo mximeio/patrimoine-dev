@@ -356,6 +356,10 @@ const REFUS = {
   // donne un seul texte pour les 7 types d'opération d'investissement — et fait
   // disparaître le cas particulier de `gift`, dont le champ est `marketValue`.
   champObligatoire:   (libelle) => `${String(libelle).replace(/\s*\(€\)\s*$/, '')} est obligatoire.`,
+  // Calculer un versement : on n'enregistre rien si le plan n'achète aucune part.
+  // ⚠️ Registre IMPERSONNEL comme les autres, et il CONSTATE (toast neutre) —
+  // il n'y a rien à corriger, seulement rien à faire.
+  aucuneQuantite:     'Aucune part à acheter : rien ne sera enregistré.',
 };
 
 // ⚠️ Durée volontairement plus longue que les 2 500 ms par défaut : le toast paraît
@@ -370,7 +374,8 @@ const DUREE_REFUS = 4000;
 // demandent à l'utilisateur de fournir quelque chose, restent en ROUGE.
 // ⚠️ Le ton est déduit du MESSAGE, pas passé par l'appelant : c'est ce qui
 // empêche deux formulaires de choisir des tons différents pour la même phrase.
-const REFUS_NEUTRES = new Set([REFUS.rienChange, REFUS.nomEnveloppeInchange, REFUS.valorisationsInchangees]);
+const REFUS_NEUTRES = new Set([REFUS.rienChange, REFUS.nomEnveloppeInchange, REFUS.valorisationsInchangees,
+  REFUS.aucuneQuantite]);
 
 // Le canal unique. À appeler en tête de submit : `if (…) return refuser(showToast,
 // REFUS.x);` — la valeur de retour n'a pas de sens pour un gestionnaire
