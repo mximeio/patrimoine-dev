@@ -633,3 +633,123 @@ function valeurSaisie(brut) {
 function ajusteLaValorisation(type) {
   return type === 'purchase' || type === 'gift' || type === 'sale';
 }
+
+// ============================================================
+//  CALCULER UN VERSEMENT — plan d'achat par cibles (spec §2.3)
+//
+//  Fonction PURE, aucune I/O : combien de parts de chaque support acheter
+//  pour approcher au mieux les cibles de répartition, avec un versement donné.
+//
+//  🔴 L'ARRONDI EST AU PLUS PROCHE, JAMAIS TRONQUÉ. Mesuré par force brute
+//  dans la spec : avec un besoin de 150 € et une part à 93 €, `floor` achète
+//  1 part au lieu de 2, laisse 57 € de retard sur ce support puis déverse le
+//  reliquat sur les parts bon marché — écart total 117 € là où l'optimum est
+//  à 73 €. Un `Math.floor` posé ici « pour ne pas dépasser » coûte 44 € de
+//  dérive sans rien casser en apparence : c'est exactement le genre d'erreur
+//  qu'aucun écran ne montre. Les tests la verrouillent.
+//
+//  🔴 L'ORDRE EST LE PRIX DÉCROISSANT, et c'est le cœur de la méthode. En
+//  commençant par le moins cher, on consomme le versement en petites parts et
+//  il ne reste plus de quoi acheter une part du support le plus cher, qui
+//  décroche alors de sa cible. Égalité de prix → tri par `id`, pour que
+//  l'affichage ne saute pas d'un rendu à l'autre.
+//
+//  🔴 LE REPORT EST SIGNÉ et n'est PAS plafonné à zéro : négatif quand une
+//  étape a dépassé son budget (arrondi au-dessus, ou choix manuel), il
+//  continue de descendre la cascade et le dernier support absorbe l'écart.
+//
+//  ⚠️ « Utiliser tout le versement » ne veut PAS dire « reste à zéro » : la
+//  règle est qu'il ne reste plus de quoi acheter la moindre part (`complete`).
+//  Viser 0 € pile dégrade le résultat — mesuré : +6 parts inutiles et l'écart
+//  total qui passe de 11 € à 72 €.
+//
+//  ⚠️ L'assiette inclut le CASH qui dort déjà dans l'enveloppe : le plan peut
+//  donc dépenser plus que le versement lui-même. Voulu.
+// ============================================================
+function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
+  const liste = Array.isArray(supports) ? supports : [];
+  const over = overrides || {};
+  const available = r2(Math.max(0, Number(amount) || 0) + Math.max(0, Number(cash) || 0));
+
+  // Périmètre : une cible ET un prix. Un exclu n'apparaît dans aucune étape,
+  // mais il est RENDU avec sa raison — un support qui disparaît sans un mot
+  // fait douter du plan entier.
+  const dansLePerimetre = [];
+  const excluded = [];
+  liste.forEach((s) => {
+    const prix = Number(s.price) || 0;
+    if (s.target === null || s.target === undefined) excluded.push({ id: s.id, reason: 'no-target' });
+    else if (prix <= 0) excluded.push({ id: s.id, reason: 'no-price' });
+    else dansLePerimetre.push(s);
+  });
+
+  // T = le portefeuille APRÈS investissement de l'assiette. C'est ce qui permet
+  // au versement de corriger une dérive : la cible s'applique au total final,
+  // pas au total actuel. ⚠️ Les supports HORS périmètre comptent quand même
+  // dans T — ils font partie du portefeuille, seulement on ne les alimente pas.
+  const totalAfter = liste.reduce((a, s) => a + (Number(s.value) || 0), 0) + available;
+
+  const besoin = {};
+  dansLePerimetre.forEach((s) => {
+    besoin[s.id] = Math.max(0, totalAfter * (Number(s.target) || 0) / 100 - (Number(s.value) || 0));
+  });
+
+  const ordre = [...dansLePerimetre].sort(
+    (a, b) => (Number(b.price) || 0) - (Number(a.price) || 0) || String(a.id).localeCompare(String(b.id))
+  );
+
+  const steps = [];
+  let left = available;
+  let carry = 0;
+  ordre.forEach((s, rang) => {
+    const prix = Number(s.price) || 0;
+    const valeur = Number(s.value) || 0;
+    const isLast = rang === ordre.length - 1;
+    const carryIn = carry;
+    const budget = besoin[s.id] + carryIn;
+    // ⚠️ Le +1e-9 absorbe l'erreur binaire : sans lui, 1200/6 peut valoir
+    // 199.99999999999997 et `floor` rend 199 parts au lieu de 200.
+    const maxAchetable = Math.max(0, Math.floor(Math.max(0, left) / prix + 1e-9));
+    const suggested = isLast
+      ? maxAchetable
+      : Math.min(Math.max(0, Math.round(Math.max(0, budget) / prix)), maxAchetable);
+
+    const o = over[s.id] || {};
+    // La quantité forcée est REPLAFONNÉE par ce qui reste réellement : un
+    // override survit à un changement de versement, mais ne peut pas faire
+    // acheter ce qu'on n'a pas.
+    const qty = o.qty === null || o.qty === undefined
+      ? suggested
+      : Math.min(Math.max(0, Math.floor(Number(o.qty) || 0)), maxAchetable);
+    const costAuto = r2(qty * prix);
+    // ⚠️ Le montant forcé n'est JAMAIS plafonné — le brider falsifierait une
+    // saisie qui décrit ce que le courtier a réellement débité. Le dépassement
+    // se SIGNALE (l'assiette passe en négatif), il ne se corrige pas.
+    const cost = o.cost === null || o.cost === undefined ? costAuto : r2(Number(o.cost) || 0);
+    const valueAfter = r2(valeur + cost);
+
+    left = r2(left - cost);
+    carry = budget - cost;
+
+    steps.push({
+      id: s.id, price: prix, target: Number(s.target) || 0,
+      need: r2(besoin[s.id]), carryIn: r2(carryIn), budget: r2(budget),
+      qty, suggested, qtyAdjusted: qty !== suggested,
+      cost, costAuto, costForced: cost !== costAuto,
+      carryOut: r2(carry), leftAfter: left,
+      valueAfter, pctAfter: totalAfter ? r2(valueAfter / totalAfter * 100) : 0,
+      gapPts: totalAfter ? r2(valueAfter / totalAfter * 100 - (Number(s.target) || 0)) : 0,
+      isLast,
+    });
+  });
+
+  const prixMini = ordre.reduce((m, s) => Math.min(m, Number(s.price) || 0), Infinity);
+  return {
+    steps, excluded, available, totalAfter,
+    invested: r2(available - left),
+    left,
+    targetSum: r2(dansLePerimetre.reduce((a, s) => a + (Number(s.target) || 0), 0)),
+    // « Plus rien n'est achetable » — et non « le reste vaut zéro ».
+    complete: ordre.length > 0 && left < prixMini,
+  };
+}
