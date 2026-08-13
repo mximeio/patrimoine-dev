@@ -692,7 +692,7 @@ function ajusteLaValorisation(type) {
 // atteint, le résultat ne peut donc jamais être pire que la cascade seule.
 // ⚠️ Un support dont la quantité est FORCÉE n'est pas exploré : le choix de
 // l'utilisateur ne se discute pas, on optimise seulement autour de lui.
-function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffective) {
+function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffective, ancrage) {
   const PLAFOND_FEUILLES = 4096; // 2^12 — au-delà, on garde le meilleur trouvé
   let meilleur = null;
   let feuilles = 0;
@@ -718,6 +718,31 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffe
     let candidats;
     if (o.qty !== null && o.qty !== undefined) {
       candidats = [Math.min(Math.max(0, Math.floor(Number(o.qty) || 0)), maxAchetable)];
+    } else if (o.cost !== null && o.cost !== undefined && ancrage) {
+      // 🔴 MONTANT FORCÉ : LA QUANTITÉ NE BOUGE PAS. Règle posée par l'utilisateur
+      // le 13/08/2026 — « la quantité n'évolue pas si on ne l'a pas changée, sauf à
+      // son initialisation ou à la réinitialisation ». C'est le PRIX qui se déduit
+      // (`prixDeduit`, plus bas), pas la quantité qui se recalcule.
+      //
+      // Le défaut corrigé, relevé sur une capture : saisir un montant faisait bouger
+      // le nombre de parts tout seul (6 → 7). **Mesuré, et pire que ça** : taper le
+      // montant que l'app venait ELLE-MÊME de calculer (213 €) le faisait aussi.
+      // La cause : dès que le coût est forcé, `coutDe` rend ce coût quelle que soit
+      // la quantité — donc la quantité n'influence plus NI le reste à répartir NI
+      // l'écart aux cibles. Toutes les valeurs se valent, l'optimisation ne départage
+      // plus rien, et on retombait sur l'arrondi naturel de `budget/prix` (6,93 → 7).
+      //
+      // ⇒ On épingle la quantité sur l'ANCRAGE : le plan calculé en ignorant les
+      // montants forcés, mais en gardant les quantités forcées. C'est exactement
+      // « ce que la ligne affichait avant qu'on tape le montant » — y compris quand
+      // la cascade l'avait déjà déplacée à cause d'une AUTRE ligne forcée.
+      // ⚠️ NE PAS épingler sur `suggested` (la proposition sans aucun override) : une
+      // quantité déjà déplacée par la cascade reviendrait en arrière au moment où l'on
+      // saisit un montant, ce qui serait le même défaut dans l'autre sens.
+      // ⚠️ Les lignes SUIVANTES, elles, voient bien le montant forcé (`coutDe`) et
+      // réagissent : moins d'argent pour elles. C'est la cascade, et elle est
+      // préservée — seule la ligne saisie est épinglée.
+      candidats = [ancrage[rang]];
     } else if (dernier) {
       candidats = [maxAchetable];
     } else {
@@ -821,7 +846,23 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // La cible EFFECTIVE, en fraction : c'est elle que l'écart mesure, sinon
   // l'affichage se contredirait (on lirait « cible 40 % » et « → 50 % »).
   const cibleEffective = (s) => (sommeCiblesUtiles > 0 ? (Number(s.target) || 0) / sommeCiblesUtiles : 0);
-  const retenues = _choisirQuantites(ordre, besoin, investissable, totalAfter, over, cibleEffective);
+  // L'ANCRAGE — les quantités « d'avant la saisie du montant » : on ignore les
+  // montants forcés et on garde les quantités forcées. Il n'est calculé que s'il
+  // sert, c'est-à-dire s'il existe au moins un montant forcé.
+  const aUnMontantForce = ordre.some((s) => {
+    const o = over[s.id] || {};
+    return o.cost !== null && o.cost !== undefined;
+  });
+  let ancrage = null;
+  if (aUnMontantForce) {
+    const qtysSeules = {};
+    Object.keys(over).forEach((id) => {
+      const o = over[id] || {};
+      if (o.qty !== null && o.qty !== undefined) qtysSeules[id] = { qty: o.qty };
+    });
+    ancrage = _choisirQuantites(ordre, besoin, investissable, totalAfter, qtysSeules, cibleEffective);
+  }
+  const retenues = _choisirQuantites(ordre, besoin, investissable, totalAfter, over, cibleEffective, ancrage);
   const proposees = Object.keys(over).length
     ? _choisirQuantites(ordre, besoin, investissable, totalAfter, {}, cibleEffective)
     : retenues;
@@ -885,6 +926,17 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
       // repère ne repère plus rien.
       qtyRecalculee: !((o.qty !== null && o.qty !== undefined) && qty !== suggested) && qty !== suggested,
       cost, costAuto, costForced: cost !== costAuto,
+      // 🔴 LE PRIX DÉDUIT — « si je modifie le montant final, c'est que je viens
+      // d'acheter, donc le prix se déduit : montant / quantité » (utilisateur,
+      // 13/08/2026). Le cours bouge très vite entre le calcul et l'ordre passé ;
+      // le montant réellement débité est donc la seule donnée sûre, et il porte le
+      // vrai prix de la part.
+      // ⚠️ `null` quand il n'y a rien à déduire : pas de montant forcé, ou zéro part
+      // (division par zéro). L'appelant affiche alors le prix SAISI.
+      // ⚠️ Rien n'est persisté — les prix ne vivent que le temps des deux fenêtres
+      // (décision du 12/08/2026), donc ce prix déduit n'est qu'un AFFICHAGE et ne
+      // réécrit pas la saisie de l'étape 1. C'est ce qui rend la règle inoffensive.
+      prixDeduit: (cost !== costAuto && qty > 0) ? r2(cost / qty) : null,
       carryOut: r2(carry), leftAfter: left,
       valueAfter, pctAfter: totalAfter ? r2(valueAfter / totalAfter * 100) : 0,
       gapPts: totalAfter ? r2(valueAfter / totalAfter * 100 - cibleEffective(s) * 100) : 0,

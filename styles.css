@@ -3855,6 +3855,10 @@ button.cp-seg-item { cursor: pointer; }
   background: var(--surface-hover); border-radius: var(--radius-full); padding: 2px 8px; }
 .cp-etape--ajustee .cp-cible { background: var(--surface); }
 .cp-prix-rappel { font-size: 11.5px; color: var(--text-subtle); }
+/* « · déduit » — le prix vient du montant payé, pas de la saisie de l'étape 1.
+   En indigo comme le liseré des lignes ajustées : les deux marquent une
+   INTERVENTION de l'utilisateur, pas une conséquence du calcul. */
+.cp-prix-deduit { color: var(--accent); font-weight: 500; }
 .cp-rang { margin-left: auto; font-size: 11.5px; color: var(--text-subtle); }
 
 .cp-achat { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; flex-wrap: wrap; }

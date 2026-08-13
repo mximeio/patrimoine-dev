@@ -2130,7 +2130,25 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
                       <b className="cp-nom">{supportName(e)}</b>
                       <span className="cp-cible">cible {fmt(step.target)} %</span>
-                      <span className="cp-prix-rappel">{fmt(step.price)} € la part</span>
+                      {/* 🔴 LE PRIX AFFICHÉ EST LE PRIX DÉDUIT dès qu'un montant est
+                          forcé — « si je modifie le montant final, c'est que je viens
+                          d'acheter, donc le prix se déduit : montant / quantité »
+                          (utilisateur, 13/08/2026), le cours bougeant très vite entre
+                          le calcul et l'ordre passé.
+                          ⚠️ Il est MARQUÉ « déduit » et ne remplace pas le prix saisi
+                          en silence : un nombre qui change tout seul est précisément
+                          le défaut corrigé le même jour. Le prix saisi reste lisible
+                          dans le pied de carte (« calculé N € »), ce qui donne l'écart
+                          de cours d'un coup d'œil.
+                          ⚠️ Rien n'est persisté : la saisie de l'étape 1 n'est pas
+                          touchée, et revenir sur « Valeurs » annule l'ajustement donc
+                          le prix déduit disparaît avec lui. */}
+                      <span className="cp-prix-rappel">
+                        {fmt(step.prixDeduit === null || step.prixDeduit === undefined
+                          ? step.price : step.prixDeduit)} € la part
+                        {step.prixDeduit !== null && step.prixDeduit !== undefined
+                          && <span className="cp-prix-deduit"> · déduit</span>}
+                      </span>
                       <span className="cp-rang">{rang + 1}/{plan.steps.length}{step.isLast ? ' · tout le reliquat' : ''}</span>
                     </div>
                     {/* Trois blocs sur une ligne : les parts, le montant payé, et
