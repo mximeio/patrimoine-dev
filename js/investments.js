@@ -1884,10 +1884,26 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // ⚠️ Le refus passe par un TOAST et non par un onglet grisé : doctrine du
   // 10/08/2026 (§10), « le bouton grisé est abandonné ». Un onglet inerte était le
   // pire des deux — ni état lisible, ni message.
-  // ⚠️ Sinon on repasse par `validerLesValeurs`, et NON par un `setEtape(2)` direct :
-  // c'est ce qui garde le garde-fou du prix et écrit une valeur retouchée entre-temps.
+  //
+  // 🔴 L'INVARIANT, POSÉ PAR L'UTILISATEUR LE 13/08/2026 :
+  //        « l'onglet 2 ne se franchit que lorsque l'onglet 1 porte une coche »
+  // Donc la garde est `valeursAJour`, et NON `valeursValidees`. La première version
+  // ne refusait que si l'étape 1 n'avait JAMAIS été validée : une valeur retouchée
+  // puis un clic sur l'onglet ÉCRIVAIT la retouche au passage. Relevé par
+  // l'utilisateur, qui s'étonnait de ne pas voir de confirmation — et il avait
+  // raison de s'étonner, pour une raison de plus que celle qu'il croyait : rien
+  // n'était perdu, mais **un contrôle de NAVIGATION mutait la base sans le dire**.
+  // Un onglet libellé « 2 · Répartition » n'annonce pas « enregistrer mes valeurs ».
+  // ⇒ Le geste qui écrit est le BOUTON, qui porte le mot « Valider ». L'onglet ne
+  // fait que se déplacer, ou refuser.
+  // ⚠️ Effet de bord voulu : la coche devient ACTIONNABLE — éteinte, elle explique
+  // pourquoi l'onglet ne passe pas, au lieu de n'être qu'un ornement d'avancement.
+  // ⚠️ On passe quand même par `validerLesValeurs` et non par un `setEtape(2)` direct,
+  // car elle porte le garde-fou du prix (« aucun prix saisi » doit refuser ici aussi)
+  // et l'avertissement de redistribution. Dans cette branche `valeurModifiee` est
+  // faux par construction, donc elle prend sa voie SANS écriture — vérifié.
   const allerALaRepartition = () => {
-    if (!valeursValidees) return refuser(showToast, REFUS.valeursAValider);
+    if (!valeursAJour) return refuser(showToast, REFUS.valeursAValider);
     validerLesValeurs();
   };
 
