@@ -838,10 +838,15 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     // ⚠️ Le +1e-9 absorbe l'erreur binaire : sans lui, 1200/6 peut valoir
     // 199.99999999999997 et `floor` rend 199 parts au lieu de 200.
     const maxAchetable = Math.max(0, Math.floor(Math.max(0, left) / prix + 1e-9));
-    // ⚠️ `suggested` vient de la passe SANS override, `qty` de la passe avec —
-    // les deux sont déjà replafonnées par ce qui reste (un override survit à un
-    // changement de versement, mais ne peut pas faire acheter ce qu'on n'a pas).
-    const suggested = Math.min(proposees[rang], isLast ? maxAchetable : proposees[rang]);
+    // `suggested` vient de la passe SANS AUCUN override : c'est franchement « ce
+    // que la fenêtre proposerait si l'on ne touchait à rien », donc exactement ce
+    // que restaure le bouton « Réinitialiser les propositions ».
+    // ⚠️ NE PAS le replafonner par le `maxAchetable` du moment. Il l'était pour le
+    // dernier support jusqu'au 13/08/2026, et ce plafond n'avait aucune intention :
+    // il faisait tomber la proposition à 0 dès qu'un ajustement en amont avait mangé
+    // l'assiette, donc l'étiquette « quantité ajustée » disparaissait sur cette
+    // ligne — et masquait le défaut symétrique corrigé juste en dessous.
+    const suggested = proposees[rang];
     const o = over[s.id] || {};
     const qty = retenues[rang];
     const costAuto = r2(qty * prix);
@@ -857,7 +862,28 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     steps.push({
       id: s.id, price: prix, target: r2(cibleEffective(s) * 100),
       need: r2(besoin[s.id]), carryIn: r2(carryIn), budget: r2(budget),
-      qty, suggested, qtyAdjusted: qty !== suggested,
+      qty, suggested,
+      // 🔴 « AJUSTÉE » VEUT DIRE « L'UTILISATEUR A FORCÉ CETTE LIGNE » — et rien
+      // d'autre. Le test portait sur `qty !== suggested` seul jusqu'au 13/08/2026,
+      // ce qui allumait l'étiquette sur des supports que PERSONNE n'avait touchés :
+      // forcer une quantité décale mécaniquement toutes les suivantes par la
+      // cascade, et chacune se déclarait alors « ajustée, proposition N » comme si
+      // un choix y avait été fait. Mesuré : forcer PAEEM étiquetait PUST, forcer
+      // PUST étiquetait PAEEM.
+      // ⚠️ Le décalage des lignes suivantes n'est PAS une information à signaler :
+      // c'est le fonctionnement même de la cascade, et le signaler noie la seule
+      // ligne où l'utilisateur est réellement intervenu.
+      qtyAdjusted: (o.qty !== null && o.qty !== undefined) && qty !== suggested,
+      // 🔴 ET LA LIGNE QUI A BOUGÉ SANS QU'ON Y TOUCHE — demande de l'utilisateur
+      // du 13/08/2026 : « ça aurait été pas mal que ça bouge partout, comme ça on
+      // voit que tout a évolué ». Il a raison sur le besoin ; ce qui était faux,
+      // c'était de le dire avec le MÊME mot que l'ajustement manuel.
+      // ⇒ Deux drapeaux, deux phrases : « quantité ajustée » sur la ligne qu'on a
+      // forcée, « recalculé » sur celles que la cascade a déplacées.
+      // ⚠️ Le liseré indigo, lui, ne suit QUE `qtyAdjusted`/`costForced` : il marque
+      // l'intervention, pas la conséquence. Sinon toute la fenêtre s'allume et le
+      // repère ne repère plus rien.
+      qtyRecalculee: !((o.qty !== null && o.qty !== undefined) && qty !== suggested) && qty !== suggested,
       cost, costAuto, costForced: cost !== costAuto,
       carryOut: r2(carry), leftAfter: left,
       valueAfter, pctAfter: totalAfter ? r2(valueAfter / totalAfter * 100) : 0,

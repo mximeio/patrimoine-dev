@@ -2060,10 +2060,11 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         <div className="cp-bilan-reste">reste {fmt(step.leftAfter)} €</div>
                       </div>
                     </div>
-                    {ajustee && (
+                    {(ajustee || step.qtyRecalculee) && (
                       <div className="cp-detail">
                         {step.qtyAdjusted ? `quantité ajustée, proposition ${step.suggested}` : ''}
-                        {step.qtyAdjusted && step.costForced ? ' · ' : ''}
+                        {step.qtyRecalculee ? `recalculé, proposition ${step.suggested}` : ''}
+                        {(step.qtyAdjusted || step.qtyRecalculee) && step.costForced ? ' · ' : ''}
                         {step.costForced ? `montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
                       </div>
                     )}
