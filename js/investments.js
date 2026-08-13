@@ -1832,16 +1832,25 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                 Le retour à la ligne se fait très bien tout seul, aux espaces. */}
             <div className="cp-assiette">
               + non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b>
-              {' '}={' '}<b className="num">{fmt(plan.available)} €</b> à répartir
+              {' '}={' '}<b className="num">{fmt(plan.available)} €</b>
+              {plan.reserve > 0
+                ? <>, dont <b className="num">{fmt(plan.investissable)} €</b> à répartir</>
+                : ' à répartir'}
             </div>
             {/* ⚠️ Ligne SUPPRIMÉE quand les cibles font 100 % — c'était un bandeau
                 vert permanent qui n'apprenait rien (relevé par l'utilisateur).
                 Elle ne parle que si une mise à l'échelle a eu lieu, et elle dit
                 alors ce qui se passe : depuis le 12/08/2026 les cibles sont
                 normalisées sur leur somme, donc 40/40 vaut 50/50. */}
+            {/* ⚠️ Ce texte a changé de SENS le 13/08/2026 avec la règle « C » : les
+                cibles ne sont plus mises à l'échelle pour répartir 100 % de
+                l'assiette — c'est l'ASSIETTE qui est réduite à leur somme, et le
+                reste demeure en cash à dessein. Ne pas revenir à l'ancienne
+                formule, elle décrirait un comportement qui n'existe plus. */}
             {cibleTotale !== 100 && (
               <div className="cp-cibles">
-                Cibles à {fmt(cibleTotale)} % au total : mises à l'échelle pour répartir 100 %.
+                Cibles à {fmt(cibleTotale)} % au total : {fmt(Math.min(100, cibleTotale))} % de l'assiette
+                {' '}sera investie, le reste demeure en cash.
               </div>
             )}
             {/* La référence des pourcentages, dite UNE fois ici plutôt que répétée
@@ -1989,15 +1998,29 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
               Les montants payés dépassent l'assiette de <b className="num">{fmt(Math.abs(plan.left))} €</b> :
               le cash de l'enveloppe passera en négatif.
             </div>
+          ) : plan.complete && plan.reserve > 0 ? (
+            /* 🔴 Avec des cibles sous 100 %, le reliquat est VOULU — annoncer
+               « assiette entièrement utilisée » serait faux, et laisser le
+               message ambre ferait lire un échec du calcul là où il n'y en a
+               pas. C'est la conséquence obligatoire de la règle « C ». */
+            <div className="cp-etat cp-etat--vert">
+              {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
+              {' '}<b className="num">{fmt(plan.left)} €</b> restent en cash.
+            </div>
           ) : plan.complete ? (
             <div className="cp-etat cp-etat--vert">
               Assiette entièrement utilisée — il reste <b className="num">{fmt(plan.left)} €</b>,
               moins que la part la moins chère ({fmt(moinsCher)} €).
             </div>
           ) : (
+            /* ⚠️ Le reliquat ACHETABLE, pas le reste en cash : avec une réserve
+               volontaire, compter sur `left` promettrait des parts qu'on n'a pas
+               l'intention d'acheter. */
             <div className="cp-etat cp-etat--ambre">
-              Il reste <b className="num">{fmt(plan.left)} €</b>, de quoi acheter encore
-              {' '}{Math.floor(plan.left / moinsCher)} part{Math.floor(plan.left / moinsCher) > 1 ? 's' : ''}
+              Il reste <b className="num">{fmt(plan.investissable - plan.invested)} €</b> à répartir,
+              de quoi acheter encore
+              {' '}{Math.floor((plan.investissable - plan.invested) / moinsCher)} part
+              {Math.floor((plan.investissable - plan.invested) / moinsCher) > 1 ? 's' : ''}
               {' '}de {supportName(etfDe(plan.steps[plan.steps.length - 1].id))}.
             </div>
           )}

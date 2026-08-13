@@ -759,7 +759,39 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // au versement de corriger une dérive : la cible s'applique au total final,
   // pas au total actuel. ⚠️ Les supports HORS périmètre comptent quand même
   // dans T — ils font partie du portefeuille, seulement on ne les alimente pas.
-  const totalAfter = liste.reduce((a, s) => a + (Number(s.value) || 0), 0) + available;
+  // 🔴 ON N'INVESTIT QUE Σcibles % DE L'ASSIETTE — décision de l'utilisateur du
+  // 12/08/2026, « on dépense tout de 80 % du montant versé ».
+  // Une somme de cibles inférieure à 100 % vaut donc « je garde le reste en
+  // cash », et ce reste est VOLONTAIRE — ce n'est pas un échec du calcul.
+  // ⚠️ NE PAS confondre avec la règle d'avant : appliquer les cibles brutes au
+  // total ne « répartissait » pas 80 %. Mesuré sur le portefeuille réel — des
+  // cibles à 52/16/12 rendaient TOUS les besoins nuls, donc on n'achetait rien,
+  // ou tout partait sur le support le moins cher. Une cible porte sur le
+  // PORTEFEUILLE, pas sur le versement : d'où cette définition explicite.
+  // ⚠️ Plafonné à 100 % : des cibles qui totalisent 120 % ne font pas dépenser
+  // plus que ce qu'on a.
+  // ⚠️ À 100 % — le cas normal — `investissable === available`, et le plan est
+  // rigoureusement identique à celui d'avant. Les 17 fixtures de la spec le
+  // vérifient : aucune ne bouge.
+  // 🔴 DEUX SOMMES DE CIBLES, ET LES CONFONDRE CHANGE LE COMPORTEMENT.
+  //  • DÉCLARÉE — toutes les cibles saisies, y compris celles des supports
+  //    écartés faute de prix. C'est la POLITIQUE d'allocation, et c'est elle qui
+  //    décide quelle part de l'assiette on investit.
+  //  • UTILE — les seules cibles des supports réellement achetables. C'est elle
+  //    qui normalise la répartition entre eux.
+  // ⚠️ Ce qui se joue là : un prix manquant est un TROU DE DONNÉE, pas un choix
+  // de garder du cash. Si sa cible sortait aussi de la somme déclarée, oublier un
+  // prix ferait investir moins — alors que la maquette annonce l'inverse à
+  // l'utilisateur : « sans lui, sa part irait aux autres supports ». C'est donc
+  // une redistribution, et elle est signalée à l'écran.
+  const sommeCibles = liste.reduce((a, s) => (
+    (s.target === null || s.target === undefined) ? a : a + (Number(s.target) || 0)), 0);
+  const sommeCiblesUtiles = dansLePerimetre.reduce((a, s) => a + (Number(s.target) || 0), 0);
+  const partInvestie = sommeCibles > 0 ? Math.min(1, sommeCibles / 100) : 0;
+  const investissable = r2(available * partInvestie);
+  const reserve = r2(available - investissable);
+  // T' — le portefeuille APRÈS investissement de la seule part investissable.
+  const totalAfter = liste.reduce((a, s) => a + (Number(s.value) || 0), 0) + investissable;
 
   // 🔴 LES CIBLES SONT NORMALISÉES SUR LEUR PROPRE SOMME, et non sur 100 —
   // arbitrage de l'utilisateur du 12/08/2026. Des cibles à 40/40 se comportent
@@ -772,10 +804,9 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // ⚠️ Somme nulle (aucune cible, ou toutes à 0) : on ne divise pas par zéro et
   // tous les besoins sont nuls — le dernier support absorbe alors l'assiette,
   // comme avant.
-  const sommeCibles = dansLePerimetre.reduce((a, s) => a + (Number(s.target) || 0), 0);
   const besoin = {};
   dansLePerimetre.forEach((s) => {
-    const part = sommeCibles > 0 ? (Number(s.target) || 0) / sommeCibles : 0;
+    const part = sommeCiblesUtiles > 0 ? (Number(s.target) || 0) / sommeCiblesUtiles : 0;
     besoin[s.id] = Math.max(0, totalAfter * part - (Number(s.value) || 0));
   });
 
@@ -789,14 +820,14 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   // que devient la cascade une fois qu'on a forcé une valeur en amont.
   // La cible EFFECTIVE, en fraction : c'est elle que l'écart mesure, sinon
   // l'affichage se contredirait (on lirait « cible 40 % » et « → 50 % »).
-  const cibleEffective = (s) => (sommeCibles > 0 ? (Number(s.target) || 0) / sommeCibles : 0);
-  const retenues = _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffective);
+  const cibleEffective = (s) => (sommeCiblesUtiles > 0 ? (Number(s.target) || 0) / sommeCiblesUtiles : 0);
+  const retenues = _choisirQuantites(ordre, besoin, investissable, totalAfter, over, cibleEffective);
   const proposees = Object.keys(over).length
-    ? _choisirQuantites(ordre, besoin, available, totalAfter, {}, cibleEffective)
+    ? _choisirQuantites(ordre, besoin, investissable, totalAfter, {}, cibleEffective)
     : retenues;
 
   const steps = [];
-  let left = available;
+  let left = investissable;
   let carry = 0;
   ordre.forEach((s, rang) => {
     const prix = Number(s.price) || 0;
@@ -836,12 +867,22 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   });
 
   const prixMini = ordre.reduce((m, s) => Math.min(m, Number(s.price) || 0), Infinity);
+  const invested = r2(investissable - left);
   return {
-    steps, excluded, available, totalAfter,
-    invested: r2(available - left),
-    left,
-    targetSum: r2(dansLePerimetre.reduce((a, s) => a + (Number(s.target) || 0), 0)),
-    // « Plus rien n'est achetable » — et non « le reste vaut zéro ».
-    complete: ordre.length > 0 && left < prixMini,
+    steps, excluded,
+    available,        // l'assiette ENTIÈRE — versement + cash de l'enveloppe
+    investissable,    // la part qu'on répartit : available × Σcibles / 100
+    reserve,          // ce qu'on laisse en cash À DESSEIN (0 quand Σcibles ≥ 100)
+    totalAfter,
+    invested,
+    // ⚠️ `left` est ce qui reste de l'assiette ENTIÈRE, réserve comprise : c'est
+    // le chiffre que l'utilisateur retrouve en cash dans son enveloppe. Le
+    // reliquat de la seule part investissable, lui, est `left - reserve`.
+    left: r2(available - invested),
+    targetSum: r2(sommeCibles),
+    // « Plus rien n'est achetable » — et non « le reste vaut zéro ». ⚠️ Se juge
+    // sur la part INVESTISSABLE : avec des cibles à 80 %, il reste
+    // volontairement du cash et le plan est pourtant complet.
+    complete: ordre.length > 0 && (investissable - invested) < prixMini,
   };
 }
