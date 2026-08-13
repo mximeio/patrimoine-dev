@@ -1004,8 +1004,40 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
   // Liste des supports distribuants pour le filtre "dividende"
   const distributingEtfs = (data.etfs || []).filter(e => (e.kind || 'capitalizing') === 'distributing');
 
+  // 🔴 « DIVIDENDE » EST MASQUÉ QUAND AUCUN SUPPORT NE DISTRIBUE — proposition de
+  // l'utilisateur du 13/08/2026, et elle répare DEUX entorses à la doctrine du
+  // projet plutôt que de seulement gagner de la place :
+  //  • le bouton « Enregistrer » était GRISÉ (`disabled`), le motif abandonné le
+  //    10/08 — « le grisé apporte visuellement un point de crispation » ;
+  //  • un panneau ambre de 74 px APPARAISSAIT à la sélection, donc la fenêtre
+  //    bougeait — l'autre moitié du même grief.
+  // Gain mesuré au navigateur : la grille passe de 240 à **178 px** (7 types dans
+  // deux colonnes laissaient une cellule orpheline ; à 6 elle tombe juste et
+  // « Frais » monte), plus les 74 px du panneau dans le cas dividende.
+  // ⚠️ **CE QU'ON PERD, et c'est assumé** : le panneau ne refusait pas, il
+  // EXPLIQUAIT et donnait le remède (« ouvre Réglages et bascule un support en
+  // Distribuant »). Un bouton qui manque ne dit rien. Le risque reste faible parce
+  // que la cause est LISIBLE à côté : un support distribuant porte un badge
+  // « Distribuant » sur sa ligne et « (Dist.) » dans les listes déroulantes.
+  // ⚠️ Effet de bord à connaître : le chemin de découverte s'inverse — on bascule
+  // un support en « Distribuant », et le bouton apparaît.
+  //
+  // 🔴 L'EXCEPTION, ET ELLE N'EST PAS COSMÉTIQUE : on garde le bouton quand on ÉDITE
+  // un dividende existant. Sinon un dividende saisi avant que son support ne
+  // redevienne capitalisant deviendrait **impossible à modifier** — on amputerait la
+  // correction d'une opération qui existe.
+  const editeUnDividende = editing && (initial.type === 'dividend');
+  const dividendePossible = distributingEtfs.length > 0 || editeUnDividende;
+
   // Détermine si le sous-ensemble de supports actuel est compatible avec l'op
-  const etfsForType = opType === 'dividend' ? distributingEtfs : (data.etfs || []);
+  // ⚠️ En édition d'un dividende, le support de l'opération est AJOUTÉ à la liste
+  // même s'il ne distribue plus : sans lui la liste serait vide et l'exception
+  // ci-dessus serait creuse — bouton visible, mais plus aucun support à choisir.
+  const etfsForType = opType === 'dividend'
+    ? (editeUnDividende && initial.etf && !distributingEtfs.find(e => e.id === initial.etf)
+      ? [...distributingEtfs, ...(data.etfs || []).filter(e => e.id === initial.etf)]
+      : distributingEtfs)
+    : (data.etfs || []);
   // Si le support sélectionné n'est plus dans la liste filtrée, on bascule sur le premier
   useEffect(() => {
     if (etfsForType.length > 0 && !etfsForType.find(e => e.id === etf)) {
@@ -1028,7 +1060,10 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
     { id: 'gift',       label: 'Réception',  icon: 'gift',      color: '#ec4899',      bg: '#fdf2f8',              desc: 'Cadeau, parrainage' },
     { id: 'dividend',   label: 'Dividende',  icon: 'coin',      color: COLORS.info,    bg: 'var(--info-light)',    desc: 'Cash perçu' },
     { id: 'fee',        label: 'Frais',      icon: 'receipt',   color: COLORS.muted,   bg: '#f1f5f9',              desc: 'Frais de tenue de compte' },
-  ];
+    // ⚠️ Le filtre est posé ICI, sur la liste, et non par un `display: none` dans le
+    // rendu : une cellule masquée en CSS occuperait quand même sa place dans la
+    // grille, donc la cellule orpheline resterait et les 62 px seraient perdus.
+  ].filter(t => t.id !== 'dividend' || dividendePossible);
 
   const submit = (e) => {
     e.preventDefault();
@@ -1087,7 +1122,9 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
                       : opType === 'withdrawal' ? 'Montant retiré (€)'
                       : opType === 'fee' ? 'Montant des frais (€)'
                       : 'Montant (€)';
-  const dividendNoEtf  = opType === 'dividend' && distributingEtfs.length === 0;
+  // ⚠️ `dividendNoEtf` A DISPARU le 13/08/2026, avec le panneau ambre et le bouton
+  // grisé qu'il gouvernait : « Dividende » n'est plus proposé quand aucun support ne
+  // distribue, donc cet état n'est plus atteignable. Cf. `dividendePossible`.
   // 🔴 RÈGLE DU CHAMP PORTEUR (arbitrage de l'utilisateur, 10/08/2026). Ce
   // formulaire N'A PAS DE LIBELLÉ — ni champ, ni état : le montant y est donc le
   // SEUL porteur d'information, et il devient obligatoire. Ce n'est pas une règle
@@ -1097,18 +1134,15 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
   // c'est ce que dit `needsAmount` juste au-dessus. Les 7 types affichent bien un
   // montant à l'écran ; c'est la variable derrière qui change. Une garde écrite sur
   // `amount` seul laisserait « Réception » grisé EN PERMANENCE.
-  // ⚠️ Exclu quand `dividendNoEtf` : le champ montant n'est alors même pas rendu, le
-  // bouton est déjà grisé, et son bandeau orange explique déjà quoi faire. Ajouter
-  // une seconde phrase contredirait la première.
   // Nom du champ montant, ARTICULÉ pour entrer dans « … est obligatoire. » : les
   // libellés d'écran sont sans article (« Montant reçu »), et « Réception » a un
   // féminin (« La valeur de marché… »). Sans ça la phrase serait bancale.
   const nomDuMontant = needsAmount
     ? 'Le ' + amountLabel.replace(/\s*\(€\)\s*$/, '').toLowerCase()
     : 'La valeur de marché à la réception';
-  const montantVide = !dividendNoEtf && (needsAmount
+  const montantVide = needsAmount
     ? (parseFloat(amount) || 0) === 0
-    : (parseFloat(marketValue) || 0) === 0);
+    : (parseFloat(marketValue) || 0) === 0;
 
   return (
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1146,7 +1180,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       <div><label className="label">Date</label><DateInputPicker value={date} onChange={setDate} /></div>
 
       {/* Support — pour tous sauf deposit */}
-      {needsEtf && !dividendNoEtf && (
+      {needsEtf && (
         <div>
           <label className="label">Support</label>
           <select value={etf} onChange={e => setEtf(e.target.value)} className="input" required>
@@ -1173,15 +1207,8 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
         </div>
       )}
 
-      {/* Message d'erreur quand pas de support distribuant */}
-      {dividendNoEtf && (
-        <div style={{ padding: 12, background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, fontSize: 13, color: '#9a3412' }}>
-          Aucun support distribuant configuré dans cette enveloppe. Pour saisir un dividende, ouvre <strong>Réglages</strong> et bascule au moins un support en "Distribuant".
-        </div>
-      )}
-
       {/* Montant — pour deposit / purchase / dividend / sale */}
-      {needsAmount && !dividendNoEtf && (
+      {needsAmount && (
         <div>
           <label className="label">{amountLabel}</label>
           <AmountInput value={amount} onChange={(n) => setAmount(n)} className="input" placeholder="0.00" />
@@ -1208,7 +1235,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       )}
 
       <div className="form-actions" style={{ marginTop: 4 }}>
-        <button type="submit" className="btn btn-accent btn-lg" disabled={dividendNoEtf}>
+        <button type="submit" className="btn btn-accent btn-lg">
           {editing ? 'Modifier' : 'Enregistrer'}
         </button>
         {editing && onDelete && (
