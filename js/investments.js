@@ -1683,6 +1683,15 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // puis on répartit. Motif : la première fenêtre mélangeait un relevé et un
   // calcul, et sur téléphone elle défilait sans fin.
   const [etape, setEtape] = useState(1);
+  // 🔴 « L'ÉTAPE 1 A ÉTÉ VALIDÉE » EST UN FAIT, PAS UNE POSITION — relevé par
+  // l'utilisateur le 13/08/2026 : « quand on retourne sur Valeurs, pourquoi la
+  // coche disparaît ? ». Elle se lisait `etape === 2`, c'est-à-dire « je suis à
+  // l'étape 2 » et non « l'étape 1 est faite » — donc revenir en arrière
+  // l'éteignait alors que les valeurs étaient bel et bien ÉCRITES en base.
+  // ⚠️ Cet état ne se remet jamais à faux : une écriture ne se dé-fait pas, et
+  // fermer à l'étape 2 laisse les valeurs enregistrées (décision du 12/08/2026).
+  // C'est `valeursAJour` plus bas qui décide de MONTRER la coche.
+  const [valeursValidees, setValeursValidees] = useState(false);
   const [versement, setVersement] = useState('');
   const [valeurs, setValeurs] = useState({});
   // 🔴 LES PRIX NE SONT PAS PERSISTÉS — décision du 12/08/2026, et c'est plus sûr
@@ -1748,11 +1757,26 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   const totalSaisi = r2(etfs.reduce((a, e) => a + (valeurSaisie(valeurAffichee(e)) || 0), 0));
   const totalStocke = r2(etfs.reduce((a, e) => a + (Number((data.currentValues || {})[e.id]) || 0), 0));
   const deltaValeurs = r2(totalSaisi - totalStocke);
-  const valeurModifiee = etfs.some((e) => {
-    const saisie = valeurSaisie(valeurAffichee(e));
-    if (saisie === null) return false;
-    return r2(saisie) !== r2(Number((data.currentValues || {})[e.id]) || 0);
-  });
+
+  // 🔴 « QU'EST-CE QUI A RÉELLEMENT CHANGÉ » PASSE PAR `enveloppesModifiees` —
+  // pas par une comparaison réécrite ici. Le §10 est formel : cette décision est
+  // une fonction pure de `compute.js`, verrouillée par 21 tests, et « ne pas la
+  // réinliner dans un composant » — une condition laissée dans le JSX est hors
+  // couverture du harnais. Cette fenêtre en est le TROISIÈME appelant, après les
+  // deux fenêtres de valorisation.
+  // ⚠️ Elle attend une LISTE d'enveloppes et une saisie indexée par leur id ;
+  // ici il n'y en a qu'une et le composant ne reçoit pas son id (seulement son
+  // `data`), d'où cette clé locale — elle ne sert qu'à apparier les deux maps.
+  // ⚠️ `currentValues` renvoyé est la map COMPLÈTE à écrire : les supports non
+  // touchés y gardent leur valeur, sinon l'écriture les effacerait.
+  const CLE = 'enveloppe';
+  const modifiees = enveloppesModifiees([{ id: CLE, data }], { [CLE]: valeurs });
+  const valeurModifiee = modifiees.length > 0;
+  // Ce que la coche dit : « les valeurs affichées sont celles de la base ».
+  // 🔴 Elle S'ÉTEINT dès qu'on retouche une valeur, et se rallume à l'écriture —
+  // arbitrage du 13/08/2026. Une coche qu'on ne peut plus éteindre cesse d'être un
+  // signal (même dérive que le garde-fou TR corrigé en v621).
+  const valeursAJour = valeursValidees && !valeurModifiee;
 
   const aSaisi = etape === 1
     ? (Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0)
@@ -1768,6 +1792,35 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // devient intapable (voir le commentaire des états plus haut).
   const poserCost = (id, brut) => setCoutsSaisis((c) => ({ ...c, [id]: nettoyerMontant(brut) }));
 
+  // SOURCE UNIQUE du texte : deux gestes annulent les ajustements (revenir aux
+  // valeurs, changer le versement), même conséquence donc même phrase.
+  // ⚠️ Le toast ne part QUE s'il y avait quelque chose à annuler — sans quoi
+  // changer le versement en parlerait à chaque caractère tapé. Dès la première
+  // frappe il n'y a plus rien, donc une seule annonce.
+  const oublierLesAjustements = () => {
+    if (ajustements > 0) {
+      showToast(`${ajustements} ajustement${ajustements > 1 ? 's' : ''} annulé${ajustements > 1 ? 's' : ''} : les propositions seront recalculées.`, 'info', DUREE_REFUS);
+    }
+    setQtysForcees({}); setCoutsSaisis({});
+  };
+
+  // 🔴 CHANGER LE VERSEMENT REMET TOUTES LES RÉPARTITIONS À ZÉRO — demande de
+  // l'utilisateur du 13/08/2026, et la sonde a montré que l'état d'avant était
+  // PIRE qu'une remise à zéro plutôt que plus conservateur :
+  //  • une quantité forcée est rabotée en silence par le plafond d'achetable dès
+  //    que l'assiette rétrécit — mesuré, « PUST = 3 parts » s'affichait à 2 à
+  //    200 € de versement, ET l'étiquette « quantité ajustée » disparaissait avec,
+  //    donc plus aucune trace à l'écran que l'ajustement avait existé ;
+  //  • un MONTANT payé forcé, lui, survit tel quel et fait exploser les autres
+  //    lignes — mesuré à cibles constantes, WPEA passait de 0 à 53 parts entre
+  //    1 000 € et 2 000 € de versement.
+  // ⇒ Un ajustement a été choisi contre une assiette donnée : elle change, il ne
+  // veut plus rien dire. On l'annule, et on le DIT.
+  const poserVersement = (brut) => {
+    oublierLesAjustements();
+    setVersement(nettoyerMontant(brut));
+  };
+
   // ---- Étape 1 → 2 : on ÉCRIT les valeurs, puis on répartit -----------------
   const validerLesValeurs = async () => {
     if (busy) return;
@@ -1778,42 +1831,64 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
     if (sansPrix.length === avecCible.length) {
       return refuser(showToast, REFUS.prixObligatoire);
     }
+    // Le passage à l'étape 2, commun aux deux voies (avec ou sans écriture).
+    const passerALaRepartition = () => {
+      // Les valeurs sont en base : le brouillon local n'a plus lieu d'être.
+      setValeurs({});
+      setValeursValidees(true);
+      setEtape(2);
+      // ⚠️ Prévenir quand une part ne sera pas servie : la maquette l'annonce
+      // ainsi, et c'est un CONSTAT (toast neutre), pas une faute à corriger.
+      if (sansPrix.length) {
+        showToast(REFUS.partRedistribuee(sansPrix.map((e) => supportName(e)).join(', ')), 'info', DUREE_REFUS);
+      }
+    };
+    // 🔴 AUCUNE ÉCRITURE SI AUCUNE VALEUR N'A CHANGÉ (13/08/2026). Avant, valider
+    // l'étape 1 écrivait TOUJOURS — donc traverser la fenêtre sans rien toucher
+    // renvoyait les valeurs telles qu'elles étaient à l'OUVERTURE.
+    // ⚠️ Ce que ça règle, et ce que ça ne règle PAS : le backlog note qu'une
+    // valorisation mise à jour ailleurs entre-temps serait écrasée par ce renvoi.
+    // Ne pas écrire quand rien n'a changé ferme le cas le plus probable — celui où
+    // l'on ne fait que passer — mais pas le cas général : retoucher UNE valeur
+    // renvoie encore les autres. Le vrai correctif reste « n'écrire que les valeurs
+    // réellement modifiées », et il n'est pas dans ce lot.
+    // ⚠️ Le garde-fou du prix reste DEVANT : « rien à écrire » ne veut pas dire
+    // « rien à vérifier ».
+    if (!valeurModifiee) return passerALaRepartition();
     setBusy(true);
-    const valeursFinales = { ...(data.currentValues || {}) };
-    etfs.forEach((e) => {
-      const saisie = valeurSaisie(valeurAffichee(e));
-      if (saisie !== null) valeursFinales[e.id] = r2(saisie);
-    });
     // 🔴 LA DATE NE BOUGE QUE SI UNE VALEUR A RÉELLEMENT CHANGÉ — `currentValuesDate`
     // a UN SEUL sens depuis le 09/08/2026 (§10), « date de la dernière saisie
-    // réelle ». ⚠️ Firestore refuse `undefined` : si le champ n'existe pas et qu'on
-    // n'a rien saisi, il ne faut pas l'écrire.
-    const dateValo = valeurModifiee ? todayIso() : data.currentValuesDate;
+    // réelle ». Ici on est justement dans la branche où elle a changé.
+    // ⚠️ Firestore refuse `undefined` : si le champ n'existe pas, ne pas l'écrire.
+    const dateValo = todayIso();
     const ok = await onSubmit({
-      ...data, currentValues: valeursFinales,
+      ...data, currentValues: modifiees[0].currentValues,
       ...(dateValo === undefined ? {} : { currentValuesDate: dateValo }),
     });
     setBusy(false);
     if (!ok) return;
-    // Les valeurs sont en base : le brouillon local n'a plus lieu d'être.
-    setValeurs({});
-    setEtape(2);
-    // ⚠️ Prévenir quand une part ne sera pas servie : la maquette l'annonce
-    // ainsi, et c'est un CONSTAT (toast neutre), pas une faute à corriger.
-    if (sansPrix.length) {
-      showToast(REFUS.partRedistribuee(sansPrix.map((e) => supportName(e)).join(', ')), 'info', DUREE_REFUS);
-    }
+    passerALaRepartition();
   };
 
   const revenirAuxValeurs = () => {
     // 🔴 Les ajustements sont ANNULÉS au retour, et on le DIT. Les garder serait
     // pire que les perdre : ils ont été choisis contre un plan qui n'existe plus
     // dès qu'une valeur ou un prix bouge, et rien ne le signalerait.
-    if (ajustements > 0) {
-      showToast(`${ajustements} ajustement${ajustements > 1 ? 's' : ''} annulé${ajustements > 1 ? 's' : ''} : les propositions seront recalculées.`, 'info', DUREE_REFUS);
-    }
-    setQtysForcees({}); setCoutsSaisis({});
+    oublierLesAjustements();
     setEtape(1);
+  };
+
+  // L'onglet « 2 · Répartition ». 🔴 C'ÉTAIT UN `<span>` INERTE, donc un clic sans
+  // effet ni explication — relevé par l'utilisateur le 13/08/2026 : « pourquoi on
+  // ne peut pas repartir sur Répartition en cliquant sur l'onglet ? ».
+  // ⚠️ Le refus passe par un TOAST et non par un onglet grisé : doctrine du
+  // 10/08/2026 (§10), « le bouton grisé est abandonné ». Un onglet inerte était le
+  // pire des deux — ni état lisible, ni message.
+  // ⚠️ Sinon on repasse par `validerLesValeurs`, et NON par un `setEtape(2)` direct :
+  // c'est ce qui garde le garde-fou du prix et écrit une valeur retouchée entre-temps.
+  const allerALaRepartition = () => {
+    if (!valeursValidees) return refuser(showToast, REFUS.valeursAValider);
+    validerLesValeurs();
   };
 
   const enregistrer = async () => {
@@ -1846,7 +1921,10 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   };
 
   const rienASaisir = !etfs.length;
-  const etape1Faite = etape === 2;
+  // La coche de l'étape franchie. ⚠️ Sa couleur et son épaisseur sont dans
+  // `styles.css` (`.cp-seg-item svg`) et non ici : `Icon` fixe `strokeWidth: 2`
+  // en attribut, et seule une déclaration CSS peut porter le 3 du balisage.
+  const coche = valeursAJour ? <Icon name="check" size={13} /> : null;
 
   return (
     <Modal title="Calculer un versement" size="lg" dirty={aSaisi} onClose={onClose}>
@@ -1865,13 +1943,26 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
               et les deux moitiés sont égales — c'est ce que montre la version
               iPhone, et un rail qui n'occupe que la moitié de l'écran y paraît
               flotter. Une coche marque l'étape franchie. */}
+          {/* ⚠️ L'ACTIVE est un `<span>`, l'INACTIVE un `<button>` — et pas
+              l'inverse : `button.cp-seg-item` porte `cursor: pointer`, qui
+              mentirait sur la moitié où l'on est déjà. Chaque moitié n'est un
+              bouton que quand elle a réellement une action. */}
           <div className="cp-onglets">
             <div className="cp-seg">
-              <button type="button" className={`cp-seg-item${etape === 1 ? ' cp-seg-item--actif' : ''}`}
-                onClick={() => (etape === 2 ? revenirAuxValeurs() : null)}>
-                {etape1Faite && <Icon name="check" size={13} />}1 · Valeurs
-              </button>
-              <span className={`cp-seg-item${etape === 2 ? ' cp-seg-item--actif' : ''}`}>2 · Répartition</span>
+              {etape === 1 ? (
+                <span className="cp-seg-item cp-seg-item--actif">{coche}1 · Valeurs</span>
+              ) : (
+                <button type="button" className="cp-seg-item" onClick={revenirAuxValeurs}>
+                  {coche}1 · Valeurs
+                </button>
+              )}
+              {etape === 2 ? (
+                <span className="cp-seg-item cp-seg-item--actif">2 · Répartition</span>
+              ) : (
+                <button type="button" className="cp-seg-item" onClick={allerALaRepartition}>
+                  2 · Répartition
+                </button>
+              )}
             </div>
           </div>
 
@@ -1972,7 +2063,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   <label className="cp-carte-lbl">Versement prévu (€)</label>
                   <input type="text" inputMode="decimal" className="input num cp-versement" value={versement}
                     onFocus={selectionnerAuFocus}
-                    onChange={(e) => setVersement(nettoyerMontant(e.target.value))} />
+                    onChange={(e) => poserVersement(e.target.value)} />
                   <div className="cp-carte-detail">0 € répartit le cash seul</div>
                 </div>
               </div>

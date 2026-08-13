@@ -365,6 +365,11 @@ const REFUS = {
   // ⚠️ CONSTAT, pas erreur (toast neutre) : on peut continuer sans ce prix, mais
   // il faut dire ce que ça change — sa part ira aux autres supports.
   partRedistribuee:   (noms) => `Sans prix, la part de ${noms} ira aux autres supports.`,
+  // L'onglet « 2 · Répartition » cliqué avant d'avoir validé l'étape 1.
+  // ⚠️ CONSTAT (toast neutre) : rien n'est en faute, l'ordre des étapes est juste
+  // rappelé. Et surtout, ce refus EXISTE — l'onglet était un `<span>` inerte, donc
+  // un clic sans effet ni explication, ce que le §10 refuse.
+  valeursAValider:    'Les valeurs doivent être validées avant de répartir.',
 };
 
 // ⚠️ Durée volontairement plus longue que les 2 500 ms par défaut : le toast paraît
@@ -375,12 +380,12 @@ const DUREE_REFUS = 4000;
 // 🔴 TOUS les refus ne sont PAS des erreurs — relevé par l'utilisateur le
 // 10/08/2026, et c'est juste : « Aucune modification à enregistrer » ne signale
 // aucune faute, il constate qu'il n'y a rien à faire. Le rouge le surjouerait.
-// ⇒ Ces trois-là passent en toast NEUTRE (fond sombre) ; tous les autres, qui
+// ⇒ Ceux-là passent en toast NEUTRE (fond sombre) ; tous les autres, qui
 // demandent à l'utilisateur de fournir quelque chose, restent en ROUGE.
 // ⚠️ Le ton est déduit du MESSAGE, pas passé par l'appelant : c'est ce qui
 // empêche deux formulaires de choisir des tons différents pour la même phrase.
 const REFUS_NEUTRES = new Set([REFUS.rienChange, REFUS.nomEnveloppeInchange, REFUS.valorisationsInchangees,
-  REFUS.aucuneQuantite]);
+  REFUS.aucuneQuantite, REFUS.valeursAValider]);
 
 // Le canal unique. À appeler en tête de submit : `if (…) return refuser(showToast,
 // REFUS.x);` — la valeur de retour n'a pas de sens pour un gestionnaire

@@ -3767,6 +3767,19 @@ input[type="month"] {
   font-size: 13px; font-weight: 500; color: var(--text-muted); }
 button.cp-seg-item { cursor: pointer; }
 .cp-seg-item--actif { background: var(--text); color: #fff; }
+/* La coche de l'étape franchie — VERTE et ÉPAISSE, comme le balisage de la
+   maquette la pose à six endroits. Elle était grise et fine : `Icon` dessine en
+   `currentColor`, donc elle héritait du `--text-muted` de l'onglet, et personne
+   ne l'avait remarqué (13 px).
+   🔴 POURQUOI EN CSS ET NON PAR LA PROP `color` D'`Icon` : `Icon` fixe
+   `strokeWidth: 2` en ATTRIBUT de présentation, et une déclaration CSS l'emporte
+   sur un attribut — c'est la seule voie qui porte le 3 sans toucher au composant
+   partagé par toute l'app.
+   ⚠️ Le vert vaut aussi sur la moitié ACTIVE (fond sombre) : depuis le
+   13/08/2026 la coche peut y tomber, quand on revient sur « Valeurs » après avoir
+   validé. Une coche blanche s'y fondrait dans le libellé et ne se lirait plus
+   comme un acquis — arbitrage de l'utilisateur. */
+.cp-seg-item svg { stroke: var(--success); stroke-width: 3; }
 
 /* Tableau de l'étape 1 : des colonnes, pas un cadre. Le seul filet est celui
    du total. */
