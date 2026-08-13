@@ -2221,35 +2221,41 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                               n'est PAS la convention des montants signés de l'app
                               (vert = hausse) : ici on ne juge pas une variation,
                               on situe par rapport à une cible. */}
-                          <span className={`cp-ecart${step.gapPts < 0 ? ' cp-ecart--sous' : ''}`}>
+                          {/* 🔴 LA COULEUR JUGE LA DISTANCE, PLUS LE SENS (13/08/2026).
+                              `ecartLoinDeLaCible` et son seuil vivent dans `compute.js`
+                              — pas ici : une condition dans le JSX est hors couverture
+                              du harnais (§10), et le seuil est justement ce qui peut
+                              dériver sans qu'on le voie. */}
+                          <span className={`cp-ecart${ecartLoinDeLaCible(step.gapPts) ? ' cp-ecart--loin' : ''}`}>
                             {step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt
                           </span>
                         </div>
                         <div className="cp-bilan-reste">reste {fmt(step.leftAfter)} €</div>
                       </div>
                     </div>
-                    {/* 🔴 LES DEUX ÉTIQUETTES DE QUANTITÉ ONT DISPARU le 13/08/2026 —
-                        « une couleur de liseré pour le modifié et une pour la cascade,
-                        et ça me suffirait » (utilisateur). Les liserés disent la même
-                        chose sans être lus.
-                        ⚠️ Ce qui partait avec elles était « proposition N », c'est-à-dire
-                        ce que « Réinitialiser » restaure. J'avais objecté que c'était la
-                        seule trace de cette valeur ; **son argument l'emporte** :
-                        « dans tous les cas, réinitialiser réinitialise à ta proposition ».
-                        La destination est dans le NOM du bouton, et on voit le résultat
-                        après avoir cliqué — l'afficher ligne par ligne était l'aperçu
-                        d'une valeur qu'on obtient de toute façon.
-                        ⚠️ **La mention du MONTANT FORCÉ reste, et ce n'est pas un oubli** :
-                        elle porte autre chose — le coût au prix SAISI à l'étape 1, seul
-                        point de comparaison du « · déduit » de l'en-tête quand le cours a
-                        bougé. Sans elle, le prix déduit ne se compare à rien.
+                    {/* 🔴 PLUS AUCUN PIED DE CARTE — les TROIS étiquettes ont disparu le
+                        13/08/2026, à la demande de l'utilisateur, et `.cp-detail` est
+                        mort avec elles (classe et règles CSS retirées).
+                        • « quantité ajustée, proposition N » et « recalculé, proposition N »
+                          → remplacées par les DEUX COULEURS de liseré : elles disent la
+                          même chose sans être lues. J'avais objecté que « proposition N »
+                          était la seule trace de ce que « Réinitialiser » restaure ; son
+                          argument l'emporte — « dans tous les cas, réinitialiser
+                          réinitialise à ta proposition », donc la destination est dans le
+                          NOM du bouton et on voit le résultat après avoir cliqué.
+                        • « montant forcé, calculé N € » → c'était le **dernier vestige
+                          d'une estimation périmée** : le prix saisi à l'étape 1 est une
+                          hypothèse, et dès qu'on a acheté c'est le montant débité qui fait
+                          foi — d'où `prixDeduit`. Même logique que « les prix ne sont pas
+                          persistés ». ⚠️ **Et son pire cas l'a condamnée** : sur une carte
+                          à 0 part elle affichait « calculé 0.00 € », soit une ligne entière
+                          pour ne rien dire.
+                        ⚠️ **CE QUI EST PERDU, et c'est assumé** : à l'étape 2, plus rien ne
+                        rappelle le prix SAISI. Le revoir demande de repasser par
+                        « Modifier », ce qui annule les ajustements. Le prix déduit reste la
+                        donnée utile.
                         ⚠️ Écart assumé avec la maquette, qui prescrit « quantité ajustée,
                         proposition 0 » : cf. le CHANGELOG. */}
-                    {step.costForced && (
-                      <div className="cp-detail">
-                        {`montant forcé, calculé ${fmt(step.costAuto)} €`}
-                      </div>
-                    )}
                   </div>
                 );
               })}

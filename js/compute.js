@@ -763,6 +763,28 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffe
   return meilleur ? meilleur.qs : ordre.map(() => 0);
 }
 
+// 🔴 LE SEUIL AU-DELÀ DUQUEL UN ÉCART À LA CIBLE EST « LOIN » — 1 point, décision de
+// l'utilisateur du 13/08/2026, et c'est une valeur POSÉE : rien dans le projet ne la
+// fonde, elle se change ici et nulle part ailleurs.
+//
+// Ce que la couleur dit, et le chemin qui y a mené : la pastille était **verte
+// au-dessus** de la cible et **ambre en dessous**, donc elle jugeait le SENS de
+// l'écart. Or être 1,95 pt au-dessus n'est pas meilleur qu'être 1 pt en dessous —
+// c'est le plus gros écart du plan, et il s'affichait comme une bonne nouvelle. Le
+// signe, lui, était déjà écrit dans le nombre.
+// ⇒ La couleur juge désormais la **DISTANCE** : vert « ça passe » sous le seuil,
+// rouge « c'est moins bien » au-delà, dans les DEUX sens.
+// ⚠️ Une réserve, tranchée par l'utilisateur et gardée pour la trace : vert/rouge est
+// aussi la convention des montants SIGNÉS de l'app (`value-positive`/`value-negative`,
+// vert = hausse), visible dans la même fenêtre. Son arbitrage : « vert = c'est bien, ça
+// passe et rouge = c'est moins bien » se lit d'abord, et l'unité `pt` distingue le
+// contexte d'un montant en euros. Une variante vert/ambre a été montrée et écartée.
+// ⚠️ Prédicat PUR et exporté exprès : une condition laissée dans le JSX est hors
+// couverture du harnais (§10). C'est ce qui permet de verrouiller le seuil par un test
+// plutôt que de le laisser dériver dans un `className`.
+const SEUIL_ECART_PT = 1;
+const ecartLoinDeLaCible = (pts) => Math.abs(Number(pts) || 0) >= SEUIL_ECART_PT;
+
 function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
   const liste = Array.isArray(supports) ? supports : [];
   const over = overrides || {};
