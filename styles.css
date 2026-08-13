@@ -3840,7 +3840,15 @@ button.cp-seg-item { cursor: pointer; }
 .cp-duo { display: flex; gap: 12px; }
 .cp-carte { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 14px 15px; }
-.cp-carte--saisie { background: var(--surface-alt); }
+/* ⚠️ `.cp-carte--saisie` A ÉTÉ SUPPRIMÉE le 13/08/2026 (fond `--surface-alt`), et la
+   classe est retirée du JSX avec elle. Elle teintait la carte « Versement prévu »
+   pour dire « ici tu saisis » — mais le champ est déjà blanc bordé, ce qui EST le
+   signal de saisie de l'app : deux signaux pour une seule chose.
+   ⚠️ La couleur, elle, n'était pas en cause (gris neutre de la palette, à ne pas
+   confondre avec le fond indigo retiré le même jour, celui-là hors charte) ; ce qui
+   l'était, c'est de teinter une carte pour un motif que rien d'autre dans l'app ne
+   teinte — aucun précédent de `--surface-alt` pour marquer « cette carte contient un
+   champ ». Décision de l'utilisateur. */
 .cp-carte-lbl { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase;
   letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
 .cp-carte-val { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }

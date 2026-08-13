@@ -2075,7 +2075,10 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     {plan.reserve > 0 && <> · <b className="num">{fmt(plan.reserve)} €</b> gardés en cash</>}
                   </div>
                 </div>
-                <div className="cp-carte cp-carte--saisie">
+                {/* ⚠️ Plus de `cp-carte--saisie` : la carte de saisie ne se teinte
+                    plus (13/08/2026). Le champ blanc bordé suffit à dire qu'on y
+                    tape — cf. le commentaire de `styles.css`. */}
+                <div className="cp-carte">
                   <label className="cp-carte-lbl">Versement prévu (€)</label>
                   <input type="text" inputMode="decimal" className="input num cp-versement" value={versement}
                     onFocus={selectionnerAuFocus}
@@ -2199,7 +2202,19 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
               {ajustements > 0 && (
                 <div className="cp-reset">
-                  <button type="button" className="btn" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
+                  {/* 🔴 `btn-secondary` ET NON `btn` NU. Mesuré le 13/08/2026 : avec
+                      `.btn` seul, ce bouton s'affichait avec le style NATIF du
+                      navigateur — `background: rgb(239,239,239)` et
+                      `color: rgb(0,0,0)`, deux valeurs qui n'existent nulle part dans
+                      la palette (`--surface-hover` vaut 241,245,249 et `--text`
+                      15,23,42). `.btn` ne pose ni fond ni couleur de texte : il ne
+                      s'emploie jamais seul.
+                      ⚠️ Les trois autres `.btn` nus de l'app sont les boutons
+                      « Supprimer », dont les styles EN LIGNE écrasent fond, texte et
+                      bordure — aucun bouton ne s'affichait réellement en `.btn` nu,
+                      celui-ci était le seul. Il aurait donc rendu différemment sur
+                      Safari iOS, où le bouton natif n'a pas la même apparence. */}
+                  <button type="button" className="btn btn-secondary" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
                     Réinitialiser les propositions ({ajustements})
                   </button>
                   <div className="cp-reset-note">Le versement et les valeurs sont conservés.</div>
