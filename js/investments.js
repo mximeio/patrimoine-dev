@@ -1804,6 +1804,34 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
     setQtysForcees({}); setCoutsSaisis({});
   };
 
+  // 🔴 « RÉINITIALISER » DEMANDE CONFIRMATION, et la note sous le bouton a disparu
+  // avec ce changement (13/08/2026, proposition de l'utilisateur : « il faut
+  // comprendre que c'est lié au bouton… peut-être qu'on pourrait supprimer ça et
+  // afficher une demande de confirmation avec cette information »).
+  // **Deux défauts dans la note, et il avait raison sur les deux** : elle obligeait à
+  // DEVINER à quoi elle se rattachait, et comme elle vivait dans le bloc conditionné
+  // par `ajustements > 0`, elle apparaissait et disparaissait — donc **elle faisait
+  // bouger la fenêtre**. C'est exactement le grief qui a fait abandonner le bouton
+  // grisé le 10/08 (§10).
+  // ⚠️ **Une confirmation ici n'est PAS une entorse à la doctrine du toast.** Le
+  // projet a remplacé ses REFUS par des toasts, mais il confirme toujours la perte
+  // d'une saisie non enregistrée : c'est ce que fait le garde-fou de `Modal`
+  // (« Des modifications n'ont pas été enregistrées et seront perdues. »), sans
+  // qu'aucune écriture soit en jeu. Réinitialiser détruit la même chose — du travail
+  // fait à la main.
+  // ⚠️ Et cette information est une **réassurance AVANT d'agir**, pas un constat
+  // après : un toast (la voie des deux autres chemins d'annulation) arriverait trop
+  // tard pour servir à quelque chose.
+  // ⚠️ Forme calée sur le garde-fou existant : énoncé, ligne vide, question.
+  const reinitialiser = () => {
+    const n = ajustements;
+    const phrase = n > 1
+      ? `Les ${n} ajustements seront annulés et les propositions recalculées.`
+      : "L'ajustement sera annulé et les propositions recalculées.";
+    if (!window.confirm(`${phrase}\n\nLe versement et les valeurs sont conservés.\n\nRéinitialiser ?`)) return;
+    setQtysForcees({}); setCoutsSaisis({});
+  };
+
   // 🔴 CHANGER LE VERSEMENT REMET TOUTES LES RÉPARTITIONS À ZÉRO — demande de
   // l'utilisateur du 13/08/2026, et la sonde a montré que l'état d'avant était
   // PIRE qu'une remise à zéro plutôt que plus conservateur :
@@ -2214,10 +2242,9 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       bordure — aucun bouton ne s'affichait réellement en `.btn` nu,
                       celui-ci était le seul. Il aurait donc rendu différemment sur
                       Safari iOS, où le bouton natif n'a pas la même apparence. */}
-                  <button type="button" className="btn btn-secondary" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
+                  <button type="button" className="btn btn-secondary" onClick={reinitialiser}>
                     Réinitialiser les propositions ({ajustements})
                   </button>
-                  <div className="cp-reset-note">Le versement et les valeurs sont conservés.</div>
                 </div>
               )}
 
