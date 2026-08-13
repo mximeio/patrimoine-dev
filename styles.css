@@ -3727,8 +3727,10 @@ input[type="month"] {
 .cp-cibles { font-size: 12.5px; color: var(--warning); margin-top: 6px; font-weight: 600; }
 
 .cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; position: relative; }
-.cp-etape--ajustee { border-color: #c7d2fe; background: var(--accent-soft); }
-.cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+/* ⚠️ `--ajustee` était défini DEUX FOIS dans ce fichier, ici et dans le bloc du
+   relifting plus bas, avec des valeurs différentes. La seconde l'emportait, donc
+   celle-ci ne servait à rien tout en donnant à lire le contraire. Une seule
+   définition subsiste, en bas — cf. « signal d'une carte modifiée ». */
 .cp-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .cp-pastille { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 .cp-nom { font-size: 14px; }
@@ -3860,20 +3862,46 @@ button.cp-seg-item { cursor: pointer; }
 .cp-barre-cible { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
   opacity: .9; transform: translateX(-1px); }
 
-/* Cartes de support */
+/* Cartes de support.
+   ⚠️ `overflow: hidden` + `background` explicite : copiés de `.maj-env`, ils font
+   que le liseré ci-dessous est ROGNÉ par le rayon de la carte, donc propre dans
+   les coins sans avoir à lui donner son propre `border-radius`. */
 .cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px;
-  position: relative; }
-.cp-etape--ajustee { border-color: #c7d2fe; background: var(--accent-soft); padding-left: 17px; }
-.cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
-  width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+  position: relative; overflow: hidden; background: var(--surface); }
+/* 🔴 SIGNAL D'UNE CARTE MODIFIÉE — ALIGNÉ SUR `.maj-env--modifiee` (mise à jour
+   groupée), à la demande de l'utilisateur le 13/08/2026. **Un liseré indigo pleine
+   hauteur, et RIEN D'AUTRE.**
+   Ce qui a été RETIRÉ, et pourquoi chacun :
+   • `background: var(--accent-soft)` — 🔴 **l'app n'a JAMAIS teinté le fond d'un état
+     « modifié », nulle part.** Relevé exhaustif du 13/08/2026 : les trois seuls états
+     de ce genre sont `restore-confirm .rc-r.chgd` (v560), `.maj-env--modifiee` et
+     celui-ci ; les deux premiers sont des liserés SANS fond, et le commentaire de la
+     v560 est explicite — « charte de l'app, **sans fond coloré** (fini l'ambre/brun) ».
+     Le fond était donc un hapax de ce chantier, contraire à une règle écrite un an
+     plus tôt. *C'est une question de l'utilisateur qui l'a mis au jour : « le fond n'a
+     jamais été fait nulle part dans l'application, si ? ». Non.*
+   • `border-color: #c7d2fe` — même raison : la carte modifiée de la fenêtre groupée
+     garde `var(--border)`. Deux signaux pour un seul état, dont un hors charte.
+   • `padding-left: 17px` — 🔴 **il faisait SAUTER le contenu de 3 px** au moment précis
+     où l'on saisit dans le champ (mesuré : le nom du support passait de 378,5 à
+     381,5 px). C'est exactement le défaut que la fenêtre groupée a corrigé le
+     11/08/2026 (« la carte sautait donc à la PREMIÈRE FRAPPE »), réintroduit ici sous
+     une autre forme : son garde-fou ne dit que « ne pas revenir à un `border-left` »,
+     et un `padding` est passé dessous. ⚠️ Le liseré n'a besoin d'AUCUNE place réservée
+     — il se superpose au padding, comme dans `.maj-env`.
+   ⚠️ `top: 0; bottom: 0` et non `10px/10px` : pleine hauteur, préférence de
+   l'utilisateur et forme de `.maj-env--modifiee`. */
+.cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--accent); }
 .cp-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cp-pastille { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 .cp-nom { font-size: 14px; }
-/* Le badge de cible contraste avec le fond de SA carte : gris sur carte
-   blanche, blanc sur carte ajustée. */
+/* Le badge de cible : gris sur carte blanche, et c'est tout.
+   ⚠️ La règle `.cp-etape--ajustee .cp-cible { background: var(--surface) }` a été
+   RETIRÉE le 13/08/2026 avec le fond teinté : elle n'existait que pour contraster
+   avec lui. La garder rendrait le badge blanc sur blanc — invisible. */
 .cp-cible { font-size: 11px; font-weight: 600; color: var(--text-muted);
   background: var(--surface-hover); border-radius: var(--radius-full); padding: 2px 8px; }
-.cp-etape--ajustee .cp-cible { background: var(--surface); }
 .cp-prix-rappel { font-size: 11.5px; color: var(--text-subtle); }
 /* « · déduit » — le prix vient du montant payé, pas de la saisie de l'étape 1.
    En indigo comme le liseré des lignes ajustées : les deux marquent une
