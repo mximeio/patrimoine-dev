@@ -13,6 +13,13 @@
   --accent-hover: #4338ca;
   --accent-light: #eef2ff;
   --accent-soft: #f5f5ff;
+  /* Indigo PÂLE — déclaré le 13/08/2026, sur décision de l'utilisateur. La valeur
+     #c7d2fe traînait déjà en littéral à deux endroits (la période de recherche
+     sélectionnée, la dernière sauvegarde) : elle est nommée plutôt que recopiée.
+     ⚠️ Ne pas la confondre avec `--accent-light` / `--accent-soft`, qui sont des
+     FONDS quasi blancs : sur un trait de 3 px ils ne se voient pas. Celle-ci est
+     faite pour un TRAIT. */
+  --accent-pale: #c7d2fe;
   --success: #10b981;
   --success-light: #ecfdf5;
   --danger: #ef4444;
@@ -2335,7 +2342,7 @@ input[type="month"] {
 }
 .search-periode-btn:hover { background: var(--surface-hover); color: var(--text); }
 .search-periode-btn.on {
-  background: var(--accent-light); color: var(--accent); border-color: #c7d2fe;
+  background: var(--accent-light); color: var(--accent); border-color: var(--accent-pale);
 }
 .search-periode-pastille {
   position: absolute; top: -2px; right: -2px;
@@ -2642,7 +2649,7 @@ input[type="month"] {
   display: flex; align-items: center; gap: 12px;
   border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface);
 }
-.backup-row.latest { border-color: #c7d2fe; background: #fbfbff; }
+.backup-row.latest { border-color: var(--accent-pale); background: #fbfbff; }
 .backup-row .ic {
   width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
   background: var(--accent-light); color: var(--accent);
@@ -3904,6 +3911,25 @@ button.cp-seg-item { cursor: pointer; }
    l'utilisateur et forme de `.maj-env--modifiee`. */
 .cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0;
   width: 3px; background: var(--accent); }
+/* 🔴 LA LIGNE QUE LA CASCADE A DÉPLACÉE — même liseré, en indigo PÂLE (13/08/2026,
+   proposition de l'utilisateur, comparée aux deux autres candidates dans l'app avant
+   de trancher).
+   **Pourquoi la même famille de couleur, et pas un gris** : les deux marques
+   racontent le même phénomène — un ajustement et sa conséquence — et c'est
+   l'INTENSITÉ qui dit qui en est l'auteur. Un gris (`--border-strong`, essayé à
+   l'écran) est presque la couleur du contour de la carte : il se lit comme une
+   bordure épaissie, il faut savoir qu'il est là.
+   ⚠️ **Ceci PÉRIME la règle de la v999** (« le liseré indigo ne suit QUE
+   l'ajustement manuel, ne pas l'étendre aux lignes recalculées, sinon toute la
+   fenêtre s'allume »). Elle n'est pas violée, elle est remplacée : le liseré plein
+   reste réservé à l'intervention, et la conséquence reçoit un signal DISTINCT.
+   ⚠️ Sa réserve garde une part de vrai — les trois cartes portant un trait, c'est
+   désormais la COULEUR qui distingue, plus la présence. C'est un code sans légende
+   à l'écran, assumé par l'utilisateur : « on n'est pas bête, on comprendra ».
+   ⚠️ Les deux classes sont EXCLUSIVES côté JSX, et l'indigo plein gagne quand une
+   ligne cumule les deux : on marque l'intervention, pas la conséquence. */
+.cp-etape--cascade::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--accent-pale); }
 .cp-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cp-pastille { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 .cp-nom { font-size: 14px; }

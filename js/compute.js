@@ -919,11 +919,19 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
       // du 13/08/2026 : « ça aurait été pas mal que ça bouge partout, comme ça on
       // voit que tout a évolué ». Il a raison sur le besoin ; ce qui était faux,
       // c'était de le dire avec le MÊME mot que l'ajustement manuel.
-      // ⇒ Deux drapeaux, deux phrases : « quantité ajustée » sur la ligne qu'on a
-      // forcée, « recalculé » sur celles que la cascade a déplacées.
-      // ⚠️ Le liseré indigo, lui, ne suit QUE `qtyAdjusted`/`costForced` : il marque
-      // l'intervention, pas la conséquence. Sinon toute la fenêtre s'allume et le
-      // repère ne repère plus rien.
+      // ⇒ Deux drapeaux — et ce sont désormais **deux LISERÉS**, plus deux phrases.
+      // 🔴 CE COMMENTAIRE A ÉTÉ RÉÉCRIT LE 13/08/2026. Il disait : « le liseré indigo
+      // ne suit QUE `qtyAdjusted`/`costForced` : il marque l'intervention, pas la
+      // conséquence. Sinon toute la fenêtre s'allume et le repère ne repère plus
+      // rien. » ⇒ **Périmé le soir même** : les deux étiquettes de texte ont disparu
+      // au profit de deux couleurs de liseré — indigo PLEIN (`--accent`) sur la ligne
+      // forcée, indigo PÂLE (`--accent-pale`) sur celles que la cascade a déplacées.
+      // ⚠️ La règle d'origine n'est pas violée : elle interdisait d'étendre le liseré
+      // PLEIN, et il reste réservé à l'intervention. La conséquence reçoit un signal
+      // DISTINCT, comparé aux deux autres candidates dans l'app avant d'être retenu.
+      // ⚠️ Sa réserve garde une part de vrai, et elle est assumée : les trois cartes
+      // portant un trait, c'est la COULEUR qui distingue, plus la présence.
+      // ⚠️ `styles.css` (`.cp-etape--cascade`) porte le détail du choix.
       qtyRecalculee: !((o.qty !== null && o.qty !== undefined) && qty !== suggested) && qty !== suggested,
       cost, costAuto, costForced: cost !== costAuto,
       // 🔴 LE PRIX DÉDUIT — « si je modifie le montant final, c'est que je viens

@@ -2154,9 +2154,21 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     </div>
                   );
                 }
+                // 🔴 DEUX LISERÉS EXCLUSIFS, ET L'INTERVENTION L'EMPORTE (13/08/2026,
+                // proposition de l'utilisateur, les trois candidates comparées dans
+                // l'app avant de trancher) : indigo PLEIN sur la ligne qu'on a forcée,
+                // indigo PÂLE sur celles que la cascade a déplacées.
+                // ⚠️ Une ligne peut cumuler les deux — un montant forcé fait `ajustee`,
+                // et l'ancrage peut laisser sa quantité différente de la proposition,
+                // donc `qtyRecalculee`. L'ordre du ternaire tranche : on marque
+                // l'intervention, jamais la conséquence.
+                // ⚠️ Ceci remplace la règle de la v999 (« ne pas étendre le liseré aux
+                // lignes recalculées ») : elle interdisait d'étendre l'indigo PLEIN, ce
+                // qu'on ne fait pas. Le §10 de `CLAUDE.md` porte la version à jour.
                 const ajustee = step.qtyAdjusted || step.costForced;
+                const marque = ajustee ? ' cp-etape--ajustee' : (step.qtyRecalculee ? ' cp-etape--cascade' : '');
                 return (
-                  <div key={id} className={`cp-etape${ajustee ? ' cp-etape--ajustee' : ''}`}>
+                  <div key={id} className={`cp-etape${marque}`}>
                     <div className="cp-tete">
                       <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
                       <b className="cp-nom">{supportName(e)}</b>
@@ -2216,12 +2228,26 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         <div className="cp-bilan-reste">reste {fmt(step.leftAfter)} €</div>
                       </div>
                     </div>
-                    {(ajustee || step.qtyRecalculee) && (
+                    {/* 🔴 LES DEUX ÉTIQUETTES DE QUANTITÉ ONT DISPARU le 13/08/2026 —
+                        « une couleur de liseré pour le modifié et une pour la cascade,
+                        et ça me suffirait » (utilisateur). Les liserés disent la même
+                        chose sans être lus.
+                        ⚠️ Ce qui partait avec elles était « proposition N », c'est-à-dire
+                        ce que « Réinitialiser » restaure. J'avais objecté que c'était la
+                        seule trace de cette valeur ; **son argument l'emporte** :
+                        « dans tous les cas, réinitialiser réinitialise à ta proposition ».
+                        La destination est dans le NOM du bouton, et on voit le résultat
+                        après avoir cliqué — l'afficher ligne par ligne était l'aperçu
+                        d'une valeur qu'on obtient de toute façon.
+                        ⚠️ **La mention du MONTANT FORCÉ reste, et ce n'est pas un oubli** :
+                        elle porte autre chose — le coût au prix SAISI à l'étape 1, seul
+                        point de comparaison du « · déduit » de l'en-tête quand le cours a
+                        bougé. Sans elle, le prix déduit ne se compare à rien.
+                        ⚠️ Écart assumé avec la maquette, qui prescrit « quantité ajustée,
+                        proposition 0 » : cf. le CHANGELOG. */}
+                    {step.costForced && (
                       <div className="cp-detail">
-                        {step.qtyAdjusted ? `quantité ajustée, proposition ${step.suggested}` : ''}
-                        {step.qtyRecalculee ? `recalculé, proposition ${step.suggested}` : ''}
-                        {(step.qtyAdjusted || step.qtyRecalculee) && step.costForced ? ' · ' : ''}
-                        {step.costForced ? `montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
+                        {`montant forcé, calculé ${fmt(step.costAuto)} €`}
                       </div>
                     )}
                   </div>
@@ -2242,8 +2268,14 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       bordure — aucun bouton ne s'affichait réellement en `.btn` nu,
                       celui-ci était le seul. Il aurait donc rendu différemment sur
                       Safari iOS, où le bouton natif n'a pas la même apparence. */}
+                  {/* ⚠️ PLUS DE COMPTEUR (13/08/2026). La maquette prescrit
+                      « Réinitialiser les propositions (2) », mais elle a été dessinée
+                      AVANT la confirmation : celle-ci annonce désormais le nombre au
+                      moment où il compte (« Les 2 ajustements seront annulés »), et la
+                      simple PRÉSENCE du bouton dit déjà qu'il y a un ajustement.
+                      Prescription dépassée par un fait nouveau, pas contredite. */}
                   <button type="button" className="btn btn-secondary" onClick={reinitialiser}>
-                    Réinitialiser les propositions ({ajustements})
+                    Réinitialiser les propositions
                   </button>
                 </div>
               )}
