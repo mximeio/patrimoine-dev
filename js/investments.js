@@ -599,11 +599,11 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
           stats={stats}
           showToast={showToast}
           onClose={() => setModal(null)}
-          onSubmit={async (newData) => {
-            const ok = await handleUpdateData(newData);
-            if (ok) setModal(null);
-            return ok;
-          }}
+          /* ⚠️ NE FERME PAS la fenêtre — elle a DEUX enregistrements depuis la
+             refonte en deux étapes : celui des valeurs (étape 1, qui doit laisser
+             la fenêtre ouverte) et celui du versement (étape 2, qui la ferme).
+             C'est donc le composant qui décide, par `onClose`. */
+          onSubmit={handleUpdateData}
         />
       )}
       {modal === 'history-ops' && (
@@ -1678,32 +1678,40 @@ function HistoryOpsTable({ stats, data, onEdit, onDelete }) {
 // une vue est hors couverture du harnais.
 function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast }) {
   const etfs = data.etfs || [];
+  // 🔴 DEUX ÉTAPES (maquette `versement-design-3a`, 12/08/2026) : on relève les
+  // valeurs et les prix, on les VALIDE — les valeurs sont alors écrites en base —
+  // puis on répartit. Motif : la première fenêtre mélangeait un relevé et un
+  // calcul, et sur téléphone elle défilait sans fin.
+  const [etape, setEtape] = useState(1);
   const [versement, setVersement] = useState('');
   const [valeurs, setValeurs] = useState({});
+  // 🔴 LES PRIX NE SONT PAS PERSISTÉS — décision du 12/08/2026, et c'est plus sûr
+  // que ce que prévoyait la spec §2.6. Elle les mémorisait pour ouvrir sur un plan
+  // tout prêt, au prix de ce qu'elle nommait elle-même « le principal risque
+  // d'erreur silencieuse de tout l'écran » : un prix périmé pré-rempli, validé sans
+  // être vu. Ne rien mémoriser fait DISPARAÎTRE le risque au lieu de le signaler.
+  // ⚠️ Ne pas relire `etf.lastUnitPrice` ici : le champ existe encore en base
+  // (écrit par la v991) mais il n'est plus ni lu ni écrit.
   const [prix, setPrix] = useState({});
   // 🔴 DEUX ÉTATS SÉPARÉS, ET C'EST LE CŒUR DU PIÈGE. Les quantités forcées sont
   // des NOMBRES (des parts, entières) ; les montants payés sont des CHAÎNES.
   // Écrit d'abord en stockant le montant parsé, ce qui rendait la virgule
   // INTAPABLE : « 284, » se parsait en 284, se réaffichait « 284 », et le
   // séparateur disparaissait à l'instant où on le tapait. Relevé par
-  // l'utilisateur. Même règle que les fenêtres de valorisation : la chaîne reste
-  // la chaîne, on ne parse QU'À L'USAGE.
+  // l'utilisateur. La chaîne reste la chaîne, on ne parse QU'À L'USAGE.
   const [qtysForcees, setQtysForcees] = useState({});
   const [coutsSaisis, setCoutsSaisis] = useState({});
   const [busy, setBusy] = useState(false);
 
-  // Affichage : la saisie si elle existe, sinon la donnée. Même motif que la
-  // fenêtre groupée — on ne pré-remplit pas le state, sinon tout paraîtrait
-  // « modifié » dès l'ouverture.
+  // Affichage : la saisie si elle existe, sinon la donnée. On ne pré-remplit pas
+  // le state, sinon tout paraîtrait « modifié » dès l'ouverture.
   const valeurAffichee = (e) => {
     if (valeurs[e.id] !== undefined) return valeurs[e.id];
     const v = (data.currentValues || {})[e.id];
     return v === undefined || v === null ? '' : String(v);
   };
-  const prixAffiche = (e) => {
-    if (prix[e.id] !== undefined) return prix[e.id];
-    return e.lastUnitPrice === undefined || e.lastUnitPrice === null ? '' : String(e.lastUnitPrice);
-  };
+  const prixAffiche = (e) => (prix[e.id] === undefined ? '' : prix[e.id]);
+  const aUneCible = (e) => !(e.target === null || e.target === undefined || e.target === '' || Number(e.target) === 0);
 
   const supports = etfs.map((e) => ({
     id: e.id,
@@ -1733,9 +1741,22 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
   const etfDe = (id) => etfs.find((e) => e.id === id) || {};
   const ajustements = plan.steps.filter((s) => s.qtyAdjusted || s.costForced).length;
-  const aSaisi = versement !== '' || Object.keys(qtysForcees).length > 0
-    || Object.keys(coutsSaisis).length > 0
-    || Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0;
+  const cibleTotale = plan.targetSum;
+  const moinsCher = plan.steps.length ? Math.min(...plan.steps.map((s) => s.price)) : 0;
+  const ecartMax = plan.steps.reduce((m, s) => Math.max(m, Math.abs(s.gapPts)), 0);
+
+  const totalSaisi = r2(etfs.reduce((a, e) => a + (valeurSaisie(valeurAffichee(e)) || 0), 0));
+  const totalStocke = r2(etfs.reduce((a, e) => a + (Number((data.currentValues || {})[e.id]) || 0), 0));
+  const deltaValeurs = r2(totalSaisi - totalStocke);
+  const valeurModifiee = etfs.some((e) => {
+    const saisie = valeurSaisie(valeurAffichee(e));
+    if (saisie === null) return false;
+    return r2(saisie) !== r2(Number((data.currentValues || {})[e.id]) || 0);
+  });
+
+  const aSaisi = etape === 1
+    ? (Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0)
+    : (versement !== '' || Object.keys(qtysForcees).length > 0 || Object.keys(coutsSaisis).length > 0);
 
   // Toucher −/+ RELÂCHE le montant forcé de la ligne : sinon on garderait un
   // montant qui ne correspond plus du tout à la quantité affichée (spec §2.6).
@@ -1746,6 +1767,54 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // ⚠️ On garde la CHAÎNE telle quelle — pas de parsing ici, sinon la virgule
   // devient intapable (voir le commentaire des états plus haut).
   const poserCost = (id, brut) => setCoutsSaisis((c) => ({ ...c, [id]: nettoyerMontant(brut) }));
+
+  // ---- Étape 1 → 2 : on ÉCRIT les valeurs, puis on répartit -----------------
+  const validerLesValeurs = async () => {
+    if (busy) return;
+    const avecCible = etfs.filter(aUneCible);
+    const sansPrix = avecCible.filter((e) => (valeurSaisie(prixAffiche(e)) || 0) <= 0);
+    // Refus DUR seulement s'il n'y a rien à répartir : sans un seul prix, il n'y
+    // a pas de plan possible.
+    if (sansPrix.length === avecCible.length) {
+      return refuser(showToast, REFUS.prixObligatoire);
+    }
+    setBusy(true);
+    const valeursFinales = { ...(data.currentValues || {}) };
+    etfs.forEach((e) => {
+      const saisie = valeurSaisie(valeurAffichee(e));
+      if (saisie !== null) valeursFinales[e.id] = r2(saisie);
+    });
+    // 🔴 LA DATE NE BOUGE QUE SI UNE VALEUR A RÉELLEMENT CHANGÉ — `currentValuesDate`
+    // a UN SEUL sens depuis le 09/08/2026 (§10), « date de la dernière saisie
+    // réelle ». ⚠️ Firestore refuse `undefined` : si le champ n'existe pas et qu'on
+    // n'a rien saisi, il ne faut pas l'écrire.
+    const dateValo = valeurModifiee ? todayIso() : data.currentValuesDate;
+    const ok = await onSubmit({
+      ...data, currentValues: valeursFinales,
+      ...(dateValo === undefined ? {} : { currentValuesDate: dateValo }),
+    });
+    setBusy(false);
+    if (!ok) return;
+    // Les valeurs sont en base : le brouillon local n'a plus lieu d'être.
+    setValeurs({});
+    setEtape(2);
+    // ⚠️ Prévenir quand une part ne sera pas servie : la maquette l'annonce
+    // ainsi, et c'est un CONSTAT (toast neutre), pas une faute à corriger.
+    if (sansPrix.length) {
+      showToast(REFUS.partRedistribuee(sansPrix.map((e) => supportName(e)).join(', ')), 'info', DUREE_REFUS);
+    }
+  };
+
+  const revenirAuxValeurs = () => {
+    // 🔴 Les ajustements sont ANNULÉS au retour, et on le DIT. Les garder serait
+    // pire que les perdre : ils ont été choisis contre un plan qui n'existe plus
+    // dès qu'une valeur ou un prix bouge, et rien ne le signalerait.
+    if (ajustements > 0) {
+      showToast(`${ajustements} ajustement${ajustements > 1 ? 's' : ''} annulé${ajustements > 1 ? 's' : ''} : les propositions seront recalculées.`, 'info', DUREE_REFUS);
+    }
+    setQtysForcees({}); setCoutsSaisis({});
+    setEtape(1);
+  };
 
   const enregistrer = async () => {
     if (busy) return;
@@ -1761,177 +1830,173 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
       ops.push({ id: uid(), type: 'deposit', date: todayIso(), amount: r2(montantVersement) });
     }
     const valeursFinales = { ...(data.currentValues || {}) };
-    etfs.forEach((e) => {
-      const saisie = valeurSaisie(valeurAffichee(e));
-      if (saisie !== null) valeursFinales[e.id] = r2(saisie);
-    });
     achats.forEach((s) => {
       ops.push({ id: uid(), type: 'purchase', date: todayIso(), etf: s.id, amount: r2(s.cost) });
       // Convention d'`AddOperationForm` : un achat GONFLE la valorisation.
-      valeursFinales[s.id] = r2((valeursFinales[s.id] || 0) + s.cost);
+      valeursFinales[s.id] = r2((Number(valeursFinales[s.id]) || 0) + s.cost);
     });
-    const etfsFinaux = etfs.map((e) => {
-      const p = valeurSaisie(prixAffiche(e));
-      return p === null ? e : { ...e, lastUnitPrice: r2(p), lastUnitPriceDate: todayIso() };
-    });
-    // 🔴 LA DATE DE VALORISATION NE BOUGE QUE SI UNE VALEUR A RÉELLEMENT ÉTÉ
-    // SAISIE — relevé par l'utilisateur le 12/08/2026, et c'était un défaut.
-    // Cette fenêtre la reposait à chaque enregistrement, ce qui éteignait la
-    // carte « À rafraîchir » sans qu'aucune valorisation ait été relevée.
-    // Deux raisons de ne pas le faire, et elles sont déjà écrites ailleurs :
-    //  • `currentValuesDate` a UN SEUL sens depuis le 09/08 — « date de la
-    //    dernière saisie réelle » (§10) — et c'est pour ça qu'`enveloppesModifiees`
-    //    existe. Un signal qu'on peut éteindre sans rien faire n'est plus un signal ;
-    //  • `AddOperationForm` ne la touche PAS en créant un achat, alors qu'il gonfle
-    //    la valorisation. Le gonflement mécanique d'un achat n'est pas un relevé.
-    // ⚠️ Firestore REFUSE `undefined` (§10) : si le champ n'existait pas et qu'on
-    // n'a rien saisi, il ne faut pas l'écrire du tout.
-    const valorisationSaisie = etfs.some((e) => {
-      const saisie = valeurSaisie(valeurAffichee(e));
-      if (saisie === null) return false;
-      const stockee = Number((data.currentValues || {})[e.id]) || 0;
-      return r2(saisie) !== r2(stockee);
-    });
-    const dateValo = valorisationSaisie ? todayIso() : data.currentValuesDate;
-    const ok = await onSubmit({
-      ...data, etfs: etfsFinaux, operations: ops,
-      currentValues: valeursFinales,
-      ...(dateValo === undefined ? {} : { currentValuesDate: dateValo }),
-    });
+    // ⚠️ Pas de `currentValuesDate` ici : les valeurs ont déjà été relevées (et
+    // datées si besoin) à l'étape 1. Le gonflement mécanique d'un achat n'est pas
+    // un relevé — `AddOperationForm` ne la touche pas davantage.
+    const ok = await onSubmit({ ...data, operations: ops, currentValues: valeursFinales });
     setBusy(false);
-    if (ok) showToast(`Versement enregistré · ${achats.length} achat${achats.length > 1 ? 's' : ''}`, 'success');
+    if (!ok) return;
+    showToast(`Versement enregistré · ${achats.length} achat${achats.length > 1 ? 's' : ''}`, 'success');
+    onClose();
   };
 
-  const cibleTotale = plan.targetSum;
-  const ecartMax = plan.steps.reduce((m, s) => Math.max(m, Math.abs(s.gapPts)), 0);
-  const moinsCher = plan.steps.length ? Math.min(...plan.steps.map((s) => s.price)) : 0;
+  const rienASaisir = !etfs.length;
 
   return (
     <Modal title="Calculer un versement" size="lg" dirty={aSaisi} onClose={onClose}>
-      {/* ⚠️ L'état vide ne se déclenche que si RIEN n'est saisissable — un
-          support sans prix garde ses champs plus bas, donc la fenêtre reste
-          utile même quand le plan est vide. Tester `plan.steps.length` seul
-          affichait un état vide définitif au premier usage. */}
-      {!plan.steps.length && !plan.excluded.some((x) => x.reason === 'no-price') && (
+      {rienASaisir && (
         <EmptyState icon="percent" title="Aucun support à répartir"
-          hint="Fixe une cible et un prix d'une part dans les Réglages de l'enveloppe." />
+          hint="Ajoute un support et fixe sa cible dans les Réglages de l'enveloppe." />
       )}
 
-      {(!!plan.steps.length || plan.excluded.some((x) => x.reason === 'no-price')) && (
+      {!rienASaisir && (
         <>
-          {/* ---- Zone A : paramètres ---- */}
-          <div className="cp-zone">
-            <label className="label">Versement prévu (€)</label>
-            <input type="text" inputMode="decimal" className="input num" value={versement}
-              onChange={(e) => setVersement(nettoyerMontant(e.target.value))}
-              onFocus={selectionnerAuFocus} />
-            {/* ⚠️ Une seule phrase qui COULE, sans flex ni gap. Elle a été
-                construite en deux `<span>` dans un conteneur flex à `gap: 8px`,
-                et l'espace se voyait : le `=` recevait 8 px + une espace à sa
-                gauche, une seule espace à sa droite. Relevé par l'utilisateur.
-                Le retour à la ligne se fait très bien tout seul, aux espaces. */}
-            <div className="cp-assiette">
-              + non investi dans l'enveloppe : <b className="num">{fmt(stats.cashRemaining)} €</b>
-              {' '}={' '}<b className="num">{fmt(plan.available)} €</b>
-              {plan.reserve > 0
-                ? <>, dont <b className="num">{fmt(plan.investissable)} €</b> à répartir</>
-                : ' à répartir'}
-            </div>
-            {/* ⚠️ Ligne SUPPRIMÉE quand les cibles font 100 % — c'était un bandeau
-                vert permanent qui n'apprenait rien (relevé par l'utilisateur).
-                Elle ne parle que si une mise à l'échelle a eu lieu, et elle dit
-                alors ce qui se passe : depuis le 12/08/2026 les cibles sont
-                normalisées sur leur somme, donc 40/40 vaut 50/50. */}
-            {/* ⚠️ Ce texte a changé de SENS le 13/08/2026 avec la règle « C » : les
-                cibles ne sont plus mises à l'échelle pour répartir 100 % de
-                l'assiette — c'est l'ASSIETTE qui est réduite à leur somme, et le
-                reste demeure en cash à dessein. Ne pas revenir à l'ancienne
-                formule, elle décrirait un comportement qui n'existe plus. */}
-            {cibleTotale !== 100 && (
-              <div className="cp-cibles">
-                Cibles à {fmt(cibleTotale)} % au total : {fmt(Math.min(100, cibleTotale))} % de l'assiette
-                {' '}sera investie, le reste demeure en cash.
-              </div>
-            )}
-            {/* La référence des pourcentages, dite UNE fois ici plutôt que répétée
-                sur chaque ligne : ils se lisent sur le total APRÈS versement, ce
-                qui explique qu'un support sans achat voie sa part baisser. */}
-            <div className="cp-exclus">Les pourcentages du plan se lisent sur le total après versement.</div>
-            {!!plan.excluded.length && (
-              <div className="cp-exclus">
-                {plan.excluded.length} support{plan.excluded.length > 1 ? 's' : ''} hors calcul, listé
-                {plan.excluded.length > 1 ? 's' : ''} dans le plan.
-              </div>
-            )}
+          {/* ---- le fil des deux étapes ---- */}
+          <div className="cp-fil">
+            <button type="button" className={`cp-fil-item${etape === 1 ? ' cp-fil-item--actif' : ''}`}
+              onClick={() => (etape === 2 ? revenirAuxValeurs() : null)}>1 · Valeurs</button>
+            <span className="cp-fil-sep">›</span>
+            <span className={`cp-fil-item${etape === 2 ? ' cp-fil-item--actif' : ''}`}>2 · Répartition</span>
           </div>
 
-          {/* ---- Zone B : le plan, dans l'ordre d'achat ----
-              🔴 UNE SEULE LISTE POUR TOUS LES SUPPORTS, ET DES CLÉS STABLES.
-              Ce n'était pas le cas au premier jet, et l'utilisateur l'a senti
-              immédiatement sur son iPhone : les supports « sans prix » vivaient
-              dans une seconde liste, donc taper le premier chiffre d'un prix
-              faisait CHANGER DE PARENT au support (il rejoignait le plan).
-              React démontait alors l'`input` en cours de saisie pour en monter
-              un autre ailleurs — et le focus meurt avec le nœud. On perdait la
-              suite de sa frappe à chaque fois.
-              ⇒ Un seul parent, `key={id}` : React DÉPLACE le nœud au lieu de le
-              recréer, le curseur reste dedans, et le réordonnancement par prix
-              décroissant continue de se faire sous les doigts sans rien casser.
-              ⚠️ Ne pas re-scinder cette liste « pour la lisibilité ». */}
-          {[...plan.steps.map((s, i) => ({ id: s.id, step: s, rang: i })),
-            ...plan.excluded.map((x) => ({ id: x.id, reason: x.reason }))].map(({ id, step, rang, reason }) => {
-            const e = etfDe(id);
-            const dateP = e.lastUnitPriceDate;
-            const ageP = dateP ? Math.floor((Date.now() - new Date(dateP + 'T12:00:00').getTime()) / 86400000) : null;
-
-            // Sans CIBLE, il n'y a rien à saisir ici : ça se règle ailleurs.
-            if (reason === 'no-target') {
-              return (
-                <div key={id} className="cp-exclu-ligne">
-                  <span className="cp-pastille" style={{ background: COLORS.subtle }} />
-                  <b>{supportName(e)}</b>
-                  <span>Aucune cible fixée · Réglages</span>
+          {/* ================= ÉTAPE 1 — les valeurs et les prix ================= */}
+          {etape === 1 && (
+            <>
+              {cibleTotale !== 100 && (
+                <div className="cp-cibles">
+                  Cibles à {fmt(cibleTotale)} % au total : {fmt(Math.min(100, cibleTotale))} % de l'assiette
+                  {' '}sera investie, le reste demeure en cash.
                 </div>
-              );
-            }
-
-            const sansPrix = reason === 'no-price';
-            return (
-              <div key={id} className={`cp-etape${sansPrix ? ' cp-etape--sansprix' : ''}${(!sansPrix && (step.qtyAdjusted || step.costForced)) ? ' cp-etape--ajustee' : ''}`}>
-                <div className="cp-tete">
-                  <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
-                  <b className="cp-nom">{supportName(e)}</b>
-                  <span className="cp-cible">cible {fmt(sansPrix ? (Number(e.target) || 0) : step.target)} %</span>
-                  <span className="cp-rang">
-                    {sansPrix ? 'hors plan' : `${rang + 1}/${plan.steps.length}${step.isLast ? ' · tout le reliquat' : ''}`}
-                  </span>
+              )}
+              <div className="cp-tableau">
+                {/* ⚠️ En-têtes longs sur desktop, courts en portrait — la maquette
+                    mobile n'affiche que « Valeur » et « Prix », et la colonne des
+                    noms n'a pas la place pour davantage. Même idiome que les noms
+                    de support : les deux textes sont rendus, la CSS choisit. */}
+                <div className="cp-tableau-tete">
+                  <span />
+                  <span><span className="cp-th-long">Valeur actuelle (€)</span><span className="cp-th-court">Valeur</span></span>
+                  <span><span className="cp-th-long">Prix d'une part (€)</span><span className="cp-th-court">Prix</span></span>
                 </div>
-                <div className="cp-champs">
-                  <div>
-                    <label className="label">Valeur actuelle (€)</label>
+                {etfs.map((e) => (
+                  <div key={e.id} className="cp-tableau-ligne">
+                    <span className="cp-lbl">
+                      <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
+                      <b>{supportName(e)}</b>
+                      {/* Le libellé secondaire disparaît en portrait : la colonne
+                          n'y fait plus que 96 px, le ticker suffit à identifier. */}
+                      <span className="cp-lbl-sec"><LibelleSupport etf={e} prefixe=" — " /></span>
+                    </span>
                     <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
                       onFocus={selectionnerAuFocus}
-                      onChange={(ev) => setValeurs((v) => ({ ...v, [id]: nettoyerMontant(ev.target.value) }))} />
-                  </div>
-                  <div>
-                    <label className="label">Prix d'une part (€)</label>
-                    <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
-                      onFocus={selectionnerAuFocus}
-                      onChange={(ev) => setPrix((p) => ({ ...p, [id]: nettoyerMontant(ev.target.value) }))} />
-                    {/* 🔴 La date du prix est OBLIGATOIRE dès lors qu'il est
-                        pré-rempli : un prix périmé validé sans être vu fausse
-                        tout le plan. Ambre au-delà de 7 jours (spec §2.6). */}
-                    {!!dateP && (
-                      <div className={`cp-date-prix${ageP > 7 ? ' cp-date-prix--vieux' : ''}`}>
-                        dernier prix connu le {fmtDateNumeric(dateP)}
-                      </div>
+                      onChange={(ev) => setValeurs((v) => ({ ...v, [e.id]: nettoyerMontant(ev.target.value) }))} />
+                    {aUneCible(e) ? (
+                      <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                        onFocus={selectionnerAuFocus}
+                        onChange={(ev) => setPrix((p) => ({ ...p, [e.id]: nettoyerMontant(ev.target.value) }))} />
+                    ) : (
+                      // ⚠️ Sans cible, le prix n'est PAS demandé : il ne servirait
+                      // à rien, et un champ inutile se remplit quand même.
+                      <span className="cp-sanscible">Aucune cible fixée · Réglages</span>
                     )}
                   </div>
+                ))}
+                <div className="cp-tableau-total">
+                  <span>Total des supports</span>
+                  <b className="num">{fmt(totalSaisi)} €</b>
+                  {deltaValeurs !== 0 ? <DeltaMontant valeur={deltaValeurs} /> : <span />}
                 </div>
-                {sansPrix ? (
-                  <div className="cp-detail">Renseigne le prix d'une part pour que ce support entre dans le plan.</div>
-                ) : (
-                  <>
+              </div>
+              <div className="cp-note">
+                Le prix d'une part est demandé pour chaque support qui porte une cible non nulle.
+                La valorisation et sa date ne sont enregistrées que si une valeur a changé.
+              </div>
+              <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={validerLesValeurs}>
+                {busy ? 'Enregistrement…' : 'Valider et continuer'}
+              </button>
+            </>
+          )}
+
+          {/* ================= ÉTAPE 2 — la répartition ================= */}
+          {etape === 2 && (
+            <>
+              <div className="cp-rappel">
+                <span>Valeurs enregistrées · <b className="num">{fmt(totalSaisi)} €</b> sur {etfs.length} support{etfs.length > 1 ? 's' : ''}</span>
+                <button type="button" className="cp-modifier" onClick={revenirAuxValeurs}>Modifier</button>
+              </div>
+
+              <div className="cp-zone">
+                <label className="label">Versement prévu (€)</label>
+                <input type="text" inputMode="decimal" className="input num" value={versement}
+                  onFocus={selectionnerAuFocus}
+                  onChange={(e) => setVersement(nettoyerMontant(e.target.value))} />
+                <div className="cp-note-champ">0 € répartit le cash seul</div>
+                <div className="cp-assiette">
+                  Assiette : <b className="num">{fmt(plan.available)} €</b>
+                  {' '}({fmt(valeurSaisie(versement) || 0)} € versés + {fmt(stats.cashRemaining)} € non investi)
+                  {plan.reserve > 0 && <>, dont <b className="num">{fmt(plan.investissable)} €</b> à répartir</>}
+                </div>
+              </div>
+
+              {/* ---- la barre de répartition ----
+                  🔴 LES REPÈRES BLANCS MARQUENT LES CIBLES, pas les bornes des
+                  segments. La maquette dit « le trait blanc marque la cible » mais
+                  son balisage les pose au bord de chaque segment, c'est-à-dire sur
+                  la valeur RÉELLE — la légende y promet donc autre chose que ce
+                  qu'elle montre. Aux positions de cible cumulées, l'écart devient
+                  visible : le repère tombe à l'intérieur du segment quand on
+                  dépasse, à l'extérieur quand on est en retard. */}
+              {!!plan.steps.length && (
+                <div className="cp-barre-bloc">
+                  <div className="cp-barre-tete">
+                    <span>Répartition après versement</span>
+                    <span>le trait blanc marque la cible</span>
+                  </div>
+                  <div className="cp-barre">
+                    {plan.steps.map((s) => (
+                      <div key={s.id} className="cp-barre-part"
+                        style={{ width: `${Math.max(0, s.pctAfter)}%`, background: etfDe(s.id).color || COLORS.accent }} />
+                    ))}
+                    {plan.steps.map((s, i) => {
+                      const cumul = plan.steps.slice(0, i + 1).reduce((a, x) => a + x.target, 0);
+                      return cumul >= 99.9 ? null
+                        : <span key={`c-${s.id}`} className="cp-barre-cible" style={{ left: `${cumul}%` }} />;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ---- une carte par support ----
+                  🔴 UNE SEULE LISTE, CLÉS STABLES. Les supports « sans prix »
+                  vivaient dans une seconde liste : taper le premier chiffre d'un
+                  prix les faisait CHANGER DE PARENT, React démontait l'`input` en
+                  cours de saisie et le focus mourait avec le nœud. Ne pas re-scinder. */}
+              {[...plan.steps.map((s, i) => ({ id: s.id, step: s, rang: i })),
+                ...plan.excluded.map((x) => ({ id: x.id, reason: x.reason }))].map(({ id, step, rang, reason }) => {
+                const e = etfDe(id);
+                if (reason) {
+                  return (
+                    <div key={id} className="cp-exclu-ligne">
+                      <span className="cp-pastille" style={{ background: COLORS.subtle }} />
+                      <b>{supportName(e)}</b>
+                      <span>{reason === 'no-target' ? 'Aucune cible fixée · Réglages' : 'Prix manquant · sa part est allée aux autres'}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={id} className={`cp-etape${(step.qtyAdjusted || step.costForced) ? ' cp-etape--ajustee' : ''}`}>
+                    <div className="cp-tete">
+                      <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
+                      <b className="cp-nom">{supportName(e)}</b>
+                      <span className="cp-cible">cible {fmt(step.target)} %</span>
+                      <span className="cp-prix-rappel">{fmt(step.price)} € la part</span>
+                      <span className="cp-rang">{rang + 1}/{plan.steps.length}{step.isLast ? ' · tout le reliquat' : ''}</span>
+                    </div>
                     <div className="cp-achat">
                       <div className="cp-qty">
                         <button type="button" className="btn-icon" aria-label="Une part de moins"
@@ -1952,14 +2017,6 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       → {fmt(step.pctAfter)} % ({step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt)
                       · reste <b className="num">{fmt(step.leftAfter)} €</b>
                     </div>
-                    {/* 🔴 LA LIGNE « budget X (besoin Y + report Z) » A ÉTÉ RETIRÉE le
-                        12/08/2026, et pas seulement pour la place : depuis que le plan
-                        explore les deux arrondis (v993), la quantité retenue n'est PLUS
-                        forcément `budget / prix` arrondi. Cette ligne décrivait donc une
-                        règle qui n'explique plus le résultat — elle invitait à demander
-                        « pourquoi 8 parts alors que le budget en dit 8,5 ? ».
-                        ⚠️ Ce qui reste ici est le seul contenu DÉCISIONNEL : le signalement
-                        d'un ajustement à la main. Ne pas y remettre du diagnostic. */}
                     {(step.qtyAdjusted || step.costForced) && (
                       <div className="cp-detail">
                         {step.qtyAdjusted ? `quantité ajustée, proposition ${step.suggested}` : ''}
@@ -1967,68 +2024,62 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         {step.costForced ? `montant forcé, calculé ${fmt(step.costAuto)} €` : ''}
                       </div>
                     )}
-                  </>
-                )}
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
 
-          {ajustements > 0 && (
-            <div className="cp-reset">
-              <button type="button" className="btn" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
-                Réinitialiser les propositions ({ajustements})
-              </button>
-              <div className="cp-reset-note">Le versement, les valeurs actuelles et les prix sont conservés.</div>
-            </div>
+              {ajustements > 0 && (
+                <div className="cp-reset">
+                  <button type="button" className="btn" onClick={() => { setQtysForcees({}); setCoutsSaisis({}); }}>
+                    Réinitialiser les propositions ({ajustements})
+                  </button>
+                  <div className="cp-reset-note">Le versement et les valeurs sont conservés.</div>
+                </div>
+              )}
+
+              {!!plan.steps.length && (
+                <>
+                  <div className="cp-synthese">
+                    <div><span>Investi</span><b className="num">{fmt(plan.invested)} €</b></div>
+                    <div><span>Reliquat non investi</span><b className="num">{fmt(plan.left)} €</b></div>
+                    <div><span>Écart maximal</span><b className="num">{fmt(ecartMax)} pt</b></div>
+                  </div>
+
+                  {/* Ordre de PRIORITÉ : le dépassement passe devant tout, et
+                      « c'est fini » ne se dit jamais quand il reste de quoi acheter. */}
+                  {plan.left < 0 ? (
+                    <div className="cp-etat cp-etat--rouge">
+                      Les montants payés dépassent l'assiette de <b className="num">{fmt(Math.abs(plan.left))} €</b> :
+                      le cash de l'enveloppe passera en négatif.
+                    </div>
+                  ) : plan.complete && plan.reserve > 0 ? (
+                    /* 🔴 Avec des cibles sous 100 %, le reliquat est VOULU. */
+                    <div className="cp-etat cp-etat--vert">
+                      {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
+                      {' '}<b className="num">{fmt(plan.left)} €</b> restent en cash.
+                    </div>
+                  ) : plan.complete ? (
+                    <div className="cp-etat cp-etat--vert">
+                      Assiette entièrement utilisée — il reste <b className="num">{fmt(plan.left)} €</b>,
+                      moins que la part la moins chère ({fmt(moinsCher)} €).
+                    </div>
+                  ) : (
+                    <div className="cp-etat cp-etat--ambre">
+                      Il reste <b className="num">{fmt(plan.investissable - plan.invested)} €</b> à répartir,
+                      de quoi acheter encore
+                      {' '}{Math.floor((plan.investissable - plan.invested) / moinsCher)} part
+                      {Math.floor((plan.investissable - plan.invested) / moinsCher) > 1 ? 's' : ''}
+                      {' '}de {supportName(etfDe(plan.steps[plan.steps.length - 1].id))}.
+                    </div>
+                  )}
+
+                  <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={enregistrer}>
+                    {busy ? 'Enregistrement…' : 'Enregistrer le versement et les achats'}
+                  </button>
+                </>
+              )}
+            </>
           )}
-
-          {/* ---- Zone C : synthèse — seulement s'il y a un plan à synthétiser ---- */}
-          {!!plan.steps.length && (<>
-          <div className="cp-synthese">
-            <div><span>Investi</span><b className="num">{fmt(plan.invested)} €</b></div>
-            <div><span>Reliquat non investi</span><b className="num">{fmt(plan.left)} €</b></div>
-            <div><span>Écart maximal</span><b className="num">{fmt(ecartMax)} pt</b></div>
-          </div>
-
-          {/* Ordre de PRIORITÉ imposé par la spec : le dépassement passe devant
-              tout, et « c'est fini » ne se dit jamais quand il reste de quoi
-              acheter une part. */}
-          {plan.left < 0 ? (
-            <div className="cp-etat cp-etat--rouge">
-              Les montants payés dépassent l'assiette de <b className="num">{fmt(Math.abs(plan.left))} €</b> :
-              le cash de l'enveloppe passera en négatif.
-            </div>
-          ) : plan.complete && plan.reserve > 0 ? (
-            /* 🔴 Avec des cibles sous 100 %, le reliquat est VOULU — annoncer
-               « assiette entièrement utilisée » serait faux, et laisser le
-               message ambre ferait lire un échec du calcul là où il n'y en a
-               pas. C'est la conséquence obligatoire de la règle « C ». */
-            <div className="cp-etat cp-etat--vert">
-              {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
-              {' '}<b className="num">{fmt(plan.left)} €</b> restent en cash.
-            </div>
-          ) : plan.complete ? (
-            <div className="cp-etat cp-etat--vert">
-              Assiette entièrement utilisée — il reste <b className="num">{fmt(plan.left)} €</b>,
-              moins que la part la moins chère ({fmt(moinsCher)} €).
-            </div>
-          ) : (
-            /* ⚠️ Le reliquat ACHETABLE, pas le reste en cash : avec une réserve
-               volontaire, compter sur `left` promettrait des parts qu'on n'a pas
-               l'intention d'acheter. */
-            <div className="cp-etat cp-etat--ambre">
-              Il reste <b className="num">{fmt(plan.investissable - plan.invested)} €</b> à répartir,
-              de quoi acheter encore
-              {' '}{Math.floor((plan.investissable - plan.invested) / moinsCher)} part
-              {Math.floor((plan.investissable - plan.invested) / moinsCher) > 1 ? 's' : ''}
-              {' '}de {supportName(etfDe(plan.steps[plan.steps.length - 1].id))}.
-            </div>
-          )}
-
-          <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={enregistrer}>
-            {busy ? 'Enregistrement…' : 'Enregistrer le versement et les achats'}
-          </button>
-          </>)}
         </>
       )}
     </Modal>

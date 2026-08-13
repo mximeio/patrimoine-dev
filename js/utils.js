@@ -360,6 +360,11 @@ const REFUS = {
   // ⚠️ Registre IMPERSONNEL comme les autres, et il CONSTATE (toast neutre) —
   // il n'y a rien à corriger, seulement rien à faire.
   aucuneQuantite:     'Aucune part à acheter : rien ne sera enregistré.',
+  // Étape 1 du versement : sans un seul prix, il n'y a aucun plan à proposer.
+  prixObligatoire:    "Le prix d'une part est obligatoire pour au moins un support.",
+  // ⚠️ CONSTAT, pas erreur (toast neutre) : on peut continuer sans ce prix, mais
+  // il faut dire ce que ça change — sa part ira aux autres supports.
+  partRedistribuee:   (noms) => `Sans prix, la part de ${noms} ira aux autres supports.`,
 };
 
 // ⚠️ Durée volontairement plus longue que les 2 500 ms par défaut : le toast paraît

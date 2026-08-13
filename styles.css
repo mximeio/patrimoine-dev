@@ -3728,8 +3728,6 @@ input[type="month"] {
 .cp-assiette { font-size: 12.5px; line-height: 1.6; color: var(--text-muted); margin-top: 8px; }
 .cp-assiette b { color: var(--text); }
 .cp-cibles { font-size: 12.5px; color: var(--warning); margin-top: 6px; font-weight: 600; }
-.cp-cibles--ok { color: var(--success); }
-.cp-exclus { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
 .cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; position: relative; }
 .cp-etape--ajustee { border-color: #c7d2fe; background: var(--accent-soft); }
@@ -3739,9 +3737,6 @@ input[type="month"] {
 .cp-nom { font-size: 14px; }
 .cp-cible, .cp-rang { font-size: 12px; color: var(--text-muted); }
 .cp-rang { margin-left: auto; }
-.cp-champs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.cp-date-prix { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
-.cp-date-prix--vieux { color: var(--warning); font-weight: 600; }
 .cp-achat { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; margin-top: 10px; }
 .cp-qty { display: flex; align-items: center; gap: 8px; }
 .cp-qty .btn-icon { width: 32px; height: 32px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 16px; line-height: 1; }
@@ -3763,8 +3758,65 @@ input[type="month"] {
 .cp-etat--ambre { background: var(--warning-light); color: #b45309; }
 
 @media (max-width: 640px) and (orientation: portrait) {
-  .cp-champs { grid-template-columns: 1fr; }
   .cp-achat { grid-template-columns: 1fr; align-items: stretch; }
   .cp-synthese { grid-template-columns: 1fr; }
 }
-.cp-etape--sansprix { border-style: dashed; background: var(--surface-alt); }
+
+/* --- refonte en DEUX ÉTAPES (13/08/2026, maquette versement-design-3a) --- */
+.cp-fil { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.cp-fil-item { font-size: 12px; font-weight: 600; color: var(--text-subtle);
+  background: none; border: 0; padding: 0; }
+.cp-fil-item--actif { color: var(--accent); }
+button.cp-fil-item { cursor: pointer; }
+.cp-fil-sep { color: var(--text-subtle); font-size: 12px; }
+
+.cp-tableau { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total {
+  display: grid; grid-template-columns: 1fr 132px 132px; gap: 12px; align-items: center;
+  padding: 9px 12px; }
+.cp-tableau-tete { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); background: var(--surface-alt); }
+.cp-tableau-ligne + .cp-tableau-ligne { border-top: 1px solid var(--border); }
+.cp-tableau-total { border-top: 1px solid var(--border-strong); background: var(--surface-alt);
+  font-size: 13px; }
+.cp-lbl { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13.5px; }
+.cp-sanscible { font-size: 11.5px; color: var(--text-muted); font-style: italic; text-align: right; }
+.cp-note { font-size: 12px; color: var(--text-muted); margin: 10px 0 14px; }
+.cp-note-champ { font-size: 11.5px; color: var(--text-subtle); margin-top: 5px; }
+
+.cp-rappel { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; padding: 9px 12px; background: var(--surface-alt);
+  border-radius: var(--radius-md); font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
+.cp-rappel b { color: var(--text); }
+.cp-modifier { background: none; border: 0; padding: 0; font-size: 12.5px; font-weight: 600;
+  color: var(--accent); cursor: pointer; }
+
+.cp-barre-bloc { margin: 14px 0; }
+.cp-barre-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  margin-bottom: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--text-muted); }
+.cp-barre-tete span:last-child { text-transform: none; letter-spacing: 0; font-size: 11.5px;
+  color: var(--text-subtle); }
+.cp-barre { display: flex; height: 22px; border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--surface-hover); position: relative; }
+.cp-barre-part { height: 100%; }
+/* 🔴 Le repère de CIBLE, posé sur la position cumulée — pas au bord du segment.
+   Il tombe DANS le segment quand le support dépasse sa cible, à l'extérieur
+   quand il est en retard : c'est ce décalage qui se lit d'un coup d'œil. */
+.cp-barre-cible { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
+  opacity: .9; transform: translateX(-1px); }
+
+.cp-prix-rappel { font-size: 11.5px; color: var(--text-subtle); }
+/* ⚠️ `min-width: 0` n'est pas décoratif : un enfant de grille vaut `auto` par
+   défaut et refuse de rétrécir, donc le champ déborderait sur petit écran. */
+.cp-cout { min-width: 0; }
+
+.cp-th-court { display: none; }
+@media (max-width: 640px) and (orientation: portrait) {
+  .cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total { grid-template-columns: 1fr 92px 92px; gap: 8px; }
+  .cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total { padding-left: 10px; padding-right: 10px; }
+  .cp-lbl { font-size: 12.5px; }
+  .cp-lbl-sec { display: none; }
+  .cp-th-long { display: none; }
+  .cp-th-court { display: inline; }
+}
