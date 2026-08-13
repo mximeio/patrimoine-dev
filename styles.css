@@ -3798,7 +3798,27 @@ button.cp-seg-item { cursor: pointer; }
 .cp-tableau-total b { font-size: 13px; color: var(--text); }
 .cp-lbl { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 13.5px; }
 .cp-lbl b { font-weight: 600; }
-.cp-lbl-sec { font-size: 12.5px; color: var(--text-muted); min-width: 0; }
+/* 🔴 MÊME COMPORTEMENT QUE LA FENÊTRE DE MISE À JOUR SIMPLE quand une valeur
+   change — écart relevé par l'utilisateur le 13/08/2026 sur deux captures.
+   La cause : les règles de troncature sont portées par `.maj-sup-lbl .maj-sup-court`,
+   un sélecteur qui **n'atteint pas** `.cp-lbl`. Le libellé secondaire n'avait donc
+   ni `ellipsis` ni `nowrap`, et le delta n'avait pas `flex: none`.
+   **Mesuré avant/après** sur PUST (« Amundi PEA Nasdaq-100 UCITS ETF Acc ») : le
+   libellé passait de 1,7 ligne à 0,8, et le delta de 30 px à 15 — les deux se
+   coupaient en deux dès que le delta apparaissait, c'est-à-dire au moment précis
+   où l'on saisit.
+   ⚠️ On tronque le libellé **SECONDAIRE**, jamais le nom principal : c'est
+   exactement l'arbitrage du 11/08/2026 rappelé quinze lignes plus haut — un
+   secondaire tronqué est anodin (le ticker l'accompagne et identifie), un NOM
+   tronqué quand il est seul ampute ce qui dit sur quelle ligne on saisit. Le `<b>`
+   n'est pas touché ici, il continue de rétrécir et de passer à la ligne.
+   ⚠️ `display: none` en portrait reste posé plus bas : les colonnes y font 108/84 px
+   et le secondaire n'y tient pas. */
+.cp-lbl-sec { font-size: 12.5px; color: var(--text-muted); min-width: 0;
+  flex-shrink: 999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Le delta repoussé à DROITE du libellé et insécable — copié de
+   `.maj-sup-lbl .maj-delta`, même motif : identité à gauche, montant à droite. */
+.cp-lbl .maj-delta { margin-left: auto; flex: none; white-space: nowrap; }
 .cp-sanscible { text-align: right; color: var(--text-subtle); }
 .cp-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 4px 0 0; }
 .cp-th-court { display: none; }
