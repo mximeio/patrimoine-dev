@@ -2138,7 +2138,12 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   <input type="text" inputMode="decimal" className="input num cp-versement" value={versement}
                     onFocus={selectionnerAuFocus}
                     onChange={(e) => poserVersement(e.target.value)} />
-                  <div className="cp-carte-detail">0 € répartit le cash seul</div>
+                  {/* ⚠️ « 0 € répartit le cash seul » RETIRÉ le 13/08/2026, et son motif
+                      est bon : c'est le comportement PAR DÉFAUT à l'ouverture — le champ
+                      naît vide, donc le plan répartit déjà le seul cash de l'enveloppe,
+                      et la carte d'assiette à gauche le montre en clair
+                      (« 0 € versés + 0.69 € non investi »). Une phrase qui décrit ce que
+                      l'écran fait déjà sous les yeux ne fait que prendre une ligne. */}
                 </div>
               </div>
 
@@ -2146,7 +2151,14 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                 <div className="cp-barre-bloc">
                   <div className="cp-barre-tete">
                     <span>Répartition après versement</span>
-                    <span>le trait blanc marque la cible</span>
+                    {/* ⚠️ « le trait blanc marque la cible » RETIRÉ le 13/08/2026
+                        (demande de l'utilisateur, desktop et téléphone) : sur un écran
+                        de 390 px cette légende touchait le bord droit.
+                        ⚠️ C'est la légende la MOINS devinable du lot, et il faut le
+                        savoir : contrairement aux couleurs de liseré, qu'on apprend en
+                        agissant (on touche `+`, la couleur apparaît), rien ne fait
+                        découvrir qu'un trait tombé DANS un segment signifie que le
+                        support dépasse sa cible. La remettre coûte une ligne. */}
                   </div>
                   {/* 🔴 Les repères sont posés aux positions de CIBLE cumulées, en
                       absolu — et non au bord des segments. C'est ce qui rend
@@ -2219,7 +2231,16 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         {step.prixDeduit !== null && step.prixDeduit !== undefined
                           && <span className="cp-prix-deduit"> · déduit</span>}
                       </span>
-                      <span className="cp-rang">{rang + 1}/{plan.steps.length}{step.isLast ? ' · tout le reliquat' : ''}</span>
+                      {/* ⚠️ « · tout le reliquat » RETIRÉ le 13/08/2026 (demande de
+                          l'utilisateur, desktop et téléphone). C'était une propriété
+                          CONSTANTE de la dernière ligne, donc une mention qui ne
+                          variait jamais — et elle allongeait l'en-tête au point de le
+                          faire passer à la ligne sur iPhone.
+                          ⚠️ Ce qu'on perd : la règle « le dernier support absorbe ce
+                          qui reste » n'est plus écrite. Son EFFET reste visible — le
+                          « reste » de cette carte tombe sous le prix de la part la
+                          moins chère, et le message d'état le dit en clair. */}
+                      <span className="cp-rang">{rang + 1}/{plan.steps.length}</span>
                     </div>
                     {/* Trois blocs sur une ligne : les parts, le montant payé, et
                         le résultat aligné à droite. */}

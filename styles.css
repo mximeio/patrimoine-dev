@@ -3807,7 +3807,15 @@ button.cp-seg-item { cursor: pointer; }
 .cp-tableau-tete, .cp-tableau-ligne { display: grid; grid-template-columns: 1fr 118px 118px; gap: 12px;
   align-items: center; }
 .cp-tableau-tete { padding-bottom: 4px; }
-.cp-tableau-tete span { font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: right; }
+/* 🔴 ALIGNÉ À GAUCHE, comme `.label` — relevé par l'utilisateur le 13/08/2026 sur
+   ses captures iPhone : « Valeur actuelle (€) » et « Prix d'une part (€) » avaient
+   l'air alignés à droite alors que le CONTENU des champs, lui, s'aligne à gauche.
+   L'étiquette ne surplombait donc pas le début de ce qu'elle nomme.
+   ⚠️ Sa référence est la bonne : cette règle est désormais identique à `.label`
+   (12 px / 500 / `--text-muted`), l'étiquette de champ du reste de l'app — c'est
+   ce que font les réglages du compte courant. Il n'y avait que ce `text-align`
+   pour l'en distinguer. */
+.cp-tableau-tete span { font-size: 12px; font-weight: 500; color: var(--text-muted); }
 .cp-tableau-ligne { padding: 8px 0; }
 .cp-tableau-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   border-top: 1px solid var(--border); padding-top: 9px; margin-top: 2px;
@@ -3877,7 +3885,10 @@ button.cp-seg-item { cursor: pointer; }
   margin-bottom: 7px; }
 .cp-barre-tete span:first-child { font-size: 11px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .08em; color: var(--text-muted); }
-.cp-barre-tete span:last-child { font-size: 11.5px; color: var(--text-subtle); }
+/* ⚠️ Le second `span` a disparu du JSX le 13/08/2026 (la légende « le trait blanc
+   marque la cible »). La règle est retirée avec lui — `span:first-child` porte seul
+   le titre, et le `justify-content: space-between` du parent n'a plus qu'un enfant
+   à placer, donc il l'aligne à gauche comme voulu. */
 .cp-barre { display: flex; height: 22px; border-radius: var(--radius-sm); overflow: hidden;
   background: var(--surface-hover); position: relative; }
 .cp-barre-part { height: 100%; }
@@ -4024,8 +4035,14 @@ button.cp-seg-item { cursor: pointer; }
   .cp-cout { flex: 1; }
   .cp-cout .input { width: 100%; font-size: 16px; }
   .cp-versement { font-size: 16px; }
-  .cp-bilan { margin-left: 0; width: 100%; text-align: left; }
-  .cp-bilan-pct { justify-content: flex-start; }
+  /* 🔴 LE BILAN RESTE ALIGNÉ À DROITE EN PORTRAIT (13/08/2026, demande de
+     l'utilisateur sur capture iPhone). Il passait à gauche parce qu'il occupe
+     alors sa propre ligne sous les contrôles — mais aligné à droite, le
+     pourcentage, l'écart et le « reste » se calent sur le bord droit du champ
+     « Montant payé » juste au-dessus, et la lecture est la même qu'en desktop.
+     ⚠️ `margin-left: 0` et `width: 100%` RESTENT : c'est ce qui lui donne sa
+     ligne entière. Seul l'alignement du texte revient au défaut. */
+  .cp-bilan { margin-left: 0; width: 100%; }
   .cp-synthese { grid-template-columns: 1fr; }
   .cp-corps { gap: 12px; }
 }
