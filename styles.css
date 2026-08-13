@@ -3539,6 +3539,15 @@ input[type="month"] {
    Relevé par l'utilisateur le 09/08/2026 (« 250 et 80 ont l'air écrits en très
    gros »). La couleur suffit à le faire remarquer, le gras n'y ajoutait rien. */
 .maj-delta { font-size: 12px; font-weight: 400; margin-left: 4px; }
+/* 🔴 QUAND LE DELTA PRÉCÈDE LE MONTANT — sous-totaux et total général depuis le
+   13/08/2026, pour que « les deltas soient toujours avant, comme pour les lignes ».
+   Sa marge passe donc à DROITE : gardée à gauche, elle l'aurait écarté du libellé
+   tout en le collant au montant, soit l'inverse de ce qu'il faut.
+   ⚠️ Ne concerne PAS `.maj-env-montant` (la carte repliée), qui empile montant et
+   delta en COLONNE : « avant » y signifierait « au-dessus », ce qui mettrait le petit
+   nombre gris par-dessus le montant en gras. Laissé tel quel à dessein. */
+.maj-sous-total .maj-delta, .maj-total .maj-delta,
+.cp-tableau-total .maj-delta { margin-left: 0; margin-right: 6px; }
 /* Sur une ligne de support, le delta est repoussé à DROITE du libellé — même
    motif que l'en-tête replié : identité à gauche, montant à droite. */
 .maj-sup-lbl .maj-delta { margin-left: auto; flex: none; white-space: nowrap; }
@@ -3848,16 +3857,11 @@ button.cp-seg-item { cursor: pointer; }
 .cp-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 4px 0 0; }
 .cp-th-court { display: none; }
 
-/* Étape 2 — le rappel des valeurs enregistrées */
-.cp-rappel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  background: var(--surface-alt); border-radius: var(--radius-md); padding: 10px 13px;
-  font-size: 12.5px; color: var(--text-muted); }
-.cp-rappel b { color: var(--text); }
-.cp-rappel-ok { display: inline-flex; color: var(--success); flex: none; }
-.cp-modifier { margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 11px; border: 1px solid var(--border); background: var(--surface);
-  border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; color: var(--text);
-  cursor: pointer; }
+/* ⚠️ Étape 2 — le bandeau « valeurs enregistrées » et son bouton « Modifier » ont été
+   RETIRÉS le 13/08/2026 : arriver sur « Répartition » suppose forcément d'avoir validé
+   « Valeurs », donc le bandeau énonçait une condition d'entrée, pas une information.
+   Quatre règles mortes partent avec lui (`.cp-rappel`, `.cp-rappel-ok`, `.cp-modifier`).
+   Le retour se fait par l'onglet « 1 · Valeurs » — cf. le commentaire du JSX. */
 
 /* Les deux cartes : ce dont on dispose, ce qu'on ajoute */
 .cp-duo { display: flex; gap: 12px; }
@@ -3953,7 +3957,13 @@ button.cp-seg-item { cursor: pointer; }
    ⚠️ La règle `.cp-etape--ajustee .cp-cible { background: var(--surface) }` a été
    RETIRÉE le 13/08/2026 avec le fond teinté : elle n'existait que pour contraster
    avec lui. La garder rendrait le badge blanc sur blanc — invisible. */
-.cp-cible { font-size: 11px; font-weight: 600; color: var(--text-muted);
+/* ⚠️ `inline-flex` + `gap` depuis que la pastille porte la MIRE au lieu du mot
+   « cible » : c'est ce qui aligne l'icône sur la ligne de base du chiffre.
+   ⚠️ Le piège du §10 sur `.infotip` — « l'inline-flex avale l'espace qui précède » —
+   ne s'applique PAS ici, et c'est vérifié : le parent `.cp-tete` est un flex avec
+   `gap: 8px`, donc l'espacement ne dépend d'aucun blanc typographique. */
+.cp-cible { display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
   background: var(--surface-hover); border-radius: var(--radius-full); padding: 2px 8px; }
 .cp-prix-rappel { font-size: 11.5px; color: var(--text-subtle); }
 /* « · déduit » — le prix vient du montant payé, pas de la saisie de l'étape 1.
@@ -4043,6 +4053,14 @@ button.cp-seg-item { cursor: pointer; }
      ⚠️ `margin-left: 0` et `width: 100%` RESTENT : c'est ce qui lui donne sa
      ligne entière. Seul l'alignement du texte revient au défaut. */
   .cp-bilan { margin-left: 0; width: 100%; }
-  .cp-synthese { grid-template-columns: 1fr; }
+  /* 🔴 LA SYNTHÈSE EN TROIS LIGNES, PAS EN SIX (13/08/2026, sur capture iPhone :
+     « tu peux peut-être faire mieux »). Empilée en une colonne, chaque mesure prenait
+     DEUX lignes — son libellé au-dessus de sa valeur — soit six lignes pour trois
+     chiffres. Le libellé passe à gauche, la valeur à droite : trois lignes.
+     ⚠️ C'est le motif de `.maj-sous-total`, la ligne de total de l'app — pas une
+     invention pour cet écran. ⚠️ Trois colonnes étaient exclues : « Reliquat non
+     investi » ne tient pas dans 110 px. */
+  .cp-synthese { grid-template-columns: 1fr; gap: 7px; }
+  .cp-synthese > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .cp-corps { gap: 12px; }
 }

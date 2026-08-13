@@ -40,6 +40,25 @@ const PORTFOLIO_PALETTE = ['#4f46e5', '#f59e0b', '#06b6d4', '#ec4899', '#10b981'
 const eurFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 const fmt = (n) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0).replace(',', '.');
 const fmtNoDec = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n || 0).replace(',', '.');
+// 🔴 RÈGLE DU 13/08/2026 — UN POURCENTAGE S'AFFICHE TOUJOURS À DEUX DÉCIMALES.
+// Posée par l'utilisateur après avoir vu « 65.0 % » dans la liste des supports et
+// « 15.00 % » pour la même notion dans la fenêtre de versement. Il y avait TROIS
+// familles d'affichage dans l'app, et c'est l'audit des 17 fichiers qui les a sorties :
+//   • `toFixed(1)` — quatre endroits (dont la page Patrimoine) ;
+//   • `toFixed(2)` — la majorité, déjà conforme ;
+//   • aucun formatage du tout — quatre endroits affichant la valeur STOCKÉE, donc
+//     « 15 % » pour une cible saisie à 15, face au « 15.00 % » du plan.
+// ⇒ Deux voies, selon la nature du nombre, et il ne faut pas les confondre :
+//   • un pourcentage CALCULÉ → `.toFixed(2)`, l'idiome déjà en place pour `gainPct` ;
+//   • un pourcentage STOCKÉ (une cible, une part employeur) → `fmt()`, qui vaut mieux
+//     qu'un `.toFixed` : il absorbe `null`/`undefined` (`n || 0`) là où `.toFixed`
+//     lèverait, et ces champs sont optionnels.
+// ⚠️ UNE SEULE EXCEPTION, et elle est VOULUE : `.cmpd-round` dans `charges.js` garde son
+// `toFixed(0)`. Ce n'est pas un oubli — `.cmpd-exact` / `.cmpd-round` sont deux versions
+// du MÊME chiffre, et le CSS bascule de l'une à l'autre (l'exacte en desktop, l'arrondie
+// sur smartphone, cf. styles.css §589). Les passer tous deux à deux décimales
+// supprimerait la version compacte pensée pour le téléphone.
+// ⚠️ Ne concerne PAS les montants en euros : eux ont déjà `fmt` / `fmtNoDec`.
 const eur = (n) => eurFormatter.format(n || 0).replace(',', '.');
 const r2 = (n) => Math.round(n * 100) / 100;
 // Signe affiché devant un montant de ligne (compte courant + récurrents) :

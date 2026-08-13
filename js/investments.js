@@ -212,7 +212,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           <div className="stat-card-icon tr"><Icon name="coin" size={14} /></div>
           <div className="stat-card-label">Cash non investi</div>
           <div className="stat-card-value num">{fmt(consolidated.cashRemaining)} €</div>
-          <div className="stat-card-sub">{consolidated.totalDeposited > 0 ? (consolidated.cashRemaining / consolidated.totalDeposited * 100).toFixed(1) : 0} % du versé</div>
+          <div className="stat-card-sub">{consolidated.totalDeposited > 0 ? (consolidated.cashRemaining / consolidated.totalDeposited * 100).toFixed(2) : '0.00'} % du versé</div>
         </div>
         <div className="stat-card">
           <div className={`stat-card-icon ${staleWarn ? 'tr-utensils' : 'stale-neutral'}`}><Icon name="calendar" size={14} /></div>
@@ -500,7 +500,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
           <div className="stat-card-icon tr"><Icon name="coin" size={14} /></div>
           <div className="stat-card-label">Cash non investi</div>
           <div className="stat-card-value num">{fmt(stats.cashRemaining)} €</div>
-          <div className="stat-card-sub">{stats.totalDeposited > 0 ? (stats.cashRemaining / stats.totalDeposited * 100).toFixed(1) : 0} % du versé</div>
+          <div className="stat-card-sub">{stats.totalDeposited > 0 ? (stats.cashRemaining / stats.totalDeposited * 100).toFixed(2) : '0.00'} % du versé</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-icon income"><Icon name="arrowDown" size={14} /></div>
@@ -793,7 +793,7 @@ function SupportRow({ position, lastDate }) {
   // v592 : cible de répartition (optionnelle) → icône cible grise + bulle
   // (survol desktop / tap mobile) affichant la cible et l'écart en points.
   const hasTarget = position.target != null && position.target !== '';
-  const targetTip = hasTarget ? `Cible ${position.target} %` : '';
+  const targetTip = hasTarget ? `Cible ${fmt(position.target)} %` : '';
   // v593 : nom complet (nom exact) si la place le permet, nom court sinon —
   // décidé en CSS (media-query) : desktop + paysage = complet ; portrait = court.
   // 🔴 LE CALCUL A ÉTÉ RETIRÉ D'ICI le 11/08/2026 : c'était la troisième copie de
@@ -820,7 +820,17 @@ function SupportRow({ position, lastDate }) {
           )}
         </div>
         <div className="support-sub">
-          {position.weight.toFixed(1)} %
+          {/* DEUX décimales — première application de la règle du 13/08/2026, dont
+              l'énoncé et les motifs vivent dans `utils.js`, près de `fmt`.
+              C'est ici que l'utilisateur l'a relevée : ce poids s'affichait « 65.0 % »
+              alors que la fenêtre « calculer un versement » montre **le même nombre**
+              avec deux décimales et le compare à une cible elle aussi à deux décimales.
+              ⚠️ **CE COMMENTAIRE A ÉTÉ CORRIGÉ UNE HEURE APRÈS AVOIR ÉTÉ ÉCRIT.** Il
+              affirmait que « les autres `toFixed(1)` de l'app RESTENT », au motif qu'ils
+              ne sont comparés à rien — un raisonnement cas par cas que l'utilisateur a
+              écarté au profit d'une règle globale, après un audit des 17 fichiers.
+              Il n'y a plus AUCUN `toFixed(1)` dans le code. */}
+          {position.weight.toFixed(2)} %
           {hasTarget && <>{' '}<InfoTip iconName="target" label={targetTip} /></>}
           {lastDate ? ` · ${fmtDateNumeric(lastDate)}` : ''}
           {isDist && position.dividendsReceived > 0 && (
@@ -878,7 +888,7 @@ function SupportsAllocationCard({ stats, onHide }) {
             <LibelleSupport etf={p} className="" style={{ color: COLORS.muted, fontSize: 12 }} />
             <span style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
               <span className="num" style={{ fontWeight: 600 }}>{fmt(p.current)} €</span>
-              <span className="num" style={{ color: COLORS.muted, fontSize: 12, minWidth: 50, textAlign: 'right' }}>{p.weight.toFixed(1)} %</span>
+              <span className="num" style={{ color: COLORS.muted, fontSize: 12, minWidth: 50, textAlign: 'right' }}>{p.weight.toFixed(2)} %</span>
             </span>
           </div>
         ))}
@@ -1350,6 +1360,17 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     return ((p.data && p.data.etfs) || []).reduce((a, e) => a + (Number(cur[e.id]) || 0), 0);
   };
   const totalGeneral = ordonnees.reduce((a, p) => a + sousTotal(p), 0);
+  // 🔴 LE DELTA DU TOTAL GÉNÉRAL (13/08/2026, demande de l'utilisateur) : les
+  // sous-totaux montraient le leur, le total général non — donc l'écran disait de
+  // combien chaque enveloppe bougeait, mais pas de combien le patrimoine investi
+  // bougeait en tout.
+  // ⚠️ Il s'affiche dès qu'une enveloppe est modifiée, et NON quand le delta est non
+  // nul : c'est la règle déjà en place sur les sous-totaux, et elle porte une
+  // information de plus — deux enveloppes qui bougent de +X et −X donnent « +0.00 € »,
+  // ce qui dit « ça a changé, mais le total n'a pas bougé ». Aligner les deux règles
+  // évite surtout qu'un lecteur cherche pourquoi l'un s'affiche et l'autre pas.
+  const totalGeneralInitial = ordonnees.reduce((a, p) => a + sousTotalInitial(p), 0);
+  const deltaGeneral = r2(totalGeneral - totalGeneralInitial);
 
   const enregistrer = async () => {
     if (busy) return;
@@ -1391,7 +1412,11 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   // permanence. C'est là que le motif se décidera pour de bon.*
   const actions = (
     <div className="maj-actions">
-      <div className="maj-total"><span>Total général</span><b className="num">{fmt(totalGeneral)} €</b></div>
+      {/* ⚠️ Delta AVANT le montant, comme sur les lignes et les sous-totaux depuis le
+          13/08/2026 : « pour que les deltas soient toujours avant » (utilisateur). */}
+      <div className="maj-total"><span>Total général</span>
+        <b className="num">{modifiees.length > 0 && <DeltaMontant valeur={deltaGeneral} />}{fmt(totalGeneral)} €</b>
+      </div>
       {/* Note PERMANENTE — indépendante de l'état du bouton, donc sans mouvement.
           ⚠️ AU-DESSUS du bouton depuis le 11/08/2026 : c'est l'ordre des autres
           modales de l'app (on lit la condition, puis on agit), et le bouton
@@ -1466,7 +1491,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                 {!!etfs.length && (
                   <div className="maj-sous-total">
                     <span>Sous-total</span>
-                    <b className="num">{fmt(sousTotal(p))} €{deltaNode}</b>
+                    <b className="num">{deltaNode}{fmt(sousTotal(p))} €</b>
                   </div>
                 )}
               </div>
@@ -1574,8 +1599,8 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange, showToast }) {
         {!!(data.etfs || []).length && (
           <div className="maj-sous-total">
             <span>Total des supports</span>
-            <b className="num">{fmt(totalSupports)} €
-              {change && <DeltaMontant valeur={deltaSupports} />}
+            <b className="num">
+              {change && <DeltaMontant valeur={deltaSupports} />}{fmt(totalSupports)} €
             </b>
           </div>
         )}
@@ -1719,7 +1744,14 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // fermer à l'étape 2 laisse les valeurs enregistrées (décision du 12/08/2026).
   // C'est `valeursAJour` plus bas qui décide de MONTRER la coche.
   const [valeursValidees, setValeursValidees] = useState(false);
-  const [versement, setVersement] = useState('');
+  // 🔴 LE VERSEMENT NAÎT À « 0 » — proposition de l'utilisateur du 13/08/2026, et elle
+  // répare une incohérence : le champ était **vide et sans placeholder**, alors que la
+  // carte d'assiette juste à côté annonce « 0.00 € versés ». Deux affichages pour un
+  // même état. ⚠️ Le PLAN ne change pas d'un iota : `valeurSaisie('')` et
+  // `valeurSaisie('0')` donnent tous deux 0, c'est donc purement ce qu'on montre.
+  // ⚠️ Et un versement à 0 n'écrit rien : `enregistrer` ne crée l'opération `deposit`
+  // que si le montant est > 0. Aucun risque de déposer un versement nul.
+  const [versement, setVersement] = useState('0');
   const [valeurs, setValeurs] = useState({});
   // 🔴 LES PRIX NE SONT PAS PERSISTÉS — décision du 12/08/2026, et c'est plus sûr
   // que ce que prévoyait la spec §2.6. Elle les mémorisait pour ouvrir sur un plan
@@ -1807,7 +1839,14 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
   const aSaisi = etape === 1
     ? (Object.keys(valeurs).length > 0 || Object.keys(prix).length > 0)
-    : (versement !== '' || Object.keys(qtysForcees).length > 0 || Object.keys(coutsSaisis).length > 0);
+    // 🔴 COMPARAISON NUMÉRIQUE, ET NON `versement !== ''`. Le champ naissant à « 0 »,
+    // la garde d'origine aurait tenu la fenêtre pour MODIFIÉE dès l'arrivée à l'étape 2,
+    // et fermer aurait toujours demandé confirmation — le défaut exact que le §10 décrit
+    // (« sans ça, ouvrir la modale marque modifié d'emblée »).
+    // ⚠️ C'est aussi la règle du 10/08 : un montant ne se compare JAMAIS à `''`, `''` et
+    // `0` doivent compter comme ÉGAUX. Les deux formes valent donc « rien saisi ».
+    : ((parseFloat(versement) || 0) !== 0
+      || Object.keys(qtysForcees).length > 0 || Object.keys(coutsSaisis).length > 0);
 
   // Toucher −/+ RELÂCHE le montant forcé de la ligne : sinon on garderait un
   // montant qui ne correspond plus du tout à la quantité affichée (spec §2.6).
@@ -1871,9 +1910,20 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   //    1 000 € et 2 000 € de versement.
   // ⇒ Un ajustement a été choisi contre une assiette donnée : elle change, il ne
   // veut plus rien dire. On l'annule, et on le DIT.
+  // 🔴 VIDER LE CHAMP Y REMET « 0 » (13/08/2026) : il ne peut plus être vide, donc
+  // l'écran ne montre jamais d'état indéterminé.
+  // ⚠️ ET LE GARDE-FOU QUI VA AVEC, sans quoi la règle ci-dessus se retournerait contre
+  // l'utilisateur : sur un champ affichant « 0 », une touche d'effacement produirait de
+  // nouveau « 0 » — une frappe SANS EFFET — et elle aurait pourtant annulé tous les
+  // ajustements au passage. On sort donc si la valeur propre est inchangée.
+  // ⚠️ Le retour à l'étape 1 puis à l'étape 2 ne passe pas par ici : `versement` est un
+  // état du composant, qui reste monté. Il est donc CONSERVÉ — vérifié au navigateur, et
+  // c'est ce que promet déjà le toast « le versement et les valeurs sont conservés ».
   const poserVersement = (brut) => {
+    const propre = nettoyerMontant(brut) || '0';
+    if (propre === versement) return;
     oublierLesAjustements();
-    setVersement(nettoyerMontant(brut));
+    setVersement(propre);
   };
 
   // ---- Étape 1 → 2 : on ÉCRIT les valeurs, puis on répartit -----------------
@@ -2083,7 +2133,20 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                 })}
                 <div className="cp-tableau-total">
                   <span>Total des supports</span>
-                  <b className="num">{fmt(totalSaisi)} €{deltaValeurs !== 0 && <DeltaMontant valeur={deltaValeurs} />}</b>
+                  {/* ⚠️ Delta AVANT le montant (13/08/2026) — la même règle que les
+                      sous-totaux des deux fenêtres de valorisation : « pour que les
+                      deltas soient toujours avant, comme pour les lignes ».
+                      🔴 Relevé par l'utilisateur, qui a pensé à CET écran alors que sa
+                      demande portait sur les fenêtres de mise à jour : l'étape 1 fait le
+                      même travail, elle devait suivre la même règle.
+                      🔴 ET LA CONDITION EST ALIGNÉE ELLE AUSSI (13/08/2026) : `valeurModifiee`
+                      et non `deltaValeurs !== 0`. Les deux ne diffèrent que dans un cas —
+                      monter un support de +100 et en baisser un autre de −100 — mais c'est
+                      justement là que ça compte : « rien » laisserait croire qu'on n'a rien
+                      touché, alors que « +0.00 € » dit « ça a changé, et le total n'a pas
+                      bougé ». `valeurModifiee` vient de `enveloppesModifiees`, donc c'est
+                      littéralement la même sémantique que les deux autres fenêtres. */}
+                  <b className="num">{valeurModifiee && <DeltaMontant valeur={deltaValeurs} />}{fmt(totalSaisi)} €</b>
                 </div>
               </div>
 
@@ -2109,27 +2172,38 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
           {/* ================= ÉTAPE 2 — la répartition ================= */}
           {etape === 2 && (
             <>
-              <div className="cp-rappel">
-                <span className="cp-rappel-ok"><Icon name="check" size={14} /></span>
-                <span>Valeurs enregistrées · <b className="num">{fmt(totalSaisi)} €</b> sur {etfs.length} support{etfs.length > 1 ? 's' : ''}</span>
-                <button type="button" className="cp-modifier" onClick={revenirAuxValeurs}>
-                  <Icon name="arrowLeft" size={13} />Modifier
-                </button>
-              </div>
-
-              {/* ⚠️ DEUX cartes CÔTE À CÔTE : l'assiette (ce dont on dispose) puis
-                  le versement (ce qu'on ajoute). Cet ordre est celui de la
-                  maquette, et il se lit de gauche à droite comme une addition.
-                  En portrait elles s'empilent. */}
+              {/* 🔴 LE BANDEAU « VALEURS ENREGISTRÉES » A ÉTÉ RETIRÉ le 13/08/2026, et
+                  le motif de l'utilisateur est imparable : « à chaque fois qu'on arrive
+                  sur Répartition, c'est forcément validé sur Valeurs ». Il annonçait donc
+                  une condition d'entrée dans l'étape, pas une information.
+                  ⚠️ En portrait il coûtait DEUX lignes, le bouton « ← Modifier » basculant
+                  sous le texte.
+                  🔴 **CE QU'IL PORTAIT AUSSI, ET QUI A DES REMPLAÇANTS — vérifié avant de
+                  le retirer, sans quoi on enfermerait l'utilisateur à l'étape 2** :
+                   • la coche « valeurs à jour » → la pastille d'étapes la porte déjà sur
+                     « 1 · Valeurs » ;
+                   • le total des supports → la carte « Assiette à répartir » donne ce qui
+                     compte pour décider, et la barre montre la répartition ;
+                   • **le retour** → l'onglet « 1 · Valeurs » appelle `revenirAuxValeurs`
+                     depuis la v1001. C'est le seul chemin restant : si l'onglet se révélait
+                     peu évident à l'usage, c'est ce bandeau qu'il faudrait remettre. */}
+              {/* 🔴 LE VERSEMENT D'ABORD, L'ASSIETTE ENSUITE — ordre inversé le
+                  13/08/2026 sur proposition de l'utilisateur, et il corrige un
+                  raisonnement FAUX que ce commentaire portait lui-même.
+                  Il disait : « l'assiette puis le versement, ça se lit de gauche à droite
+                  comme une addition ». C'est l'inverse — **l'assiette n'est pas un terme de
+                  l'addition, c'est la SOMME** (versement + cash non investi). On lisait donc
+                  le résultat avant sa cause.
+                  ⇒ Le nouvel ordre est celui de la CAUSE puis de l'EFFET : je saisis 890, et
+                  l'app me dit que l'assiette vaut 890,69 € en détaillant sa composition.
+                  ⚠️ **Et c'est en portrait que ça compte le plus** : les cartes s'y empilent,
+                  donc on rencontrait « Assiette 0,69 € » AVANT d'avoir rien saisi — un
+                  chiffre qui ne veut encore rien dire. Maintenant on tape, puis on voit la
+                  conséquence juste en dessous.
+                  ⚠️ Aucun CSS à changer : les deux cartes sont en `flex: 1`, donc inverser
+                  l'ordre du DOM suffit — à gauche en desktop, en premier en portrait.
+                  ⚠️ Écart assumé avec la maquette, qui pose l'assiette en premier. */}
               <div className="cp-duo">
-                <div className="cp-carte">
-                  <div className="cp-carte-lbl">Assiette à répartir</div>
-                  <div className="cp-carte-val num">{fmt(plan.investissable)} €</div>
-                  <div className="cp-carte-detail">
-                    {fmt(valeurSaisie(versement) || 0)} € versés + {fmt(stats.cashRemaining)} € non investi dans l'enveloppe
-                    {plan.reserve > 0 && <> · <b className="num">{fmt(plan.reserve)} €</b> gardés en cash</>}
-                  </div>
-                </div>
                 {/* ⚠️ Plus de `cp-carte--saisie` : la carte de saisie ne se teinte
                     plus (13/08/2026). Le champ blanc bordé suffit à dire qu'on y
                     tape — cf. le commentaire de `styles.css`. */}
@@ -2138,12 +2212,18 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   <input type="text" inputMode="decimal" className="input num cp-versement" value={versement}
                     onFocus={selectionnerAuFocus}
                     onChange={(e) => poserVersement(e.target.value)} />
-                  {/* ⚠️ « 0 € répartit le cash seul » RETIRÉ le 13/08/2026, et son motif
-                      est bon : c'est le comportement PAR DÉFAUT à l'ouverture — le champ
-                      naît vide, donc le plan répartit déjà le seul cash de l'enveloppe,
-                      et la carte d'assiette à gauche le montre en clair
-                      (« 0 € versés + 0.69 € non investi »). Une phrase qui décrit ce que
-                      l'écran fait déjà sous les yeux ne fait que prendre une ligne. */}
+                  {/* ⚠️ « 0 € répartit le cash seul » RETIRÉ le 13/08/2026 : c'est le
+                      comportement PAR DÉFAUT à l'ouverture — le champ naît vide, donc le
+                      plan répartit déjà le seul cash, et la carte d'assiette le montre en
+                      clair juste à côté (« 0 € versés + 0.69 € non investi »). */}
+                </div>
+                <div className="cp-carte">
+                  <div className="cp-carte-lbl">Assiette à répartir</div>
+                  <div className="cp-carte-val num">{fmt(plan.investissable)} €</div>
+                  <div className="cp-carte-detail">
+                    {fmt(valeurSaisie(versement) || 0)} € versés + {fmt(stats.cashRemaining)} € non investi dans l'enveloppe
+                    {plan.reserve > 0 && <> · <b className="num">{fmt(plan.reserve)} €</b> gardés en cash</>}
+                  </div>
                 </div>
               </div>
 
@@ -2211,7 +2291,17 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     <div className="cp-tete">
                       <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
                       <b className="cp-nom">{supportName(e)}</b>
-                      <span className="cp-cible">cible {fmt(step.target)} %</span>
+                      {/* 🔴 LA MIRE REMPLACE LE MOT « cible » (13/08/2026, proposition de l'utilisateur
+                          pour gagner de la place sur iPhone — appliqué aux DEUX plateformes).
+                          ⚠️ Ce qui a décidé le desktop : l'icône `target` est **déjà** le
+                          marqueur de cible de ce module — `SupportRow` la porte sur chaque
+                          support qui en a une. Garder le mot ici et l'icône là aurait fait
+                          deux représentations d'une même notion dans le même écran.
+                          ⚠️ Le `title` garde le mot accessible au survol : l'icône est
+                          parlante, mais elle n'est pas du texte. */}
+                      <span className="cp-cible" title="Cible de répartition">
+                        <Icon name="target" size={12} />{fmt(step.target)} %
+                      </span>
                       {/* 🔴 LE PRIX AFFICHÉ EST LE PRIX DÉDUIT dès qu'un montant est
                           forcé — « si je modifie le montant final, c'est que je viens
                           d'acheter, donc le prix se déduit : montant / quantité »
