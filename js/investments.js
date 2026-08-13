@@ -1846,6 +1846,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   };
 
   const rienASaisir = !etfs.length;
+  const etape1Faite = etape === 2;
 
   return (
     <Modal title="Calculer un versement" size="lg" dirty={aSaisi} onClose={onClose}>
@@ -1854,14 +1855,24 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
           hint="Ajoute un support et fixe sa cible dans les Réglages de l'enveloppe." />
       )}
 
+      {/* ⚠️ Intervalle CONSTANT entre les blocs (`.cp-corps`) : c'est le rythme
+          de la maquette. Sans lui, chaque bloc gère sa marge et elles divergent. */}
       {!rienASaisir && (
-        <>
-          {/* ---- le fil des deux étapes ---- */}
-          <div className="cp-fil">
-            <button type="button" className={`cp-fil-item${etape === 1 ? ' cp-fil-item--actif' : ''}`}
-              onClick={() => (etape === 2 ? revenirAuxValeurs() : null)}>1 · Valeurs</button>
-            <span className="cp-fil-sep">›</span>
-            <span className={`cp-fil-item${etape === 2 ? ' cp-fil-item--actif' : ''}`}>2 · Répartition</span>
+        <div className="cp-corps">
+          {/* ---- le sélecteur d'étapes ----
+              Pastille segmentée, comme la maquette : deux moitiés dans un rail
+              gris, l'active en sombre. ⚠️ En portrait elle prend TOUTE la largeur
+              et les deux moitiés sont égales — c'est ce que montre la version
+              iPhone, et un rail qui n'occupe que la moitié de l'écran y paraît
+              flotter. Une coche marque l'étape franchie. */}
+          <div className="cp-onglets">
+            <div className="cp-seg">
+              <button type="button" className={`cp-seg-item${etape === 1 ? ' cp-seg-item--actif' : ''}`}
+                onClick={() => (etape === 2 ? revenirAuxValeurs() : null)}>
+                {etape1Faite && <Icon name="check" size={13} />}1 · Valeurs
+              </button>
+              <span className={`cp-seg-item${etape === 2 ? ' cp-seg-item--actif' : ''}`}>2 · Répartition</span>
+            </div>
           </div>
 
           {/* ================= ÉTAPE 1 — les valeurs et les prix ================= */}
@@ -1873,45 +1884,56 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   {' '}sera investie, le reste demeure en cash.
                 </div>
               )}
+              {/* ⚠️ Ni cadre ni séparateurs de lignes : la maquette pose un simple
+                  jeu de colonnes, et le seul filet est celui du total. */}
               <div className="cp-tableau">
-                {/* ⚠️ En-têtes longs sur desktop, courts en portrait — la maquette
-                    mobile n'affiche que « Valeur » et « Prix », et la colonne des
-                    noms n'a pas la place pour davantage. Même idiome que les noms
-                    de support : les deux textes sont rendus, la CSS choisit. */}
                 <div className="cp-tableau-tete">
                   <span />
                   <span><span className="cp-th-long">Valeur actuelle (€)</span><span className="cp-th-court">Valeur</span></span>
                   <span><span className="cp-th-long">Prix d'une part (€)</span><span className="cp-th-court">Prix</span></span>
                 </div>
-                {etfs.map((e) => (
-                  <div key={e.id} className="cp-tableau-ligne">
-                    <span className="cp-lbl">
-                      <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
-                      <b>{supportName(e)}</b>
-                      {/* Le libellé secondaire disparaît en portrait : la colonne
-                          n'y fait plus que 96 px, le ticker suffit à identifier. */}
-                      <span className="cp-lbl-sec"><LibelleSupport etf={e} prefixe=" — " /></span>
-                    </span>
-                    <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
-                      onFocus={selectionnerAuFocus}
-                      onChange={(ev) => setValeurs((v) => ({ ...v, [e.id]: nettoyerMontant(ev.target.value) }))} />
-                    {aUneCible(e) ? (
-                      <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                {etfs.map((e) => {
+                  const saisie = valeurSaisie(valeurAffichee(e));
+                  const stockee = Number((data.currentValues || {})[e.id]) || 0;
+                  const delta = saisie === null ? 0 : r2(saisie - stockee);
+                  return (
+                    <div key={e.id} className="cp-tableau-ligne">
+                      <span className="cp-lbl">
+                        <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
+                        <b>{supportName(e)}</b>
+                        <span className="cp-lbl-sec"><LibelleSupport etf={e} prefixe=" — " /></span>
+                        {/* Le delta se lit SUR LA LIGNE du support, pas seulement
+                            au total : c'est là qu'on vient de taper. */}
+                        {delta !== 0 && <DeltaMontant valeur={delta} />}
+                      </span>
+                      <input type="text" inputMode="decimal" className="input num" value={valeurAffichee(e)}
                         onFocus={selectionnerAuFocus}
-                        onChange={(ev) => setPrix((p) => ({ ...p, [e.id]: nettoyerMontant(ev.target.value) }))} />
-                    ) : (
-                      // ⚠️ Sans cible, le prix n'est PAS demandé : il ne servirait
-                      // à rien, et un champ inutile se remplit quand même.
-                      <span className="cp-sanscible">Aucune cible fixée · Réglages</span>
-                    )}
-                  </div>
-                ))}
+                        onChange={(ev) => setValeurs((v) => ({ ...v, [e.id]: nettoyerMontant(ev.target.value) }))} />
+                      {aUneCible(e) ? (
+                        <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                          onFocus={selectionnerAuFocus}
+                          onChange={(ev) => setPrix((p) => ({ ...p, [e.id]: nettoyerMontant(ev.target.value) }))} />
+                      ) : (
+                        <span className="cp-sanscible">—</span>
+                      )}
+                    </div>
+                  );
+                })}
                 <div className="cp-tableau-total">
                   <span>Total des supports</span>
-                  <b className="num">{fmt(totalSaisi)} €</b>
-                  {deltaValeurs !== 0 ? <DeltaMontant valeur={deltaValeurs} /> : <span />}
+                  <b className="num">{fmt(totalSaisi)} €{deltaValeurs !== 0 && <DeltaMontant valeur={deltaValeurs} />}</b>
                 </div>
               </div>
+
+              {/* Les supports sans cible : hors calcul, leur prix n'est pas demandé. */}
+              {etfs.filter((e) => !aUneCible(e)).map((e) => (
+                <div key={e.id} className="cp-exclu-ligne">
+                  <span className="cp-pastille" style={{ background: COLORS.subtle }} />
+                  <b>{supportName(e)}</b>
+                  <span>Aucune cible fixée · Réglages — hors calcul, son prix n'est pas demandé</span>
+                </div>
+              ))}
+
               <div className="cp-note">
                 Le prix d'une part est demandé pour chaque support qui porte une cible non nulle.
                 La valorisation et sa date ne sont enregistrées que si une valeur a changé.
@@ -1926,37 +1948,45 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
           {etape === 2 && (
             <>
               <div className="cp-rappel">
+                <span className="cp-rappel-ok"><Icon name="check" size={14} /></span>
                 <span>Valeurs enregistrées · <b className="num">{fmt(totalSaisi)} €</b> sur {etfs.length} support{etfs.length > 1 ? 's' : ''}</span>
-                <button type="button" className="cp-modifier" onClick={revenirAuxValeurs}>Modifier</button>
+                <button type="button" className="cp-modifier" onClick={revenirAuxValeurs}>
+                  <Icon name="arrowLeft" size={13} />Modifier
+                </button>
               </div>
 
-              <div className="cp-zone">
-                <label className="label">Versement prévu (€)</label>
-                <input type="text" inputMode="decimal" className="input num" value={versement}
-                  onFocus={selectionnerAuFocus}
-                  onChange={(e) => setVersement(nettoyerMontant(e.target.value))} />
-                <div className="cp-note-champ">0 € répartit le cash seul</div>
-                <div className="cp-assiette">
-                  Assiette : <b className="num">{fmt(plan.available)} €</b>
-                  {' '}({fmt(valeurSaisie(versement) || 0)} € versés + {fmt(stats.cashRemaining)} € non investi)
-                  {plan.reserve > 0 && <>, dont <b className="num">{fmt(plan.investissable)} €</b> à répartir</>}
+              {/* ⚠️ DEUX cartes CÔTE À CÔTE : l'assiette (ce dont on dispose) puis
+                  le versement (ce qu'on ajoute). Cet ordre est celui de la
+                  maquette, et il se lit de gauche à droite comme une addition.
+                  En portrait elles s'empilent. */}
+              <div className="cp-duo">
+                <div className="cp-carte">
+                  <div className="cp-carte-lbl">Assiette à répartir</div>
+                  <div className="cp-carte-val num">{fmt(plan.investissable)} €</div>
+                  <div className="cp-carte-detail">
+                    {fmt(valeurSaisie(versement) || 0)} € versés + {fmt(stats.cashRemaining)} € non investi dans l'enveloppe
+                    {plan.reserve > 0 && <> · <b className="num">{fmt(plan.reserve)} €</b> gardés en cash</>}
+                  </div>
+                </div>
+                <div className="cp-carte cp-carte--saisie">
+                  <label className="cp-carte-lbl">Versement prévu (€)</label>
+                  <input type="text" inputMode="decimal" className="input num cp-versement" value={versement}
+                    onFocus={selectionnerAuFocus}
+                    onChange={(e) => setVersement(nettoyerMontant(e.target.value))} />
+                  <div className="cp-carte-detail">0 € répartit le cash seul</div>
                 </div>
               </div>
 
-              {/* ---- la barre de répartition ----
-                  🔴 LES REPÈRES BLANCS MARQUENT LES CIBLES, pas les bornes des
-                  segments. La maquette dit « le trait blanc marque la cible » mais
-                  son balisage les pose au bord de chaque segment, c'est-à-dire sur
-                  la valeur RÉELLE — la légende y promet donc autre chose que ce
-                  qu'elle montre. Aux positions de cible cumulées, l'écart devient
-                  visible : le repère tombe à l'intérieur du segment quand on
-                  dépasse, à l'extérieur quand on est en retard. */}
               {!!plan.steps.length && (
                 <div className="cp-barre-bloc">
                   <div className="cp-barre-tete">
                     <span>Répartition après versement</span>
                     <span>le trait blanc marque la cible</span>
                   </div>
+                  {/* 🔴 Les repères sont posés aux positions de CIBLE cumulées, en
+                      absolu — et non au bord des segments. C'est ce qui rend
+                      l'écart lisible : le trait tombe DANS le segment quand le
+                      support dépasse, à l'extérieur quand il est en retard. */}
                   <div className="cp-barre">
                     {plan.steps.map((s) => (
                       <div key={s.id} className="cp-barre-part"
@@ -1971,11 +2001,9 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                 </div>
               )}
 
-              {/* ---- une carte par support ----
-                  🔴 UNE SEULE LISTE, CLÉS STABLES. Les supports « sans prix »
-                  vivaient dans une seconde liste : taper le premier chiffre d'un
-                  prix les faisait CHANGER DE PARENT, React démontait l'`input` en
-                  cours de saisie et le focus mourait avec le nœud. Ne pas re-scinder. */}
+              {/* 🔴 UNE SEULE LISTE, CLÉS STABLES — deux listes faisaient CHANGER
+                  DE PARENT un support dès qu'on tapait son prix, React démontait
+                  l'`input` en cours de saisie et le focus mourait avec le nœud. */}
               {[...plan.steps.map((s, i) => ({ id: s.id, step: s, rang: i })),
                 ...plan.excluded.map((x) => ({ id: x.id, reason: x.reason }))].map(({ id, step, rang, reason }) => {
                 const e = etfDe(id);
@@ -1988,8 +2016,9 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     </div>
                   );
                 }
+                const ajustee = step.qtyAdjusted || step.costForced;
                 return (
-                  <div key={id} className={`cp-etape${(step.qtyAdjusted || step.costForced) ? ' cp-etape--ajustee' : ''}`}>
+                  <div key={id} className={`cp-etape${ajustee ? ' cp-etape--ajustee' : ''}`}>
                     <div className="cp-tete">
                       <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
                       <b className="cp-nom">{supportName(e)}</b>
@@ -1997,13 +2026,18 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       <span className="cp-prix-rappel">{fmt(step.price)} € la part</span>
                       <span className="cp-rang">{rang + 1}/{plan.steps.length}{step.isLast ? ' · tout le reliquat' : ''}</span>
                     </div>
+                    {/* Trois blocs sur une ligne : les parts, le montant payé, et
+                        le résultat aligné à droite. */}
                     <div className="cp-achat">
-                      <div className="cp-qty">
-                        <button type="button" className="btn-icon" aria-label="Une part de moins"
-                          onClick={() => poserQty(id, step.qty - 1)}>−</button>
-                        <span className="cp-parts num">{step.qty} part{step.qty > 1 ? 's' : ''}</span>
-                        <button type="button" className="btn-icon" aria-label="Une part de plus"
-                          onClick={() => poserQty(id, step.qty + 1)}>+</button>
+                      <div>
+                        <label className="label">Parts</label>
+                        <div className="cp-stepper">
+                          <button type="button" aria-label="Une part de moins"
+                            onClick={() => poserQty(id, step.qty - 1)}>−</button>
+                          <span className="num">{step.qty}</span>
+                          <button type="button" aria-label="Une part de plus"
+                            onClick={() => poserQty(id, step.qty + 1)}>+</button>
+                        </div>
                       </div>
                       <div className="cp-cout">
                         <label className="label">Montant payé (€)</label>
@@ -2012,12 +2046,21 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                           onFocus={selectionnerAuFocus}
                           onChange={(ev) => poserCost(id, ev.target.value)} />
                       </div>
+                      <div className="cp-bilan">
+                        <div className="cp-bilan-pct num">
+                          {fmt(step.pctAfter)} %
+                          {/* ⚠️ VERT au-dessus de la cible, AMBRE en dessous — ce
+                              n'est PAS la convention des montants signés de l'app
+                              (vert = hausse) : ici on ne juge pas une variation,
+                              on situe par rapport à une cible. */}
+                          <span className={`cp-ecart${step.gapPts < 0 ? ' cp-ecart--sous' : ''}`}>
+                            {step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt
+                          </span>
+                        </div>
+                        <div className="cp-bilan-reste">reste {fmt(step.leftAfter)} €</div>
+                      </div>
                     </div>
-                    <div className="cp-resultat">
-                      → {fmt(step.pctAfter)} % ({step.gapPts >= 0 ? '+' : '−'}{fmt(Math.abs(step.gapPts))} pt)
-                      · reste <b className="num">{fmt(step.leftAfter)} €</b>
-                    </div>
-                    {(step.qtyAdjusted || step.costForced) && (
+                    {ajustee && (
                       <div className="cp-detail">
                         {step.qtyAdjusted ? `quantité ajustée, proposition ${step.suggested}` : ''}
                         {step.qtyAdjusted && step.costForced ? ' · ' : ''}
@@ -2045,15 +2088,12 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     <div><span>Écart maximal</span><b className="num">{fmt(ecartMax)} pt</b></div>
                   </div>
 
-                  {/* Ordre de PRIORITÉ : le dépassement passe devant tout, et
-                      « c'est fini » ne se dit jamais quand il reste de quoi acheter. */}
                   {plan.left < 0 ? (
                     <div className="cp-etat cp-etat--rouge">
                       Les montants payés dépassent l'assiette de <b className="num">{fmt(Math.abs(plan.left))} €</b> :
                       le cash de l'enveloppe passera en négatif.
                     </div>
                   ) : plan.complete && plan.reserve > 0 ? (
-                    /* 🔴 Avec des cibles sous 100 %, le reliquat est VOULU. */
                     <div className="cp-etat cp-etat--vert">
                       {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
                       {' '}<b className="num">{fmt(plan.left)} €</b> restent en cash.
@@ -2080,7 +2120,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
               )}
             </>
           )}
-        </>
+        </div>
       )}
     </Modal>
   );

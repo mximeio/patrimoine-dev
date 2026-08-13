@@ -3724,9 +3724,6 @@ input[type="month"] {
    ⚠️ Les noms de variables CSS ne sont PAS ceux du JS : ici c'est
    --text-muted / --text-subtle, jamais --muted (§10, DEV v986).
    ============================================================ */
-.cp-zone { padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); margin-bottom: 14px; }
-.cp-assiette { font-size: 12.5px; line-height: 1.6; color: var(--text-muted); margin-top: 8px; }
-.cp-assiette b { color: var(--text); }
 .cp-cibles { font-size: 12.5px; color: var(--warning); margin-top: 6px; font-weight: 600; }
 
 .cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; position: relative; }
@@ -3738,10 +3735,6 @@ input[type="month"] {
 .cp-cible, .cp-rang { font-size: 12px; color: var(--text-muted); }
 .cp-rang { margin-left: auto; }
 .cp-achat { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; margin-top: 10px; }
-.cp-qty { display: flex; align-items: center; gap: 8px; }
-.cp-qty .btn-icon { width: 32px; height: 32px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 16px; line-height: 1; }
-.cp-parts { font-size: 13.5px; font-weight: 600; min-width: 68px; text-align: center; }
-.cp-resultat { font-size: 12.5px; color: var(--text-light); margin-top: 10px; }
 .cp-detail { font-size: 11.5px; color: var(--text-subtle); margin-top: 3px; }
 
 .cp-exclu-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 10px;
@@ -3762,61 +3755,160 @@ input[type="month"] {
   .cp-synthese { grid-template-columns: 1fr; }
 }
 
-/* --- refonte en DEUX ÉTAPES (13/08/2026, maquette versement-design-3a) --- */
-.cp-fil { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.cp-fil-item { font-size: 12px; font-weight: 600; color: var(--text-subtle);
-  background: none; border: 0; padding: 0; }
-.cp-fil-item--actif { color: var(--accent); }
-button.cp-fil-item { cursor: pointer; }
-.cp-fil-sep { color: var(--text-subtle); font-size: 12px; }
+/* --- refonte en DEUX ÉTAPES (13/08/2026, maquette versement-design-3a) ---
+   ⚠️ Les dimensions viennent de la maquette et ne sont pas approximatives :
+   colonnes 118 px (84/108 en portrait), stepper 132×38 à boutons de 42, champ
+   du montant à 148 px, barre de 22 px. Les retoucher au jugé, c'est refaire le
+   travail que la maquette a servi à éviter. */
+.cp-onglets { padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.cp-seg { display: inline-flex; gap: 3px; background: var(--surface-hover); border-radius: 11px; padding: 3px; }
+.cp-seg-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 0; background: none; border-radius: 8px; padding: 7px 13px;
+  font-size: 13px; font-weight: 500; color: var(--text-muted); }
+button.cp-seg-item { cursor: pointer; }
+.cp-seg-item--actif { background: var(--text); color: #fff; }
 
-.cp-tableau { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-.cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total {
-  display: grid; grid-template-columns: 1fr 132px 132px; gap: 12px; align-items: center;
-  padding: 9px 12px; }
-.cp-tableau-tete { font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-  color: var(--text-muted); background: var(--surface-alt); }
-.cp-tableau-ligne + .cp-tableau-ligne { border-top: 1px solid var(--border); }
-.cp-tableau-total { border-top: 1px solid var(--border-strong); background: var(--surface-alt);
-  font-size: 13px; }
-.cp-lbl { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13.5px; }
-.cp-sanscible { font-size: 11.5px; color: var(--text-muted); font-style: italic; text-align: right; }
-.cp-note { font-size: 12px; color: var(--text-muted); margin: 10px 0 14px; }
-.cp-note-champ { font-size: 11.5px; color: var(--text-subtle); margin-top: 5px; }
+/* Tableau de l'étape 1 : des colonnes, pas un cadre. Le seul filet est celui
+   du total. */
+/* Conteneur du tableau : il n'a PAS de style propre, mais il doit exister —
+   sans lui, ses lignes seraient des enfants directs de `.cp-corps` et
+   hériteraient de son intervalle de 16 px. */
+.cp-tableau { display: block; }
+.cp-tableau-tete, .cp-tableau-ligne { display: grid; grid-template-columns: 1fr 118px 118px; gap: 12px;
+  align-items: center; }
+.cp-tableau-tete { padding-bottom: 4px; }
+.cp-tableau-tete span { font-size: 12px; font-weight: 500; color: var(--text-muted); text-align: right; }
+.cp-tableau-ligne { padding: 8px 0; }
+.cp-tableau-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  border-top: 1px solid var(--border); padding-top: 9px; margin-top: 2px;
+  font-size: 12px; color: var(--text-muted); }
+.cp-tableau-total b { font-size: 13px; color: var(--text); }
+.cp-lbl { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 13.5px; }
+.cp-lbl b { font-weight: 600; }
+.cp-lbl-sec { font-size: 12.5px; color: var(--text-muted); min-width: 0; }
+.cp-sanscible { text-align: right; color: var(--text-subtle); }
+.cp-note { font-size: 12px; line-height: 1.45; color: var(--text-muted); margin: 4px 0 0; }
+.cp-th-court { display: none; }
 
-.cp-rappel { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  flex-wrap: wrap; padding: 9px 12px; background: var(--surface-alt);
-  border-radius: var(--radius-md); font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
+/* Étape 2 — le rappel des valeurs enregistrées */
+.cp-rappel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface-alt); border-radius: var(--radius-md); padding: 10px 13px;
+  font-size: 12.5px; color: var(--text-muted); }
 .cp-rappel b { color: var(--text); }
-.cp-modifier { background: none; border: 0; padding: 0; font-size: 12.5px; font-weight: 600;
-  color: var(--accent); cursor: pointer; }
+.cp-rappel-ok { display: inline-flex; color: var(--success); flex: none; }
+.cp-modifier { margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border: 1px solid var(--border); background: var(--surface);
+  border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; color: var(--text);
+  cursor: pointer; }
 
-.cp-barre-bloc { margin: 14px 0; }
+/* Les deux cartes : ce dont on dispose, ce qu'on ajoute */
+.cp-duo { display: flex; gap: 12px; }
+.cp-carte { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 15px; }
+.cp-carte--saisie { background: var(--surface-alt); }
+.cp-carte-lbl { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
+.cp-carte-val { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.cp-carte-detail { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+.cp-carte-detail b { color: var(--text); }
+.cp-versement { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+
+/* La barre de répartition */
+.cp-barre-bloc { margin-top: 2px; }
 .cp-barre-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  margin-bottom: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--text-muted); }
-.cp-barre-tete span:last-child { text-transform: none; letter-spacing: 0; font-size: 11.5px;
-  color: var(--text-subtle); }
+  margin-bottom: 7px; }
+.cp-barre-tete span:first-child { font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-muted); }
+.cp-barre-tete span:last-child { font-size: 11.5px; color: var(--text-subtle); }
 .cp-barre { display: flex; height: 22px; border-radius: var(--radius-sm); overflow: hidden;
   background: var(--surface-hover); position: relative; }
 .cp-barre-part { height: 100%; }
-/* 🔴 Le repère de CIBLE, posé sur la position cumulée — pas au bord du segment.
-   Il tombe DANS le segment quand le support dépasse sa cible, à l'extérieur
-   quand il est en retard : c'est ce décalage qui se lit d'un coup d'œil. */
+/* 🔴 Le repère de CIBLE, posé sur la position cumulée — pas au bord du segment. */
 .cp-barre-cible { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
   opacity: .9; transform: translateX(-1px); }
 
+/* Cartes de support */
+.cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px;
+  position: relative; }
+.cp-etape--ajustee { border-color: #c7d2fe; background: var(--accent-soft); padding-left: 17px; }
+.cp-etape--ajustee::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
+  width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+.cp-tete { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cp-pastille { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.cp-nom { font-size: 14px; }
+/* Le badge de cible contraste avec le fond de SA carte : gris sur carte
+   blanche, blanc sur carte ajustée. */
+.cp-cible { font-size: 11px; font-weight: 600; color: var(--text-muted);
+  background: var(--surface-hover); border-radius: var(--radius-full); padding: 2px 8px; }
+.cp-etape--ajustee .cp-cible { background: var(--surface); }
 .cp-prix-rappel { font-size: 11.5px; color: var(--text-subtle); }
-/* ⚠️ `min-width: 0` n'est pas décoratif : un enfant de grille vaut `auto` par
-   défaut et refuse de rétrécir, donc le champ déborderait sur petit écran. */
-.cp-cout { min-width: 0; }
+.cp-rang { margin-left: auto; font-size: 11.5px; color: var(--text-subtle); }
 
-.cp-th-court { display: none; }
+.cp-achat { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.cp-achat .label { font-size: 12px; font-weight: 500; margin-bottom: 5px; }
+.cp-stepper { display: flex; align-items: center; border: 1px solid var(--border);
+  background: var(--surface); border-radius: var(--radius-sm); width: 132px; height: 38px;
+  overflow: hidden; }
+.cp-stepper button { width: 42px; height: 100%; border: 0; background: var(--surface-alt);
+  font-size: 16px; line-height: 1; color: var(--text); cursor: pointer; }
+.cp-stepper button:first-child { border-right: 1px solid var(--border); }
+.cp-stepper button:last-child { border-left: 1px solid var(--border); }
+.cp-stepper span { flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; }
+.cp-cout { min-width: 0; }
+.cp-cout .input { width: 148px; }
+.cp-bilan { margin-left: auto; text-align: right; }
+.cp-bilan-pct { font-size: 14px; font-weight: 600; display: flex; align-items: center;
+  justify-content: flex-end; gap: 7px; }
+.cp-ecart { font-weight: 500; font-size: 11px; color: #047857; background: var(--success-light);
+  border-radius: var(--radius-full); padding: 2px 7px; }
+.cp-ecart--sous { color: #b45309; background: var(--warning-light); }
+.cp-bilan-reste { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.cp-detail { font-size: 11.5px; color: var(--text-subtle); margin-top: 8px; }
+
+.cp-exclu-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--surface-alt); border-radius: var(--radius-md); padding: 10px 11px;
+  font-size: 12px; color: var(--text-muted); }
+.cp-cibles { font-size: 12.5px; color: var(--warning); font-weight: 600; }
+.cp-reset { margin: 2px 0; }
+.cp-reset-note { font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 5px; }
+.cp-synthese { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px;
+  background: var(--surface-alt); border-radius: var(--radius-md); }
+.cp-synthese span { display: block; font-size: 11.5px; color: var(--text-muted); }
+.cp-synthese b { font-size: 14px; }
+.cp-etat { font-size: 12.5px; padding: 10px 12px; border-radius: var(--radius-md); }
+.cp-etat--rouge { background: var(--danger-light); color: #b91c1c; }
+.cp-etat--vert { background: var(--success-light); color: #047857; }
+.cp-etat--ambre { background: var(--warning-light); color: #b45309; }
+
+/* ⚠️ La fenêtre empile ses blocs avec un intervalle constant — c'est ce qui
+   donne son rythme à la maquette. Sans ça, chaque bloc doit gérer sa marge et
+   elles finissent par diverger. */
+.cp-corps { display: flex; flex-direction: column; gap: 16px; }
+
 @media (max-width: 640px) and (orientation: portrait) {
-  .cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total { grid-template-columns: 1fr 92px 92px; gap: 8px; }
-  .cp-tableau-tete, .cp-tableau-ligne, .cp-tableau-total { padding-left: 10px; padding-right: 10px; }
-  .cp-lbl { font-size: 12.5px; }
+  /* Le rail prend toute la largeur, deux moitiés égales (maquette iPhone). */
+  .cp-seg { display: flex; }
+  .cp-seg-item { flex: 1; padding: 6px 0; }
+  .cp-tableau-tete, .cp-tableau-ligne { grid-template-columns: 1fr 108px 84px; gap: 8px; }
+  .cp-lbl { gap: 6px; }
   .cp-lbl-sec { display: none; }
   .cp-th-long { display: none; }
   .cp-th-court { display: inline; }
+  /* 🔴 16 px MINIMUM sur les champs : en dessous, iOS Safari zoome au focus
+     (§10). Et 44 px de haut sur les boutons −/+, la réserve d'Apple. */
+  .cp-tableau-ligne .input { font-size: 16px; padding: 9px 8px; }
+  .cp-duo { flex-direction: column; }
+  .cp-achat { gap: 10px; }
+  /* 🔴 46 px de CADRE pour 44 px de BOUTON : la bordure de 1 px en haut et en
+     bas est prise sur la hauteur intérieure. Mesuré — à 44 px de cadre, la
+     cible tactile ne fait que 42 px, sous la réserve d'Apple que le brief cite. */
+  .cp-stepper { height: 46px; width: 140px; }
+  .cp-stepper button { width: 46px; font-size: 18px; }
+  .cp-cout { flex: 1; }
+  .cp-cout .input { width: 100%; font-size: 16px; }
+  .cp-versement { font-size: 16px; }
+  .cp-bilan { margin-left: 0; width: 100%; text-align: left; }
+  .cp-bilan-pct { justify-content: flex-start; }
+  .cp-synthese { grid-template-columns: 1fr; }
+  .cp-corps { gap: 12px; }
 }
