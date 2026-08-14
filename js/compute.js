@@ -936,7 +936,28 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
       // ⚠️ Le décalage des lignes suivantes n'est PAS une information à signaler :
       // c'est le fonctionnement même de la cascade, et le signaler noie la seule
       // ligne où l'utilisateur est réellement intervenu.
-      qtyAdjusted: (o.qty !== null && o.qty !== undefined) && qty !== suggested,
+      // 🔴 ET LE SECOND MEMBRE A ÉTÉ RETIRÉ LE 14/08/2026 — défaut reproduit par
+      // l'utilisateur sur son iPhone, puis démontré par un test qu'il a exécuté.
+      // Le correctif du 13/08 avait AJOUTÉ `o.qty != null` en GARDANT
+      // `qty !== suggested`, alors que le premier suffisait. Conséquence : une ligne
+      // épinglée sur exactement la valeur que le plan propose ne portait AUCUN
+      // liseré — elle était pourtant gelée, et ne participait plus à la cascade.
+      // Mesuré sur ses données : PAEEM épinglé à 9 (sa propre proposition) et PUST
+      // porté à 1 part envoyaient les 103 € entiers sur WPEA (490 parts) ; sans
+      // l'épingle, PAEEM descendait à 7 et WPEA n'en prenait que 556 — **66 € de
+      // différence pour le même geste, et rien à l'écran pour l'expliquer.**
+      // ⇒ **L'ÉPINGLE EST UN FAIT, PAS UN ÉCART.** Ce qu'il faut afficher c'est
+      // « tu as décidé cette ligne », jamais « ton chiffre diffère du mien ».
+      // ⚠️ Deux symptômes de plus tombent avec la même ligne, et c'est le signe
+      // qu'on tient la cause : `ajustements` (investments.js) compte
+      // `qtyAdjusted || costForced`, donc le bouton « Réinitialiser les
+      // propositions » DISPARAISSAIT sur un verrou invisible — le rendant
+      // inannulable autrement qu'en changeant le versement, en revenant aux valeurs
+      // ou en fermant la fenêtre. Et une quantité forcée **rabotée** par le plafond
+      // d'achetable (cf. le replafonnement plus bas) perdait aussi sa marque.
+      // ⚠️ Le test qui discrimine est « épinglée sur sa propre proposition » : aucun
+      // des tests du 13/08 ne mordait, tous épinglant sur une valeur différente.
+      qtyAdjusted: o.qty !== null && o.qty !== undefined,
       // 🔴 ET LA LIGNE QUI A BOUGÉ SANS QU'ON Y TOUCHE — demande de l'utilisateur
       // du 13/08/2026 : « ça aurait été pas mal que ça bouge partout, comme ça on
       // voit que tout a évolué ». Il a raison sur le besoin ; ce qui était faux,
@@ -954,7 +975,10 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
       // ⚠️ Sa réserve garde une part de vrai, et elle est assumée : les trois cartes
       // portant un trait, c'est la COULEUR qui distingue, plus la présence.
       // ⚠️ `styles.css` (`.cp-etape--cascade`) porte le détail du choix.
-      qtyRecalculee: !((o.qty !== null && o.qty !== undefined) && qty !== suggested) && qty !== suggested,
+      // ⚠️ Sa condition suit celle du dessus (14/08/2026) : une ligne épinglée n'est
+      // JAMAIS « recalculée », même quand son épingle coïncide avec la proposition.
+      // Les deux drapeaux restent exclusifs, et c'est un test qui le vérifie.
+      qtyRecalculee: !(o.qty !== null && o.qty !== undefined) && qty !== suggested,
       cost, costAuto, costForced: cost !== costAuto,
       // 🔴 LE PRIX DÉDUIT — « si je modifie le montant final, c'est que je viens
       // d'acheter, donc le prix se déduit : montant / quantité » (utilisateur,
