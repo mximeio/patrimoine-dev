@@ -696,6 +696,8 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffe
   const PLAFOND_FEUILLES = 4096; // 2^12 — au-delà, on garde le meilleur trouvé
   let meilleur = null;
   let feuilles = 0;
+  // Vrai tant qu'on exige que les épingles soient honorées à l'exact (cf. plus bas).
+  let strict = true;
   const coutDe = (s, q) => {
     const o = over[s.id] || {};
     return (o.cost === null || o.cost === undefined) ? r2(q * (Number(s.price) || 0)) : r2(Number(o.cost) || 0);
@@ -717,7 +719,25 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffe
     const o = over[s.id] || {};
     let candidats;
     if (o.qty !== null && o.qty !== undefined) {
-      candidats = [Math.min(Math.max(0, Math.floor(Number(o.qty) || 0)), maxAchetable)];
+      // 🔴 UNE ÉPINGLE EST UNE CONTRAINTE DURE, PAS UN PLAFOND — règle du 14/08/2026,
+      // arbitrage de l'utilisateur après un défaut qu'il a trouvé sur son iPhone.
+      // Le défaut : elle était replafonnée par `maxAchetable`, donc le solveur pouvait
+      // **troquer l'épingle contre un meilleur ajustement global**. Mesuré sur ses
+      // données — PAEEM épinglé à 26 rendait PAEEM=23 **et achetait 1 PUST** que
+      // personne n'avait demandé, parce que ce plan-là gagnait 0,204 pt d'écart. Deux
+      // conséquences, la seconde pire que la première : un `+` faisait **baisser** le
+      // nombre de 2 sous le doigt (la famille du défaut de la v1002), et l'épingle
+      // stockée (26) divergeait de la valeur affichée (23) — donc le `+` suivant
+      // repartait de 23 et le 26 devenait inatteignable.
+      // ⇒ Une branche qui ne peut pas honorer l'épingle **exactement** est ABANDONNÉE.
+      // Ici, épingler 26 impose donc PUST à 0 et WPEA à 32 : la ligne affiche ce qu'on
+      // a demandé, et rien ne bouge tout seul.
+      // ⚠️ Le repli non strict, plus bas, empêche de rendre un plan à zéro si AUCUNE
+      // branche n'honore les épingles. L'IHM n'y mène pas (`quantiteHonorable` refuse
+      // l'appui avant), mais un plan vide serait un défaut pire que celui-ci.
+      const voulu = Math.max(0, Math.floor(Number(o.qty) || 0));
+      if (strict && voulu > maxAchetable) return;
+      candidats = [Math.min(voulu, maxAchetable)];
     } else if (o.cost !== null && o.cost !== undefined && ancrage) {
       // 🔴 MONTANT FORCÉ : LA QUANTITÉ NE BOUGE PAS. Règle posée par l'utilisateur
       // le 13/08/2026 — « la quantité n'évolue pas si on ne l'a pas changée, sauf à
@@ -760,6 +780,17 @@ function _choisirQuantites(ordre, besoin, available, totalAfter, over, cibleEffe
     });
   };
   marcher(0, available, 0, []);
+  // 🔴 REPLI : aucune branche n'honore les épingles à l'exact. On rejoue en
+  // replafonnant, plutôt que de rendre un plan à ZÉRO — ce qui serait un défaut bien
+  // pire que l'épingle rabotée. ⚠️ Ce repli n'est PAS le comportement d'avant le
+  // 14/08/2026 remis en douce : l'IHM refuse l'appui avant d'en arriver là
+  // (`quantiteHonorable`), donc il ne se déclenche que sur un état qu'aucun geste ne
+  // produit — une épingle héritée d'une assiette plus large, par exemple.
+  if (!meilleur) {
+    strict = false;
+    feuilles = 0;
+    marcher(0, available, 0, []);
+  }
   return meilleur ? meilleur.qs : ordre.map(() => 0);
 }
 
@@ -1062,6 +1093,29 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
 // ajustement, donc le dernier endroit où l'on veut du code non testé.
 // ⚠️ Elle rejoue le plan DEUX fois. Sans conséquence : le calcul est pur et borné
 // par `PLAFOND_FEUILLES`, et ça ne se produit qu'à un appui sur `+`/`−`.
+// 🔴 CETTE QUANTITÉ EST-ELLE HONORABLE ? — le garde-fou de la règle ci-dessus
+// (14/08/2026). Depuis qu'une épingle ne se rabote plus, il faut savoir AVANT de la
+// poser si un plan peut la porter : sinon le solveur retomberait sur son repli non
+// strict et rendrait un autre chiffre que celui demandé, en silence — le défaut même
+// qu'on vient de corriger.
+// ⇒ On rejoue le plan avec l'épingle et on vérifie que la ligne rend **exactement**
+// ce qu'on a demandé. Sinon l'IHM refuse l'appui par un toast neutre
+// (`partDePlusImpossible`), au lieu d'afficher un nombre que personne n'a demandé.
+// ⚠️ PURE ET EXPORTÉE, même motif que sa voisine : laissée dans `poserQty`, elle
+// serait hors couverture du harnais (§10).
+function quantiteHonorable({ amount, cash, supports, overrides } = {}, id, q) {
+  const voulu = Math.max(0, Math.floor(Number(q) || 0));
+  const base = overrides || {};
+  const sans = { ...base };
+  delete sans[id];
+  const avec = { ...sans, [id]: { qty: voulu } };
+  const s = computeContributionPlan({ amount, cash, supports, overrides: avec })
+    .steps.find((x) => x.id === id);
+  // Ligne absente du plan : on ne sait pas juger, donc on n'autorise pas — le refus
+  // est visible, un chiffre faux ne l'est pas.
+  return s ? s.qty === voulu : false;
+}
+
 function epingleNecessaire({ amount, cash, supports, overrides } = {}, id, q) {
   const base = overrides || {};
   // La ligne SANS son épingle : les autres sont conservées, et le montant forcé de

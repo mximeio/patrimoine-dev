@@ -389,6 +389,22 @@ const REFUS = {
   // rappelé. Et surtout, ce refus EXISTE — l'onglet était un `<span>` inerte, donc
   // un clic sans effet ni explication, ce que le §10 refuse.
   valeursAValider:    'Les valeurs doivent être validées avant de répartir.',
+  // 🔴 LES DEUX APPUIS SUR `−`/`+` QUI NE PEUVENT RIEN FAIRE — demande de
+  // l'utilisateur du 14/08/2026, née d'une bonne intuition et d'un mécanisme qui ne
+  // marche pas : il proposait de rendre le bouton NON CLIQUABLE avec un message au
+  // clic. Les deux sont incompatibles — un élément `disabled` **ne peut pas être
+  // tapé**, donc il ne porte aucun message, et le §10 l'a déjà mesuré le 10/08 en
+  // abandonnant le bouton grisé (« la bulle au survol ne marche pas sur iPhone »).
+  // ⇒ **Le bouton reste actif et le refus s'annonce par un toast**, ce qui est la
+  // doctrine en vigueur et ce que le besoin réclamait vraiment : savoir POURQUOI
+  // rien ne bouge.
+  // ⚠️ CONSTATS, pas erreurs (toasts neutres) : on a touché un plancher ou un
+  // plafond, il n'y a rien à corriger.
+  partsNegatives:     'Le nombre de parts ne peut pas être négatif.',
+  // ⚠️ Le plafond n'est pas « ce qui reste » mais **ce que l'assiette entière
+  // permet** : depuis la règle du 14/08, une épingle ne se rabote plus, donc une
+  // part de plus est refusée seulement si AUCUN plan ne peut l'honorer.
+  partDePlusImpossible: "L'assiette ne permet pas une part de plus.",
 };
 
 // ⚠️ Durée volontairement plus longue que les 2 500 ms par défaut : le toast paraît
@@ -403,8 +419,12 @@ const DUREE_REFUS = 4000;
 // demandent à l'utilisateur de fournir quelque chose, restent en ROUGE.
 // ⚠️ Le ton est déduit du MESSAGE, pas passé par l'appelant : c'est ce qui
 // empêche deux formulaires de choisir des tons différents pour la même phrase.
+// ⚠️ `partsNegatives` y entre alors que son jumeau `montantNegatif` n'y est PAS —
+// écart assumé et signalé (14/08/2026). Un montant négatif est une saisie fautive
+// qu'on corrige ; un `−` sur zéro est un appui qui touche le plancher, sans faute.
+// Si l'usage montre que les deux doivent s'aligner, c'est ici que ça se change.
 const REFUS_NEUTRES = new Set([REFUS.rienChange, REFUS.nomEnveloppeInchange, REFUS.valorisationsInchangees,
-  REFUS.aucuneQuantite, REFUS.valeursAValider]);
+  REFUS.aucuneQuantite, REFUS.valeursAValider, REFUS.partsNegatives, REFUS.partDePlusImpossible]);
 
 // Le canal unique. À appeler en tête de submit : `if (…) return refuser(showToast,
 // REFUS.x);` — la valeur de retour n'a pas de sens pour un gestionnaire

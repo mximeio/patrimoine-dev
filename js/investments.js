@@ -1862,12 +1862,23 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   // bouger sous le doigt (cf. v1002).
   const poserQty = (id, q) => {
     const propre = Math.max(0, Math.floor(Number(q) || 0));
-    const garder = epingleNecessaire({
+    const params = {
       amount: valeurSaisie(versement) || 0,
       cash: stats.cashRemaining,
       supports,
       overrides: over,
-    }, id, propre);
+    };
+    // 🔴 LES DEUX APPUIS QUI NE PEUVENT RIEN FAIRE S'ANNONCENT — demande de
+    // l'utilisateur du 14/08/2026. ⚠️ Il proposait de rendre le bouton NON CLIQUABLE
+    // avec un message au clic : les deux s'excluent, un élément `disabled` ne peut pas
+    // être tapé (§10, motif de l'abandon du bouton grisé le 10/08). Le bouton reste
+    // donc actif et le refus passe par un toast, ce qui est la doctrine en vigueur.
+    if (q < 0) return refuser(showToast, REFUS.partsNegatives);
+    // ⚠️ Vient APRÈS le plancher et AVANT la pose : depuis que l'épingle est une
+    // contrainte dure, une quantité qu'aucun plan ne peut honorer doit être refusée
+    // plutôt que rabotée en silence.
+    if (!quantiteHonorable(params, id, propre)) return refuser(showToast, REFUS.partDePlusImpossible);
+    const garder = epingleNecessaire(params, id, propre);
     setQtysForcees((o) => {
       const n = { ...o };
       if (garder) n[id] = propre; else delete n[id];
