@@ -1850,8 +1850,29 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
 
   // Toucher −/+ RELÂCHE le montant forcé de la ligne : sinon on garderait un
   // montant qui ne correspond plus du tout à la quantité affichée (spec §2.6).
+  // 🔴 UN `+` PUIS UN `−` NE LAISSE PLUS D'ÉPINGLE — règle posée par l'utilisateur le
+  // 14/08/2026 (« c'est chelou, non ? »), et il avait raison : finir verrouillé sur une
+  // valeur qu'on n'a pas quittée est un état que personne n'a demandé, alors qu'il
+  // retire la ligne de la cascade.
+  // ⚠️ Toute la décision vit dans `epingleNecessaire` (`compute.js`), PURE et testée :
+  // ici il ne reste que la pose. Le §10 est formel — une condition laissée dans le JSX
+  // est hors couverture du harnais, et celle-ci RETIRE un ajustement.
+  // ⚠️ Le nombre affiché est le même dans les deux branches, `epingleNecessaire` ne
+  // renvoyant `false` que lorsque épingler ou non donne le même résultat : rien ne peut
+  // bouger sous le doigt (cf. v1002).
   const poserQty = (id, q) => {
-    setQtysForcees((o) => ({ ...o, [id]: Math.max(0, q) }));
+    const propre = Math.max(0, Math.floor(Number(q) || 0));
+    const garder = epingleNecessaire({
+      amount: valeurSaisie(versement) || 0,
+      cash: stats.cashRemaining,
+      supports,
+      overrides: over,
+    }, id, propre);
+    setQtysForcees((o) => {
+      const n = { ...o };
+      if (garder) n[id] = propre; else delete n[id];
+      return n;
+    });
     setCoutsSaisis((c) => { const n = { ...c }; delete n[id]; return n; });
   };
   // ⚠️ On garde la CHAÎNE telle quelle — pas de parsing ici, sinon la virgule

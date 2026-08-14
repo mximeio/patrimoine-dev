@@ -1018,3 +1018,67 @@ function computeContributionPlan({ amount, cash, supports, overrides } = {}) {
     complete: ordre.length > 0 && (investissable - invested) < prixMini,
   };
 }
+
+// 🔴 FAUT-IL ÉPINGLER CETTE LIGNE ? — règle posée par l'utilisateur le 14/08/2026,
+// après le correctif de la v1012 : *« est-ce normal qu'un verrou soit mis si on
+// revient à la valeur d'avant ? C'est chelou, non ? »*
+//
+// **Il a raison.** Un `+` suivi d'un `−` veut dire « j'ai changé d'avis, oublie » ;
+// finir épinglé sur la valeur qu'on n'a pas quittée est un état que personne n'a
+// demandé — et il a une CONSÉQUENCE, la ligne ne participant plus à la cascade.
+// Sans relâchement par ligne (jamais construit, cf. `BACKLOG.md`), une tape de trop
+// ne se défaisait qu'avec « Réinitialiser », qui détruit tous les autres ajustements.
+//
+// ⇒ **LA RÈGLE : on épingle si et seulement si le chiffre demandé change le
+// résultat de CETTE ligne**, dans le contexte du moment.
+// ⚠️ **« Le contexte du moment », et non la proposition d'origine** — c'est le point
+// qui fait tenir la règle. Si une AUTRE ligne est épinglée, la valeur qu'une ligne
+// aurait librement n'est plus `suggested` mais sa valeur déplacée par la cascade.
+// Comparer à `suggested` déplacerait la bizarrerie au lieu de la supprimer :
+// PUST épinglé à 1 fait afficher 7 à PAEEM, et un retour à 7 se serait épinglé
+// puisque 7 ≠ 9.
+//
+// 🔴 **POURQUOI CETTE FORME ET NON « RELÂCHER AU RETOUR », qui était ma proposition** :
+// relâcher une épingle relance la cascade, donc le nombre peut BOUGER SOUS LE DOIGT
+// (revenir de 10 vers 9 et atterrir sur 7) — le défaut corrigé en v1002. Ici le saut
+// est impossible **par construction** : on ne s'abstient d'épingler que lorsque
+// épingler ou non donne le MÊME nombre affiché. Et le mode de panne est plus doux —
+// ne pas créer un état, au lieu d'en supprimer un que l'utilisateur voulait garder.
+//
+// ⚠️ **La comparaison porte sur le RÉSULTAT et non sur le chiffre demandé** : une
+// quantité est replafonnée par ce qui reste achetable, donc demander 999 parts quand
+// 8 sont possibles ne change rien à l'écran. Comparer les chiffres bruts y aurait
+// posé une épingle au liseré visible et à l'effet nul — du bruit, d'autant plus
+// inutile que changer le versement efface de toute façon tous les overrides.
+//
+// ⚠️ **Ce qu'on perd, et c'est assumé** : impossible de dire « bloque cette ligne ici
+// quoi qu'il arrive » quand sa valeur est justement celle proposée. Cette intention
+// n'est pas exprimable avec un `+`/`−` — le geste « j'appuie puis je reviens » est
+// indistinguable de « je n'ai rien changé ». Face à un geste ambigu, le lire comme
+// « pas de décision » est le bon choix.
+//
+// ⚠️ **PURE ET EXPORTÉE EXPRÈS** : laissée dans `poserQty` (`investments.js`), cette
+// décision serait hors couverture du harnais (§10) — et c'est un chemin qui RETIRE un
+// ajustement, donc le dernier endroit où l'on veut du code non testé.
+// ⚠️ Elle rejoue le plan DEUX fois. Sans conséquence : le calcul est pur et borné
+// par `PLAFOND_FEUILLES`, et ça ne se produit qu'à un appui sur `+`/`−`.
+function epingleNecessaire({ amount, cash, supports, overrides } = {}, id, q) {
+  const base = overrides || {};
+  // La ligne SANS son épingle : les autres sont conservées, et le montant forcé de
+  // cette ligne part aussi — c'est ce que fait `poserQty`, qui l'efface toujours.
+  const sans = { ...base };
+  delete sans[id];
+  const avec = { ...sans, [id]: { qty: Math.max(0, Math.floor(Number(q) || 0)) } };
+  const retenue = (over) => {
+    const s = computeContributionPlan({ amount, cash, supports, overrides: over })
+      .steps.find((x) => x.id === id);
+    return s ? s.qty : null;
+  };
+  const libre = retenue(sans);
+  const force = retenue(avec);
+  // Ligne absente du plan (support exclu, prix manquant) : rien à comparer, on
+  // épingle. Ne jamais renvoyer `false` sur un cas qu'on ne sait pas juger — ce
+  // serait perdre une saisie en silence.
+  if (libre === null || force === null) return true;
+  return force !== libre;
+}
