@@ -254,15 +254,20 @@ input[type="month"] {
 /* Pied FIGÉ optionnel (prop `footer` de Modal, 09/08/2026) : symétrique de
    .modal-header — même flex-shrink, même fond, un liseré côté corps. Il n'existe
    que si la prop est passée, donc aucune modale existante n'est affectée.
-   🔴 AUCUN APPELANT AUJOURD'HUI — ET C'EST VOULU : ne pas la supprimer.
-   La seule modale qui la passait (mise à jour groupée) est revenue à une zone
-   d'actions en fin de corps le 09/08/2026, la fenêtre ne défilant pas sur des
-   données réelles. La prop et cette règle sont CONSERVÉES pour le chantier
-   « calculer un versement », dont le récapitulatif et le message d'état n'ont
-   d'intérêt que visibles en permanence — c'est lui qui décidera du motif.
-   ⚠️ Un balayage de classes mortes la trouvera et la croira supprimable : elle
-   ne l'est pas. La retirer casserait ce chantier EN SILENCE, la prop continuant
-   d'exister sans sa mise en forme. Cf. la fiche « le pied figé » de BACKLOG.md.
+   🔴 AUCUN APPELANT, ET AUCUN EN PERSPECTIVE — ne pas la supprimer.
+   DÉCISION EXPLICITE DE L'UTILISATEUR, 14/08/2026 : « on garde footer et
+   .modal-foot, on ne supprime rien ». C'est la seule raison qui vaut aujourd'hui,
+   et elle suffit.
+   ⚠️ CE COMMENTAIRE A DIT AUTRE CHOSE : il conservait la règle « pour le chantier
+   calculer un versement, c'est lui qui décidera du motif ». Ce chantier est LIVRÉ
+   (PROD v643) avec son récapitulatif en fin de corps — l'occasion annoncée a eu
+   lieu et n'a pas servi. Ne pas croiser l'ancien motif avec l'état du projet pour
+   en conclure que la protection a expiré : elle a changé de fondement.
+   🔴 UN BALAYAGE DE CLASSES MORTES LA TROUVERA ET LA CROIRA SUPPRIMABLE : elle ne
+   l'est pas — c'est le cas d'école du garé « 57 classes CSS candidates au code
+   mort ». Morte au comptage, vivante par décision. La retirer laisserait la prop
+   `footer` d'`ui.js` exister SANS sa mise en forme, donc un pied cassé au premier
+   appelant, EN SILENCE. Cf. BACKLOG.md, section ÉCARTÉ, « le pied figé ».
    ⚠️ Pas de safe-area en bas, et c'est VÉRIFIÉ, pas oublié : en portrait
    l'overlay pose 14px tout autour, la modale flotte et ne touche jamais le home
    indicator (voir le commentaire de .modal-body en media-query 768px). */
