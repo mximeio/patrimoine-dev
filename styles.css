@@ -941,6 +941,48 @@ input[type="month"] {
   position: relative; transition: border-color 0.15s, box-shadow 0.15s;
 }
 .stat-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+/* Carte OUVRABLE (14/08/2026) — un seul appelant : la carte « Tickets resto »
+   du compte courant, qui ouvre sa fenêtre.
+   ⚠️ Le survol de `.stat-card` ci-dessus ne signale RIEN : les 12 cartes de
+   l'app le portent, y compris les 11 qui n'ouvrent rien. D'où les deux ajouts
+   ci-dessous, et eux seuls disent « ça s'ouvre » :
+   - le FOND au survol, `--surface-alt` : c'est la couleur du survol des lignes
+     ouvrables (12 usages, aucune exception ; `--surface-hover` est réservé aux
+     boutons-contrôles — mesuré). Le précédent exact est `.portfolio-list-row`,
+     qui est lui aussi un <button> dessiné comme une carte ;
+   - le chevron, qui lui s'annonce AU DOIGT — l'app est d'abord une PWA sur
+     iPhone, où il n'y a pas de curseur : `cursor: pointer` seul n'aurait rien
+     annoncé sur l'appareil principal.
+   La remise à zéro du style natif est indispensable : sans elle, WebKit impose
+   sa police, son centrage et son fond au <button>. */
+button.stat-card {
+  font: inherit; color: inherit; text-align: left; width: 100%;
+  -webkit-appearance: none; appearance: none;
+}
+.stat-card-clickable { cursor: pointer; }
+.stat-card-clickable:hover { background: var(--surface-alt); }
+/* Même traitement que `.portfolio-list-arrow`, dont il reprend le rôle. Placé
+   en bas à droite : le haut-droite est occupé par `.stat-card-icon`. */
+.stat-card-arrow {
+  position: absolute; right: 14px; bottom: 14px;
+  color: var(--text-subtle); font-size: 16px; line-height: 1;
+}
+/* Le chevron est en `position: absolute`, donc il ne pousse RIEN : sans cette
+   réserve, un sous-titre long lui passerait dessous. C'est exactement ce que
+   `.stat-card-label` fait déjà (`padding-right: 32px`) pour l'icône du coin
+   haut-droite — même problème, même idiome.
+   ⚠️ 10px, et ce chiffre se DÉDUIT, il ne se choisit pas : le chevron n'empiète
+   que de 5 px dans la boîte de contenu (elle s'arrête à 16 px du bord, il
+   commence à 21), donc 5 px de réserve + 5 px de respiration.
+   ⚠️ Mesuré le 14/08/2026 en layout MOBILE, seul cas serré — la carte n'y fait
+   que 176 px, contre 293 en desktop : « 28,01 € de ma poche » occupe 122 px et
+   « 999,99 € … » 130 px, pour 134 px utiles. Les trois chiffres tiennent sur une
+   ligne ; à quatre, le sous-titre REVIENT À LA LIGNE au lieu de chevaucher le
+   chevron — la dégradation est propre, et ce cas demanderait ~80 tickets dans le
+   mois. 🔴 Un premier essai à 24 px faisait replier le sous-titre RÉEL, donc
+   grandir la carte et casser l'alignement des quatre. Ne pas remonter ce
+   nombre sans remesurer sur un écran de 390 px. */
+.stat-card-clickable .stat-card-sub { padding-right: 10px; }
 .stat-card-icon {
   position: absolute; top: 12px; right: 12px;
   width: 26px; height: 26px; border-radius: 7px;
