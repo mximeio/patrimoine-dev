@@ -146,7 +146,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.investments}`, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Valeur totale investissements
+            Valeur totale
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ModuleBadge module="investments" />
@@ -452,15 +452,21 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
       {/* HERO */}
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.investments}`, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          {/* Un LIBELLÉ qui dit ce qu'est le montant, comme toutes les autres
-              hero cards de l'app (« Patrimoine total », « Valeur totale
-              investissements », « Solde pointé », « Valeur actuelle »).
-              Le NOM de l'enveloppe était affiché ici jusqu'au 15/08/2026 : il est
-              désormais dans la ligne de titre, juste au-dessus, donc le répéter
-              coûtait une ligne pour ne rien apprendre — et laissait cette hero
-              card seule à ne pas annoncer son montant. */}
+          {/* Un LIBELLÉ qui dit ce qu'est le montant, comme toutes les hero cards
+              de l'app. Le NOM de l'enveloppe était affiché ici jusqu'au
+              15/08/2026 : il est désormais dans la ligne de titre, juste
+              au-dessus, donc le répéter coûtait une ligne pour ne rien apprendre.
+              ⚠️ « Valeur » tout court, sans « de l'enveloppe » : le type de
+              l'objet est le dernier reste de cette même redite. La règle des huit
+              hero cards, arbitrée le 15/08/2026 : le libellé dit la NATURE du
+              montant (solde = de l'argent qu'on a · valeur = une estimation de
+              marché), et n'ajoute un qualificatif que là où il apporte —
+              « pointé » sur le compte courant, « totale » sur une vue qui somme.
+              ⚠️ Ne pas citer ici les libellés des autres écrans : une première
+              version de ce commentaire les énumérait, et ils ont changé le jour
+              même. Le CHANGELOG porte le tableau complet. */}
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Valeur de l'enveloppe
+            Valeur
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ModuleBadge module="investments" />

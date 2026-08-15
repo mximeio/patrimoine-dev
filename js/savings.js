@@ -102,7 +102,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.savings}`, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Total épargne
+            Solde total
           </div>
           <ModuleBadge module="savings" />
         </div>
@@ -327,7 +327,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
               détaillé dans `investments.js`. Le nom du livret vit dans la ligne
               de titre depuis le 15/08/2026. */}
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Solde du livret
+            Solde
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ModuleBadge module="savings" />
