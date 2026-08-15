@@ -581,7 +581,22 @@ function App() {
   // Sélection d'un onglet (desktop et mobile). Re-tap sur l'onglet déjà
   // actif → retour en haut de page (réflexe standard des tab bars iOS).
   const selectModule = (id) => {
-    if (id === safeModule) { scrollAppTo(0, true); return; }
+    if (id === safeModule) {
+      // Appui sur l'onglet DÉJÀ actif. Le premier remonte en haut (comportement
+      // d'origine) ; une fois EN HAUT, si une sous-page est ouverte, l'appui
+      // suivant revient à la page groupée — la convention iOS, ajoutée le
+      // 15/08/2026 sur demande de l'utilisateur.
+      // ⚠️ Le critère est « on est déjà en haut », PAS un compteur d'appuis :
+      //  aucun minuteur, aucun état à remettre à zéro, et le geste reste juste
+      //  quand la page est déjà en haut — l'appui revient alors directement à la
+      //  page groupée au lieu de ne rien faire, ce qu'un compteur aurait raté.
+      // ⚠️ Ne marche que parce que la coquille SAIT qu'une sous-page est ouverte
+      //  (`sousPage`), état introduit le même jour pour la ligne de titre. Avant
+      //  lui, ce geste n'était pas exprimable ici.
+      if (sousPage && appScrollY() <= 4) { sousPage.onBack(); return; }
+      scrollAppTo(0, true);
+      return;
+    }
     setModuleName(id);
   };
 

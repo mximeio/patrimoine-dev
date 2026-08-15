@@ -3026,38 +3026,12 @@ button.stat-card {
    `.titre-retour` / `.btn-retour`, plus haut dans ce fichier. Ne pas les
    recréer : c'est l'en-tête de sous-page qui porte ce rôle. */
 
-.hero-name-edit {
-  background: transparent;
-  border: 1px solid transparent;
-  color: white;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: 6px;
-  margin-left: -6px;
-  min-width: 0;
-  max-width: 70%;
-  font-family: inherit;
-  outline: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.hero-name-edit:hover { background: rgba(255,255,255,0.08); }
-.hero-name-edit:focus { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
-/* Nom affiché (non éditable) dans le hero : le renommage passe par Réglages,
-   comme le Compte courant. Même rendu visuel que .hero-name-edit. */
-.hero-name-static {
-  color: white;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 500;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* `.hero-name-edit` et `.hero-name-static` SUPPRIMÉES le 15/08/2026.
+   La seconde habillait le nom de l'enveloppe et du livret en tête de leur hero
+   card ; ces heroes annoncent désormais leur MONTANT (« Valeur de l'enveloppe »,
+   « Solde du livret ») comme toutes les autres, le nom vivant dans la ligne de
+   titre. La première n'avait déjà plus aucun appelant : le renommage en place
+   qu'elle servait avait disparu, et seul un commentaire l'annonçait encore. */
 
 .hero-kebab {
   width: 32px; height: 32px;

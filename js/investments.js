@@ -452,7 +452,16 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
       {/* HERO */}
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.investments}`, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div className="hero-name-static" title={portfolio.name}>{portfolio.name}</div>
+          {/* Un LIBELLÉ qui dit ce qu'est le montant, comme toutes les autres
+              hero cards de l'app (« Patrimoine total », « Valeur totale
+              investissements », « Solde pointé », « Valeur actuelle »).
+              Le NOM de l'enveloppe était affiché ici jusqu'au 15/08/2026 : il est
+              désormais dans la ligne de titre, juste au-dessus, donc le répéter
+              coûtait une ligne pour ne rien apprendre — et laissait cette hero
+              card seule à ne pas annoncer son montant. */}
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
+            Valeur de l'enveloppe
+          </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <ModuleBadge module="investments" />
             <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
