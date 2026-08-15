@@ -913,24 +913,44 @@ input[type="month"] {
    Remplace les trois fils d'Ariane, qui inséraient une ligne entre le titre de
    rubrique et la hero card — 36 px de saut vertical mesurés à l'ouverture d'une
    enveloppe. Ici la hauteur ne bouge pas : la hero card reste au même Y. */
-.titre-retour { display: flex; align-items: center; gap: 4px; min-width: 0; }
-/* ⚠️ Cible tactile de 44 px SANS grandir la ligne de 24 px : les marges
-   négatives compensent exactement le débordement, comme `.title-row-slot`
-   laisse déborder la chip de mois de 32 px. Ne pas remplacer par du padding.
-   ⚠️ La marge gauche vaut la MOITIÉ de ce qui dépasse autour du glyphe —
-   (44 − 22) / 2 = 11 — pour que le CHEVRON tombe pile sur la marge de contenu,
-   pas la boîte. Le handoff donnait −17 px : mesuré le 15/08/2026, la boîte
-   débordait alors de 17 px à gauche du contenu sans que le glyphe s'aligne sur
-   quoi que ce soit. Toute retouche de la taille du bouton doit recalculer cette
-   marge, sinon l'alignement casse en silence. */
+/* 6 px, et non les 4 px d'origine : c'est l'écart entre la BOÎTE du bouton et la
+   première lettre du titre — donc ce qu'on voit au survol, quand la boîte se
+   remplit. À 4 px le rectangle venait toucher le texte. ⚠️ Ne pas le confondre
+   avec l'écart entre le TRAIT et le titre, qui vaut 6 px de plus : la boîte
+   porte 1 px de marge autour du svg, et le svg 7,3 px de vide autour du tracé
+   (cf. `.btn-retour`). C'est cette confusion qui avait produit un réglage à 0. */
+.titre-retour { display: flex; align-items: center; gap: 6px; min-width: 0; }
+/* 🔴 LE FAIT QUI COMMANDE TOUT CE BLOC : l'icône porte 7,3 px de VIDE INTÉGRÉ.
+   Le tracé de `chevronLeft` n'occupe que `x ∈ [8, 16]` d'un viewBox de 24, donc
+   ~7,3 px sur un rendu de 22 px, de chaque côté. Ce vide appartient à l'ICÔNE,
+   pas au bouton. ⇒ **Si la boîte ne déborde pas à gauche, le trait est
+   forcément rentré**, d'au moins ces 7,3 px. On ne peut pas avoir les deux, et
+   ce n'est pas un réglage à trouver.
+   Décision de l'utilisateur du 15/08/2026, sur maquette : **rien ne déborde**.
+   D'où une boîte de 24 px collée à la marge — le trait se pose alors à 8 px du
+   bord, le minimum atteignable.
+   ⚠️ AUCUNE marge négative à droite. Un premier essai en posait une (−4 px) pour
+   rapprocher le TRAIT du titre : elle annulait exactement le `gap`, et au survol
+   la boîte remplie venait toucher la première lettre. Ce qu'on voit au survol
+   c'est la BOÎTE, pas le trait — c'est elle qui doit respirer.
+   ⚠️ Une seule règle pour mobile ET desktop : la surcharge desktop du bouton a
+   été retirée le même jour. Seule la taille du TITRE diffère encore. */
 .btn-retour {
-  width: 44px; height: 44px;
-  margin: -11px 0 -11px -11px;
+  width: 24px; height: 24px;
+  margin: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border: none; background: transparent; padding: 0;
   color: var(--accent); border-radius: 8px;
   flex-shrink: 0; cursor: pointer;
+  position: relative; /* ancre de la cible tactile ci-dessous */
 }
+/* 🔴 CIBLE TACTILE DE 44 px SANS BOÎTE DE 44 px. 24 + 10 + 10 = 44. Cette zone
+   n'affiche rien, ne déplace rien et ne participe pas à la mise en page : elle
+   ne fait qu'agrandir ce qui est cliquable. C'est ce qui permet de tenir les
+   deux exigences à la fois — un bouton visuellement petit et aligné, et le
+   minimum de 44 px au doigt. ⚠️ Ne pas la supprimer en la prenant pour un
+   reste : sans elle la cible retombe à 24 px. */
+.btn-retour::after { content: ''; position: absolute; inset: -10px; }
 .btn-retour:active { opacity: .6; }
 @media (hover: hover) {
   .btn-retour:hover { background: var(--accent-light); }
@@ -959,13 +979,10 @@ input[type="month"] {
      ⚠️ La promesse « hauteur inchangée » du handoff n'est structurellement vraie
      qu'en MOBILE, où la ligne existait déjà et ne fait que changer de contenu. */
   .title-row.title-row-sous-page .mobile-page-title { font-size: 17px; }
-  /* Le bouton reprend une taille de pointeur : les 44 px ne valent que pour le
-     doigt. Marge gauche recalculée en conséquence — (28 − 22) / 2 = 3 — pour que
-     le glyphe reste sur la marge de contenu. */
-  .title-row.title-row-sous-page .btn-retour {
-    width: 28px; height: 28px;
-    margin: -4px 0 -4px -3px;
-  }
+  /* ⚠️ AUCUNE surcharge du bouton ici, et c'est délibéré : il fait 24 px partout
+     depuis le 15/08/2026. Une taille différente par écran obligerait à recalculer
+     ses deux marges à chaque fois — c'est ce qui avait produit un débordement à
+     gauche et 22 px d'écart à droite. Une seule géométrie, une seule règle. */
 }
 
 .hero-value-big { font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
