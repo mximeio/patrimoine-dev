@@ -515,8 +515,32 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         </div>
       </div>
 
-      {/* STAT CARDS */}
+      {/* STAT CARDS — ordre posé le 14/08/2026 : UTILITÉ DÉCROISSANTE, la carte de
+          fraîcheur restant en dernier (seule convention d'ordre de l'app, partagée
+          avec la vue liste). Il était auparavant cash → versé → investi, où le total
+          se trouvait au milieu et où l'ordre ne disait rien.
+          🔴 NE PAS LE RELIRE COMME UN CALCUL. `Investi + Cash` ne vaut `Versé` que
+          sans dividende, sans vente et sans retrait — la relation exacte est
+          `Investi + Cash = Versé + dividendes + plus-value réalisée − retraits`
+          (cf. `cashRemaining`, compute.js). L'égalité est DÉJÀ fausse dans une
+          enveloppe qui touche un dividende, donc un ordre qui suggérerait une
+          addition mentirait précisément là. C'est ce qui a fait écarter les deux
+          ordres « en équation » proposés à la conception.
+          ⚠️ ÉCART CONNU ET ACCEPTÉ : « Cash non investi » est ici en 2ᵉ position et
+          en 3ᵉ sur la vue liste. Arbitrage de l'utilisateur (14/08/2026) après avoir
+          vu les deux côte à côte : garder la carte la plus actionnable en haut vaut
+          mieux qu'une position identique d'une page à l'autre. **Ne pas « aligner »
+          les deux vues en croyant réparer un oubli.**
+          ⚠️ `fmt` sur les trois montants : le hero affiche « Investi » à 2 décimales
+          et le répète à l'identique ici. Une carte laissée à l'unité ferait cohabiter
+          deux précisions sur le même écran — et pour l'investi, sur le MÊME nombre. */}
       <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-card-icon income"><Icon name="trendUp" size={14} /></div>
+          <div className="stat-card-label">Investi</div>
+          <div className="stat-card-value num">{fmt(stats.totalInvested)} €</div>
+          <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'purchase').length} achat(s)</div>
+        </div>
         <div className="stat-card">
           <div className="stat-card-icon tr"><Icon name="coin" size={14} /></div>
           <div className="stat-card-label">Cash non investi</div>
@@ -526,19 +550,8 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         <div className="stat-card">
           <div className="stat-card-icon income"><Icon name="arrowDown" size={14} /></div>
           <div className="stat-card-label">Versé</div>
-          {/* `fmt` depuis le 14/08/2026 : le hero de cette page affiche « Investi »
-              à 2 décimales, et la carte « Cash non investi » voisine aussi. Laisser
-              celle-ci à l'unité ferait cohabiter deux précisions sur le même écran. */}
           <div className="stat-card-value num">{fmt(stats.totalDeposited)} €</div>
           <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'deposit').length} versement(s)</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-icon income"><Icon name="trendUp" size={14} /></div>
-          <div className="stat-card-label">Investi</div>
-          {/* `fmt` : même raison que la carte « Versé » juste au-dessus — et ici
-              c'est le MÊME nombre que le hero, donc deux précisions se verraient. */}
-          <div className="stat-card-value num">{fmt(stats.totalInvested)} €</div>
-          <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'purchase').length} achat(s)</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-icon expense"><Icon name="calendar" size={14} /></div>
