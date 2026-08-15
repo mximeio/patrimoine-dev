@@ -170,9 +170,25 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi / versé</div>
+            {/* « Investi » SEUL depuis le 14/08/2026 — le « / versé » est retiré.
+                Décision de l'utilisateur, sur deux motifs : la carte « Cash non
+                investi » juste en dessous porte l'information utile (combien dort),
+                et le module Actifs physiques n'affiche lui aussi que « Investi ».
+                ⚠️ Les deux nombres ne disaient PAS la même chose, et le versé n'est
+                pas reconstituable au centime depuis le cash — `cashRemaining` compte
+                aussi les dividendes, les ventes et les retraits (cf. compute.js).
+                C'est donc un arbitrage, pas la suppression d'un doublon.
+                ⚠️ Conséquence assumée : sur CETTE vue, le montant versé n'est plus
+                affiché nulle part (il n'y a pas de carte « Versé » ici, seulement sur
+                la page d'une enveloppe). Le sous-titre « N % du versé » de la carte
+                cash y renvoie sans le montrer.
+                ⚠️ `fmt` et non `fmtNoDec` : dans ce même hero, la valeur totale, la
+                plus-value et les dividendes sont déjà à 2 décimales — cette ligne
+                était la seule arrondie à l'unité, et elle affichait « 25 845 /
+                25 845 € » pour deux nombres pourtant différents. */}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi</div>
             <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {fmtNoDec(consolidated.totalInvested)} / {fmtNoDec(consolidated.totalDeposited)} €
+              {fmt(consolidated.totalInvested)} €
             </div>
           </div>
           {consolidated.hasDistributing && (
@@ -478,9 +494,14 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi / versé</div>
+            {/* Même décision que le hero de la vue Investissements (14/08/2026), où
+                le motif complet est écrit — ne pas le dupliquer ici.
+                ⚠️ Sur CETTE page, « Versé » et « Investi » ont chacun leur carte
+                juste en dessous : elles sont passées à `fmt` en même temps, sinon le
+                même nombre s'afficherait à deux précisions à quelques centimètres. */}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi</div>
             <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {fmtNoDec(stats.totalInvested)} / {fmtNoDec(stats.totalDeposited)} €
+              {fmt(stats.totalInvested)} €
             </div>
           </div>
           {stats.hasDistributing && (
@@ -505,13 +526,18 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         <div className="stat-card">
           <div className="stat-card-icon income"><Icon name="arrowDown" size={14} /></div>
           <div className="stat-card-label">Versé</div>
-          <div className="stat-card-value num">{fmtNoDec(stats.totalDeposited)} €</div>
+          {/* `fmt` depuis le 14/08/2026 : le hero de cette page affiche « Investi »
+              à 2 décimales, et la carte « Cash non investi » voisine aussi. Laisser
+              celle-ci à l'unité ferait cohabiter deux précisions sur le même écran. */}
+          <div className="stat-card-value num">{fmt(stats.totalDeposited)} €</div>
           <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'deposit').length} versement(s)</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-icon income"><Icon name="trendUp" size={14} /></div>
           <div className="stat-card-label">Investi</div>
-          <div className="stat-card-value num">{fmtNoDec(stats.totalInvested)} €</div>
+          {/* `fmt` : même raison que la carte « Versé » juste au-dessus — et ici
+              c'est le MÊME nombre que le hero, donc deux précisions se verraient. */}
+          <div className="stat-card-value num">{fmt(stats.totalInvested)} €</div>
           <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'purchase').length} achat(s)</div>
         </div>
         <div className="stat-card">
