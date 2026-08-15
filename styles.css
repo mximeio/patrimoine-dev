@@ -3443,6 +3443,21 @@ button.stat-card {
   /* Ligne de titre (non-sticky) — pas de safe-area top en paysage,
      la status bar n'est pas en haut. Typo héritée de la règle de base. */
   .title-row { display: flex; padding-top: 6px; margin-bottom: 8px; }
+  /* 🔴 ET LA MÊME CHOSE POUR UNE SOUS-PAGE, explicitement — sans quoi la règle
+     `@media (min-width: 641px)` du haut de ce fichier l'emporte ici.
+     Pourquoi elle s'y applique alors qu'elle vise le DESKTOP : **un téléphone en
+     paysage fait ~844 px de large**, donc il satisfait `min-width: 641px`. Et
+     comme elle porte DEUX classes contre une, elle gagne à la spécificité, quel
+     que soit l'ordre. Ces deux lignes rétablissent l'égalité, à spécificité
+     identique et plus bas dans le fichier.
+     ⚠️ Mesuré le 15/08/2026 à 767×390, seul format où la pane émule le tactile
+     ET dépasse 641 px : sans elles, l'en-tête d'une sous-page valait 24 px contre
+     30 pour une liste, donc la hero card REMONTAIT de 2 px à l'ouverture — le
+     saut que ce chantier devait supprimer, réapparu en paysage et dans l'autre
+     sens. Signalé par l'utilisateur, qui l'avait vu à l'œil.
+     ⚠️ Et le titre passait à 17 px, plus petit sur la sous-page que sur la liste. */
+  .title-row.title-row-sous-page { padding-top: 6px; margin-bottom: 8px; }
+  .title-row.title-row-sous-page .mobile-page-title { font-size: 20px; }
   .month-chip-hero { display: none; }
   /* Barre basse : visible, avec safe-areas LATÉRALES (l'encoche est
      sur un côté en paysage) */
