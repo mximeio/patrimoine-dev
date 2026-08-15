@@ -916,10 +916,16 @@ input[type="month"] {
 .titre-retour { display: flex; align-items: center; gap: 4px; min-width: 0; }
 /* ⚠️ Cible tactile de 44 px SANS grandir la ligne de 24 px : les marges
    négatives compensent exactement le débordement, comme `.title-row-slot`
-   laisse déborder la chip de mois de 32 px. Ne pas remplacer par du padding. */
+   laisse déborder la chip de mois de 32 px. Ne pas remplacer par du padding.
+   ⚠️ La marge gauche vaut la MOITIÉ de ce qui dépasse autour du glyphe —
+   (44 − 22) / 2 = 11 — pour que le CHEVRON tombe pile sur la marge de contenu,
+   pas la boîte. Le handoff donnait −17 px : mesuré le 15/08/2026, la boîte
+   débordait alors de 17 px à gauche du contenu sans que le glyphe s'aligne sur
+   quoi que ce soit. Toute retouche de la taille du bouton doit recalculer cette
+   marge, sinon l'alignement casse en silence. */
 .btn-retour {
   width: 44px; height: 44px;
-  margin: -11px 0 -11px -17px;
+  margin: -11px 0 -11px -11px;
   display: inline-flex; align-items: center; justify-content: center;
   border: none; background: transparent; padding: 0;
   color: var(--accent); border-radius: 8px;
@@ -942,7 +948,24 @@ input[type="month"] {
     padding-top: 0;
     margin-bottom: 12px;
   }
-  .title-row.title-row-sous-page .mobile-page-title { font-size: 22px; }
+  /* 🔴 17 px, et NON les 22 px du handoff — corrigé le 15/08/2026 sur retour de
+     l'utilisateur, après mesure. Ici cette ligne est de la hauteur NETTE : sur
+     desktop `.title-row` était masquée, donc contrairement au mobile elle ne
+     remplace pas une ligne existante mais le fil d'Ariane (13 px, 36 px de haut
+     avec sa marge). À 22 px l'ensemble faisait 38 px : le saut vertical que ce
+     chantier devait supprimer restait entier, et l'écriture pesait bien plus
+     lourd que ce qu'elle remplaçait. À 17 px la ligne retombe à ~32 px, donc
+     SOUS l'ancien fil d'Ariane.
+     ⚠️ La promesse « hauteur inchangée » du handoff n'est structurellement vraie
+     qu'en MOBILE, où la ligne existait déjà et ne fait que changer de contenu. */
+  .title-row.title-row-sous-page .mobile-page-title { font-size: 17px; }
+  /* Le bouton reprend une taille de pointeur : les 44 px ne valent que pour le
+     doigt. Marge gauche recalculée en conséquence — (28 − 22) / 2 = 3 — pour que
+     le glyphe reste sur la marge de contenu. */
+  .title-row.title-row-sous-page .btn-retour {
+    width: 28px; height: 28px;
+    margin: -4px 0 -4px -3px;
+  }
 }
 
 .hero-value-big { font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
