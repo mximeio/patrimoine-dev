@@ -238,6 +238,9 @@ function NewSavingsForm({ onSubmit, showToast }) {
 //  VUE DÉTAIL — un livret
 // ============================================================
 function SavingsDetailView({ ctx, saving, onBack }) {
+  // La ligne de titre de la coquille porte le retour et le nom (§ en-tête de
+  // sous-page). Appelé avant tout retour anticipé, comme n'importe quel hook.
+  useEnteteSousPage(ctx, saving.name, onBack);
   const { user, showToast } = ctx;
   const [modal, setModal] = useState(null); // 'add' | 'configure' | null
   const [editingOpId, setEditingOpId] = useState(null);
@@ -311,15 +314,8 @@ function SavingsDetailView({ ctx, saving, onBack }) {
 
   return (
     <div>
-      {/* BREADCRUMB */}
-      <div className="breadcrumb">
-        <button className="breadcrumb-link" onClick={onBack}>
-          <Icon name="arrowLeft" size={13} />
-          Épargne
-        </button>
-        <span className="breadcrumb-sep">/</span>
-        <span className="breadcrumb-current">{saving.name}</span>
-      </div>
+      {/* Fil d'Ariane SUPPRIMÉ le 15/08/2026 — cf. le même commentaire dans
+          `investments.js`. Le retour et le nom vivent dans la ligne de titre. */}
 
       {/* HERO — nom éditable in-place + module badge + kebab */}
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.savings}`, marginBottom: 16 }}>

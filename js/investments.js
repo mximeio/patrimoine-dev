@@ -365,6 +365,10 @@ function NewPortfolioForm({ onSubmit, showToast }) {
 //  SOUS-PAGE D'UN PORTEFEUILLE
 // ============================================================
 function PortfolioDetailView({ ctx, portfolio, onBack }) {
+  // La ligne de titre de la coquille porte le retour et le nom (§ en-tête de
+  // sous-page). ⚠️ Appelé AVANT tout retour anticipé de ce composant, comme
+  // n'importe quel hook.
+  useEnteteSousPage(ctx, portfolio.name, onBack);
   const { user, refreshPortfolios, showToast } = ctx;
   const [modal, setModal] = useState(null);
   // ID de l'opération en cours d'édition (depuis HistoryOpsTable).
@@ -439,15 +443,11 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
 
   return (
     <div>
-      {/* BREADCRUMB */}
-      <div className="breadcrumb">
-        <button className="breadcrumb-link" onClick={onBack}>
-          <Icon name="arrowLeft" size={13} />
-          Investissements
-        </button>
-        <span className="breadcrumb-sep">/</span>
-        <span className="breadcrumb-current">{portfolio.name}</span>
-      </div>
+      {/* Le fil d'Ariane a été SUPPRIMÉ le 15/08/2026 : il insérait une ligne
+          entre le titre de rubrique et la hero card, soit 36 px de saut vertical
+          mesurés à l'ouverture. Le retour et le nom vivent désormais dans la
+          ligne de titre, posés par `useEnteteSousPage` (déclaré plus haut dans ce
+          composant). Ne pas le réintroduire. */}
 
       {/* HERO */}
       <div className="card hero-card" style={{ borderLeft: `4px solid ${MODULE_COLORS.investments}`, marginBottom: 16 }}>

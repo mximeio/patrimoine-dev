@@ -909,6 +909,41 @@ input[type="month"] {
   height: 24px;
   display: flex; align-items: center;
 }
+/* ===== Ligne de titre en mode SOUS-PAGE (15/08/2026) =====================
+   Remplace les trois fils d'Ariane, qui inséraient une ligne entre le titre de
+   rubrique et la hero card — 36 px de saut vertical mesurés à l'ouverture d'une
+   enveloppe. Ici la hauteur ne bouge pas : la hero card reste au même Y. */
+.titre-retour { display: flex; align-items: center; gap: 4px; min-width: 0; }
+/* ⚠️ Cible tactile de 44 px SANS grandir la ligne de 24 px : les marges
+   négatives compensent exactement le débordement, comme `.title-row-slot`
+   laisse déborder la chip de mois de 32 px. Ne pas remplacer par du padding. */
+.btn-retour {
+  width: 44px; height: 44px;
+  margin: -11px 0 -11px -17px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; background: transparent; padding: 0;
+  color: var(--accent); border-radius: 8px;
+  flex-shrink: 0; cursor: pointer;
+}
+.btn-retour:active { opacity: .6; }
+@media (hover: hover) {
+  .btn-retour:hover { background: var(--accent-light); }
+}
+/* Desktop : la ligne de titre reste masquée sur les pages de RUBRIQUE — le rail
+   du haut les nomme déjà — mais s'affiche sur les SOUS-PAGES, où elle remplace
+   le fil d'Ariane.
+   ⚠️ Enfermé dans `min-width: 641px` À DESSEIN : la règle qui affiche
+   `.title-row` en mobile vit dans `@media (max-width: 640px)` et y pose le
+   `padding-top` de safe-area. Une règle non bornée, plus spécifique, écraserait
+   ce padding et ferait passer le titre sous l'encoche en PWA. */
+@media (min-width: 641px) {
+  .title-row.title-row-sous-page {
+    display: flex;
+    padding-top: 0;
+    margin-bottom: 12px;
+  }
+  .title-row.title-row-sous-page .mobile-page-title { font-size: 22px; }
+}
 
 .hero-value-big { font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
 /* Le dégradé sombre des 5 hero cards (compte courant, épargne, investissements,
@@ -2962,25 +2997,11 @@ button.stat-card {
 /* ============================================================
    Investissements — vue liste + sous-page portefeuille
    ============================================================ */
-.breadcrumb {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 13px; color: var(--text-muted);
-  margin: 0 0 12px;
-  flex-wrap: wrap;
-}
-.breadcrumb-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: none; border: none;
-  color: var(--accent); font-weight: 500;
-  cursor: pointer; padding: 4px 8px;
-  border-radius: 6px;
-  font-family: inherit; font-size: inherit;
-  margin-left: -8px;
-  transition: background 0.15s;
-}
-.breadcrumb-link:hover { background: var(--accent-light); }
-.breadcrumb-sep { color: var(--text-subtle); }
-.breadcrumb-current { color: var(--text); font-weight: 500; }
+/* Les quatre classes `.breadcrumb*` ont été SUPPRIMÉES le 15/08/2026 avec les
+   trois fils d'Ariane qu'elles habillaient (compte courant, épargne,
+   investissements). Le retour vit désormais dans la ligne de titre —
+   `.titre-retour` / `.btn-retour`, plus haut dans ce fichier. Ne pas les
+   recréer : c'est l'en-tête de sous-page qui porte ce rôle. */
 
 .hero-name-edit {
   background: transparent;

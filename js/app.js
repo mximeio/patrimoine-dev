@@ -51,6 +51,15 @@ function App() {
   const [moduleName, setModuleName] = useState(() => readModuleFromHash());
   const [toast, setToast] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  // En-tête de SOUS-PAGE (15/08/2026) : `{ nom, onBack }` quand une sous-page est
+  // ouverte (une enveloppe, un livret, un compte courant en multi), `null` sinon.
+  // C'est la sous-page elle-même qui le pose, par `useEnteteSousPage` (ui.js), et
+  // le canal est `ctx` — pas un contexte React de plus : `ctx` est déjà la voie
+  // par laquelle les vues reçoivent les services de la coquille.
+  // ⚠️ DÉCLARÉ ICI, avec les autres états, donc AVANT les retours anticipés de
+  // `App`. Un hook posé plus bas ne serait pas déclaré pendant le chargement puis
+  // le serait ensuite — c'est exactement le React #310 déposé le 31/07/2026 (§8).
+  const [sousPage, setSousPage] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   // Bottom sheet du menu « ⋯ » mobile (refonte nav)
   const [showSheet, setShowSheet] = useState(false);
@@ -542,6 +551,8 @@ function App() {
     updateProfile,
     refreshSavings, refreshPortfolios, refreshPhysical,
     showToast,
+    // En-tête de sous-page : les vues de détail le posent via `useEnteteSousPage`.
+    setSousPage,
     // Charges partagées (compte joint)
     joint,
     chargesMember: !!(joint && Array.isArray(joint.members) && joint.members.includes(user.uid)),
@@ -599,8 +610,33 @@ function App() {
               masquée sur desktop via le CSS. Le slot de droite reçoit des
               actions contextuelles via portal React (ex. la chip de mois
               du Compte courant, rendue par checking.js). */}
-          <div className="title-row">
-            <h1 className="mobile-page-title">{tabs.find(t => t.id === safeModule)?.label}</h1>
+          {/* Sur une SOUS-PAGE, cette ligne change de contenu au lieu d'être
+              doublée par un fil d'Ariane : chevron de retour + nom de l'objet
+              ouvert. Sa hauteur ne bouge pas, donc la hero card reste au MÊME Y
+              qu'en vue liste — c'était tout l'objet du chantier (36 px de saut
+              mesurés avant, le 15/08/2026).
+              ⚠️ Le slot de droite reste RENDU VIDE, sans le moindre enfant React :
+              c'est un réceptacle de portal (la chip de mois de checking.js le vise
+              par `getElementById`). Y rendre quoi que ce soit ferait cohabiter
+              deux gestionnaires sur le même nœud, et React pourrait effacer ce que
+              le portal y met. C'est aussi pourquoi il n'y a PAS de libellé de
+              rubrique à droite — décision du 15/08/2026, cf. le CHANGELOG. */}
+          <div className={`title-row${sousPage ? ' title-row-sous-page' : ''}`}>
+            {sousPage ? (
+              <div className="titre-retour">
+                <button
+                  type="button"
+                  className="btn-retour"
+                  onClick={sousPage.onBack}
+                  aria-label="Retour"
+                >
+                  <Icon name="chevronLeft" size={22} />
+                </button>
+                <h1 className="mobile-page-title">{sousPage.nom}</h1>
+              </div>
+            ) : (
+              <h1 className="mobile-page-title">{tabs.find(t => t.id === safeModule)?.label}</h1>
+            )}
             <div className="title-row-slot" id="mobileTitleSlot"></div>
           </div>
 
