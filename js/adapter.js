@@ -736,9 +736,37 @@ const Adapter = {
         if (vientDuCache(snap)) { onChange({ ...DEFAULT_PROFILE }); return; }
         // 1er login CONFIRMÉ par le serveur : on initialise le profil par
         // défaut. Le set déclenchera un nouveau snapshot qui notifiera l'app.
+        //
+        //  🔴 UN NOUVEAU COMPTE NAÎT AVEC COMPTE COURANT + ÉPARGNE SEULEMENT.
+        //  Investissements et actifs physiques sont ÉTEINTS ; l'utilisateur les
+        //  active dans les Paramètres s'il en a besoin — même parti que pour les
+        //  tickets resto (cf. `_seedDefaultCheckingAccount`).
+        //  Décision de l'utilisateur, 17/08/2026.
+        //
+        //  ⚠️ POURQUOI CE N'EST PAS DANS `DEFAULT_PROFILE`, ET C'EST PLUS GRAVE
+        //  QUE POUR LES TR. Cet objet est aussi le socle de LECTURE : juste en
+        //  dessous, `modulesEnabled: { ...DEFAULT_PROFILE.modulesEnabled,
+        //  ...(data.modulesEnabled || {}) }` complète les profils dont une clé
+        //  manque. Y basculer `investments`/`physical` à `false` **désactiverait
+        //  le module chez tout utilisateur EXISTANT dont la clé est absente** —
+        //  ses données resteraient en base mais deviendraient invisibles, sans
+        //  que personne ne l'ait décidé.
+        //  🔴 Et on ne peut PAS vérifier que tous les profils portent ces clés :
+        //  les règles interdisent de lire le profil d'un autre utilisateur (c'est
+        //  leur rôle). Le socle reste donc PERMISSIF, et le défaut se pose ICI,
+        //  à la création — le seul endroit où il ne peut toucher personne.
+        //  ⚠️ `loadProfile` (plus haut) porte un second semis avec le même
+        //  travers, non corrigé : elle est MORTE (aucun appelant, vérifié le
+        //  15/08/2026) et doit être supprimée, cf. son entrée garée au backlog.
+        //  Ne pas l'aligner — ce serait donner vie à du code à retirer.
         try {
           await this._profileRef(uidStr).set({
             ...DEFAULT_PROFILE,
+            modulesEnabled: {
+              ...DEFAULT_PROFILE.modulesEnabled,
+              investments: false,
+              physical: false,
+            },
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           });
         } catch (e) { console.warn('[subscribeProfile] init failed', e); }
