@@ -834,6 +834,25 @@ const Adapter = {
       tx.set(ref, {
         name: 'Compte principal',
         ...DEFAULT_CHECKING,
+        // Tickets restaurants ÉTEINTS sur le premier compte, comme sur tous les
+        // suivants (`createCheckingAccount`, plus haut, le fait depuis toujours).
+        // ⚠️ Doit rester APRÈS le spread de DEFAULT_CHECKING, dont `settings`
+        // porte `trEnabled: true` — l'ordre est ce qui fait la règle ici.
+        //
+        //  🔴 POURQUOI CE N'EST PAS DANS `DEFAULT_CHECKING` DIRECTEMENT. Cet objet
+        //  sert aussi de socle de LECTURE : `_normalizeCheckingAccount` fait
+        //  `{ ...DEFAULT_CHECKING.settings, ...(migrated.settings || {}) }` pour
+        //  compléter les comptes anciens. Y basculer `trEnabled` à `false`
+        //  changerait donc l'interprétation d'un compte EXISTANT dont la clé est
+        //  absente — il passerait de « TR actifs » à « TR éteints », sans que rien
+        //  ne l'ait décidé. Le défaut se pose donc à la CRÉATION, jamais dans le
+        //  socle. *(La lecture, elle, teste `trEnabled !== false` : une clé absente
+        //  vaut « actif », et c'est ce qui protège les comptes d'avant.)*
+        //
+        //  Demandé par l'utilisateur le 17/08/2026, après avoir constaté
+        //  l'incohérence : le PREMIER compte naissait avec les TR, tous les
+        //  suivants sans. Personne ne l'avait relevée.
+        settings: { ...DEFAULT_CHECKING.settings, trEnabled: false },
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         // 🔴 `seededAt` — LE MARQUEUR DE SEMIS, et il n'est PAS décoratif.
