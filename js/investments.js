@@ -411,22 +411,33 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   // une panne d'Adapter. ⇒ Le succès ne s'annonce qu'une fois l'écriture faite,
   // et **on ne ferme pas** en cas d'échec : la saisie reste à l'écran, donc
   // rejouable.
-  // ⚠️ L'ATTENTE EST CONSERVÉE ICI, à dessein (01/09/2026). Le motif non
-  // bloquant a été appliqué partout ailleurs dans ce fichier, mais pas à cette
-  // fonction : son booléen de retour décide si le formulaire se ferme, et
-  // l'arbitrage ci-dessus — « on ne ferme pas en cas d'échec, la saisie reste
-  // rejouable » — est né d'un défaut REPRODUIT. Le renverser ferait perdre une
-  // saisie d'opération entière sur un refus tardif.
-  // ⚠️ Le `refreshPortfolios()` qui suivait a bien disparu, LUI : c'était une
-  // relecture serveur redondante (`subscribePortfolios` alimente déjà le même
-  // état) et c'est elle qui pend le plus longtemps sur un canal mort.
-  // ⇒ Conséquence assumée et connue : sur une PWA réveillée par iOS, cette
-  // fenêtre-ci peut encore attendre. C'est une décision à prendre à part.
-  const handleUpdateData = async (newData) => {
-    try {
-      await Adapter.updatePortfolioData(user.uid, portfolio.id, newData);
-      return true;
-    } catch (e) { console.error(e); showToast('Erreur de sauvegarde', 'error'); return false; }
+  // 🔴 L'ARBITRAGE CI-DESSUS EST RENVERSÉ — 01/09/2026, sur décision de
+  // l'utilisateur, après un RETOUR D'USAGE sur son iPhone. Il avait gardé son
+  // attente au chantier du gel de l'épargne (v1030) ; l'usage a tranché :
+  // « ça a fini par passer tout seul au bout de 5 à 10 secondes », fenêtre figée.
+  //
+  // 🔴 CE QUE L'USAGE A APPRIS, et qu'aucune mesure n'avait dit : cette attente
+  // protégeait d'un REFUS serveur — qui ne se produit pas (les règles autorisent
+  // le propriétaire ; il faudrait une session expirée, auquel cas TOUT échoue).
+  // Ce qui se produit, c'est une LENTEUR de rétablissement du canal après le
+  // réveil de l'app. Contre elle, l'attente ne protège de rien : elle la fait
+  // subir. On échangeait un inconfort CERTAIN contre une garantie théorique.
+  // ⚠️ Et attendre l'accusé N'EST PAS attendre la sauvegarde : l'écriture est
+  // appliquée et DURABLE en local dès le clic, `subscribePortfolios` la remonte
+  // aussitôt, et Firestore la rejoue jusqu'à ce qu'elle passe.
+  //
+  // ⚠️ CE QU'ON PERD, ASSUMÉ : sur un vrai refus, le formulaire sera déjà fermé
+  // et la saisie à refaire. Le défaut REPRODUIT que raconte le commentaire du
+  // dessus — « succès PUIS erreur, saisie perdue entre les deux » — ne revient
+  // PAS pour autant : on ne promet plus un succès qu'on n'a pas, on annonce
+  // l'enregistrement local, qui a bien eu lieu.
+  // ⚠️ Le booléen de retour est CONSERVÉ : trois appelants s'en servent pour
+  // fermer et poser leur toast. Il vaut désormais « c'est parti », plus « le
+  // serveur a confirmé ».
+  const handleUpdateData = (newData) => {
+    Adapter.updatePortfolioData(user.uid, portfolio.id, newData)
+      .catch((e) => { console.error(e); showToast('Erreur de sauvegarde', 'error'); });
+    return true;
   };
 
   const handleRename = (newName) => {
@@ -1374,7 +1385,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   // doivent coïncider avec l'écran du dessous, sinon on lit deux listes.
   const ordonnees = sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue);
   const [saisie, setSaisie] = useState({});
-  const [busy, setBusy] = useState(false);
   // TOUT est déplié à l'ouverture. *La règle « les plus anciennes sont dépliées »
   // a existé du matin au soir du 09/08/2026, puis a été retirée avec l'affichage
   // des dates — décision de l'utilisateur. Motif : la date ne servait qu'à
@@ -1437,36 +1447,45 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   const totalGeneralInitial = ordonnees.reduce((a, p) => a + sousTotalInitial(p), 0);
   const deltaGeneral = r2(totalGeneral - totalGeneralInitial);
 
-  const enregistrer = async () => {
-    if (busy) return;
+  // 🔴 ON N'ATTEND PLUS L'ACCUSÉ SERVEUR — 01/09/2026, sur un RETOUR D'USAGE de
+  // l'utilisateur sur son iPhone : « ça a fini par passer tout seul au bout de
+  // 5 à 10 secondes », fenêtre figée et bouton grisé pendant tout ce temps.
+  // C'était le dernier endroit à garder son attente, et le seul qu'on avait
+  // volontairement laissé de côté au chantier du gel de l'épargne (v1030).
+  //
+  // 🔴 CE QUE LE RETOUR D'USAGE A TRANCHÉ, et qu'aucune mesure n'avait dit :
+  // cette attente protégeait d'un REFUS serveur — qui ne s'est pas produit. Ce
+  // qui se produit, c'est une LENTEUR (canal qui se rétablit après le réveil de
+  // l'app : 5-10 s contre 176 ms sur un canal sain, §10). Contre elle, l'attente
+  // ne protège de rien : elle la fait subir. On échangeait un inconfort CERTAIN
+  // contre une garantie sur un cas qui n'arrive pas.
+  // ⚠️ Et attendre l'accusé N'EST PAS attendre la sauvegarde : l'écriture est
+  // appliquée et DURABLE en local dès le clic. Ces 5-10 s étaient de la
+  // confirmation, pas de l'enregistrement.
+  //
+  // ⚠️ CE QU'ON PERD, ASSUMÉ : sur un vrai refus (session expirée), la fenêtre
+  // sera déjà fermée — le toast NOMME l'enveloppe, mais la saisie est à refaire.
+  // L'ancien commentaire disait « on ne ferme que si tout est passé, sinon la
+  // saisie resterait perdue » : cet arbitrage est RENVERSÉ, en connaissance de
+  // cause et sur décision de l'utilisateur. C'est le compromis que le compte
+  // courant retenait déjà, et l'app est désormais uniforme sur ce point.
+  // ⚠️ `busy` disparaît avec l'attente : plus rien à attendre, donc plus de
+  // bouton grisé. Ne pas le réintroduire « par prudence ».
+  const enregistrer = () => {
     // Refus ANNONCÉ (10/08/2026) : remplace un `return` nu, donc un clic mort.
     if (!modifiees.length) return refuser(showToast, REFUS.valorisationsInchangees);
-    setBusy(true);
-    // Une écriture par enveloppe. On continue après un échec et on NOMME
-    // l'enveloppe fautive : pas d'échec silencieux sur un chemin qui écrit.
-    // ⚠️ Le `refreshPortfolios()` qui suivait la boucle a été RETIRÉ le
-    // 01/09/2026 : c'était une relecture serveur redondante, et le commentaire
-    // juste en dessous disait déjà pourquoi — « l'abonnement temps réel remonte
-    // leur nouvelle valeur ». Il le faisait donc à sa place, en pendant sur un
-    // canal mort. *(La spec §1.4 qui le prescrivait est une ARCHIVE, cf. §5.)*
-    // ⚠️ Les `await` de la boucle, EUX, restent : ils collectent quelle
-    // enveloppe a échoué, et cette fenêtre porte la saisie de plusieurs
-    // enveloppes — la perdre coûterait plus que l'attente. Décision à part.
-    const echecs = [];
+    // Une écriture par enveloppe. On NOMME toujours l'enveloppe fautive — le §10
+    // exige « pas d'échec silencieux sur un chemin qui écrit », et cette
+    // exigence-là est tenue : on perd la SIMULTANÉITÉ du message, pas le message.
     for (const m of modifiees) {
       const p = ordonnees.find(x => x.id === m.id);
-      try {
-        await Adapter.updatePortfolioData(user.uid, m.id, {
-          ...(p.data || {}), currentValues: m.currentValues, currentValuesDate: todayIso(),
-        });
-      } catch (e) { console.error(e); echecs.push(p ? p.name : m.id); }
+      Adapter.updatePortfolioData(user.uid, m.id, {
+        ...(p.data || {}), currentValues: m.currentValues, currentValuesDate: todayIso(),
+      }).catch((e) => {
+        console.error(e);
+        showToast(`Échec sur : ${p ? p.name : m.id}`, 'error');
+      });
     }
-    setBusy(false);
-    // ⚠️ On ne ferme QUE si tout est passé : sinon la saisie des enveloppes en
-    // échec resterait perdue. Celles qui ont réussi cessent d'elles-mêmes d'être
-    // « modifiées » (l'abonnement temps réel remonte leur nouvelle valeur), donc
-    // la fenêtre ne montre plus que ce qui reste à enregistrer.
-    if (echecs.length) { showToast(`Échec sur : ${echecs.join(', ')}`, 'error'); return; }
     showToast(`${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''} mise${modifiees.length > 1 ? 's' : ''} à jour`, 'success');
     onClose();
   };
@@ -1493,10 +1512,12 @@ function UpdateAllValuesModal({ ctx, onClose }) {
           modales de l'app (on lit la condition, puis on agit), et le bouton
           redevient le dernier élément de la fenêtre. */}
       <div className="maj-note">Seules les enveloppes modifiées seront écrites et redatées.</div>
-      <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={enregistrer}>
-        {busy ? 'Enregistrement…'
-          : modifiees.length ? `Enregistrer ${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''}`
-          : 'Enregistrer'}
+      {/* Plus de `disabled={busy}` ni d'état « Enregistrement… » (01/09/2026) :
+          l'enregistrement ne dure plus, il n'y a donc plus rien à signaler.
+          ⚠️ Le bouton reste TOUJOURS actif, conformément à la doctrine du
+          10/08/2026 — un refus s'annonce par un toast, jamais par un grisé. */}
+      <button type="button" className="btn btn-accent btn-lg" onClick={enregistrer}>
+        {modifiees.length ? `Enregistrer ${modifiees.length} enveloppe${modifiees.length > 1 ? 's' : ''}` : 'Enregistrer'}
       </button>
     </div>
   );
