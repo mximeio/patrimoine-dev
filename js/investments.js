@@ -10,7 +10,7 @@ const SHOW_ALLOCATION_DONUT = false;
 const ALLOCATION_MIN_SUPPORTS = 2;
 
 function InvestmentsView({ ctx }) {
-  const { user, portfolios, refreshPortfolios, showToast } = ctx;
+  const { user, portfolios, showToast } = ctx;
   const [activeId, setActiveId] = useState(null); // null = vue liste, sinon id du portefeuille
   const [showCreate, setShowCreate] = useState(false);
 
@@ -34,16 +34,21 @@ function InvestmentsView({ ctx }) {
     return () => window.removeEventListener('patrimoine:open', onOpen);
   }, [portfolios]);
 
-  const handleCreate = async (name) => {
-    try {
-      await Adapter.createPortfolio(user.uid, name);
-      await refreshPortfolios();
-      setShowCreate(false);
-      showToast('Enveloppe créée', 'success');
-    } catch (e) {
-      console.error(e);
-      showToast('Erreur de création', 'error');
-    }
+  // 🔴 MOTIF DU COMPTE COURANT (01/09/2026) — on rend la main sans attendre
+  // l'accusé serveur, et le `refreshPortfolios()` a disparu : il relisait la
+  // collection ENTIÈRE alors que `subscribePortfolios` (app.js) alimente déjà
+  // le même `setPortfolios`. Redondant, et c'était une lecture SERVEUR, qui
+  // pend indéfiniment sur une PWA réveillée par iOS (mesuré > 15 s, cf. le
+  // commentaire de `addSavingsOperation` dans `adapter.js`).
+  // ⚠️ Ici la saisie perdue en cas de refus tardif est UN NOM : c'est ce qui
+  // rend l'échange acceptable. Là où la saisie est lourde — `handleUpdateData`
+  // et la mise à jour groupée des valorisations — l'attente est CONSERVÉE, et
+  // leurs commentaires disent pourquoi.
+  const handleCreate = (name) => {
+    Adapter.createPortfolio(user.uid, name)
+      .catch((e) => { console.error(e); showToast('Erreur de création', 'error'); });
+    setShowCreate(false);
+    showToast('Enveloppe créée', 'success');
   };
 
   // Aucun portefeuille → état vide + bouton créer
@@ -369,7 +374,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   // sous-page). ⚠️ Appelé AVANT tout retour anticipé de ce composant, comme
   // n'importe quel hook.
   useEnteteSousPage(ctx, portfolio.name, onBack);
-  const { user, refreshPortfolios, showToast } = ctx;
+  const { user, showToast } = ctx;
   const [modal, setModal] = useState(null);
   // ID de l'opération en cours d'édition (depuis HistoryOpsTable).
   // Null = pas de modale d'édition ouverte. Quand on a un id, on rend
@@ -406,21 +411,29 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   // une panne d'Adapter. ⇒ Le succès ne s'annonce qu'une fois l'écriture faite,
   // et **on ne ferme pas** en cas d'échec : la saisie reste à l'écran, donc
   // rejouable.
+  // ⚠️ L'ATTENTE EST CONSERVÉE ICI, à dessein (01/09/2026). Le motif non
+  // bloquant a été appliqué partout ailleurs dans ce fichier, mais pas à cette
+  // fonction : son booléen de retour décide si le formulaire se ferme, et
+  // l'arbitrage ci-dessus — « on ne ferme pas en cas d'échec, la saisie reste
+  // rejouable » — est né d'un défaut REPRODUIT. Le renverser ferait perdre une
+  // saisie d'opération entière sur un refus tardif.
+  // ⚠️ Le `refreshPortfolios()` qui suivait a bien disparu, LUI : c'était une
+  // relecture serveur redondante (`subscribePortfolios` alimente déjà le même
+  // état) et c'est elle qui pend le plus longtemps sur un canal mort.
+  // ⇒ Conséquence assumée et connue : sur une PWA réveillée par iOS, cette
+  // fenêtre-ci peut encore attendre. C'est une décision à prendre à part.
   const handleUpdateData = async (newData) => {
     try {
       await Adapter.updatePortfolioData(user.uid, portfolio.id, newData);
-      await refreshPortfolios();
       return true;
     } catch (e) { console.error(e); showToast('Erreur de sauvegarde', 'error'); return false; }
   };
 
-  const handleRename = async (newName) => {
+  const handleRename = (newName) => {
     if (!newName || newName === portfolio.name) return;
-    try {
-      await Adapter.renamePortfolio(user.uid, portfolio.id, newName);
-      await refreshPortfolios();
-      showToast('Enveloppe renommée');
-    } catch (e) { console.error(e); showToast('Erreur de renommage', 'error'); }
+    Adapter.renamePortfolio(user.uid, portfolio.id, newName)
+      .catch((e) => { console.error(e); showToast('Erreur de renommage', 'error'); });
+    showToast('Enveloppe renommée');
   };
 
   // 🔴 RENVOIE UN BOOLÉEN, et ce n'est pas cosmétique : l'appelant ne doit fermer la
@@ -432,13 +445,11 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   const handleDelete = async () => {
     if (!confirm(`Supprimer l'enveloppe « ${portfolio.name} » et toutes ses opérations ?\n\nCette action est irréversible.`)) return false;
     if (!confirm('Vraiment sûr ? Toutes les opérations seront perdues à jamais.')) return false;
-    try {
-      await Adapter.deletePortfolio(user.uid, portfolio.id);
-      await refreshPortfolios();
-      showToast('Enveloppe supprimée');
-      onBack();
-      return true;
-    } catch (e) { console.error(e); showToast('Erreur de suppression', 'error'); return false; }
+    Adapter.deletePortfolio(user.uid, portfolio.id)
+      .catch((e) => { console.error(e); showToast('Erreur de suppression', 'error'); });
+    showToast('Enveloppe supprimée');
+    onBack();
+    return true;
   };
 
   return (
@@ -1358,7 +1369,7 @@ function DeltaMontant({ valeur }) {
 // plus rien ». La règle « champ vide = valeur inchangée » exige de garder la
 // chaîne telle quelle. Le refus du négatif, lui, est repris ici.
 function UpdateAllValuesModal({ ctx, onClose }) {
-  const { user, portfolios, refreshPortfolios, showToast } = ctx;
+  const { user, portfolios, showToast } = ctx;
   // MÊME expression que la liste « Mes enveloppes » : l'ordre et les couleurs
   // doivent coïncider avec l'écran du dessous, sinon on lit deux listes.
   const ordonnees = sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue);
@@ -1431,9 +1442,16 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     // Refus ANNONCÉ (10/08/2026) : remplace un `return` nu, donc un clic mort.
     if (!modifiees.length) return refuser(showToast, REFUS.valorisationsInchangees);
     setBusy(true);
-    // Une écriture par enveloppe, puis UN SEUL refreshPortfolios (spec §1.4).
-    // On continue après un échec et on NOMME l'enveloppe fautive : pas d'échec
-    // silencieux sur un chemin qui écrit.
+    // Une écriture par enveloppe. On continue après un échec et on NOMME
+    // l'enveloppe fautive : pas d'échec silencieux sur un chemin qui écrit.
+    // ⚠️ Le `refreshPortfolios()` qui suivait la boucle a été RETIRÉ le
+    // 01/09/2026 : c'était une relecture serveur redondante, et le commentaire
+    // juste en dessous disait déjà pourquoi — « l'abonnement temps réel remonte
+    // leur nouvelle valeur ». Il le faisait donc à sa place, en pendant sur un
+    // canal mort. *(La spec §1.4 qui le prescrivait est une ARCHIVE, cf. §5.)*
+    // ⚠️ Les `await` de la boucle, EUX, restent : ils collectent quelle
+    // enveloppe a échoué, et cette fenêtre porte la saisie de plusieurs
+    // enveloppes — la perdre coûterait plus que l'attente. Décision à part.
     const echecs = [];
     for (const m of modifiees) {
       const p = ordonnees.find(x => x.id === m.id);
@@ -1443,7 +1461,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
         });
       } catch (e) { console.error(e); echecs.push(p ? p.name : m.id); }
     }
-    await refreshPortfolios();
     setBusy(false);
     // ⚠️ On ne ferme QUE si tout est passé : sinon la saisie des enveloppes en
     // échec resterait perdue. Celles qui ont réussi cessent d'elles-mêmes d'être
