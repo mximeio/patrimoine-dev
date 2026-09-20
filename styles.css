@@ -3555,7 +3555,12 @@ button.stat-card {
    est de **25 px d'écran**, rien d'autre — ni données, ni panne, ni régression.
    ⇒ **Ne pas en faire un point de contrôle périodique.** Si tu lis ce bloc,
    c'est que l'occasion s'est présentée : c'est le bon moment, et le seul.
-   La fiche garée du `BACKLOG.md` porte le même avertissement.
+   🔴 **ET SURTOUT : LE TITRE NE RÉVÉLERA JAMAIS QUE LE VOILE A DISPARU.** Une
+   fois ce dégagement posé, il ne bouge plus quoi qu'il arrive — regarder le
+   titre ne peut donc rien apprendre. **Le seul signal est dans l'état DÉFILÉ** :
+   le voile délave aussi la première ligne qui passe sous le bord haut. Le jour
+   où elle reste nette au passage, le voile est parti.
+   La fiche garée du `BACKLOG.md` porte le même avertissement et le seuil.
    ============================================================ */
 @media (max-width: 640px) and (orientation: portrait) {
   html.pwa-standalone .title-row {
