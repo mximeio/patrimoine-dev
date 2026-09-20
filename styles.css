@@ -3499,16 +3499,30 @@ button.stat-card {
    POURQUOI `max()` ET PAS `+ 44px` : si Apple rétablit un inset non nul dans
    une version ultérieure, l'ancienne branche reprend la main toute seule et les
    deux dégagements ne se CUMULENT pas. La règle se périme sans intervention.
-   POURQUOI 35 ET PAS 44 : 35 est la profondeur MESURÉE du voile sur l'appareil
-   de l'utilisateur — le titre s'y pose tangent, sa première ligne de pixels sur
-   la limite, et il est net. (Option A de
-   `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par l'utilisateur le
-   20/09/2026, contre la recommandation de Claude qui proposait 44.)
-   ⚠️ LA RÉSERVE, ÉNONCÉE ET ASSUMÉE : deux cas publics mesurent **38 px** sur
-   d'autres iPhone. Si un appareil de la famille est dans ce cas, les 3 premiers
-   pixels du titre retombent dans la queue du dégradé. ⇒ **Si quelqu'un signale
-   un titre encore délavé, ce chiffre est le premier à regarder** — et le passer
-   à 44 coûte une ligne. Ne pas re-diagnostiquer tout le voile pour ça.
+   🔴 POURQUOI 35, ET POURQUOI CE N'EST PAS UN AJUSTEMENT AU PIXEL PRÈS.
+   Il faut distinguer DEUX seuils, et c'est toute la question :
+     • le voile s'éteint (opacité nulle) à **+38** ;
+     • le TEXTE redevient NET bien avant, à **+34**.
+   La mesure publiée qui fait foi est celle de grappa-irc (PR #2247), sur un
+   appareil RÉEL de géométrie identique à celle de l'utilisateur — 440 px CSS de
+   large, barre de statut de 62 px, Safari 27 :
+       « Contrast at the clearance's own edge:
+         27% at +0, 71% at +18, 91% at +26, crisp at +34 »
+   ⇒ **35 est au-dessus du seuil de netteté, pas tangent à la limite du voile.**
+   C'est la marge de 91 % → net qui est franchie, pas celle de l'opacité.
+   (Option A de `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par
+   l'utilisateur le 20/09/2026.)
+
+   ⚠️ CE QUE CE COMMENTAIRE A DIT DE FAUX PENDANT DEUX COMMITS, parce que la
+   même erreur se reproduirait sans ça : il affirmait que « deux cas publics
+   mesurent 38 px », et Claude recommandait 44 sur cette base. **C'était une
+   confusion de deux sources.** L'autre (mORA, PR #77) mesure **35**, pas 38 —
+   et sur SIMULATEUR, donc c'est la plus faible des deux. Aucune source ne donne
+   38 comme seuil de LISIBILITÉ ; 38 est le seuil d'OPACITÉ, qui ne commande
+   rien ici.
+   ⇒ **Ne pas remonter ce chiffre « par prudence » sans relire la courbe de
+   contraste ci-dessus.** Ce serait payer 9 px d'écran pour une marge qui existe
+   déjà.
 
    ⚠️ PORTRAIT ET `html.pwa-standalone` UNIQUEMENT — les deux conditions sont
    nécessaires. Le paysage n'a pas de voile (pas de barre de statut en haut) et
