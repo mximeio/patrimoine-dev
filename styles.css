@@ -3469,6 +3469,63 @@ button.stat-card {
 }
 
 /* ============================================================
+   LE VOILE iOS 27 — pourquoi le titre a besoin de 44 px (20/09/2026)
+   ------------------------------------------------------------
+   🔴 SYMPTÔME : en PWA installée, portrait, le titre de rubrique est FLOU en
+   permanence. Pas en paysage, pas dans Safari, pas sur desktop.
+   CAUSE : depuis iOS 26 — aggravé en 27 — le système peint un VOILE en haut de
+   la webview d'une app installée. Mesuré sur l'appareil de l'utilisateur, il
+   descend à ≈ 35 px ; deux cas publics en mesurent 38 sur d'autres iPhone.
+
+   🔴 CE QUI A CASSÉ LA RÈGLE D'ORIGINE, et ce n'est pas elle qui a bougé.
+   `.title-row` pose `calc(env(safe-area-inset-top, 0px) + 10px)`, et son
+   commentaire affirme que ce terme « évite que le titre passe sous la status
+   bar ». MESURÉ le 20/09/2026 dans la PWA : `env(safe-area-inset-top)` vaut
+   **0** — iOS insère déjà la webview SOUS la barre de statut (`screen` 956 −
+   `innerHeight` 894 = les 62 px de la barre). Ce terme ne protège donc plus
+   rien, et le titre retombe à 10 px, soit en plein dans le voile (sa boîte de
+   24 px occupait 10 → 34).
+   ⚠️ La phrase du commentaire était VRAIE le jour où elle a été écrite. C'est
+   la plateforme qui a changé, pas le CSS — d'où un défaut qui apparaît sans
+   qu'aucun commit ne l'ait introduit.
+
+   ⚠️ AUCUN AUTRE LEVIER N'EXISTE : ni CSS ni meta ne désactivent ce voile.
+   Éprouvé publiquement — une couleur opaque sous les 200 premiers pixels laisse
+   la teinte altérée à 100 px. C'est un MATÉRIAU TRANSLUCIDE, pas un flou qu'on
+   pourrait saturer en peignant dessous. Ne pas réessayer cette piste.
+   ⚠️ Et `viewport-fit=cover` est HORS DE CAUSE : les quatre insets valent 0,
+   le contenu ne passe pas sous la barre. Testé par la mesure, pas supposé.
+
+   POURQUOI `max()` ET PAS `+ 44px` : si Apple rétablit un inset non nul dans
+   une version ultérieure, l'ancienne branche reprend la main toute seule et les
+   deux dégagements ne se CUMULENT pas. La règle se périme sans intervention.
+   POURQUOI 44 ET PAS 35 : 35 place la première ligne de pixels du titre
+   exactement sur la limite. Il faut que ça tienne sur TOUS les iPhone de la
+   famille, pas seulement sur celui qui a servi à mesurer — d'où 9 px de garde,
+   qui couvrent les 38 px mesurés ailleurs. (Option B de
+   `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par l'utilisateur.)
+
+   ⚠️ PORTRAIT ET `html.pwa-standalone` UNIQUEMENT — les deux conditions sont
+   nécessaires. Le paysage n'a pas de voile (pas de barre de statut en haut) et
+   garde ses 6 px du bloc landscape ; Safari et le desktop n'ont pas la classe.
+   ⚠️ Et le gate DOIT rester `(max-width: 640px) and (orientation: portrait)` :
+   ce sélecteur porte DEUX classes, il gagnerait à la spécificité contre le
+   `.title-row` du bloc landscape — qui s'applique aux téléphones couchés, larges
+   de ~956 px. Même piège que celui documenté dans ce bloc landscape.
+
+   ⚠️ CE QUE ÇA NE CORRIGE PAS, et c'est assumé : le voile mange ce qui se
+   trouve en haut, quoi que ce soit. Au DÉFILEMENT, les lignes passent dessous et
+   sont délavées au passage — comportement voulu par Apple, les apps natives font
+   pareil. Seul l'état AU REPOS est repris, le seul où le titre est flou en
+   permanence. Ne pas rouvrir le sujet pour l'état défilé.
+   ============================================================ */
+@media (max-width: 640px) and (orientation: portrait) {
+  html.pwa-standalone .title-row {
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 10px), 44px);
+  }
+}
+
+/* ============================================================
    PAYSAGE TÉLÉPHONE — la barre basse reste en place (cohérence
    avec le portrait : le pouce trouve la nav au même endroit),
    mais TOUJOURS compacte (icônes seules) pour préserver la
