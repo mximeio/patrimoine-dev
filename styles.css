@@ -3499,11 +3499,16 @@ button.stat-card {
    POURQUOI `max()` ET PAS `+ 44px` : si Apple rétablit un inset non nul dans
    une version ultérieure, l'ancienne branche reprend la main toute seule et les
    deux dégagements ne se CUMULENT pas. La règle se périme sans intervention.
-   POURQUOI 44 ET PAS 35 : 35 place la première ligne de pixels du titre
-   exactement sur la limite. Il faut que ça tienne sur TOUS les iPhone de la
-   famille, pas seulement sur celui qui a servi à mesurer — d'où 9 px de garde,
-   qui couvrent les 38 px mesurés ailleurs. (Option B de
-   `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par l'utilisateur.)
+   POURQUOI 35 ET PAS 44 : 35 est la profondeur MESURÉE du voile sur l'appareil
+   de l'utilisateur — le titre s'y pose tangent, sa première ligne de pixels sur
+   la limite, et il est net. (Option A de
+   `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par l'utilisateur le
+   20/09/2026, contre la recommandation de Claude qui proposait 44.)
+   ⚠️ LA RÉSERVE, ÉNONCÉE ET ASSUMÉE : deux cas publics mesurent **38 px** sur
+   d'autres iPhone. Si un appareil de la famille est dans ce cas, les 3 premiers
+   pixels du titre retombent dans la queue du dégradé. ⇒ **Si quelqu'un signale
+   un titre encore délavé, ce chiffre est le premier à regarder** — et le passer
+   à 44 coûte une ligne. Ne pas re-diagnostiquer tout le voile pour ça.
 
    ⚠️ PORTRAIT ET `html.pwa-standalone` UNIQUEMENT — les deux conditions sont
    nécessaires. Le paysage n'a pas de voile (pas de barre de statut en haut) et
@@ -3521,7 +3526,7 @@ button.stat-card {
    ============================================================ */
 @media (max-width: 640px) and (orientation: portrait) {
   html.pwa-standalone .title-row {
-    padding-top: max(calc(env(safe-area-inset-top, 0px) + 10px), 44px);
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 10px), 35px);
   }
 }
 
