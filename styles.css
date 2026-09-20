@@ -3537,6 +3537,22 @@ button.stat-card {
    sont délavées au passage — comportement voulu par Apple, les apps natives font
    pareil. Seul l'état AU REPOS est repris, le seul où le titre est flou en
    permanence. Ne pas rouvrir le sujet pour l'état défilé.
+
+   🔴 CETTE RÈGLE NE SAIT PAS QUAND ELLE DEVIENDRA INUTILE — et c'est son point
+   faible, soulevé par l'utilisateur le jour de sa pose. Deux futurs :
+     • Apple RÉTABLIT un inset non nul → `max()` fait son travail, l'ancienne
+       branche reprend la main seule. Rien à faire.
+     • Apple RETIRE le voile en laissant l'inset à 0 → `max(10px, 35px)` vaut
+       toujours 35, et **25 px d'écran sont perdus pour rien, sans que rien ne
+       le signale**. C'est le cas le PLUS probable, la régression étant suivie
+       côté WebKit.
+   ⚠️ **Aucune détection automatique n'est possible** : le voile est peint par le
+   compositeur, la page ne peut pas l'observer. Ni `@supports`, ni mesure JS.
+   ⇒ **LE CONTRÔLE EST MANUEL ET COÛTE DIX SECONDES** : remettre `35px` à `10px`,
+   déposer sur DEV, ouvrir la PWA, regarder le titre. S'il est net, le voile a
+   disparu et cette règle entière se retire.
+   ⇒ **À REFAIRE À CHAQUE VERSION MAJEURE D'iOS.** La fiche garée du `BACKLOG.md`
+   porte le déclencheur ; ce commentaire porte la procédure.
    ============================================================ */
 @media (max-width: 640px) and (orientation: portrait) {
   html.pwa-standalone .title-row {
