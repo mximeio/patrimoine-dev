@@ -505,3 +505,99 @@ window.CONFIG_NEEDED = Object.values(window.FIREBASE_CONFIG).some(v => !v || v =
 
 // Log pour ne pas se tromper de base par mégarde
 console.info(`[Patrimoine] Firebase env: ${window.FIREBASE_ENV} (projet ${window.FIREBASE_CONFIG.projectId})`);
+
+// ============================================================
+//  ⛔ TEMPORAIRE — RÈGLE DE MESURE DU VOILE iOS 27  (20/09/2026)
+//
+//  À RETIRER dès la mesure faite. Ce bloc ne sert qu'à répondre à UNE
+//  question : jusqu'où descend la bande de flou que iOS 27 peint en haut
+//  d'une PWA installée, et les insets de sécurité en tiennent-ils compte ?
+//
+//  Pourquoi une règle COLORÉE et pas un simple affichage de chiffres :
+//  le voile est un matériau translucide, pas un flou — sur un aplat
+//  uniforme il ne « floute » rien de visible, mais il DÉCALE la couleur.
+//  Des bandes saturées alternées rendent donc la limite lisible à l'œil,
+//  là où du texte noir sur blanc ne montrerait presque rien.
+//
+//  Gardé sur DEV uniquement : la PROD ne doit jamais l'afficher.
+// ============================================================
+(function () {
+  if (window.FIREBASE_ENV !== 'dev') return;
+
+  function poser() {
+    // --- Lecture des env(safe-area-inset-*) : on les fait calculer par le
+    //     moteur sur une sonde, puis on relit le style calculé.
+    var sonde = document.createElement('div');
+    sonde.style.cssText = 'position:absolute;visibility:hidden;'
+      + 'padding-top:env(safe-area-inset-top,0px);'
+      + 'padding-right:env(safe-area-inset-right,0px);'
+      + 'padding-bottom:env(safe-area-inset-bottom,0px);'
+      + 'padding-left:env(safe-area-inset-left,0px);';
+    document.body.appendChild(sonde);
+    var cs = getComputedStyle(sonde);
+    var insets = [cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft];
+    sonde.remove();
+
+    function mm(q) { return window.matchMedia && window.matchMedia(q).matches; }
+    var mode = ['standalone', 'fullscreen', 'minimal-ui', 'browser'].filter(function (m) {
+      return mm('(display-mode: ' + m + ')');
+    }).join(',') || '(aucun)';
+    var vv = window.visualViewport;
+
+    // --- La règle : bandes de 10 px alternées, de 0 à 200 px, graduées.
+    var regle = document.createElement('div');
+    regle.style.cssText = 'position:fixed;top:0;left:0;width:104px;height:200px;'
+      + 'z-index:2147483647;pointer-events:none;font:11px/1 ui-monospace,Menlo,monospace;';
+    var html = '';
+    for (var y = 0; y < 200; y += 10) {
+      var pair = (y / 10) % 2 === 0;
+      html += '<div style="position:absolute;top:' + y + 'px;left:0;width:104px;height:10px;'
+        + 'background:' + (pair ? '#1d4ed8' : '#f59e0b') + ';"></div>';
+    }
+    // Graduations chiffrées tous les 20 px, en blanc, alignées sur le TRAIT du haut de bande.
+    for (var g = 0; g <= 200; g += 20) {
+      html += '<div style="position:absolute;top:' + g + 'px;left:0;width:104px;height:1px;'
+        + 'background:#fff;"></div>'
+        + '<div style="position:absolute;top:' + (g + 1) + 'px;left:3px;color:#fff;'
+        + 'font-weight:700;text-shadow:0 0 2px #000;">' + g + '</div>';
+    }
+    regle.innerHTML = html;
+
+    // --- Le tableau des cotes, posé BIEN SOUS la bande pour rester net.
+    var panneau = document.createElement('div');
+    panneau.style.cssText = 'position:fixed;top:230px;left:8px;right:8px;z-index:2147483646;'
+      + 'background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px 14px;'
+      + 'font:12px/1.55 ui-monospace,Menlo,monospace;pointer-events:none;'
+      + 'box-shadow:0 6px 24px rgba(0,0,0,.35);';
+    var lignes = [
+      ['safe-area top', insets[0]],
+      ['safe-area right', insets[1]],
+      ['safe-area bottom', insets[2]],
+      ['safe-area left', insets[3]],
+      ['navigator.standalone', String(window.navigator.standalone)],
+      ['display-mode', mode],
+      ['orientation', mm('(orientation: portrait)') ? 'portrait' : 'paysage'],
+      ['innerW x innerH', window.innerWidth + ' x ' + window.innerHeight],
+      ['visualViewport', vv ? (Math.round(vv.width) + ' x ' + Math.round(vv.height)
+        + '  offsetTop ' + Math.round(vv.offsetTop) + '  scale ' + vv.scale) : '(absent)'],
+      ['screen', screen.width + ' x ' + screen.height],
+      ['devicePixelRatio', String(window.devicePixelRatio)],
+      ['viewport-fit', (document.querySelector('meta[name=viewport]') || {}).content || '?'],
+      ['status-bar-style', (document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]') || {}).content || '(absent)']
+    ];
+    var t = '<div style="font-weight:700;color:#38bdf8;margin-bottom:6px">MESURE DU VOILE iOS — temporaire</div>';
+    for (var i = 0; i < lignes.length; i++) {
+      t += '<div style="display:flex;gap:8px"><span style="color:#94a3b8;flex:0 0 132px">'
+        + lignes[i][0] + '</span><span style="color:#fff">' + lignes[i][1] + '</span></div>';
+    }
+    t += '<div style="margin-top:8px;color:#fbbf24">Lis sur la règle le DERNIER chiffre encore délavé.</div>';
+    panneau.innerHTML = t;
+
+    document.body.appendChild(regle);
+    document.body.appendChild(panneau);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', poser);
+  } else { poser(); }
+})();
