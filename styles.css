@@ -3510,6 +3510,25 @@ button.stat-card {
          27% at +0, 71% at +18, 91% at +26, crisp at +34 »
    ⇒ **35 est au-dessus du seuil de netteté, pas tangent à la limite du voile.**
    C'est la marge de 91 % → net qui est franchie, pas celle de l'opacité.
+
+   🔴 **ET CE QUI COMMANDE VRAIMENT CE 35, CE N'EST PAS LE TEXTE : C'EST LA CHIP.**
+   *(Relevé le 20/09/2026, sur la question « on aurait pu mettre 31 ? ».)*
+   `.title-row-slot` fait 24 px, mais la chip de mois du Compte courant fait
+   **32 px** (hauteur verrouillée, v493) et **déborde de 4 px au-dessus** — à
+   dessein, pour que la hero card reste au même niveau que dans les rubriques
+   sans chip. **Le premier pixel de la ligne n'est donc pas à `P`, il est à
+   `P − 4`** :
+       P = 35 → haut de chip à 31   (quasi net)
+       P = 31 → haut de chip à 27   (à peine au-dessus de 91 %)
+       P = 30 → haut de chip à 26   (pile 91 %)
+   ⚠️ **Et 91 % ne vaut pas la même chose selon ce qu'on y met** : du TEXTE à
+   91 % se lit très bien ; une PASTILLE PLEINE BORDÉE à 91 % montre son décalage
+   de teinte. C'est précisément pourquoi ce voile se mesure avec des bandes
+   colorées et non avec du texte noir (cf. `CLAUDE.md` §10).
+   ⇒ **Il n'y a donc pas 5 px de mou dans ce réglage, il y en a au plus 1.**
+   Ne pas rogner cette valeur en raisonnant sur la hauteur du titre seul : c'est
+   la rubrique Compte courant qui la contraint, et elle n'est pas celle qu'on
+   regarde en premier.
    (Option A de `_maquettes/maquette-voile-ios27-titre.html`, arbitrée par
    l'utilisateur le 20/09/2026.)
 
