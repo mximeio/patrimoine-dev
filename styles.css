@@ -3551,8 +3551,11 @@ button.stat-card {
    ⇒ **LE CONTRÔLE EST MANUEL ET COÛTE DIX SECONDES** : remettre `35px` à `10px`,
    déposer sur DEV, ouvrir la PWA, regarder le titre. S'il est net, le voile a
    disparu et cette règle entière se retire.
-   ⇒ **À REFAIRE À CHAQUE VERSION MAJEURE D'iOS.** La fiche garée du `BACKLOG.md`
-   porte le déclencheur ; ce commentaire porte la procédure.
+   ⚠️ **MAIS CE N'EST PAS UNE CORVÉE À SUIVRE** : le coût de ne jamais le faire
+   est de **25 px d'écran**, rien d'autre — ni données, ni panne, ni régression.
+   ⇒ **Ne pas en faire un point de contrôle périodique.** Si tu lis ce bloc,
+   c'est que l'occasion s'est présentée : c'est le bon moment, et le seul.
+   La fiche garée du `BACKLOG.md` porte le même avertissement.
    ============================================================ */
 @media (max-width: 640px) and (orientation: portrait) {
   html.pwa-standalone .title-row {
