@@ -3500,6 +3500,12 @@ button.stat-card {
        .modal-overlay 1000…) : ouverts, ils couvrent le titre, le probe avec. */
     z-index: 55;
   }
+  /* Constaté sur iPhone : tant que le probe est affiché, iOS teinte la barre
+     de statut de sa couleur claire, même sous un voile ouvert (en prod, elle
+     s'assombrit avec le voile). Un voile couvre le titre : on retire le probe. */
+  html.pwa-standalone:has(.modal-overlay, .search-overlay, .sheet-backdrop) .ios-top-edge-probe {
+    display: none;
+  }
   html.pwa-standalone .title-row {
     padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
   }
