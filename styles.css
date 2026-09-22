@@ -3498,30 +3498,13 @@ button.stat-card {
     pointer-events: none;
     z-index: 55;
   }
-  /* Constaté sur iPhone : iOS teinte la barre de statut de la couleur du
-     probe, même quand un voile est ouvert par-dessus. Voile ouvert, le probe
-     passe donc AU-DESSUS du voile avec la couleur exacte du voile posé sur
-     --bg (#fafafa) : barre de statut, probe et voile ne font qu'une teinte.
-     Couleurs = composition calculée, à refaire si --bg ou un voile change.
-     PAS de transition sur la couleur : avec une transition de 0,15 s, la
-     barre de statut restait claire (constaté sur iPhone). */
-  html.pwa-standalone:has(.sheet-backdrop) .ios-top-edge-probe {
-    background: #9c9fa7;           /* rgba(15,23,42,0.4) sur #fafafa */
-    z-index: 3100;
-  }
-  html.pwa-standalone:has(.sheet-backdrop.closing):not(:has(.modal-overlay, .search-overlay)) .ios-top-edge-probe {
-    background: var(--bg);
-  }
-  html.pwa-standalone:has(.modal-overlay) .ios-top-edge-probe {
-    background: #797d88;           /* rgba(15,23,42,0.55) sur #fafafa */
-    z-index: 3100;
-  }
-  html.pwa-standalone:has(.sheet-backdrop):has(.modal-overlay) .ios-top-edge-probe {
-    background: #4e5462;           /* 0.55 sur 0.4 sur #fafafa */
-  }
-  html.pwa-standalone:has(.search-overlay) .ios-top-edge-probe {
-    background: #848892;           /* rgba(15,23,42,0.5) sur #fafafa */
-    z-index: 3100;
+  /* Constaté sur iPhone : tant que le probe est affiché, iOS teinte la barre
+     de statut en clair, même sous un voile ouvert (en prod, elle s'assombrit
+     avec le voile). Un voile couvre le titre : on retire le probe.
+     Essayé sans succès : teinter le probe de la couleur du voile et le passer
+     au-dessus (avec ou sans transition) — la barre de statut reste blanche. */
+  html.pwa-standalone:has(.modal-overlay, .search-overlay, .sheet-backdrop) .ios-top-edge-probe {
+    display: none;
   }
   html.pwa-standalone .title-row {
     padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
