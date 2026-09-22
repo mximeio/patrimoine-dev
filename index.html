@@ -126,33 +126,6 @@
        fichiers JS/CSS depuis le serveur. -->
   <link rel="stylesheet" href="styles.css?v=614" />
 
-  <!-- TEST DEV iOS 27 — vrai élément DOM fixed.
-       Placé APRÈS styles.css pour neutraliser uniquement sur DEV/PWA portrait
-       le workaround 35px présent dans styles.css. -->
-  <style>
-    .ios-top-edge-probe {
-      display: none;
-    }
-
-    @media (max-width: 640px) and (orientation: portrait) {
-      html.pwa-standalone .title-row {
-        padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
-      }
-
-      html.pwa-standalone .ios-top-edge-probe {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 6px;
-        background: #fafafa;
-        pointer-events: none;
-        z-index: 4000;
-      }
-    }
-  </style>
-
   <!-- React + Recharts + Babel + Firebase
        Tous les scripts CDN sont protégés par un hash SRI (Subresource
        Integrity). Si la CDN sert un fichier altéré, le navigateur refuse
@@ -181,8 +154,6 @@
           src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="ios-top-edge-probe" aria-hidden="true"></div>
-
   <div id="root">
     <div class="loading"><div class="spinner"></div><div>Chargement</div></div>
   </div>
