@@ -126,6 +126,29 @@
        fichiers JS/CSS depuis le serveur. -->
   <link rel="stylesheet" href="styles.css?v=614" />
 
+ <!-- TEST DEV iOS 27 : tentative de déclenchement d'une fixed color extension
+     WebKit au bord supérieur. La règle est placée APRÈS styles.css afin de
+     neutraliser le workaround 35px sans toucher au CSS principal. -->
+<style>
+  @media (max-width: 640px) and (orientation: portrait) {
+    html.pwa-standalone .title-row {
+      padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    }
+
+    html.pwa-standalone body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: var(--bg);
+      pointer-events: none;
+      z-index: 4000;
+    }
+  }
+</style> 
+
   <!-- React + Recharts + Babel + Firebase
        Tous les scripts CDN sont protégés par un hash SRI (Subresource
        Integrity). Si la CDN sert un fichier altéré, le navigateur refuse
