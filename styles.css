@@ -3496,7 +3496,9 @@ button.stat-card {
     height: 6px;
     background: var(--bg);
     pointer-events: none;
-    z-index: 4000;
+    /* Sous tous les voiles et popovers (.sheet-backdrop 60, popovers 100,
+       .modal-overlay 1000…) : ouverts, ils couvrent le titre, le probe avec. */
+    z-index: 55;
   }
   html.pwa-standalone .title-row {
     padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
