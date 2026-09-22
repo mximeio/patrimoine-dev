@@ -3496,15 +3496,35 @@ button.stat-card {
     height: 6px;
     background: var(--bg);
     pointer-events: none;
-    /* Sous tous les voiles et popovers (.sheet-backdrop 60, popovers 100,
-       .modal-overlay 1000…) : ouverts, ils couvrent le titre, le probe avec. */
     z-index: 55;
+    transition: background-color 0.15s ease;
   }
-  /* Constaté sur iPhone : tant que le probe est affiché, iOS teinte la barre
-     de statut de sa couleur claire, même sous un voile ouvert (en prod, elle
-     s'assombrit avec le voile). Un voile couvre le titre : on retire le probe. */
-  html.pwa-standalone:has(.modal-overlay, .search-overlay, .sheet-backdrop) .ios-top-edge-probe {
-    display: none;
+  /* Constaté sur iPhone : iOS teinte la barre de statut de la couleur du
+     probe, même quand un voile est ouvert par-dessus. Voile ouvert, le probe
+     passe donc AU-DESSUS du voile avec la couleur exacte du voile posé sur
+     --bg (#fafafa) : barre de statut, probe et voile ne font qu'une teinte.
+     Couleurs = composition calculée, à refaire si --bg ou un voile change.
+     La durée suit le fondu du voile (fadeIn 0,15 s, sheetFade 0,4 s). */
+  html.pwa-standalone:has(.sheet-backdrop) .ios-top-edge-probe {
+    background: #9c9fa7;           /* rgba(15,23,42,0.4) sur #fafafa */
+    z-index: 3100;
+    transition-duration: 0.4s;
+  }
+  html.pwa-standalone:has(.sheet-backdrop.closing):not(:has(.modal-overlay, .search-overlay)) .ios-top-edge-probe {
+    background: var(--bg);
+  }
+  html.pwa-standalone:has(.modal-overlay) .ios-top-edge-probe {
+    background: #797d88;           /* rgba(15,23,42,0.55) sur #fafafa */
+    z-index: 3100;
+    transition-duration: 0.15s;
+  }
+  html.pwa-standalone:has(.sheet-backdrop):has(.modal-overlay) .ios-top-edge-probe {
+    background: #4e5462;           /* 0.55 sur 0.4 sur #fafafa */
+  }
+  html.pwa-standalone:has(.search-overlay) .ios-top-edge-probe {
+    background: #848892;           /* rgba(15,23,42,0.5) sur #fafafa */
+    z-index: 3100;
+    transition-duration: 0.15s;
   }
   html.pwa-standalone .title-row {
     padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
