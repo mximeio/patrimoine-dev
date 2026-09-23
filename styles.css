@@ -3469,49 +3469,6 @@ button.stat-card {
 }
 
 /* ============================================================
-   iOS 27, PWA standalone, portrait : titre flou en haut de l'écran
-   ------------------------------------------------------------
-   Constat : sans rien de particulier, le titre placé à sa position
-   normale (padding-top de 10 px) apparaît flou/délavé par l'effet de
-   bord supérieur d'iOS 27.
-   Testé sur iPhone réel (iOS 27) :
-     • un vrai élément DOM position: fixed, opaque, collé en haut,
-       de 6 px ou plus → le flou disparaît ;
-     • le même en 3 px → le flou revient ;
-     • un pseudo-élément body::before équivalent → sans effet.
-   D'où `.ios-top-edge-probe` (index.html, juste après <body>) : un vrai
-   nœud, pas un pseudo-élément, et pas moins de 6 px. En fixed, il ne
-   prend aucune place dans le layout. Il remplace l'ancien dégagement
-   `max(..., 35px)` du titre, qui coûtait ~25 px de hauteur utile.
-   Limité au smartphone portrait en PWA standalone, comme ce dernier.
-   ============================================================ */
-.ios-top-edge-probe { display: none; }
-@media (max-width: 640px) and (orientation: portrait) {
-  html.pwa-standalone .ios-top-edge-probe {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: var(--bg);
-    pointer-events: none;
-    z-index: 55;
-  }
-  /* Constaté sur iPhone : tant que le probe est affiché, iOS teinte la barre
-     de statut en clair, même sous un voile ouvert (en prod, elle s'assombrit
-     avec le voile). Un voile couvre le titre : on retire le probe.
-     Essayé sans succès : teinter le probe de la couleur du voile et le passer
-     au-dessus (avec ou sans transition) — la barre de statut reste blanche. */
-  html.pwa-standalone:has(.modal-overlay, .search-overlay, .sheet-backdrop) .ios-top-edge-probe {
-    display: none;
-  }
-  html.pwa-standalone .title-row {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
-  }
-}
-
-/* ============================================================
    PAYSAGE TÉLÉPHONE — la barre basse reste en place (cohérence
    avec le portrait : le pouce trouve la nav au même endroit),
    mais TOUJOURS compacte (icônes seules) pour préserver la
