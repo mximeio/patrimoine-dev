@@ -32,6 +32,11 @@ function readModuleFromHash() {
   const h = (window.location.hash || '').replace(/^#/, '');
   return HASH_TO_MODULE[h] || 'overview';
 }
+// Instant (performance.now) de la dernière navigation venue du SYSTÈME —
+// retour ou avance du navigateur, glisser depuis le bord sur iPhone. Lu par
+// la barre d'onglets mobile pour poser sa bulle sans la faire glisser
+// (audit d'interface du 19/10/2026, constat 9). Jamais écrit ailleurs.
+let derniereNavSysteme = -Infinity;
 
 function App() {
   if (window.CONFIG_NEEDED) return <ConfigError />;
@@ -213,7 +218,10 @@ function App() {
   }, [moduleName]);
 
   useEffect(() => {
-    const onLocationChange = () => setModuleName(readModuleFromHash());
+    const onLocationChange = () => {
+      derniereNavSysteme = performance.now();
+      setModuleName(readModuleFromHash());
+    };
     window.addEventListener('popstate', onLocationChange);
     window.addEventListener('hashchange', onLocationChange);
     return () => {
@@ -1101,6 +1109,30 @@ function MobileTabBar({ tabs, current, onSelect, onMore, online = true, cacheOk 
   // v569 : idem barre desktop — les libellés (short) entrent dans les deps
   // pour re-mesurer la goutte quand un texte change de largeur (multi-comptes).
   useSlideIndicator(barRef, indRef, '.tab-item-active .tab-pill', [current, tabs.map(t => t.short || t.label).join('|'), mini], mini, true);
+
+  // Retour ou avance du SYSTÈME (glisser depuis le bord, boutons du
+  // navigateur) : la bulle se POSE au lieu de glisser. Audit d'interface du
+  // 19/10/2026, constat 9 — filmé sur iPhone : la bulle partait de l'onglet
+  // quitté et mettait ~0,6 s à arriver, et pendant ce temps l'icône d'arrivée
+  // (déjà blanche, sans la bulle dessous) et celle que la bulle recouvrait
+  // (encore sombre) disparaissaient toutes les deux. iOS a déjà animé la page
+  // entière : la barre doit être en place quand elle arrive.
+  // ⚠️ `useLayoutEffect` : il passe AVANT l'effet de `useSlideIndicator`, qui
+  // pose la position dans la même validation — c'est ce qui coupe le glissé.
+  // ⚠️ Une navigation par la BARRE n'est pas concernée : le doigt y a déjà
+  // amené la bulle sous l'onglet avant qu'il devienne actif.
+  // ⚠️ La transition est rendue 150 ms plus tard — pas « deux images » : l'effet
+  // qui pose la position est PASSIF, donc différé, et peut passer après deux
+  // images si le montage du module occupe le fil. Rendue sans condition et sans
+  // fonction de nettoyage : annuler ce rendu pourrait laisser la bulle sans
+  // transition pour de bon.
+  useLayoutEffect(() => {
+    if (performance.now() - derniereNavSysteme > 600) return;
+    const ind = indRef.current;
+    if (!ind) return;
+    ind.style.transition = 'none';
+    setTimeout(() => { if (indRef.current) indRef.current.style.transition = ''; }, 150);
+  }, [current]);
 
   // Rétractation au scroll (pattern tab bar de Music sur iOS 26/27).
   // Le scroll vient du scroller interne .main-container sur mobile
