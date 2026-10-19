@@ -937,8 +937,28 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
 
     const followChanged = prevFollowKey.current !== followKey;
     prevFollowKey.current = followKey;
+    // Retour ou avance du SYSTÈME (glisser depuis le bord, boutons du
+    // navigateur) : la pastille se POSE au lieu de glisser. Audit d'interface
+    // du 19/10/2026, constat 9 — filmé sur iPhone : la bulle partait de
+    // l'onglet quitté et mettait ~0,6 s à arriver, et pendant ce temps l'icône
+    // d'arrivée (déjà blanche, sans la bulle dessous) et celle que la bulle
+    // recouvrait (encore sombre) disparaissaient toutes les deux. iOS a déjà
+    // animé la page entière : la barre doit être en place quand elle arrive.
+    // Une navigation par la BARRE n'est pas concernée : le doigt y a déjà amené
+    // la bulle sous l'onglet avant qu'il devienne actif.
+    // 🔴 La coupure se fait ICI, pas dans un effet à part : le nettoyage de cet
+    // effet (plus bas) remet `transition` à vide juste avant que celui-ci ne
+    // pose la nouvelle position. Une coupure posée ailleurs était annulée —
+    // mesuré au navigateur sur la première version (DEV v1072).
+    const systeme = performance.now() - derniereNavSysteme < 600;
     if (followChanged) follow(340);
-    else move();
+    else if (systeme && indicatorRef.current) {
+      const ind = indicatorRef.current;
+      ind.style.transition = 'none';
+      move();
+      void ind.offsetWidth;            // fige la nouvelle position sans transition
+      ind.style.transition = '';
+    } else move();
 
     // Recalage quand la police web finit de charger (largeurs des libellés)
     // et en fin de transition par sécurité.
@@ -1110,29 +1130,6 @@ function MobileTabBar({ tabs, current, onSelect, onMore, online = true, cacheOk 
   // pour re-mesurer la goutte quand un texte change de largeur (multi-comptes).
   useSlideIndicator(barRef, indRef, '.tab-item-active .tab-pill', [current, tabs.map(t => t.short || t.label).join('|'), mini], mini, true);
 
-  // Retour ou avance du SYSTÈME (glisser depuis le bord, boutons du
-  // navigateur) : la bulle se POSE au lieu de glisser. Audit d'interface du
-  // 19/10/2026, constat 9 — filmé sur iPhone : la bulle partait de l'onglet
-  // quitté et mettait ~0,6 s à arriver, et pendant ce temps l'icône d'arrivée
-  // (déjà blanche, sans la bulle dessous) et celle que la bulle recouvrait
-  // (encore sombre) disparaissaient toutes les deux. iOS a déjà animé la page
-  // entière : la barre doit être en place quand elle arrive.
-  // ⚠️ `useLayoutEffect` : il passe AVANT l'effet de `useSlideIndicator`, qui
-  // pose la position dans la même validation — c'est ce qui coupe le glissé.
-  // ⚠️ Une navigation par la BARRE n'est pas concernée : le doigt y a déjà
-  // amené la bulle sous l'onglet avant qu'il devienne actif.
-  // ⚠️ La transition est rendue 150 ms plus tard — pas « deux images » : l'effet
-  // qui pose la position est PASSIF, donc différé, et peut passer après deux
-  // images si le montage du module occupe le fil. Rendue sans condition et sans
-  // fonction de nettoyage : annuler ce rendu pourrait laisser la bulle sans
-  // transition pour de bon.
-  useLayoutEffect(() => {
-    if (performance.now() - derniereNavSysteme > 600) return;
-    const ind = indRef.current;
-    if (!ind) return;
-    ind.style.transition = 'none';
-    setTimeout(() => { if (indRef.current) indRef.current.style.transition = ''; }, 150);
-  }, [current]);
 
   // Rétractation au scroll (pattern tab bar de Music sur iOS 26/27).
   // Le scroll vient du scroller interne .main-container sur mobile
