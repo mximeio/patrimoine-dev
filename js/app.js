@@ -38,6 +38,88 @@ function readModuleFromHash() {
 // (audit d'interface du 19/10/2026, constat 9). Jamais écrit ailleurs.
 let derniereNavSysteme = -Infinity;
 
+function urlDuModule(module) {
+  const hash = MODULE_TO_HASH[module] || '';
+  return `${window.location.pathname}${window.location.search}${hash ? '#' + hash : ''}`;
+}
+
+// ============================================================
+//  HISTORIQUE FAÇON iPHONE (DEV v1076, suite du constat 9 de l'audit du
+//  19/10/2026, décision de l'utilisateur).
+//
+//  🔴 La règle : CHANGER D'ONGLET N'EST PAS UNE NAVIGATION. Seule l'ouverture
+//  d'une SOUS-PAGE (un compte courant en multi, un livret, une enveloppe) crée
+//  une entrée d'historique ; le geste de retour — glisser depuis le bord, bouton
+//  Retour du navigateur — REMONTE donc de la sous-page à sa liste, comme dans
+//  une app iOS, et ne change jamais d'onglet.
+//  Avant : chaque onglet empilait une entrée (`pushState`), aucune sous-page.
+//  Deux défauts en sortaient, constatés sur l'iPhone de l'utilisateur :
+//   • depuis « Compte principal », le retour sautait la liste et ramenait à
+//     l'onglet d'avant ;
+//   • pendant le glisser, iOS montre une PHOTO de l'écran précédent prise au
+//     moment où on l'a quitté — par la barre, donc bulle en plein mouvement :
+//     la photo montrait la bulle entre deux onglets. Plus d'entrée par
+//     onglet, plus de photo de barre en mouvement.
+//
+//  ⚠️ Le point délicat, et la raison d'être de cet objet : TENIR L'HISTORIQUE
+//  À JOUR SUR LES QUATRE SORTIES d'une sous-page — chevron ‹, appui sur l'onglet
+//  actif, autre onglet, suppression de l'élément. Fermer la sous-page sans
+//  retirer son entrée laisserait un retour « mort » (il consommerait l'entrée
+//  sans rien changer à l'écran). D'où : une sortie interne fait `back()`, et
+//  le `popstate` qu'elle provoque est reconnu (`attente`) puis ignoré, après
+//  avoir rejoué ce que React a demandé entre-temps.
+//  ⚠️ Objet sans React ni DOM : l'historique est INJECTÉ (`h`), d'où des tests
+//  qui rejouent des séquences entières sur un faux historique (tests.js).
+//
+//  h : { push(state, url), replace(state, url), back(), url(module) }
+// ============================================================
+function creerNavigation(h) {
+  let reflet = null;     // { module, sp } : ce que l'historique reflète ; sp = sous-page au-dessus
+  let attente = null;    // { cible: { module, sp } } : un back() lancé par nous, popstate attendu
+  const SP = { sousPage: true };
+  const appliquer = (cible) => {
+    if (cible.module !== reflet.module) h.replace(null, h.url(cible.module));
+    if (cible.sp) h.push(SP, h.url(cible.module));
+    reflet = { module: cible.module, sp: cible.sp };
+  };
+  return {
+    // Appelée à chaque changement d'onglet ou d'ouverture de sous-page côté React.
+    synchroniser(module, sp) {
+      if (!reflet) {                       // montage : normalise l'entrée courante
+        h.replace(null, h.url(module));
+        reflet = { module, sp: false };
+        if (sp) appliquer({ module, sp: true });
+        return;
+      }
+      if (attente) { attente.cible = { module, sp }; return; }   // on rejouera au popstate
+      if (reflet.module === module && reflet.sp === sp) return;
+      if (reflet.sp) {                     // une sous-page est au-dessus : la retirer d'abord
+        attente = { cible: { module, sp } };
+        h.back();
+        return;
+      }
+      appliquer({ module, sp });
+    },
+    // Appelée sur `popstate`. null = retour interne, rien à faire côté React ;
+    // sinon { module, fermerSousPage } = navigation du SYSTÈME à répercuter.
+    surRetour(moduleLu, state) {
+      if (attente) {
+        const cible = attente.cible;
+        attente = null;
+        reflet = { module: reflet.module, sp: false };   // l'entrée de sous-page est retirée
+        appliquer(cible);
+        return null;
+      }
+      // Une AVANCE vers une sous-page qu'on ne sait pas rouvrir : l'entrée est
+      // neutralisée (elle devient une simple entrée d'onglet).
+      if (state && state.sousPage) h.replace(null, h.url(moduleLu));
+      const fermerSousPage = !!(reflet && reflet.sp);
+      reflet = { module: moduleLu, sp: false };
+      return { module: moduleLu, fermerSousPage };
+    },
+  };
+}
+
 function App() {
   if (window.CONFIG_NEEDED) return <ConfigError />;
 
@@ -193,40 +275,45 @@ function App() {
 
   // ============================================================
   //  Routing par hash — sync moduleName ↔ URL
-  //  - Première synchro au mount = replaceState (silencieux, pas
-  //    d'entrée d'historique), notamment pour normaliser un hash invalide
-  //  - Synchros suivantes = pushState (crée une entrée → back/forward du navigateur)
-  //  - Écoute popstate + hashchange pour récupérer une navigation externe
+  //  - L'URL porte l'onglet (#compte-courant…), mais changer d'onglet REMPLACE
+  //    l'entrée (replaceState) : depuis la DEV v1076, seule une SOUS-PAGE en crée
+  //    une — cf. `creerNavigation` en tête de fichier, qui porte toute la règle.
+  //  - Écoute popstate (retour/avance) et hashchange (adresse modifiée à la main)
   // ============================================================
-  const isFirstHashSync = useRef(true);
+  const navRef = useRef(null);
+  if (!navRef.current) {
+    navRef.current = creerNavigation({
+      push: (s, u) => history.pushState(s, '', u),
+      replace: (s, u) => history.replaceState(s, '', u),
+      back: () => history.back(),
+      url: urlDuModule,
+    });
+  }
+  // La sous-page COURANTE, lue par le gestionnaire de popstate (posé une fois).
+  const sousPageRef = useRef(sousPage);
+  sousPageRef.current = sousPage;
+  const sousPageOuverte = !!sousPage;
   useEffect(() => {
-    const hash = MODULE_TO_HASH[moduleName] || '';
-    const currentHash = (window.location.hash || '').replace(/^#/, '');
-    if (hash === currentHash) {
-      isFirstHashSync.current = false;
-      return;
-    }
-    const url = hash
-      ? `${window.location.pathname}${window.location.search}#${hash}`
-      : `${window.location.pathname}${window.location.search}`;
-    if (isFirstHashSync.current) {
-      history.replaceState(null, '', url);
-      isFirstHashSync.current = false;
-    } else {
-      history.pushState(null, '', url);
-    }
-  }, [moduleName]);
+    navRef.current.synchroniser(moduleName, sousPageOuverte);
+  }, [moduleName, sousPageOuverte]);
 
   useEffect(() => {
-    const onLocationChange = () => {
+    const onPopState = (e) => {
+      const r = navRef.current.surRetour(readModuleFromHash(), e.state);
+      if (!r) return;                       // retour lancé par l'app elle-même
+      derniereNavSysteme = performance.now();
+      if (r.fermerSousPage && sousPageRef.current) sousPageRef.current.onBack();
+      setModuleName(r.module);
+    };
+    const onHashChange = () => {
       derniereNavSysteme = performance.now();
       setModuleName(readModuleFromHash());
     };
-    window.addEventListener('popstate', onLocationChange);
-    window.addEventListener('hashchange', onLocationChange);
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('hashchange', onHashChange);
     return () => {
-      window.removeEventListener('popstate', onLocationChange);
-      window.removeEventListener('hashchange', onLocationChange);
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('hashchange', onHashChange);
     };
   }, []);
 
