@@ -1394,19 +1394,22 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
   // ---- Poignée « physique » (drag-to-dismiss) ------------------------
   // La sheet suit le doigt : vers le BAS en 1:1 (le backdrop s'estompe
   // proportionnellement), vers le HAUT avec une résistance élastique
-  // (asymptote ~42 px). Au lâcher : fermeture si on a assez descendu
-  // (> 80 px) ou d'un geste vif (> 0,5 px/ms), sinon retour en place
-  // avec un léger rebond. La fermeture par drag n'utilise PAS la classe
-  // .closing (son animation CSS repart de translateY(0) → saut visuel) :
-  // on anime depuis la position courante en styles inline.
+  // (asymptote ~42 px). Au lâcher, `fermerLaFeuille` (utils.js) décide :
+  // le SENS du doigt d'abord — une remontée garde la feuille, même tirée
+  // loin —, puis le geste prolongé contre le seuil de 80 px (audit du
+  // 19/10/2026 : avant, la position seule décidait au-delà de 80 px).
+  // Sinon retour en place avec un léger rebond. La fermeture par drag
+  // n'utilise PAS la classe .closing (son animation CSS repart de
+  // translateY(0) → saut visuel) : on anime depuis la position courante
+  // en styles inline, À LA VITESSE DU DOIGT (`dureeFermetureFeuille`).
   const sheetRef = useRef(null);
   const backdropRef = useRef(null);
-  const dragRef = useRef(null); // { startY, dy, lastY, lastT, vel }
+  const dragRef = useRef(null); // { startY, dy, y, pts: [{ y, t }] }
 
   const onDragStart = (e) => {
     if (closing || dragClosing.current) return;
     if (e.target.closest('button')) return; // tap sur une action ≠ drag
-    dragRef.current = { startY: e.clientY, dy: 0, lastY: e.clientY, lastT: e.timeStamp, vel: 0 };
+    dragRef.current = { startY: e.clientY, dy: 0, y: 0, pts: [{ y: e.clientY, t: e.timeStamp }] };
     const sheet = sheetRef.current, bd = backdropRef.current;
     if (sheet) sheet.style.transition = 'none';
     if (bd) bd.style.transition = 'none';
@@ -1415,12 +1418,14 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
   const onDragMove = (e) => {
     const d = dragRef.current;
     if (!d || !sheetRef.current) return;
-    const dt = e.timeStamp - d.lastT;
-    if (dt > 0) d.vel = (e.clientY - d.lastY) / dt; // px/ms, > 0 = vers le bas
-    d.lastY = e.clientY; d.lastT = e.timeStamp;
+    // Historique court des positions : `vitesseRecente` lit les ~100
+    // dernières ms. On garde de la marge, sans laisser la liste grossir.
+    d.pts.push({ y: e.clientY, t: e.timeStamp });
+    if (d.pts.length > 24) d.pts.splice(0, d.pts.length - 24);
     d.dy = e.clientY - d.startY;
     // Vers le haut : élastique r(a) = a·c/(a+c) — asymptote à c px.
     const y = d.dy >= 0 ? d.dy : -((-d.dy * 42) / (-d.dy + 42));
+    d.y = y;
     sheetRef.current.style.transform = `translateY(${y}px)`;
     const bd = backdropRef.current;
     if (bd) bd.style.opacity = d.dy > 0
@@ -1433,14 +1438,18 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
     dragRef.current = null;
     const sheet = sheetRef.current, bd = backdropRef.current;
     if (!sheet) return;
-    const shouldClose = d.dy > 80 || (d.dy > 15 && d.vel > 0.5);
-    if (shouldClose) {
+    const vitesse = vitesseRecente(d.pts);
+    if (fermerLaFeuille(d.dy, vitesse)) {
       dragClosing.current = true;
       sheet.style.pointerEvents = 'none';
-      sheet.style.transition = 'transform 0.22s ease-in';
+      // Part à la vitesse du doigt puis ralentit (avant : `0.22s ease-in`,
+      // qui repartait de zéro — un à-coup au lâcher d'un geste vif).
+      const reste = sheet.offsetHeight * 1.15 - d.y;
+      const duree = dureeFermetureFeuille(reste, vitesse);
+      sheet.style.transition = `transform ${Math.round(duree)}ms cubic-bezier(0.25, 0.5, 0.5, 1)`;
       sheet.style.transform = 'translateY(115%)';
       // v525 : fondu du backdrop allongé (0,4 s) — même palliatif que
-      // closeWith, la sheet garde sa vivacité (0,22 s).
+      // closeWith, la sheet garde sa vivacité.
       if (bd) { bd.style.transition = 'opacity 0.4s ease'; bd.style.opacity = '0'; }
       setTimeout(onClose, 410);
     } else {
