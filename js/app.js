@@ -954,10 +954,16 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     if (followChanged) follow(340);
     else if (systeme && indicatorRef.current) {
       const ind = indicatorRef.current;
+      // Les icônes aussi : `.tab-pill` fond sa couleur en 0,3 s, et pendant ce
+      // fondu l'icône d'arrivée restait sombre dans la bulle sombre (vidéo de
+      // l'utilisateur sur DEV v1074). Coupé le temps de poser la bulle.
+      const pills = containerRef.current ? [...containerRef.current.querySelectorAll('.tab-pill')] : [];
       ind.style.transition = 'none';
+      pills.forEach((p) => { p.style.transition = 'none'; });
       move();
       void ind.offsetWidth;            // fige la nouvelle position sans transition
       ind.style.transition = '';
+      pills.forEach((p) => { p.style.transition = ''; });
     } else move();
 
     // Recalage quand la police web finit de charger (largeurs des libellés)

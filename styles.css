@@ -4334,8 +4334,16 @@ button.cp-seg-item { cursor: pointer; }
    ============================================================ */
 @media (hover: none) and (pointer: coarse) {
   body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  input, textarea, select, [contenteditable="true"] {
+  input:not([readonly]), textarea:not([readonly]), select, [contenteditable="true"] {
     -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
+  }
+  /* Un champ en LECTURE SEULE n'est que de l'affichage — montant d'une ligne du
+     compte courant ou d'un récurrent, montant TR calculé : on le modifie par le
+     crayon. Il reste donc insélectionnable, et ne prend plus le doigt
+     (`pointer-events`) : sans ça, iOS y posait quand même sa sélection.
+     Constaté par l'utilisateur sur DEV v1074, appui long sur un montant. */
+  input[readonly], textarea[readonly] {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; pointer-events: none;
   }
 }
 
