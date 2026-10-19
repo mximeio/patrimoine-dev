@@ -4338,3 +4338,38 @@ button.cp-seg-item { cursor: pointer; }
     -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
   }
 }
+
+/* ============================================================
+   RÉDUIRE LES ANIMATIONS — audit d'interface du 19/10/2026 (constat 5)
+   ============================================================
+   Réglages iOS → Accessibilité → Mouvement → « Réduire les animations ».
+   L'app l'ignorait : la bulle de la barre glissait et rebondissait quand même.
+   Ici, plus de glissement ni de rebond : les éléments se POSENT, et ceux qui
+   apparaissent le font en fondu court. Les changements de COULEUR restent (le
+   flash d'une ligne retrouvée par la recherche aide à comprendre).
+   ⚠️ Sans effet pour qui n'a pas activé le réglage : les ressorts de la barre,
+   choisis par l'utilisateur (v504), sont intacts.
+   ⚠️ La feuille « ⋯ » pose deux transitions en JS au lâcher : `onDragEnd`
+   (app.js) lit ce réglage lui-même. Verrouillé par un test.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .tab-slide-ind,
+  .seg-indicator { transition: none; }
+  .tab-slide-ind::before { transition: box-shadow 0.2s ease; }
+  .tabbar-capsule { transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .modal { animation: fadeIn 0.15s ease; }
+  .bottom-sheet { animation: sheetFade 0.2s ease; }
+  .bottom-sheet.closing { animation: sheetFadeOut 0.2s ease forwards; }
+  .toast { animation: fadeIn 0.15s ease; }
+  .net-pill { animation: fadeIn 0.2s ease; }
+  .swap-pane.hidden-left,
+  .swap-pane.hidden-right { transform: none; }
+}
+
+/* Réglages iOS → Accessibilité → Affichage et taille du texte → « Réduire la
+   transparence » : la barre de verre devient opaque. ⚠️ Prise en charge de
+   cette requête par Safari NON VÉRIFIÉE au 19/10/2026 — sans elle, la règle
+   est simplement ignorée. */
+@media (prefers-reduced-transparency: reduce) {
+  .glassbar { background: rgba(252, 252, 254, 0.97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

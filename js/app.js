@@ -1482,8 +1482,13 @@ function MobileSheet({ user, onClose, onSearch, onSettings, onSignOut, online = 
       if (bd) { bd.style.transition = 'opacity 0.4s ease'; bd.style.opacity = '0'; }
       setTimeout(onClose, 410);
     } else {
-      // Retour en place avec un léger REBOND (courbe à dépassement)
-      sheet.style.transition = 'transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      // Retour en place avec un léger REBOND (courbe à dépassement) — sauf si
+      // « Réduire les animations » est activé (audit du 19/10/2026, constat 5) :
+      // le CSS ne peut pas neutraliser une transition posée en style en ligne.
+      const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      sheet.style.transition = reduit
+        ? 'transform 0.2s ease-out'
+        : 'transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)';
       sheet.style.transform = 'translateY(0)';
       if (bd) { bd.style.transition = 'opacity 0.2s ease'; bd.style.opacity = ''; }
       setTimeout(() => {
