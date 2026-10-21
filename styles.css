@@ -1588,6 +1588,18 @@ button.stat-card {
 .composite-comp-row.with-edit {
   grid-template-columns: 22px 1fr var(--amt-w, 130px) 24px;
 }
+/* Composantes d'une ligne d'OPÉRATION (DEV v1098, demandé par l'utilisateur) : l'icône est centrée sous la case à cocher
+   des lignes, et le libellé démarre au même endroit que le leur. Sur ordinateur, l'icône l'était déjà ; le libellé
+   était 4 px trop à gauche — la colonne de l'icône passe de 22 à 26 (l'icône, calée à gauche, ne bouge pas).
+   Ciblé par `.tx-row.composite-row +` : les composantes des récurrents (pas de case à cocher) ne bougent pas. */
+.tx-row.composite-row + .composite-comps .composite-comp-row { grid-template-columns: 26px 1fr var(--amt-w, 130px); }
+.tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 26px 1fr var(--amt-w, 130px) 24px; }
+/* Composantes d'un RÉCURRENT (DEV v1098) : pas de case à cocher, donc mêmes colonnes que la ligne parente — l'icône
+   sous son icône, le libellé sous son libellé (elles étaient en retrait de 36 px). La ligne porte un retrait de 14 px
+   en style en ligne (settings.js) : les composantes le reprennent. */
+.recurring-row.composite-row + .composite-comps { padding-left: 14px; }
+.recurring-row.composite-row + .composite-comps .composite-comp-row { grid-template-columns: 28px 1fr var(--amt-w, 130px); }
+.recurring-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 28px 1fr var(--amt-w, 130px) 24px; }
 .composite-comp-row:last-child { border-bottom: none; }
 .composite-comp-row input {
   background: transparent; border: none; outline: none;
@@ -3343,6 +3355,13 @@ button.stat-card {
   /* Variante with-edit mobile : colonne fantôme 22px (matche le crayon parent) */
   .composite-comp-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
   .composite-comps { padding: 0 10px 0 28px; }
+  /* Lignes d'opération (DEV v1098) : sur téléphone, l'icône des composantes était 7 px à gauche du centre de la case
+     à cocher, et leur libellé 8 px à gauche de celui des lignes. Mesuré au navigateur : retrait 35 px, colonne 21. */
+  .tx-row.composite-row + .composite-comps { padding-left: 35px; }
+  .tx-row.composite-row + .composite-comps .composite-comp-row { grid-template-columns: 21px 1fr var(--amt-w, 112px); }
+  .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 21px 1fr var(--amt-w, 112px) 22px; }
+  .recurring-row.composite-row + .composite-comps .composite-comp-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); }
+  .recurring-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
   .composite-amount-wrap { gap: 2px; }
   .composite-chevron { width: 20px; height: 20px; }
   /* Épargne, Actifs physiques : Famille A légèrement plus aérée que tx-row */
@@ -3872,15 +3891,21 @@ button.stat-card {
 .frozen-month .tx-row.tr-row.with-edit { grid-template-columns: 28px 1fr var(--amt-w, 130px); } /* v577 : TR figé sans pointage ni crayon */
 .frozen-month .composite-comp-row.with-edit { grid-template-columns: 22px 1fr var(--amt-w, 130px); }
 .frozen-month .composite-comp-row.with-edit > span[aria-hidden] { display: none; }
+/* … et la règle d'alignement des composantes (DEV v1098), plus spécifique, doit suivre : sans elle, la composante
+   gardait sa colonne fantôme et son montant restait 34 px à gauche de celui des lignes. */
+.frozen-month .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 26px 1fr var(--amt-w, 130px); }
 /* Déclinaison MOBILE : mêmes gabarits compacts que les lignes sans crayon
    du media ≤ 640px (112/96px de montant, icônes 20px) — sans cette
    déclinaison, les règles ci-dessus (gabarits desktop 130px) écraseraient
-   les colonnes compactes par spécificité. */
-@media (max-width: 640px) {
+   les colonnes compactes par spécificité.
+   ⚠️ 768 et non plus 640 (DEV v1098) : les gabarits compacts des lignes vivent dans le bloc ≤ 768 px ; entre 641 et
+   768, un mois figé gardait les gabarits de l'ordinateur et ne s'alignait plus sur un mois non figé. */
+@media (max-width: 768px) {
   .frozen-month .tx-row.with-edit,
   .frozen-month .tx-row.composite-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px); }
   .frozen-month .tx-row.tr-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px); } /* v577 : TR figé (mobile) */
   .frozen-month .composite-comp-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px); }
+  .frozen-month .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: 21px 1fr var(--amt-w, 112px); }
 }
 /* Cases de pointage ATTÉNUÉES en mois figé (v576) : même coche que l'active
    (carré plein indigo + coche blanche), mais l'indigo est passé à 50 %
