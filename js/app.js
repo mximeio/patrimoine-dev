@@ -594,27 +594,31 @@ function App() {
     };
   }, []);
 
-  // Barre de défilement d'iOS (DEV v1089) : la couleur sombre que pose
-  // styles.css n'est transmise à iOS que quand elle CHANGE. Après un aller-retour
-  // hors de l'app, iOS remettait la sienne — blanche en mode sombre, donc
-  // invisible (constaté par l'utilisateur sur DEV v1088). Au retour, on la fait
-  // changer d'un cran (opacité 45 % → 44 %, invisible à l'œil), puis on la
-  // rétablit un peu plus tard, au cas où iOS ne la remettrait qu'après coup.
+  // Barre de défilement d'iOS (DEV v1090) : iOS ne semble prendre la couleur
+  // sombre de styles.css qu'à la CRÉATION d'une zone qui défile. Après un
+  // aller-retour hors de l'app, il remettait la sienne — blanche en mode sombre,
+  // donc invisible (DEV v1088) ; changer la couleur au retour n'y faisait rien
+  // (DEV v1089). Ouvrir une fenêtre la faisait revenir : le verrou de `Modal`
+  // (ui.js) passe le scroller en overflow:hidden puis le rétablit, ce qui le
+  // recrée. Au retour, on fait de même le temps de deux images ; overflow:hidden
+  // préserve le scrollTop. Écran tactile seulement : sur ordinateur, retirer un
+  // instant la barre d'une fenêtre ferait sauter sa largeur.
   useEffect(() => {
-    const html = document.documentElement;
-    let minuteur = null;
-    const raviver = () => {
+    const recreer = () => {
       if (document.visibilityState !== 'visible') return;
-      html.classList.add('barre-ravivee');
-      clearTimeout(minuteur);
-      minuteur = setTimeout(() => html.classList.remove('barre-ravivee'), 600);
+      if (!window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+      const zones = [...document.querySelectorAll('.main-container, .modal-body')];
+      const avant = zones.map((el) => el.style.overflowY);
+      zones.forEach((el) => { el.style.overflowY = 'hidden'; });
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        zones.forEach((el, i) => { el.style.overflowY = avant[i]; });
+      }));
     };
-    document.addEventListener('visibilitychange', raviver);
-    window.addEventListener('pageshow', raviver);
+    document.addEventListener('visibilitychange', recreer);
+    window.addEventListener('pageshow', recreer);
     return () => {
-      clearTimeout(minuteur);
-      document.removeEventListener('visibilitychange', raviver);
-      window.removeEventListener('pageshow', raviver);
+      document.removeEventListener('visibilitychange', recreer);
+      window.removeEventListener('pageshow', recreer);
     };
   }, []);
 
