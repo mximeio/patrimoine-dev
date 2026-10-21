@@ -47,6 +47,16 @@ const NUANCE_ICONE = {
 };
 const couleurIcone = (couleur) => NUANCE_ICONE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 75%, #0f172a)`;
 
+// Le fond PÂLE d'une pastille posée en JS (DEV v1096) : le même que les pastilles du CSS (`--success-light`…, les
+// nuances 50), et non la couleur à 13-15 % — deux fois plus colorée, elle rendait les listes de l'accueil, d'épargne,
+// d'actifs et les supports plus ternes que la carte « Tickets resto » (relevé par l'utilisateur). Une couleur hors
+// table (choisie librement) est éclaircie à 8 %. Avec `couleurIcone`, l'icône y reste à 3:1 au moins (test).
+const FOND_PASTILLE = {
+  '#10b981': '#ecfdf5', '#ef4444': '#fef2f2', '#f59e0b': '#fffbeb', '#06b6d4': '#ecfeff',
+  '#ec4899': '#fdf2f8', '#8b5cf6': '#f5f3ff', '#4f46e5': '#eef2ff', '#64748b': '#f1f5f9',
+};
+const fondPastille = (couleur) => FOND_PASTILLE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 8%, #ffffff)`;
+
 // Format hybride : séparateur de milliers à la française (espace fine),
 // mais point décimal à l'anglo-saxonne — cohérent avec la saisie qui produit
 // toujours du `12.5` (AmountInput → String(n)).

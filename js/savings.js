@@ -171,7 +171,7 @@ function SavingsListRow({ saving, colorIndex, onClick }) {
     .reduce((latest, o) => (!latest || o.date > latest.date) ? o : latest, null);
   return (
     <button className="portfolio-list-row" data-locate={`saving-${saving.id}`} onClick={onClick} aria-label={`Ouvrir ${saving.name}`}>
-      <div className="portfolio-list-icon" style={{ background: color + '22', color: couleurIcone(color) }}>
+      <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
         <Icon name="piggy" size={12} />
       </div>
       <div className="portfolio-list-main">

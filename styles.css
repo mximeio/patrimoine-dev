@@ -2427,13 +2427,12 @@ button.stat-card {
 
 /* Assets rows */
 .asset-row {
-  display: grid; grid-template-columns: 26px 1fr auto auto;
+  display: grid; grid-template-columns: 22px 1fr auto auto; /* colonne = pastille du palier petit (DEV v1096) */
   gap: 12px; align-items: center;
   min-height: 60px; /* hauteur cohérente avec .portfolio-list-row */
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
 }
-.asset-row .tx-icon { width: 26px; height: 26px; font-size: 12px; }
 .asset-row:last-child { border-bottom: none; }
 @media (hover: hover) { .asset-row:hover { background: var(--surface-alt); } }
 .asset-name { font-size: 14px; font-weight: 600; color: var(--text); }
@@ -3159,7 +3158,7 @@ button.stat-card {
 /* Liste des portefeuilles (vue consolidée) */
 .portfolio-list-row {
   display: grid;
-  grid-template-columns: 26px 1fr auto 14px;
+  grid-template-columns: 22px 1fr auto 14px; /* colonne = pastille (DEV v1096) */
   align-items: center; gap: 12px;
   width: 100%;
   min-height: 60px; /* hauteur cohérente avec .asset-row */
@@ -3187,7 +3186,7 @@ button.stat-card {
 /* Liste compacte des supports détenus (sous-page) */
 .support-row {
   display: grid;
-  grid-template-columns: 26px 1fr auto;
+  grid-template-columns: 22px 1fr auto; /* colonne = pastille (DEV v1096) */
   align-items: center; gap: 12px;
   padding: 10px 16px;
   border-top: 1px solid var(--border);
@@ -3195,10 +3194,11 @@ button.stat-card {
 }
 .support-row:first-child { border-top: none; }
 @media (hover: hover) { .support-row:hover { background: var(--surface-alt); } }
+/* Palier PETIT, comme toutes les pastilles de ligne : 22 px (20 sur téléphone), DEV v1096. */
 .support-icon {
-  width: 26px; height: 26px; border-radius: 7px;
+  width: 22px; height: 22px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700;
+  font-size: 11px; font-weight: 700;
   flex-shrink: 0;
 }
 .support-main { min-width: 0; }
@@ -3324,7 +3324,13 @@ button.stat-card {
   .tx-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px) 22px; }
   .tx-row.tr-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; } /* v577 : TR sans colonne de pointage (mobile) */
   .tx-row.composite-row.with-edit { grid-template-columns: 20px 20px 1fr var(--amt-w, 112px) 22px; }
-  .tx-icon { width: 20px; height: 20px; }
+  /* Palier PETIT sur téléphone : 20 px pour TOUTES les pastilles de ligne (DEV v1096). Les lignes d'opération l'étaient
+     déjà (leur colonne fait 20) ; épargne, actifs physiques, supports et listes s'y alignent, colonne comprise — le texte
+     démarre ainsi au même endroit dans toutes les lignes. */
+  .tx-icon, .portfolio-list-icon, .support-icon { width: 20px; height: 20px; }
+  .asset-row { grid-template-columns: 20px 1fr auto auto; }
+  .portfolio-list-row { grid-template-columns: 20px 1fr auto 14px; }
+  .support-row { grid-template-columns: 20px 1fr auto; }
   /* Récurrents (modales Entrées/Sorties dans le menu ⋯) : mêmes colonnes et paddings que tx-row */
   .recurring-row { grid-template-columns: 20px 1fr var(--amt-w, 112px); gap: 6px; padding: 8px 10px; }
   .recurring-row.with-edit { grid-template-columns: 20px 1fr var(--amt-w, 112px) 22px; }
@@ -3341,7 +3347,6 @@ button.stat-card {
   .composite-chevron { width: 20px; height: 20px; }
   /* Épargne, Actifs physiques : Famille A légèrement plus aérée que tx-row */
   .asset-row { padding: 10px 12px; gap: 8px; }
-  .asset-row .tx-icon { width: 22px; height: 22px; font-size: 11px; }
   /* Configurer supports : alignée aussi */
   .etf-row { padding: 8px 10px; gap: 6px; }
   /* Boutons × et crayon resserrés pour tenir dans les cellules 22px en mobile */
@@ -3507,7 +3512,6 @@ button.stat-card {
   }
   /* Supports détenus : Famille A (entité du portefeuille, comme un compte d'épargne) */
   .support-row { padding: 10px 12px; gap: 8px; }
-  .support-icon { width: 22px; height: 22px; font-size: 11px; }
   /* Opérations : Famille B (transaction) */
   .op-row { padding: 8px 10px; gap: 6px; }
   /* (le support-gain reste affiché sur mobile pour cohérence avec asset-row et portfolio-list-row) */

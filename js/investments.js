@@ -299,7 +299,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
 
   return (
     <button className="portfolio-list-row" data-locate={`pf-${portfolio.id}`} onClick={onClick} aria-label={`Ouvrir ${portfolio.name}`}>
-      <div className="portfolio-list-icon" style={{ background: color + '22', color: couleurIcone(color) }}>
+      <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
         <Icon name="chart" size={12} />
       </div>
       <div className="portfolio-list-main">
@@ -883,7 +883,7 @@ function SupportRow({ position, lastDate }) {
       {/* ⚠️ L'initiale reste celle de `supportName` (ticker ou nom court), pas du
           nom principal affiché : elle doit rester stable et courte, et le nom
           complet commence souvent par le même mot. */}
-      <span className="support-icon" style={{ background: (position.color || COLORS.muted) + '26', color: position.color || COLORS.muted }}>
+      <span className="support-icon" style={{ background: fondPastille(position.color || COLORS.muted), color: couleurIcone(position.color || COLORS.muted) }}>
         {supportName(position).charAt(0)}
       </span>
       <div className="support-main">
