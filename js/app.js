@@ -594,6 +594,30 @@ function App() {
     };
   }, []);
 
+  // Barre de défilement d'iOS (DEV v1089) : la couleur sombre que pose
+  // styles.css n'est transmise à iOS que quand elle CHANGE. Après un aller-retour
+  // hors de l'app, iOS remettait la sienne — blanche en mode sombre, donc
+  // invisible (constaté par l'utilisateur sur DEV v1088). Au retour, on la fait
+  // changer d'un cran (opacité 45 % → 44 %, invisible à l'œil), puis on la
+  // rétablit un peu plus tard, au cas où iOS ne la remettrait qu'après coup.
+  useEffect(() => {
+    const html = document.documentElement;
+    let minuteur = null;
+    const raviver = () => {
+      if (document.visibilityState !== 'visible') return;
+      html.classList.add('barre-ravivee');
+      clearTimeout(minuteur);
+      minuteur = setTimeout(() => html.classList.remove('barre-ravivee'), 600);
+    };
+    document.addEventListener('visibilitychange', raviver);
+    window.addEventListener('pageshow', raviver);
+    return () => {
+      clearTimeout(minuteur);
+      document.removeEventListener('visibilitychange', raviver);
+      window.removeEventListener('pageshow', raviver);
+    };
+  }, []);
+
   // Refonte nav : plus d'auto-hide au scroll. La barre de navigation mobile
   // est désormais fixée en bas de l'écran et toujours visible ; la barre du
   // haut n'est qu'un titre qui défile naturellement avec le contenu.

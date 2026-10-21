@@ -4393,9 +4393,13 @@ button.cp-seg-item { cursor: pointer; }
    ⚠️ `scrollbar-color` s'HÉRITE : posée sur `html`, elle vaut pour toutes les
    zones qui défilent. Réservée au tactile pour ne pas changer les barres de
    défilement de l'ordinateur. Verrouillé par un test.
+   ⚠️ iOS ne reçoit la couleur que quand elle CHANGE, et remettait la sienne
+   après un aller-retour hors de l'app (DEV v1088). `.barre-ravivee` la fait
+   changer d'un cran au retour, le temps qu'iOS la reprenne (app.js, DEV v1089).
    ============================================================ */
 @media (hover: none) and (pointer: coarse) {
   html { scrollbar-color: rgba(0, 0, 0, 0.45) transparent; }
+  html.barre-ravivee { scrollbar-color: rgba(0, 0, 0, 0.44) transparent; }
 }
 
 /* ============================================================
