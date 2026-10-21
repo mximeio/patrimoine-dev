@@ -21,7 +21,8 @@ const HERO_PATRIMOINE_FOND = (() => {
 function ConsolidatedView({ ctx, onNavigate }) {
   const { profile, checkingAccounts, savings, portfolios, physical, snapshots } = ctx;
   const enabled = profile.modulesEnabled;
-  const [showEvolution, setShowEvolution] = useState(false);
+  // La vue du graphique de la carte « Répartition » : l'anneau ou l'évolution. On ouvre toujours sur l'anneau.
+  const [vue, setVue] = useState('repartition');
 
   // Référence = mois calendaire courant (on ignore les mois futurs créés pour planifier).
   // À défaut, le mois créé le plus récent qui n'est pas dans le futur.
@@ -100,77 +101,87 @@ function ConsolidatedView({ ctx, onNavigate }) {
           316 px pour quatre) avec sa couleur répétée quatre fois — liseré, tuile, titre, montant — et un texte coloré
           illisible pour le cyan, le vert et l'ambre (2,1 à 2,5:1). Désormais les lignes de 60 px du reste de l'app
           (`.portfolio-list-row`, comme « Mes comptes d'épargne », chevron compris) : texte noir, la couleur ne
-          marque plus que la tuile, avec la nuance foncée du module (`MODULE_FONCES`). */}
+          marque plus que la tuile, avec la nuance foncée du module (`MODULE_FONCES`).
+          La même carte montre aussi l'ÉVOLUTION (21/10/2026, maquette Mockup-Vue-Ensemble-Evolution) : une bascule à
+          deux icônes, au coin, fait passer de l'anneau aux aires empilées, à la même hauteur (240 px) — la liste reste
+          la légende des deux vues. Elle remplace le bouton « Afficher l'évolution » et le second graphique déplié.
+          L'en-tête court sur TOUTE la largeur : sur ordinateur, les deux colonnes du dessous prennent la même hauteur et
+          le graphique s'y centre — avec l'en-tête dans la colonne de gauche, l'anneau et la liste n'avaient pas le même
+          centre (≈ 30 px d'écart, relevé par l'utilisateur). */}
       <div className="card repartition-card" style={{ marginBottom: 16 }}>
-        <div className="repartition-graphe">
-          <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500, marginBottom: 4 }}>RÉPARTITION</div>
-          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Patrimoine par catégorie</h3>
-          <div style={{ flex: 1, position: 'relative', minHeight: 240 }}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none">
-                  {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
-                </Pie>
-                {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
-                    dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
-                    centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
-                    ordinateur (19/10/2026). La bulle doit passer devant. */}
-                <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-              <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
-              <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
-            </div>
+        <div className="repartition-tete">
+          <div>
+            <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500, marginBottom: 4 }}>{vue === 'evolution' ? 'ÉVOLUTION' : 'RÉPARTITION'}</div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{vue === 'evolution' ? 'Patrimoine dans le temps' : 'Patrimoine par catégorie'}</h3>
+          </div>
+          <div className="period-toggle bascule-vue" role="group" aria-label="Vue du graphique">
+            <button type="button" className={vue === 'repartition' ? 'active' : ''} aria-pressed={vue === 'repartition'} aria-label="Répartition" title="Répartition" onClick={() => setVue('repartition')}>
+              <Icon name="repartition" size={14} />
+            </button>
+            <button type="button" className={vue === 'evolution' ? 'active' : ''} aria-pressed={vue === 'evolution'} aria-label="Évolution" title="Évolution" onClick={() => setVue('evolution')}>
+              <Icon name="evolution" size={14} />
+            </button>
           </div>
         </div>
-
-        <div className="repartition-liste">
-          {categories.map(c => (
-            <button key={c.id} className="portfolio-list-row" onClick={() => onNavigate(c.id)} aria-label={`Ouvrir ${c.label}`}>
-              <div className="portfolio-list-icon" style={{ background: c.color + '26', color: MODULE_FONCES[c.id] }}>
-                <Icon name={c.icon} size={12} />
-              </div>
-              <div className="portfolio-list-main">
-                <div className="portfolio-list-name">{c.label}</div>
-                <div className="portfolio-list-sub">{c.sub}</div>
-              </div>
-              <div className="portfolio-list-right">
-                <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(c.value)}<span className="currency-muted"> €</span></div>
-                <div className="portfolio-list-sub num">
-                  {totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'}%
+        <div className="repartition-corps">
+          <div className="repartition-graphe">
+            {vue === 'evolution' ? (
+              <PatrimoineEvolutionChart
+                snapshots={snapshots}
+                currentSnapshot={{
+                  checking: checkingBalance,
+                  savings: savingsTotal,
+                  investments: investmentsTotal,
+                  physical: physicalTotal,
+                  total: totalPatrimoine,
+                }}
+                enabled={enabled}
+                profile={profile}
+              />
+            ) : (
+              <div style={{ position: 'relative', height: 240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none">
+                      {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
+                    </Pie>
+                    {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
+                        dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
+                        centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
+                        ordinateur (19/10/2026). La bulle doit passer devant. */}
+                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                  <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
+                  <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
                 </div>
               </div>
-              <span className="portfolio-list-arrow" aria-hidden="true">›</span>
-            </button>
-          ))}
+            )}
+          </div>
+
+          <div className="repartition-liste">
+            {categories.map(c => (
+              <button key={c.id} className="portfolio-list-row" onClick={() => onNavigate(c.id)} aria-label={`Ouvrir ${c.label}`}>
+                <div className="portfolio-list-icon" style={{ background: c.color + '26', color: MODULE_FONCES[c.id] }}>
+                  <Icon name={c.icon} size={12} />
+                </div>
+                <div className="portfolio-list-main">
+                  <div className="portfolio-list-name">{c.label}</div>
+                  <div className="portfolio-list-sub">{c.sub}</div>
+                </div>
+                <div className="portfolio-list-right">
+                  <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(c.value)}<span className="currency-muted"> €</span></div>
+                  <div className="portfolio-list-sub num">
+                    {totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'}%
+                  </div>
+                </div>
+                <span className="portfolio-list-arrow" aria-hidden="true">›</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-
-      {/* GRAPHIQUE D'ÉVOLUTION — replié par défaut */}
-      <div style={{ marginBottom: 16 }}>
-        {/* v530 : chevron vectoriel ROTATIF (règle v528) au lieu des deux
-            glyphes ▴/▾ — dernier glyphe flèche de l'app. Le libellé garde
-            ses deux états, seule la flèche pivote. */}
-        <button className="btn-add evo-toggle" style={{ borderStyle: 'solid' }} onClick={() => setShowEvolution(s => !s)}>
-          <span className={`evo-chev${showEvolution ? ' open' : ''}`}><Icon name="chevronDown" size={12} /></span>
-          {showEvolution ? "Masquer l'évolution" : "Afficher l'évolution"}
-        </button>
-      </div>
-      {showEvolution && (
-        <PatrimoineEvolutionChart
-          snapshots={snapshots}
-          currentSnapshot={{
-            checking: checkingBalance,
-            savings: savingsTotal,
-            investments: investmentsTotal,
-            physical: physicalTotal,
-            total: totalPatrimoine,
-          }}
-          enabled={enabled}
-          profile={profile}
-        />
-      )}
     </div>
   );
 }
@@ -209,17 +220,9 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
   // Si on n'a qu'un seul point, l'AreaChart n'a rien à tracer.
   if (data.length < 2) {
     return (
-      <div className="card" style={{ background: 'white', marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div>
-            <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500 }}>ÉVOLUTION</div>
-            <h3 style={{ margin: '2px 0 0', fontSize: 16, fontWeight: 600 }}>Patrimoine — répartition par catégorie</h3>
-          </div>
-        </div>
-        <div style={{ padding: '32px 16px', textAlign: 'center', color: COLORS.muted, fontSize: 13 }}>
-          Pas encore assez d'historique pour tracer une évolution.<br />
-          <span style={{ fontSize: 12 }}>Les premières données apparaîtront au fil des mois.</span>
-        </div>
+      <div style={{ padding: '32px 16px', textAlign: 'center', color: COLORS.muted, fontSize: 13 }}>
+        Pas encore assez d'historique pour tracer une évolution.<br />
+        <span style={{ fontSize: 12 }}>Les premières données apparaîtront au fil des mois.</span>
       </div>
     );
   }
@@ -255,13 +258,12 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
     { key: 'all', label: 'Tout' },
   ];
 
+  // Rendu DANS la carte « Répartition » depuis le 21/10/2026 : ni carte, ni titre (c'est l'en-tête de la carte qui
+  // dit « Évolution »), ni légende — la liste des rubriques, sous le graphique, en tient lieu. La période se pose au-
+  // dessus du graphique, à droite ; période + graphique = la hauteur réservée à l'anneau (`.repartition-graphe`).
   return (
-    <div className="card" style={{ background: 'white', marginBottom: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500 }}>ÉVOLUTION</div>
-          <h3 style={{ margin: '2px 0 0', fontSize: 16, fontWeight: 600 }}>Patrimoine — répartition par catégorie</h3>
-        </div>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <div className="period-toggle">
           {periods.map(p => (
             <button
@@ -301,14 +303,6 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
           ))}
         </AreaChart>
       </ResponsiveContainer>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 10, paddingTop: 12, borderTop: `1px solid ${COLORS.border}`, fontSize: 12, color: COLORS.muted }}>
-        {categories.map(c => (
-          <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: c.color }} />
-            {c.label}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

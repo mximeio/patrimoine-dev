@@ -428,6 +428,9 @@ function Icon({ name, size = 16, color }) {
     // un axe (14 × 18 → 20 × 20), pièce réduite d'un cran (rayon 10 → 9), tirelire recentrée (décalée de 1,2
     // vers la droite et de 1 vers le bas). Maquette : _maquettes/Mockup-Nouveau-Logo-Endroits.html, section 1.
     chart: <><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></>,
+    // La bascule de la carte « Répartition » (21/10/2026) : l'anneau et la courbe.
+    repartition: <><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>,
+    evolution: <><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m7 15 4-4 3 3 6-6"/></>,
     target: <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
     download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
     upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
