@@ -617,6 +617,8 @@ console.info(`[Patrimoine] Firebase env: ${window.FIREBASE_ENV} (projet ${window
         css: '.main-container, .modal-body { background: #334155 !important; }' },
       { id: 'clair', titre: 'Apparence claire forcée', detail: 'color-scheme: light',
         css: ':root, .main-container, .modal-body { color-scheme: light !important; }' },
+      { id: 'couleur', titre: 'Couleur de barre imposée', detail: 'scrollbar-color sombre',
+        css: '.main-container, .modal-body { scrollbar-color: rgba(0, 0, 0, 0.45) transparent !important; }' },
       { id: 'selection', titre: 'Sélection rétablie', detail: 'user-select et touch-callout du body',
         css: 'body { -webkit-user-select: auto !important; user-select: auto !important; -webkit-touch-callout: default !important; }' },
       { id: 'overscroll', titre: 'Rebond rétabli', detail: 'overscroll-behavior: auto',
