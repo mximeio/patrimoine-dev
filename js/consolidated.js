@@ -70,7 +70,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <Icon name="wallet" size={16} />
+            <Icon name="patrimoine" size={16} />
           </div>
         </div>
         <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(totalPatrimoine)} €</div>

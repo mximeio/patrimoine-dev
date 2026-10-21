@@ -804,7 +804,6 @@ input[type="month"] {
   max-width: 1240px; margin: 0 auto; padding: 12px 20px;
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
-.header-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: auto; }
 
 /* ============================================================
