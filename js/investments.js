@@ -300,7 +300,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
   return (
     <button className="portfolio-list-row" data-locate={`pf-${portfolio.id}`} onClick={onClick} aria-label={`Ouvrir ${portfolio.name}`}>
       <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
-        <Icon name="chart" size={12} />
+        <Icon name="chart" size={14} />
       </div>
       <div className="portfolio-list-main">
         <div className="portfolio-list-name">{portfolio.name}</div>

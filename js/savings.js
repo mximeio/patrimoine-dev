@@ -172,7 +172,7 @@ function SavingsListRow({ saving, colorIndex, onClick }) {
   return (
     <button className="portfolio-list-row" data-locate={`saving-${saving.id}`} onClick={onClick} aria-label={`Ouvrir ${saving.name}`}>
       <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
-        <Icon name="piggy" size={12} />
+        <Icon name="piggy" size={14} />
       </div>
       <div className="portfolio-list-main">
         <div className="portfolio-list-name">{saving.name}</div>

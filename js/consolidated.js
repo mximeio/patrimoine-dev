@@ -164,7 +164,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
             {categories.map(c => (
               <button key={c.id} className="portfolio-list-row" onClick={() => onNavigate(c.id)} aria-label={`Ouvrir ${c.label}`}>
                 <div className="portfolio-list-icon" style={{ background: fondPastille(c.color), color: couleurIcone(c.color) }}>
-                  <Icon name={c.icon} size={12} />
+                  <Icon name={c.icon} size={14} />
                 </div>
                 <div className="portfolio-list-main">
                   <div className="portfolio-list-name">{c.label}</div>
