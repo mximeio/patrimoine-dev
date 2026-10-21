@@ -299,7 +299,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
 
   return (
     <button className="portfolio-list-row" data-locate={`pf-${portfolio.id}`} onClick={onClick} aria-label={`Ouvrir ${portfolio.name}`}>
-      <div className="portfolio-list-icon" style={{ background: color + '22', color }}>
+      <div className="portfolio-list-icon" style={{ background: color + '22', color: couleurIcone(color) }}>
         <Icon name="chart" size={12} />
       </div>
       <div className="portfolio-list-main">
@@ -1716,38 +1716,38 @@ function getOpDisplay(op, nameOf) {
   switch (op.type) {
     case 'deposit':
       return {
-        iconName: 'arrowDown', bg: 'var(--success-light)', color: COLORS.success,
+        iconName: 'arrowDown', bg: 'var(--success-light)', color: couleurIcone(COLORS.success),
         label: op.isTransfer ? `Virement depuis ${op.sourceLabel}` : 'Versement',
         amount: op.amount || 0, sign: '+', amountColor: COLORS.success,
       };
     case 'withdrawal':
       return {
-        iconName: 'arrowUp', bg: 'var(--danger-light)', color: COLORS.danger,
+        iconName: 'arrowUp', bg: 'var(--danger-light)', color: couleurIcone(COLORS.danger),
         label: 'Retrait',
         amount: op.amount || 0, sign: '−', amountColor: COLORS.danger,
       };
     case 'purchase':
       return {
-        iconName: 'trendUp', bg: 'var(--accent-light)', color: COLORS.accent,
+        iconName: 'trendUp', bg: 'var(--accent-light)', color: couleurIcone(COLORS.accent),
         label: `Achat ${etfLbl}`,
         amount: op.amount || 0, sign: '−', amountColor: COLORS.accent,
       };
     case 'gift':
       return {
-        iconName: 'gift', bg: '#fdf2f8', color: '#ec4899',
+        iconName: 'gift', bg: '#fdf2f8', color: couleurIcone('#ec4899'),
         label: `Réception gratuite ${etfLbl}`,
         amount: op.marketValue || 0, sign: '', amountColor: '#ec4899',
         amountSuffix: ' (valeur)', isInformative: true,
       };
     case 'dividend':
       return {
-        iconName: 'coin', bg: 'var(--info-light)', color: COLORS.info,
+        iconName: 'coin', bg: 'var(--info-light)', color: couleurIcone(COLORS.info),
         label: `Dividende ${etfLbl}`,
         amount: op.amount || 0, sign: '+', amountColor: COLORS.info,
       };
     case 'sale':
       return {
-        iconName: 'arrowLeftRight', bg: 'var(--warning-light)', color: COLORS.warning,
+        iconName: 'arrowLeftRight', bg: 'var(--warning-light)', color: couleurIcone(COLORS.warning),
         label: `Vente ${etfLbl}`,
         amount: op.amount || 0, sign: '+', amountColor: COLORS.warning,
       };
@@ -1755,13 +1755,13 @@ function getOpDisplay(op, nameOf) {
       // Frais informatifs (déjà nets dans la valorisation) → rendu gris/neutre
       // pour les distinguer des vraies sorties de cash (rouge).
       return {
-        iconName: 'receipt', bg: '#f1f5f9', color: COLORS.muted,
+        iconName: 'receipt', bg: '#f1f5f9', color: couleurIcone(COLORS.muted),
         label: 'Frais de tenue de compte',
         amount: op.amount || 0, sign: '−', amountColor: COLORS.muted,
       };
     default:
       return {
-        iconName: 'list', bg: 'var(--surface-alt)', color: COLORS.muted,
+        iconName: 'list', bg: 'var(--surface-alt)', color: couleurIcone(COLORS.muted),
         label: '?', amount: 0, sign: '', amountColor: COLORS.muted,
       };
   }
