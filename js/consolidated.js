@@ -18,11 +18,48 @@ const LISERE_PATRIMOINE = (() => {
   return `linear-gradient(to bottom in oklch, ${c[0]} 0 18%, ${c[1]} 32% 43%, ${c[2]} 57% 68%, ${c[3]} 82% 100%)`;
 })();
 
+// L'ACCUEIL SE COMPORTE COMME UN ONGLET D'APP iPHONE : il garde son état et ne rejoue pas son entrée (décision de
+// l'utilisateur, 22/10/2026). ⚠️ La vue est DÉMONTÉE quand on quitte l'onglet (`app.js` ne la rend que sur le sien) :
+// un `useState` repartirait de zéro au retour — l'anneau, en 12M. Ce qui doit durer vit donc au niveau du FICHIER :
+// ça survit au démontage et disparaît au rechargement, exactement la durée d'une session.
+// ⚠️ Pas de `localStorage` : c'est un réglage de LECTURE, pas un endroit où l'on travaille (le mois du compte courant,
+// lui, est retenu sur l'appareil). À la relance, on repart de l'anneau en 12M.
+const SESSION_ACCUEIL = { vue: 'repartition', periode: '12', dejaAffiche: false };
+
+// L'ANIMATION DES DEUX GRAPHIQUES. Recharts anime l'entrée en 1,5 s par défaut — après 400 ms d'attente pour
+// l'anneau —, et la rejouait à chaque bascule et à chaque retour sur l'onglet : ce n'était pas un calcul.
+// Règle : entrée en 300 ms au PREMIER affichage de la session, puis plus aucune entrée animée (elle n'apprend rien et
+// retarde la lecture) ; un changement de données affiché garde sa transition courte, qui montre ce qui a bougé ; rien
+// du tout avec « Réduire les animations », que le bloc `prefers-reduced-motion` de styles.css n'atteint pas —
+// l'animation est en JavaScript.
+const DUREE_ANIMATION_GRAPHIQUE = 300;
+function dureeAnimationGraphique(reduit, entree, dejaAffiche) {
+  if (reduit) return 0;
+  if (entree && dejaAffiche) return 0;
+  return DUREE_ANIMATION_GRAPHIQUE;
+}
+
+// La durée à passer à UN graphique — par instance : l'anneau et la courbe se montent et se démontent à chaque bascule.
+// 🔴 Une DURÉE NULLE, jamais `isAnimationActive` qu'on basculerait : dans Recharts 2.12.7, passer `isAnimationActive`
+//  de faux à vrai remet à vide les secteurs précédents de l'anneau (`prevSectors: []`), donc REJOUE l'entrée entière.
+//  Une durée nulle fait poser l'état final dès la construction de l'animation (react-smooth, `duration <= 0`).
+// ⚠️ `entree` ne passe à faux que dans l'effet, APRÈS le premier rendu — et c'est ce qu'il faut : `ResponsiveContainer`
+//  ne monte le graphique qu'une fois sa taille mesurée, en clonant l'élément produit par CE premier rendu, avec sa durée.
+function useDureeAnimationGraphique() {
+  const entree = useRef(true);
+  const dejaAffiche = useRef(SESSION_ACCUEIL.dejaAffiche);
+  useEffect(() => { entree.current = false; SESSION_ACCUEIL.dejaAffiche = true; }, []);
+  const reduit = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  return dureeAnimationGraphique(reduit, entree.current, dejaAffiche.current);
+}
+
 function ConsolidatedView({ ctx, onNavigate }) {
   const { profile, checkingAccounts, savings, portfolios, physical, snapshots } = ctx;
   const enabled = profile.modulesEnabled;
-  // La vue du graphique de la carte « Répartition » : l'anneau ou l'évolution. On ouvre toujours sur l'anneau.
-  const [vue, setVue] = useState('repartition');
+  // La vue du graphique de la carte « Répartition » : l'anneau ou l'évolution. On rouvre sur la dernière vue de la
+  // session (cf. `SESSION_ACCUEIL`) — l'anneau, la première fois.
+  const [vue, setVueEtat] = useState(SESSION_ACCUEIL.vue);
+  const setVue = (v) => { SESSION_ACCUEIL.vue = v; setVueEtat(v); };
 
   // Référence = mois calendaire courant (on ignore les mois futurs créés pour planifier).
   // À défaut, le mois créé le plus récent qui n'est pas dans le futur.
@@ -139,24 +176,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
                 profile={profile}
               />
             ) : (
-              <div style={{ position: 'relative', height: 240 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none">
-                      {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
-                    </Pie>
-                    {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
-                        dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
-                        centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
-                        ordinateur (19/10/2026). La bulle doit passer devant. */}
-                    <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
-                  <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
-                </div>
-              </div>
+              <AnneauRepartition pieData={pieData} totalPatrimoine={totalPatrimoine} />
             )}
           </div>
 
@@ -187,10 +207,45 @@ function ConsolidatedView({ ctx, onNavigate }) {
 }
 
 // ============================================================
+//  ANNEAU DE RÉPARTITION
+// ============================================================
+// Un composant à part (22/10/2026) pour avoir SA PROPRE entrée : rendu en ligne dans `ConsolidatedView`, qui reste
+// montée pendant les bascules, il aurait repris l'animation de 300 ms à chaque retour sur l'anneau.
+function AnneauRepartition({ pieData, totalPatrimoine }) {
+  const duree = useDureeAnimationGraphique();
+  return (
+    <div style={{ position: 'relative', height: 240 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none"
+            animationBegin={0} animationDuration={duree}>
+            {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
+          </Pie>
+          {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
+              dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
+              centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
+              ordinateur (19/10/2026). La bulle doit passer devant. */}
+          <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+        <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
+        <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
 //  GRAPHIQUE D'ÉVOLUTION (aires empilées par catégorie)
 // ============================================================
 function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile }) {
-  const [period, setPeriod] = useState('12');
+  // La période est retenue pour la session (cf. `SESSION_ACCUEIL`), comme la vue.
+  const [period, setPeriodEtat] = useState(SESSION_ACCUEIL.periode);
+  const setPeriod = (p) => { SESSION_ACCUEIL.periode = p; setPeriodEtat(p); };
+  // ⚠️ AVANT le retour anticipé « pas assez d'historique » plus bas : un hook posé après lui ne serait pas appelé à
+  //  chaque rendu (React #310, CLAUDE.md §8).
+  const duree = useDureeAnimationGraphique();
 
   // On reconstruit la série en intégrant le mois courant à la volée
   // (au cas où le snapshot du mois courant n'aurait pas encore été écrit).
@@ -299,6 +354,8 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
               strokeWidth={1}
               fill={c.color}
               fillOpacity={0.85}
+              animationBegin={0}
+              animationDuration={duree}
             />
           ))}
         </AreaChart>
