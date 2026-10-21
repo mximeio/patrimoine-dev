@@ -95,8 +95,14 @@ function ConsolidatedView({ ctx, onNavigate }) {
         )}
       </div>
 
-      <div className="grid-overview" style={{ marginBottom: 16, alignItems: 'stretch', gridTemplateColumns: '1fr 1fr' }}>
-        <div className="card" style={{ background: 'white', display: 'flex', flexDirection: 'column' }}>
+      {/* La répartition en UNE carte (21/10/2026, maquette Mockup-Vue-Ensemble-Rubriques, P2) : l'anneau, puis la
+          liste des rubriques, qui en est la légende. Chaque rubrique était une carte à part (≈ 70 px + 12 px d'écart,
+          316 px pour quatre) avec sa couleur répétée quatre fois — liseré, tuile, titre, montant — et un texte coloré
+          illisible pour le cyan, le vert et l'ambre (2,1 à 2,5:1). Désormais les lignes de 60 px du reste de l'app
+          (`.portfolio-list-row`, comme « Mes comptes d'épargne », chevron compris) : texte noir, la couleur ne
+          marque plus que la tuile, avec la nuance foncée du module (`MODULE_FONCES`). */}
+      <div className="card repartition-card" style={{ marginBottom: 16 }}>
+        <div className="repartition-graphe">
           <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500, marginBottom: 4 }}>RÉPARTITION</div>
           <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>Patrimoine par catégorie</h3>
           <div style={{ flex: 1, position: 'relative', minHeight: 240 }}>
@@ -117,26 +123,25 @@ function ConsolidatedView({ ctx, onNavigate }) {
               <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
             </div>
           </div>
-          {/* Légende retirée : redondante avec les cards de catégorie ci-contre
-              (mêmes libellé / montant / %). */}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="repartition-liste">
           {categories.map(c => (
-            <button key={c.id} className="card card-hover" onClick={() => onNavigate(c.id)} style={{ background: 'white', cursor: 'pointer', textAlign: 'left', display: 'flex', gap: 14, alignItems: 'center', borderLeft: `3px solid ${c.color}` }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: c.color + '22', color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name={c.icon} size={18} />
+            <button key={c.id} className="portfolio-list-row" onClick={() => onNavigate(c.id)} aria-label={`Ouvrir ${c.label}`}>
+              <div className="portfolio-list-icon" style={{ background: c.color + '26', color: MODULE_FONCES[c.id] }}>
+                <Icon name={c.icon} size={12} />
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: c.color }}>{c.label}</div>
-                <div style={{ fontSize: 11, color: COLORS.muted }}>{c.sub}</div>
+              <div className="portfolio-list-main">
+                <div className="portfolio-list-name">{c.label}</div>
+                <div className="portfolio-list-sub">{c.sub}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="num" style={{ fontSize: 17, fontWeight: 600, color: c.color }}>{fmt(c.value)}<span className="currency-muted"> €</span></div>
-                <div style={{ fontSize: 11, color: COLORS.muted }}>
+              <div className="portfolio-list-right">
+                <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(c.value)}<span className="currency-muted"> €</span></div>
+                <div className="portfolio-list-sub num">
                   {totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'}%
                 </div>
               </div>
+              <span className="portfolio-list-arrow" aria-hidden="true">›</span>
             </button>
           ))}
         </div>

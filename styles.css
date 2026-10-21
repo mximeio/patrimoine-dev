@@ -793,10 +793,23 @@ input[type="month"] {
 @media (hover: hover) { .tab:hover { color: var(--text); } }
 .tab-active { color: var(--text); border-bottom-color: var(--accent); }
 
-.grid-hero, .grid-overview, .grid-2 { display: grid; gap: 16px; }
+.grid-hero, .grid-2 { display: grid; gap: 16px; }
 .grid-hero { grid-template-columns: 1.4fr 1fr; }
-.grid-overview { grid-template-columns: 1.2fr 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; }
+
+/* La répartition de la vue d'ensemble (21/10/2026) : l'anneau et la liste des rubriques dans UNE carte, la liste
+   servant de légende. Deux colonnes sur grand écran (anneau | liste), empilées sous 768 px. La carte n'a pas de
+   marge intérieure : la liste va bord à bord comme les autres listes de l'app, l'anneau porte la sienne.
+   ⚠️ `.card.repartition-card` et `!important` : le bloc mobile pose `.card { padding: 18px !important }`. */
+.card.repartition-card {
+  padding: 0 !important; overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+.repartition-graphe { padding: 20px; display: flex; flex-direction: column; min-width: 0; }
+.repartition-liste {
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; justify-content: center; min-width: 0;
+}
 
 .main-container { max-width: 1240px; margin: 0 auto; padding: 12px 20px 24px; }
 
@@ -3225,7 +3238,9 @@ button.stat-card {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .grid-hero, .grid-overview, .grid-2 { grid-template-columns: 1fr !important; }
+  .grid-hero, .grid-2 { grid-template-columns: 1fr !important; }
+  .card.repartition-card { grid-template-columns: 1fr; }
+  .repartition-liste { border-left: none; border-top: 1px solid var(--border); }
   /* Mobile : on force 2 colonnes même si .cols-3 est appliqué (TR désactivé),
      pour éviter que les libellés "RESTE MOIS PRÉC.", "ENTRÉES POINTÉES", etc. se
      coupent sur 3 lignes dans des cartes trop étroites. */

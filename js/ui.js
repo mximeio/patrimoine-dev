@@ -701,6 +701,15 @@ const MODULE_TEINTES = {
   investments: '#6ee7b7',
   physical: '#fcd34d',
 };
+// Le pendant pour fond CLAIR (21/10/2026) : la nuance FONCÉE (la 700) de chaque module, pour une icône posée sur
+// une tuile de sa couleur à 15 % — 4,5 à 6,3:1. La couleur pleine n'y faisait que 1,9 à 2,2:1 (sauf l'indigo).
+// Sur fond clair une teinte foncée, sur fond sombre une teinte claire : la couleur marque, le texte reste noir.
+const MODULE_FONCES = {
+  checking: '#4338ca',
+  savings: '#0e7490',
+  investments: '#047857',
+  physical: '#b45309',
+};
 
 function ModuleBadge({ module, size = 32, iconSize = 16 }) {
   const neutre = module === 'overview';
