@@ -2129,9 +2129,11 @@ button.stat-card {
 .picker-legend-box {
   width: 12px; height: 12px; border-radius: 3px;
   border: 1px dashed var(--border-strong); background: white;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; line-height: 1; color: var(--text-muted);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted);
 }
+/* Le « + » de la légende est l'ICÔNE `plus`, pas le caractère (22/10/2026) : un « + » tapé suit l'axe de la police et tombait
+   0,5 px trop bas dans sa case (mesuré au pixel, écran 3×). L'icône est symétrique par construction : centrée au pixel près. */
+.picker-legend-box svg { stroke-width: 3.5; display: block; }
 /* v531 : cadenas en légende — même dessin que dans les cellules
    (Icon lock 10px, trait 2.4, indigo comme les mois créés). */
 .picker-legend-lock { display: inline-flex; align-items: center; color: var(--accent); }
