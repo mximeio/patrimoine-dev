@@ -1382,6 +1382,8 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, onT
                   droite : indigo sur cellule claire, blanc sur le mois
                   affiché et au survol. */}
               {isFrozen && <span className="month-cell-lock" aria-hidden="true"><Icon name="lock" size={10} /></span>}
+              {/* « + » des mois à créer : la même icône que la légende, sur le modèle du cadenas (22/10/2026). */}
+              {!simple && !isCreated && <span className="month-cell-plus" aria-hidden="true"><Icon name="plus" size={10} /></span>}
             </button>
           );
         })}
