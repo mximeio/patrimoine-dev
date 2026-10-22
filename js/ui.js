@@ -922,7 +922,7 @@ function SignedAmountField({ value, onChange, naturalExpense = true, isTR = fals
   const signClass = isTR ? 'sgn-tr' : (isCredit ? 'sgn-in' : 'sgn-out');
   // Couleur du montant pilotée par le BOUTON (l'intention), pas par le signe de
   // la valeur → bascule rouge↔vert immédiate, même champ vide ou à 0.
-  const fieldColor = isTR ? 'var(--warning)' : (isCredit ? 'var(--success)' : 'var(--danger)');
+  const fieldColor = isTR ? 'var(--warning-fonce)' : (isCredit ? 'var(--success-fonce)' : 'var(--danger-fonce)');
 
   const handleAmountChange = (n, hadMinus) => {
     if (hadMinus) { setNeg(true); emit(n, true); }
