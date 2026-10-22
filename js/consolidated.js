@@ -43,8 +43,13 @@ function dureeAnimationGraphique(reduit, entree, dejaAffiche) {
 // 🔴 Une DURÉE NULLE, jamais `isAnimationActive` qu'on basculerait : dans Recharts 2.12.7, passer `isAnimationActive`
 //  de faux à vrai remet à vide les secteurs précédents de l'anneau (`prevSectors: []`), donc REJOUE l'entrée entière.
 //  Une durée nulle fait poser l'état final dès la construction de l'animation (react-smooth, `duration <= 0`).
-// ⚠️ `entree` ne passe à faux que dans l'effet, APRÈS le premier rendu — et c'est ce qu'il faut : `ResponsiveContainer`
-//  ne monte le graphique qu'une fois sa taille mesurée, en clonant l'élément produit par CE premier rendu, avec sa durée.
+// 🔴 Le hook s'appelle DANS le composant que rend `ResponsiveContainer` (`AnneauRepartitionChart`,
+//  `EvolutionAiresChart`), jamais au-dessus. `ResponsiveContainer` ne monte le graphique qu'au rendu SUIVANT, une fois
+//  sa taille mesurée dans son effet, en clonant ses enfants DU MOMENT. Appelé dans le parent (DEV v1099), le hook
+//  décidait au premier rendu de la carte : qu'un état d'`App` soit posé dans la même vague d'effets, et la carte se
+//  redessinait en « mise à jour » (300 ms) avant la naissance du graphique — l'entrée s'animait au retour sur l'onglet
+//  (reproduit sur banc le 22/10/2026). Ici, le premier rendu du composant EST la naissance du graphique, quel que soit
+//  le minutage ; `entree` passe à faux dans son effet, après.
 function useDureeAnimationGraphique() {
   const entree = useRef(true);
   const dejaAffiche = useRef(SESSION_ACCUEIL.dejaAffiche);
@@ -212,27 +217,37 @@ function ConsolidatedView({ ctx, onNavigate }) {
 // Un composant à part (22/10/2026) pour avoir SA PROPRE entrée : rendu en ligne dans `ConsolidatedView`, qui reste
 // montée pendant les bascules, il aurait repris l'animation de 300 ms à chaque retour sur l'anneau.
 function AnneauRepartition({ pieData, totalPatrimoine }) {
-  const duree = useDureeAnimationGraphique();
   return (
     <div style={{ position: 'relative', height: 240 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none"
-            animationBegin={0} animationDuration={duree}>
-            {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
-          </Pie>
-          {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
-              dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
-              centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
-              ordinateur (19/10/2026). La bulle doit passer devant. */}
-          <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
-        </PieChart>
+        <AnneauRepartitionChart pieData={pieData} />
       </ResponsiveContainer>
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
         <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
         <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{fmtNoDec(totalPatrimoine)} €</div>
       </div>
     </div>
+  );
+}
+
+// Le graphique lui-même, rendu PAR `ResponsiveContainer` : c'est là que se décide la durée (cf.
+// `useDureeAnimationGraphique`). ⚠️ Son nom finit par `Chart` À DESSEIN : `ResponsiveContainer` (Recharts 2.12.7) ne
+// passe son `style` — largeur et hauteur 100 %, plafonnées à la taille mesurée — qu'à un enfant dont le nom finit
+// ainsi. Renommé autrement, il perdrait ce style en silence. Même règle pour `EvolutionAiresChart`.
+function AnneauRepartitionChart({ pieData, width, height, style }) {
+  const duree = useDureeAnimationGraphique();
+  return (
+    <PieChart width={width} height={height} style={style}>
+      <Pie data={pieData} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="62%" outerRadius="90%" paddingAngle={3} stroke="none"
+        animationBegin={0} animationDuration={duree}>
+        {pieData.map(p => <Cell key={p.id} fill={p.color} />)}
+      </Pie>
+      {/* `zIndex` : l'étiquette « TOTAL » du centre est posée APRÈS le graphique
+          dans la page, donc dessinée par-dessus la bulle quand celle-ci tombe au
+          centre — d'où l'effet de bulle « transparente » signalé sur iPhone et sur
+          ordinateur (19/10/2026). La bulle doit passer devant. */}
+      <Tooltip content={<CustomTooltip />} wrapperStyle={{ zIndex: 2 }} />
+    </PieChart>
   );
 }
 
@@ -243,9 +258,6 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
   // La période est retenue pour la session (cf. `SESSION_ACCUEIL`), comme la vue.
   const [period, setPeriodEtat] = useState(SESSION_ACCUEIL.periode);
   const setPeriod = (p) => { SESSION_ACCUEIL.periode = p; setPeriodEtat(p); };
-  // ⚠️ AVANT le retour anticipé « pas assez d'historique » plus bas : un hook posé après lui ne serait pas appelé à
-  //  chaque rendu (React #310, CLAUDE.md §8).
-  const duree = useDureeAnimationGraphique();
 
   // On reconstruit la série en intégrant le mois courant à la volée
   // (au cas où le snapshot du mois courant n'aurait pas encore été écrit).
@@ -332,35 +344,45 @@ function PatrimoineEvolutionChart({ snapshots, currentSnapshot, enabled, profile
         </div>
       </div>
       <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={data} margin={{ top: 6, right: 8, left: -10, bottom: 0 }}>
-          <CartesianGrid stroke={COLORS.border} strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLORS.muted }} tickLine={false} axisLine={{ stroke: COLORS.border }} />
-          <YAxis
-            tick={{ fontSize: 11, fill: COLORS.muted }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v) => v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`}
-            width={50}
-          />
-          <Tooltip content={<EvolutionTooltip categories={sortedCategories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
-          {/* Premier <Area> rendu = bande du BAS de l'empilement */}
-          {sortedCategories.map(c => (
-            <Area
-              key={c.key}
-              type="monotone"
-              dataKey={c.key}
-              stackId="1"
-              stroke={c.color}
-              strokeWidth={1}
-              fill={c.color}
-              fillOpacity={0.85}
-              animationBegin={0}
-              animationDuration={duree}
-            />
-          ))}
-        </AreaChart>
+        <EvolutionAiresChart data={data} categories={sortedCategories} />
       </ResponsiveContainer>
     </div>
+  );
+}
+
+// Les aires, rendues PAR `ResponsiveContainer` : la durée s'y décide, et le nom finit par `Chart` pour recevoir son
+// `style` (cf. `AnneauRepartitionChart`). Un changement de période les redessine sans les remonter : la transition
+// courte montre ce qui a bougé.
+function EvolutionAiresChart({ data, categories, width, height, style }) {
+  const duree = useDureeAnimationGraphique();
+  return (
+    <AreaChart width={width} height={height} style={style} data={data} margin={{ top: 6, right: 8, left: -10, bottom: 0 }}>
+      <CartesianGrid stroke={COLORS.border} strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLORS.muted }} tickLine={false} axisLine={{ stroke: COLORS.border }} />
+      <YAxis
+        tick={{ fontSize: 11, fill: COLORS.muted }}
+        tickLine={false}
+        axisLine={false}
+        tickFormatter={(v) => v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`}
+        width={50}
+      />
+      <Tooltip content={<EvolutionTooltip categories={categories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
+      {/* Premier <Area> rendu = bande du BAS de l'empilement */}
+      {categories.map(c => (
+        <Area
+          key={c.key}
+          type="monotone"
+          dataKey={c.key}
+          stackId="1"
+          stroke={c.color}
+          strokeWidth={1}
+          fill={c.color}
+          fillOpacity={0.85}
+          animationBegin={0}
+          animationDuration={duree}
+        />
+      ))}
+    </AreaChart>
   );
 }
 
