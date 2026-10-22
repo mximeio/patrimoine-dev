@@ -1355,8 +1355,8 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, onT
       <div className="month-grid">
         {Array.from({ length: 12 }, (_, m) => {
           const k = monthKey(year, m);
-          // Le mois CALENDAIRE en cours (22/10/2026) : un trait sous le nom, en bas de la cellule — loin du point et du
-          // cadenas, qui vivent en haut à droite. Pas en mode simple : un formulaire n'a pas de « mois en cours ».
+          // Le mois CALENDAIRE en cours (22/10/2026) : un trait sous le nom, en bas de la cellule — loin du cadenas, qui vit
+          // en haut à droite. Pas en mode simple : un formulaire n'a pas de « mois en cours ».
           const isToday = !simple && k === currentMonthKey();
           // Mode simple (v533) : plus AUCUN costume « créé » — la notion
           // n'existe pas dans les formulaires (réglages, création de
@@ -1378,9 +1378,9 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, onT
                 : `${FRENCH_MONTHS[m]} ${year}${isCreated ? (isFrozen ? ' — figé (consultation)' : '') : ' — Cliquer pour créer'}`}
             >
               {FRENCH_MONTHS[m].slice(0, 4)}
-              {/* Cadenas VECTORIEL (icône du set, currentColor) à la place
-                  de la pastille « créé » (masquée via .frozen) : indigo sur
-                  cellule claire, blanc sur le mois courant et au survol. */}
+              {/* Cadenas VECTORIEL (icône du set, currentColor), en haut à
+                  droite : indigo sur cellule claire, blanc sur le mois
+                  affiché et au survol. */}
               {isFrozen && <span className="month-cell-lock" aria-hidden="true"><Icon name="lock" size={10} /></span>}
             </button>
           );
@@ -1388,7 +1388,7 @@ function MonthPicker({ year, setYear, months, currentMonth, onPick, onClose, onT
       </div>
       {!simple && (
         <div className="picker-legend">
-          <span className="picker-legend-item"><span className="picker-legend-dot" /> Mois créé</span>
+          <span className="picker-legend-item"><span className="picker-legend-created" /> Mois créé</span>
           <span className="picker-legend-item"><span className="picker-legend-box" /> Cliquer pour créer</span>
           {/* v531 : le cadenas n'apparaît en légende que si au moins un
               mois est figé — inutile d'expliquer un symbole absent. */}
