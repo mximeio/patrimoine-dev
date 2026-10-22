@@ -2139,6 +2139,7 @@ button.stat-card {
    (Icon lock 10px, trait 2.4, indigo comme la pastille « créé »). */
 .picker-legend-lock { display: inline-flex; align-items: center; color: var(--accent); }
 .picker-legend-lock svg { stroke-width: 2.4; display: block; }
+.picker-legend-trait { width: 14px; height: 3px; border-radius: 2px; background: var(--accent); }
 
 /* Module nav */
 /* Onglet du segmented control desktop (refonte nav) : segment sans bordure,
@@ -3959,6 +3960,16 @@ button.stat-card {
 .month-cell-lock { position: absolute; top: 4px; right: 5px; display: inline-flex; transform: translateZ(0); }
 .month-cell-lock svg { stroke-width: 2.4; display: block; }
 .month-cell.created.frozen:not(.current)::after { content: none; }
+/* Le mois CALENDAIRE en cours (22/10/2026, maquette Mockup-Calendrier-Aujourdhui.html) : un trait sous le nom. En bas de la
+   cellule, là où rien d'autre n'est posé (point et cadenas vivent en haut à droite), il se lit sur les quatre états : indigo,
+   blanc sur la cellule affichée et sur une cellule créée survolée (fond indigo plein). ::before est libre : ::after porte le
+   point des mois créés et le « + » des mois à créer. */
+.month-cell.today::before {
+  content: ''; position: absolute; left: 50%; bottom: 6px; width: 14px; height: 3px;
+  border-radius: 2px; background: var(--accent); transform: translateX(-50%);
+}
+.month-cell.today.current::before { background: white; }
+@media (hover: hover) { .month-cell.created.today:hover::before { background: white; } }
 /* Item de menu désactivé (Supprimer un mois figé) */
 .dropdown-item:disabled { color: var(--text-subtle); cursor: not-allowed; }
 @media (hover: hover) { .dropdown-item:disabled:hover { background: transparent; } }
