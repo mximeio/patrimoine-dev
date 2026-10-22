@@ -194,7 +194,7 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
       <div className="charge-amount-block">
         {c.period === 'annual' ? (
           <>
-            <span className="charge-total-ro" style={{ color: 'var(--danger)' }}>{eurEl(chargeTotalOf(c))}{showMonthlyEquiv && <span className="charge-monthly-equiv"> · − {eurEl(monthlyEquiv)}/mois</span>}</span>
+            <span className="charge-total-ro" style={{ color: 'var(--danger-fonce)' }}>{eurEl(chargeTotalOf(c))}{showMonthlyEquiv && <span className="charge-monthly-equiv"> · − {eurEl(monthlyEquiv)}/mois</span>}</span>
             <span className="charge-split-mini">
               {people.map((p, i) => {
                 const sh = chargeShareOf(c, p.id, nets, people.length) / 12;
@@ -209,7 +209,7 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
           </>
         ) : (
           <>
-            <span className="charge-total-ro" style={{ color: 'var(--danger)' }}>− {eurEl(chargeTotalOf(c))}</span>
+            <span className="charge-total-ro" style={{ color: 'var(--danger-fonce)' }}>− {eurEl(chargeTotalOf(c))}</span>
             <span className="charge-split-mini">
               {people.map((p, i) => {
                 const sh = chargeShareOf(c, p.id, nets, people.length);
@@ -770,7 +770,7 @@ function ChargesModal({ ctx, onClose }) {
                 <div className="pc-name">{p.label}</div>
                 <div className="pcard-hero">
                   <div className="pcard-hero-label">Il reste</div>
-                  <div className="pcard-hero-val" style={{ color: sum.restant[p.id] >= 0 ? 'var(--success)' : 'var(--danger)' }}>{eurEl(sum.restant[p.id])}</div>
+                  <div className="pcard-hero-val" style={{ color: sum.restant[p.id] >= 0 ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>{eurEl(sum.restant[p.id])}</div>
                 </div>
                 <div className="pcard-sub">
                   À payer <b>{eurEl(sum.aPayer[p.id])}</b>

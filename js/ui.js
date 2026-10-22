@@ -687,7 +687,7 @@ function LogoPatrimoine({ size = 48 }) {
 function ConfigError() {
   return (
     <div style={{ maxWidth: 600, margin: '60px auto', padding: 32, background: 'white', border: `1px solid ${COLORS.border}`, borderRadius: 14 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 0, color: COLORS.danger }}>Configuration Firebase manquante</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 0, color: 'var(--danger-fonce)' }}>Configuration Firebase manquante</h1>
       <p style={{ color: COLORS.muted, lineHeight: 1.6 }}>
         Renseigne ta configuration Firebase dans <code>js/config.js</code> (constante <code>FIREBASE_CONFIG</code>).
       </p>
