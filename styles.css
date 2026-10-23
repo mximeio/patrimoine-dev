@@ -50,8 +50,9 @@
      .main-container et le bas des modales (bloc « Modale : PORTRAIT »). ≈ 30 pt
      sur un iPhone à barre d'accueil (safe-area 34 − 4), 14 px ailleurs. UNE
      variable pour que ces quatre-là ne divergent jamais : si la barre bouge, la
-     modale suit et la cache toujours. Le paysage a sa propre ligne (bloc
-     paysage téléphone, safe-area − 10). */
+     modale suit et la cache toujours. Le paysage REDÉFINIT cette variable
+     (bloc paysage téléphone, safe-area − 10) : barre, feuille et réserve y
+     partagent la leur. */
   --ligne-appui: max(14px, calc(env(safe-area-inset-bottom, 0px) - 4px));
   --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
   --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
@@ -3648,6 +3649,14 @@ button.stat-card {
    fenêtre desktop basse (< 600px) garde l'AppBar classique.
    ============================================================ */
 @media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
+  /* LIGNE D'APPUI DU PAYSAGE : safe-area − 10, jamais moins de 8 px (≈ 11 pt sur
+     un iPhone couché, safe-area 21). Redéfinie ICI plutôt qu'écrite en dur, pour
+     que la barre, la feuille « ⋯ » et la réserve du contenu la partagent comme en
+     portrait. Avant (jusqu'à la DEV v1114), seule la barre la portait : la feuille
+     restait sur la ligne du portrait (safe-area − 4), 6 pt plus haut, et le bas de
+     la barre dépassait dessous, sous le voile. Les modales n'en dépendent qu'en
+     portrait. */
+  :root { --ligne-appui: max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px)); }
   /* L'AppBar desktop disparaît : même nav qu'en portrait */
   .app-header { display: none; }
   /* Ligne de titre (non-sticky) — pas de safe-area top en paysage,
@@ -3682,13 +3691,12 @@ button.stat-card {
      elle garde les proportions du portrait (64 pt à 5, 160 à 2). Même règle
      que la feuille « ⋯ », déjà recadrée et centrée en paysage (plus bas).
      `left`/`right` gardent les safe-areas : la marge auto centre la barre
-     dans la zone sûre. */
+     dans la zone sûre. Le bas suit --ligne-appui, redéfinie en tête de bloc. */
   .tabbar-wrap {
     display: flex;
     left: calc(12px + env(safe-area-inset-left, 0px));
     right: calc(12px + env(safe-area-inset-right, 0px));
     max-width: 380px; margin: 0 auto;
-    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px));
   }
   /* Compacte en permanence (équivaut au mode contracté, sans dépendre du
      scroll) : la hauteur d'écran est comptée en paysage. */
@@ -3704,21 +3712,23 @@ button.stat-card {
   }
   /* Le contenu ne passe pas sous la barre, et scroller interne comme en
      portrait (page verrouillée). Réserve du bas calculée comme en portrait
-     (DEV v1091) : position de la barre (son `bottom` ci-dessus) + sa hauteur
-     compacte (42 px : capsule 2 + goutte 8 + icône 22 + 8 + 2) + 16 px d'écart. */
+     (DEV v1091) : ligne d'appui de la barre + sa hauteur compacte (42 px :
+     capsule 2 + goutte 8 + icône 22 + 8 + 2) + 16 px d'écart. */
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   .main-container {
     height: 100dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding-bottom: calc(max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px)) + 42px + 16px);
+    padding-bottom: calc(var(--ligne-appui) + 42px + 16px);
   }
   .main-inner > :last-child,
   .main-inner > :last-child > :last-child { margin-bottom: 0 !important; }
   /* Overflow garanti (cf. portrait) : le geste reste dans le scroller */
   .main-inner { min-height: calc(100% + 1px); }
-  /* Bottom sheet : recadrée en largeur (pleine largeur = absurde en paysage) */
+  /* Bottom sheet : recadrée en largeur (pleine largeur = absurde en paysage).
+     Son bas suit --ligne-appui comme la barre : plus large (430 contre 380) et
+     plus haute, elle la recouvre entièrement, comme en portrait. */
   .bottom-sheet { left: 0; right: 0; margin: 0 auto; width: min(430px, calc(100% - 16px)); }
 }
 
