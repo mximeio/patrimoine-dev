@@ -3674,11 +3674,20 @@ button.stat-card {
   .title-row.title-row-sous-page .title-row-slot { display: flex; }
   .month-chip-hero { display: none; }
   /* Barre basse : visible, avec safe-areas LATÉRALES (l'encoche est
-     sur un côté en paysage) */
+     sur un côté en paysage).
+     LIMITÉE À 380 px ET CENTRÉE (23/10/2026, décision de l'utilisateur sur
+     images, maquette Mockup-Barre-Ligne-Appui) : la largeur qu'elle a en
+     portrait sur le plus grand iPhone (440 − 2 × 30). En pleine largeur, la
+     capsule pleine étirait la goutte à 150 pt dès 5 rubriques, 375 à 2 ; ici
+     elle garde les proportions du portrait (64 pt à 5, 160 à 2). Même règle
+     que la feuille « ⋯ », déjà recadrée et centrée en paysage (plus bas).
+     `left`/`right` gardent les safe-areas : la marge auto centre la barre
+     dans la zone sûre. */
   .tabbar-wrap {
     display: flex;
     left: calc(12px + env(safe-area-inset-left, 0px));
     right: calc(12px + env(safe-area-inset-right, 0px));
+    max-width: 380px; margin: 0 auto;
     bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px));
   }
   /* Compacte en permanence (équivaut au mode contracté, sans dépendre du
