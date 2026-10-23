@@ -45,14 +45,14 @@
   --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-full: 999px;
-  /* LIGNE D'APPUI des objets flottants du bas, en portrait téléphone : la barre
+  /* LIGNE D'APPUI des objets flottants du bas, sur téléphone : la barre
      basse (.tabbar-wrap), la feuille « ⋯ » (.bottom-sheet), la réserve de
      .main-container et le bas des modales (bloc « Modale : PORTRAIT »). ≈ 30 pt
      sur un iPhone à barre d'accueil (safe-area 34 − 4), 14 px ailleurs. UNE
      variable pour que ces quatre-là ne divergent jamais : si la barre bouge, la
-     modale suit et la cache toujours. Le paysage REDÉFINIT cette variable
-     (bloc paysage téléphone, safe-area − 10) : barre, feuille et réserve y
-     partagent la leur. */
+     modale suit et la cache toujours. Le paysage téléphone suit la MÊME règle
+     (≈ 17 pt sur un iPhone couché) : barre, feuille et réserve du contenu ;
+     les modales n'y dépendent pas d'elle. */
   --ligne-appui: max(14px, calc(env(safe-area-inset-bottom, 0px) - 4px));
   --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
   --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
@@ -3649,14 +3649,13 @@ button.stat-card {
    fenêtre desktop basse (< 600px) garde l'AppBar classique.
    ============================================================ */
 @media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
-  /* LIGNE D'APPUI DU PAYSAGE : safe-area − 10, jamais moins de 8 px (≈ 11 pt sur
-     un iPhone couché, safe-area 21). Redéfinie ICI plutôt qu'écrite en dur, pour
-     que la barre, la feuille « ⋯ » et la réserve du contenu la partagent comme en
-     portrait. Avant (jusqu'à la DEV v1114), seule la barre la portait : la feuille
-     restait sur la ligne du portrait (safe-area − 4), 6 pt plus haut, et le bas de
-     la barre dépassait dessous, sous le voile. Les modales n'en dépendent qu'en
-     portrait. */
-  :root { --ligne-appui: max(8px, calc(env(safe-area-inset-bottom, 0px) - 10px)); }
+  /* LIGNE D'APPUI : la MÊME règle qu'en portrait (--ligne-appui, :root), pas de
+     ligne propre au paysage — ≈ 17 pt sur un iPhone couché (safe-area 21 − 4).
+     Décision de l'utilisateur du 23/10/2026, sur l'avis du skill apple-design :
+     l'ancienne ligne (safe-area − 10, ≈ 11 pt) laissait moins d'air sous la barre
+     qu'au-dessus (16 pt jusqu'au contenu) et la faisait empiéter de 10 pt sur la
+     zone du geste d'accueil, juste au-dessus de la barre d'accueil d'iOS. La barre,
+     la feuille « ⋯ » et la réserve du contenu la suivent. */
   /* L'AppBar desktop disparaît : même nav qu'en portrait */
   .app-header { display: none; }
   /* Ligne de titre (non-sticky) — pas de safe-area top en paysage,
@@ -3691,7 +3690,7 @@ button.stat-card {
      elle garde les proportions du portrait (64 pt à 5, 160 à 2). Même règle
      que la feuille « ⋯ », déjà recadrée et centrée en paysage (plus bas).
      `left`/`right` gardent les safe-areas : la marge auto centre la barre
-     dans la zone sûre. Le bas suit --ligne-appui, redéfinie en tête de bloc. */
+     dans la zone sûre. Le bas suit --ligne-appui, comme en portrait. */
   .tabbar-wrap {
     display: flex;
     left: calc(12px + env(safe-area-inset-left, 0px));
