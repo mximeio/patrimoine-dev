@@ -11,6 +11,54 @@ if (window.navigator.standalone === true
   document.documentElement.classList.add('pwa-standalone');
 }
 
+// 🔬 SONDE TEMPORAIRE — DEV seulement, À RETIRER après le verdict iPhone.
+// Question : le toucher de l'heure (retour en haut d'iOS) arrive-t-il quand
+// le document est verrouillé (html/body en overflow: hidden, styles.css) ?
+// iOS n'envoie aucun événement à la page : il ramène le DOCUMENT à 0. On le
+// décale donc de 1 px et on guette son retour à 0, sans rien faire défiler.
+// Deux filtres contre les faux positifs : un toucher récent (doigt, clavier)
+// et un window.scrollTo de l'app (changement d'onglet, fermeture de modale).
+window.addEventListener('load', () => {
+  if (window.FIREBASE_ENV !== 'dev' || !document.documentElement.classList.contains('pwa-standalone')) return;
+  let dernierGeste = 0;
+  const noter = () => { dernierGeste = performance.now(); };
+  ['touchstart', 'touchend'].forEach((t) => window.addEventListener(t, noter, { capture: true, passive: true }));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', noter);
+  const scrollToApp = window.scrollTo.bind(window);
+  window.scrollTo = (...args) => { noter(); return scrollToApp(...args); };
+  const bulle = document.createElement('div');
+  Object.assign(bulle.style, {
+    position: 'fixed', left: '50%', bottom: '140px', transform: 'translateX(-50%)', zIndex: '5000',
+    padding: '8px 14px', borderRadius: '999px', background: 'rgba(15, 23, 42, 0.92)', color: '#fff',
+    font: '600 14px/1.3 Inter, system-ui, sans-serif', whiteSpace: 'nowrap', pointerEvents: 'none', display: 'none',
+  });
+  document.body.appendChild(bulle);
+  let minuteur = null;
+  const dire = (texte) => {
+    bulle.textContent = texte;
+    bulle.style.display = 'block';
+    clearTimeout(minuteur);
+    minuteur = setTimeout(() => { bulle.style.display = 'none'; }, 3000);
+  };
+  const verrouille = () => getComputedStyle(document.documentElement).overflowY === 'hidden';
+  const armer = () => {
+    if (!verrouille() || document.body.style.position === 'fixed') return;
+    document.body.style.minHeight = 'calc(100% + 1px)';
+    scrollToApp(0, 1);
+  };
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 0 || !verrouille() || document.body.style.position === 'fixed') return;
+    if (performance.now() - dernierGeste > 800) dire('Tap sur l\'heure détecté ✓');
+    setTimeout(armer, 400);
+  }, { passive: true });
+  window.addEventListener('resize', () => setTimeout(armer, 400));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(armer, 400); });
+  setTimeout(() => {
+    armer();
+    if (verrouille()) dire(window.scrollY >= 1 ? 'Sonde heure : prête' : 'Sonde heure : décalage refusé');
+  }, 1500);
+});
+
 // Routing par hash : permet de mettre un raccourci direct sur l'écran d'accueil
 // vers un onglet précis (ex. #compte-courant), avec back/forward natif du navigateur.
 const HASH_TO_MODULE = {
