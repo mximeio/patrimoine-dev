@@ -1251,20 +1251,21 @@ button.stat-card {
 }
 .tx-row:last-child { border-bottom: none; }
 @media (hover: hover) { .tx-row:hover { background: var(--surface-alt); } }
-/* L'estompe d'une ligne à pointer porte sur ce qui dit son ÉTAT (icône de type, CASE, libellé, étiquette, date, montant),
-   pas sur ses ACTIONS : le crayon, le chevron d'une composite et l'icône de note restent nets (décision de l'utilisateur,
-   04/11/2026, maquette _maquettes/Mockup-Case-A-Pointer/, réglage D « crayon net »). Une action est la même sur une ligne
-   pointée ou non : la colonne des crayons reste uniforme, comme dans les autres listes de l'app, et le crayon garde 4,8:1
-   (2,5:1 estompé). La case, elle, suit la ligne avec son bord d'origine (1,3:1 estompée) : choix assumé de discrétion.
-   Le montant s'estompe toujours avec la ligne (décision du 22/10/2026). Verrouillé par tests.js. */
-.tx-row.unpointed :is(.tx-icon, .tx-check-hit, .op-label, .composite-tag, .op-date, .tx-amount-wrap) { opacity: 0.65; }
-@media (hover: hover) { .tx-row.unpointed:hover :is(.tx-icon, .tx-check-hit, .op-label, .composite-tag, .op-date, .tx-amount-wrap) { opacity: 0.85; } }
+/* TOUTE la ligne à pointer s'estompe, boutons compris (case, crayon, chevron), PAR CHOIX de l'utilisateur le 04/11/2026 :
+   « toute la ligne dit en attente ». Deux autres réglages ont été essayés en DEV et écartés (v1121 : case et crayon nets,
+   case à bord foncé ; v1122 : case estompée, crayon net — l'action quotidienne devenait la plus pâle de la ligne).
+   Maquette _maquettes/Mockup-Case-A-Pointer/. Coût connu et accepté : crayon et chevron à 2,5:1, case vide à 1,3:1.
+   Ne pas « corriger » au nom du contraste. Verrouillé par tests.js. */
+.tx-row.unpointed { opacity: 0.65; }
+@media (hover: hover) { .tx-row.unpointed:hover { opacity: 0.85; } }
 
 /* Quand une ligne composite n'est pas pointée, ses composantes (affichées
    sous la ligne) doivent visuellement hériter du même état. On atténue
-   donc tout le bloc composantes (elles n'ont aucune action), par le wrapper
-   .tx-composite-wrap.unpointed ; la ligne parente gère son estompe elle-même
-   par la règle ci-dessus. */
+   donc tout le bloc composantes. NB : on ne peut pas appliquer .unpointed
+   uniquement aux .composite-comp-row car la .tx-row parente porte déjà
+   sa propre opacité — on attaque le wrapper .tx-composite-wrap.unpointed
+   qui ne contient QUE le bloc des composantes (puisque la ligne parente
+   gère son opacité elle-même via .tx-row.unpointed). */
 .tx-composite-wrap.unpointed .composite-comps { opacity: 0.65; }
 @media (hover: hover) { .tx-composite-wrap.unpointed:hover .composite-comps { opacity: 0.85; } }
 .tx-row.auto .tx-amount { color: var(--accent); }
@@ -1331,8 +1332,7 @@ button.stat-card {
 }
 
 .tx-check {
-  /* Bord --border-strong (1,5:1), gardé PAR CHOIX le 04/11/2026 : un bord à 3:1 (--text-subtle, DEV v1121) rendait la case
-     trop présente aux yeux de l'utilisateur. En mois figé, inerte, elle prend --border (règle .frozen-month). */
+  /* Bord --border-strong (1,5:1) gardé PAR CHOIX le 04/11/2026 : un bord à 3:1 (DEV v1121) rendait la case trop présente. */
   width: 18px; height: 18px; border: 2px solid var(--border-strong);
   border-radius: 4px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
