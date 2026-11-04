@@ -1251,8 +1251,13 @@ button.stat-card {
 }
 .tx-row:last-child { border-bottom: none; }
 @media (hover: hover) { .tx-row:hover { background: var(--surface-alt); } }
-.tx-row.unpointed { opacity: 0.65; }
-@media (hover: hover) { .tx-row.unpointed:hover { opacity: 0.85; } }
+/* L'estompe d'une ligne à pointer porte sur son CONTENU (icône de type, libellé, étiquette, date, montant), plus sur ses
+   CONTRÔLES (04/11/2026, constat de l'audit, validé par l'utilisateur) : estompés à 65 %, la case à pointer tombait à 1,3:1
+   et le crayon à 2,5:1, sous le seuil de 3:1 d'une icône — sur l'écran le plus utilisé, et pour le geste quotidien.
+   Restent nets : la case (.tx-check-hit), le crayon (.tx-edit), le chevron d'une composite et l'icône de note.
+   Le montant s'estompe toujours avec la ligne (décision du 22/10/2026). Verrouillé par tests.js. */
+.tx-row.unpointed :is(.tx-icon, .op-label, .composite-tag, .op-date, .tx-amount-wrap) { opacity: 0.65; }
+@media (hover: hover) { .tx-row.unpointed:hover :is(.tx-icon, .op-label, .composite-tag, .op-date, .tx-amount-wrap) { opacity: 0.85; } }
 
 /* Quand une ligne composite n'est pas pointée, ses composantes (affichées
    sous la ligne) doivent visuellement hériter du même état. On atténue
@@ -1327,7 +1332,9 @@ button.stat-card {
 }
 
 .tx-check {
-  width: 18px; height: 18px; border: 2px solid var(--border-strong);
+  /* Bord en --text-subtle (3,3:1) et non --border-strong (1,5:1) : une case vide est un CONTRÔLE, elle doit
+     se voir sans être cochée (04/11/2026). En mois figé, inerte, elle garde --border (règle .frozen-month). */
+  width: 18px; height: 18px; border: 2px solid var(--text-subtle);
   border-radius: 4px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: all 0.15s;
