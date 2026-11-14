@@ -822,6 +822,9 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIco
   const icone = sansIcone ? null : module === 'overview' ? 'patrimoine' : MODULE_ICONS[module];
   return (
     <div className={`card carte-tete carte-tete--${module}`} style={{ background: CARTE_FONDS[module] || CARTE_FONDS.overview }}>
+      {/* Le reflet et l'anneau décoratifs vivent dans ce calque, SEUL rogné : la carte, elle, laisse dépasser le menu « ⋯ »
+          et le calendrier du mois (coupés sur iPhone tant que la carte rognait tout, relevé du 15/11/2026). */}
+      <span className="ct-deco" aria-hidden="true" />
       <div className="ct-l1">
         <span className="ct-lib">{libelle}</span>
         <div className="ct-droite">
