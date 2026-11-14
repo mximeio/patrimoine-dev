@@ -821,6 +821,49 @@ input[type="month"] {
 .charges-legend-global .charge-vir-dot, .charges-legend-global .charge-prov-dot { margin-right: 5px; }
 .csm-name { font-weight: 600; }
 .charge-row--ro .tx-edit, .charge-row--ro .tx-delete { flex-shrink: 0; }
+
+/* ── Répartition des charges, version 2 (15/11/2026, Mockup-Repartition-Charges) ─────────────────────────────────────
+   Lignes de charge et de revenu au format des lignes d'opération ; synthèse et comparaison en cartes grises comme
+   « Mettre à jour les valeurs ». Classes neuves (ch-*) : les anciennes règles .charge-row/.pcard ne s'y appliquent pas. */
+.seg-kebab { padding: 9px 12px; font-size: 16px; line-height: 1; }
+.seg-solo + .seg-kebab { margin-left: 0; }
+.ch-liste { border-top: 1px solid var(--border); }
+.ch-ligne { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto 22px; align-items: center; gap: 8px; min-height: 46px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.ch-ligne--revenu { grid-template-columns: 34px minmax(0, 1fr) auto 22px; gap: 12px; min-height: 52px; }
+.ch-grip { display: grid; place-items: center; height: 100%; color: var(--text-subtle); cursor: grab; touch-action: none; }
+.ch-nom { min-width: 0; display: grid; gap: 1px; }
+.ch-nom b { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-nom small { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-montant { white-space: nowrap; }
+.ch-montant-val { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--danger-fonce); }
+.ch-montant-val--neutre { color: var(--text); }
+.ch-montant-val .cur { color: var(--text-muted); }
+.ch-montant .charge-montant-tip { color: var(--danger-fonce); }
+.ch-montant .charge-montant-tip .ch-montant-val { border-bottom: 1px dotted currentColor; } /* le pointillé sous le chiffre, pas sous la zone de toucher (padding de .infotip-txt) */
+.ch-ligne .tx-edit { justify-self: center; }
+.ch-av { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.ch-av.ch-av--petit { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
+.settings-group-title .ch-total { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.ch-ajout { margin-top: 10px; }
+.ch-vide { padding: 14px 0; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.ch-carte { background: var(--surface-alt); border-radius: 16px; padding: 2px 14px 4px; }
+.ch-carte + .ch-carte { margin-top: 10px; }
+.ch-carte-tete { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.ch-carte-tete b { font-size: 14px; font-weight: 600; }
+.ch-reste { margin-left: auto; font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ch-reste small { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-right: 4px; }
+.ch-reste .cur { color: inherit; opacity: .7; }
+.ch-carte-l { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 40px; font-size: 14px; border-top: 1px solid var(--border); }
+.ch-carte-l span:first-child { color: var(--text-light); }
+.ch-carte-l span:last-child { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Comparaison dans une carte grise : le tableau garde son fond (sa colonne figée), intitulés en clair. */
+.ch-carte.cmpp { border: 0; overflow: hidden; padding-bottom: 8px; }
+.ch-carte.cmpp .cmpp-tab th { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; padding: 6px 8px; }
+.ch-carte.cmpp .cmpp-tab td { font-size: 13px; padding: 9px 8px; }
+.ch-carte.cmpp .cmpp-tab td.cmpp-sc, .ch-carte.cmpp .cmpp-tab th.cmpp-sc { background: var(--surface-alt); padding-left: 0; box-shadow: none; }
+.ch-carte.cmpp .cmpp-tab tr.ref td, .ch-carte.cmpp .cmpp-tab tr.ref td.cmpp-sc { background: transparent; }
+.ch-carte.cmpp .cmpp-tab tr.ref td.cmpp-sc { color: var(--accent); }
+.ch-carte.cmpp .cmpp-tab tbody tr td { border-top: 1px solid var(--border); }
 .charge-badge { width: 24px; height: 24px; font-size: 11px; }
 
 /* Formulaire "Charge" : segmented control + ligne mensuel */
