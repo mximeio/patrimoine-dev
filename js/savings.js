@@ -494,21 +494,11 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
       </div>
       <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
 
-      {/* Zone supprimer */}
-      <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
-      <div style={{ marginTop: 6, padding: 12, background: 'var(--danger-light)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger-fonce)' }}>Supprimer ce compte d'épargne</div>
-          <div style={{ fontSize: 12, color: 'var(--danger-fonce)', opacity: 0.85, marginTop: 2 }}>
-            Toutes les opérations seront perdues à jamais. Action irréversible.
-          </div>
-        </div>
-        <button
-          type="button"
-          className="btn"
-          onClick={onDelete}
-          style={{ background: 'var(--danger-fonce)', color: 'white', borderColor: 'var(--danger-fonce)', flexShrink: 0 }}
-        >
+      {/* Zone de suppression au style C', comme celle d'une enveloppe (15/11/2026). */}
+      <div className="zone-danger">
+        <b>Supprimer ce compte d'épargne</b>
+        <small>Toutes les opérations seront perdues à jamais. Action irréversible.</small>
+        <button type="button" className="btn btn-danger" onClick={onDelete}>
           <Icon name="trash" size={14} /> Supprimer
         </button>
       </div>
