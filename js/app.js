@@ -1183,8 +1183,10 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
   return (
     <header className="app-header">
       <div className="app-bar-inner">
-        {/* Pas de logo : l'onglet actif du segmented (icône + nom foncés)
-            jouait déjà ce rôle visuellement — le logo faisait doublon. */}
+        {/* LE LOGO REVIENT avec la modernisation C' (15/11/2026, maquette cartes2.html) : l'onglet actif n'est plus
+            foncé (pastille blanche, point de couleur), il ne joue plus le rôle de marque. Il avait été retiré parce qu'il
+            faisait doublon avec l'onglet actif foncé. */}
+        <div className="app-bar-logo"><LogoPatrimoine size={30} /><span>Patrimoine</span></div>
         <nav className="app-bar-nav" ref={railRef}>
           <div className="seg-indicator" ref={indRef} />
           {tabs.map(t => (
@@ -1193,7 +1195,8 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
               onClick={() => onSelectModule(t.id)}
               className={`module-tab ${currentModule === t.id ? 'module-tab-active' : ''}`}
             >
-              <span className="module-tab-icon"><Icon name={t.icon} size={15} /></span>
+              {/* Un point de la couleur de la rubrique à la place de l'icône (maquette C') ; l'accueil n'en a pas. */}
+              {MODULE_COLORS[t.id] && <i className="module-tab-dot" style={{ background: MODULE_COLORS[t.id] }} aria-hidden="true" />}
               {t.label}
             </button>
           ))}

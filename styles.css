@@ -1189,6 +1189,25 @@ input[type="month"] {
 .ct-courbe { margin: auto -16px -10px; height: 44px; }
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
 
+/* ── LA NAVIGATION C' (15/11/2026, maquette cartes2.html) ──
+   Ordinateur : le logo à gauche, les onglets au centre sur un rail gris, l'actif en pastille BLANCHE (texte foncé, point
+   de couleur), les boutons ronds à droite. Téléphone : la bulle de l'onglet actif prend la couleur de sa rubrique. */
+.app-bar-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; flex: none; }
+.app-bar-inner .app-bar-nav { margin: 0 auto; border-radius: 999px; padding: 4px; background: #f1f3f7; }
+.app-bar-nav .seg-indicator { background: #fff; border-radius: 999px; box-shadow: 0 1px 2px rgba(11,16,32,0.08), 0 4px 10px -4px rgba(11,16,32,0.15); }
+.app-bar-nav .module-tab { border-radius: 999px; font-weight: 700; gap: 8px; }
+.app-bar-nav .module-tab-active { color: var(--text); }
+@media (hover: hover) { .app-bar-nav .module-tab-active:hover { color: var(--text); } }
+.module-tab-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.app-bar-user { margin-left: 0; }
+.app-bar-user .btn-icon { width: 38px; height: 38px; border-radius: 50%; background: #f1f3f7; }
+.tab-slide-ind::before { transition: background-color .3s ease, box-shadow .2s ease; }
+[data-rubrique="checking"] .tab-slide-ind::before { background: #4f46e5; }
+[data-rubrique="savings"] .tab-slide-ind::before { background: #0e7490; }
+[data-rubrique="investments"] .tab-slide-ind::before { background: #047857; }
+[data-rubrique="physical"] .tab-slide-ind::before { background: #f2b33d; }
+[data-rubrique="physical"] .tab-item-active { color: #2b1d00; }
+
 /* ── LES LISTES C' (15/11/2026, maquette cartes2.html) — TOUS les blocs de section : plus de carte autour, un titre de
    19 px (l'icône de section se retire), le nombre d'éléments à droite, des lignes séparées par un filet, le bouton
    « + Ajouter » en pointillés sur toute la largeur. Les avatars des listes portent deux lettres. ── */
