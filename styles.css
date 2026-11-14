@@ -39,6 +39,11 @@
   --danger-fonce: #dc2626;
   --warning-fonce: #a8730a; /* ambre DORÉ depuis le 15/11/2026 (était l'orangé #c96a07) : la famille de l'ambre clair des fenêtres
      TR et des actifs (#f2b33d), un cran plus foncé pour rester lisible en texte — 4,1:1 sur blanc, 3,9:1 sur --warning-light */
+  /* 🟡 EXCEPTION NOMMÉE, choisie par l'utilisateur le 15/11/2026 en connaissance de cause : tout ce qui est TICKETS RESTO
+     (montants TR, montant de la composante « Tickets resto », signe « + » des TR, couverts de la pastille) est en ambre CLAIR,
+     la couleur des fenêtres TR — 1,9:1 sur blanc, sous le minimum de lisibilité. Le reste de l'ambre (alertes, actifs) reste
+     en --warning-fonce. Revenir au doré = remplacer cette valeur par var(--warning-fonce). */
+  --tr-clair: #f2b33d;
   --info-fonce: #0891b2;
   --rose-fonce: #db2777;
   --violet-fonce: #7c3aed;
@@ -1557,7 +1562,7 @@ input[type="month"] {
 @media (max-width: 420px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
 .pastille-cc b { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .pastille-cc-tr { cursor: pointer; }
-.pastille-cc-tr .pastille-cc-ico { color: var(--warning-fonce); } /* ambre doré, comme tout l'ambre hors des fenêtres TR (15/11/2026) */
+.pastille-cc-tr .pastille-cc-ico { color: var(--tr-clair); } /* exception TR, cf. --tr-clair */
 .pastille-cc-chev { color: var(--text-subtle); font-size: 16px; line-height: 1; margin-left: -2px; }
 @media (hover: hover) { .pastille-cc-tr:hover { border-color: var(--border-strong); } }
 
@@ -1884,7 +1889,7 @@ button.stat-card {
 }
 .signed-amount-btn.sgn-out { color: var(--danger-fonce);  background: var(--danger-light);  border-color: var(--danger-light); }
 .signed-amount-btn.sgn-in  { color: var(--success-fonce); background: var(--success-light); border-color: var(--success-light); }
-.signed-amount-btn.sgn-tr  { color: var(--warning-fonce); background: var(--warning-light); border-color: var(--warning-light); }
+.signed-amount-btn.sgn-tr  { color: var(--tr-clair); background: var(--warning-light); border-color: var(--warning-light); }
 .signed-amount-btn:active { transform: scale(0.94); }
 .signed-amount-btn.is-ro { cursor: default; }
 .signed-amount-btn.is-ro:active { transform: none; }
@@ -1963,7 +1968,7 @@ button.stat-card {
 .tx-row:has(.tx-icon.tr) .tx-amount,
 .tx-row:has(.tx-icon.tr) .tx-amount-wrap input,
 .recurring-row:has(.tx-icon.tr) .tx-amount-wrap input,
-.composite-comp-row:has(.tx-icon.tr) .tx-amount-wrap input { color: var(--warning-fonce); }
+.composite-comp-row:has(.tx-icon.tr) .tx-amount-wrap input { color: var(--tr-clair); }
 
 .tx-delete {
   width: 24px; height: 24px; padding: 0;
@@ -2028,7 +2033,7 @@ button.stat-card {
 .modal-comp-row--expense .tx-currency { color: var(--danger-fonce); }
 .modal-comp-row--tr .tx-amount,
 .modal-comp-row--tr .tx-amount-wrap input,
-.modal-comp-row--tr .tx-currency { color: var(--warning-fonce); }
+.modal-comp-row--tr .tx-currency { color: var(--tr-clair); }
 
 /* Liste scrollable dans une modale : on déborde des marges horizontales
    du modal-body via marginLeft/Right négatifs, et on ré-applique le
@@ -2159,7 +2164,7 @@ button.stat-card {
   padding: 4px 6px;
 }
 .composite-comp-row input:focus { background: var(--surface-alt); border-radius: 4px; }
-.composite-comp-row input.tr-auto { color: var(--warning-fonce); cursor: default; }
+.composite-comp-row input.tr-auto { color: var(--tr-clair); cursor: default; }
 .composite-comp-label-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .composite-comp-label-wrap input { flex: 1; min-width: 0; }
 .tr-tag {
@@ -2329,7 +2334,7 @@ button.stat-card {
 .supports-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; }
 .supports-groupe .support-edit-row {
   width: 100%; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer;
-  grid-template-columns: 10px minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 14px; min-height: 56px;
+  grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 14px; min-height: 56px; /* plus de pastille de couleur (15/11/2026) */
   border-bottom: 1px solid var(--border);
 }
 @media (hover: hover) { .supports-groupe .support-edit-row:hover { background: var(--surface-hover); } }

@@ -273,7 +273,6 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
           const nomComplet = (e.fullName || '').trim();
           return (
             <button type="button" key={e.id} className="support-edit-row" onClick={() => setEditing(e)} aria-label={`Modifier le support ${supportName(e)}`}>
-              <span className="support-edit-dot" style={{ background: e.color || COLORS.muted }} />
               <span className="support-edit-name">
                 {/* Nom complet si la place le permet, nom court sinon — motif partagé
                     (`LibelleSupport`, ui.js). Cette table était le seul endroit à ne
@@ -377,10 +376,8 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div className="support-type-row">
-        <div className="support-color-cell">
-          <label className="label">Couleur</label>
-          <input type="color" className="support-color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="Couleur du support" />
-        </div>
+        {/* Plus de champ « Couleur » (15/11/2026, demande de l'utilisateur) : les supports sont verts dans les listes. La couleur
+            reste ENREGISTRÉE (attribuée d'office à la création, cf. openCreate) : elle ne sert plus qu'aux graphiques de répartition. */}
         <div className="support-type-cell">
           <label className="label">Type</label>
           <div className="support-type-seg" role="group" aria-label="Type de support">

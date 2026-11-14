@@ -1608,7 +1608,7 @@ function MonthInputPicker({ value, onChange, placeholder = 'Choisir un mois', cl
 // ============================================================
 function getCheckingOpDisplay(op) {
   if (op.isTRRefund) {
-    return { iconName: 'utensils', bg: 'var(--warning-light)', color: 'var(--warning-fonce)', amountColor: 'var(--warning-fonce)', variant: 'tr' };
+    return { iconName: 'utensils', bg: 'var(--warning-light)', color: 'var(--warning-fonce)', amountColor: 'var(--tr-clair)', variant: 'tr' };
   }
   if (op.type === 'in') {
     return { iconName: 'arrowDown', bg: 'var(--success-light)', color: couleurIcone(COLORS.success), amountColor: 'var(--success-fonce)', variant: 'income' };
