@@ -362,6 +362,13 @@ input[type="month"] {
 .modal-ico.modal-ico--neutre { background: #475569; color: #fff; }
 .modal .modal-header { border-bottom: 0; }
 .modal .modal-header + .modal-body { padding-top: 6px; }
+/* Sur ordinateur (15/11/2026) : en-tête SYMÉTRIQUE — autant d'air sous l'icône qu'au-dessus (22 + 22), pour que le titre reste
+   centré dans la bande blanche quand la liste défile dessous. Le corps compense (2 px) : l'écart avec le premier champ reste de
+   24 px quand rien ne défile. Souris + survol seulement : le téléphone, même couché, garde ses règles (encoche). */
+@media (min-width: 641px) and (hover: hover) and (pointer: fine) {
+  .modal .modal-header { padding-bottom: 22px; }
+  .modal .modal-header + .modal-body { padding-top: 2px; }
+}
 .btn-icon.modal-x { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-alt); flex: none; }
 .modal-body { padding: 24px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 /* Pied FIGÉ optionnel (prop `footer` de Modal, 09/08/2026) : symétrique de
