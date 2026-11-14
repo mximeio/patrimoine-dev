@@ -857,9 +857,14 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous
         <div className="ct-pied">
           {cellules.map((c, i) => (
             <div key={i} className="ct-cel">
-              <small>{c.court ? <><span className="ct-long">{c.label}</span><span className="ct-court">{c.court}</span></> : c.label}</small>
+              {/* `fait` : la cellule est terminée (tout pointé) — coche verte après l'intitulé, jauge pleine en vert
+                  (piste B de _maquettes/Mockup-Tout-Pointe, choisie par l'utilisateur le 15/11/2026). */}
+              <small className={c.fait ? 'ct-cel-fait' : undefined}>
+                {c.court ? <><span className="ct-long">{c.label}</span><span className="ct-court">{c.court}</span></> : c.label}
+                {c.fait && <span className="ct-coche" role="img" aria-label="tout pointé">✓</span>}
+              </small>
               <b className="num">{c.value}</b>
-              {c.fil !== undefined && c.fil !== null && <div className="ct-fil"><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
+              {c.fil !== undefined && c.fil !== null && <div className={`ct-fil${c.fait ? ' ct-fil--fait' : ''}`}><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
             </div>
           ))}
         </div>

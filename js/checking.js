@@ -690,12 +690,17 @@ function CheckingView({ ctx, onBack }) {
                 Supprimer ce mois
               </button>
             </Dropdown></>}
-        pied={[
-          { label: 'Entrées pointées', court: 'Entrées', value: `${fmt(stats.entriesPointed)} / ${fmt(stats.entriesAll)} €`,
-            fil: stats.entriesAll > 0 ? (stats.entriesPointed / stats.entriesAll) * 100 : 0 },
-          { label: 'Sorties pointées', court: 'Sorties', value: `${fmt(stats.exitsPointed)} / ${fmt(stats.exitsAll)} €`,
-            fil: stats.exitsAll > 0 ? (stats.exitsPointed / stats.exitsAll) * 100 : 0 },
-        ]}
+        pied={(() => {
+          // « Tout pointé » (piste B, 15/11/2026) : le montant ne s'écrit plus qu'une fois, coche et jauge vertes.
+          // Même règle qu'avant la modernisation : il faut au moins une ligne (`> 0`), et un reste nul au centime près.
+          const cellule = (label, court, pointe, total) => {
+            const fait = total > 0 && r2(total - pointe) <= 0;
+            return { label, court, fait, value: fait ? `${fmt(total)} €` : `${fmt(pointe)} / ${fmt(total)} €`,
+              fil: total > 0 ? (pointe / total) * 100 : 0 };
+          };
+          return [cellule('Entrées pointées', 'Entrées', stats.entriesPointed, stats.entriesAll),
+            cellule('Sorties pointées', 'Sorties', stats.exitsPointed, stats.exitsAll)];
+        })()}
         dessous={projOpen && (
           <div className="proj-detail num">
             <div className="pd-row"><span>Reste de {monthLabel(prevMonthKey(curKey))} (projeté)</span><b>{eur(stats.carryProjected)}</b></div>
