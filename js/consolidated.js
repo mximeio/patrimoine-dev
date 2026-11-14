@@ -185,21 +185,15 @@ function ConsolidatedView({ ctx, onNavigate }) {
     sorties: duMois.reduce((s, st) => s + st.exitsAll - st.exitsPointed, 0),
     entrees: duMois.reduce((s, st) => s + st.entriesAll - st.entriesPointed, 0),
   } : null;
-  // Alerte de valorisation (ordinateur) : la même règle que la carte « À rafraîchir » des Investissements — la
-  // valorisation la plus ancienne, au-delà de 30 jours, quand toutes les enveloppes ne sont pas à la même date.
-  const dated = enabled.investments ? portfolios.map(p => ({ name: p.name, d: p.data?.currentValuesDate })).filter(x => x.d) : [];
-  const plusAncienne = dated.slice().sort((a, b) => a.d.localeCompare(b.d))[0];
-  const memeDate = dated.length > 1 && dated.every(x => x.d === dated[0].d);
-  const joursValo = plusAncienne ? Math.max(0, Math.floor((Date.now() - new Date(plusAncienne.d + 'T12:00:00').getTime()) / 86400000)) : 0;
-  const alerteValo = plusAncienne && !memeDate && joursValo > 30
-    ? { noms: dated.filter(x => x.d === plusAncienne.d).map(x => x.name).join(', '), jours: joursValo } : null;
+  // Plus d'alerte de valorisation sur l'accueil (15/11/2026, décision de l'utilisateur, ordinateur compris) : elle reste en haut
+  // de la page Investissements.
 
   const periods = [{ key: '3', label: '3M' }, { key: '12', label: '12M' }, { key: 'all', label: 'Tout' }];
   const signe = (n) => `${n >= 0 ? '+' : ''}${fmt(n)} €`;
 
   return (
     <div>
-      <div className={`accueil-haut${ceMois || alerteValo ? ' accueil-haut--cote' : ''}`}>
+      <div className={`accueil-haut${ceMois ? ' accueil-haut--cote' : ''}`}>
         <CarteDeTete
           module="overview" libelle="Patrimoine total" montant={totalPatrimoine}
           droite={avecCourbe && <span className="ct-pill">{signe(variation)} depuis {monthLabelShort(douze[0].monthKey)}</span>}
@@ -207,7 +201,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
         >
           {avecCourbe && <MiniCourbe valeurs={douze.map(p => p.total)} />}
         </CarteDeTete>
-        {(ceMois || alerteValo) && (
+        {ceMois && (
           <aside className="accueil-cote">
             {ceMois && (
               <div className="encart-mois">
@@ -216,16 +210,6 @@ function ConsolidatedView({ ctx, onNavigate }) {
                 <div className="encart-k"><span>Sorties à pointer</span><b className="num">{eur(ceMois.sorties)}</b></div>
                 <div className="encart-k"><span>Entrées à pointer</span><b className="num">{eur(ceMois.entrees)}</b></div>
                 <button type="button" className="encart-lien" onClick={() => onNavigate('checking')}>Pointer <span aria-hidden="true">›</span></button>
-              </div>
-            )}
-            {alerteValo && (
-              <div className="alerte-valo">
-                <span className="alerte-valo-ico"><Icon name="calendar" size={16} /></span>
-                <div>
-                  <b>Valorisation à rafraîchir</b>
-                  <p>{alerteValo.noms}, il y a {alerteValo.jours} jours.</p>
-                  <button type="button" className="btn btn-primary" onClick={() => onNavigate('investments')}>Voir les investissements</button>
-                </div>
               </div>
             )}
           </aside>
