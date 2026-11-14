@@ -139,6 +139,10 @@ function App() {
   const [joint, setJoint] = useState(undefined);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [moduleName, setModuleName] = useState(() => readModuleFromHash());
+  // La rubrique ouverte, posée sur <html> (modernisation C', 14/11/2026) : les fenêtres sont rendues hors de la vue
+  // (portail), c'est par là que leur bouton principal prend la couleur de la rubrique. Déclaré AVANT les retours
+  // anticipés d'`App`, comme tout hook (§8 de CLAUDE.md).
+  useEffect(() => { document.documentElement.dataset.rubrique = moduleName || ''; }, [moduleName]);
   const [toast, setToast] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   // En-tête de SOUS-PAGE (15/08/2026) : `{ nom, onBack }` quand une sous-page est

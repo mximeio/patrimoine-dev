@@ -218,6 +218,33 @@ input[type="month"] {
 .form-actions { display: flex; gap: 8px; align-items: stretch; }
 .form-actions > .btn { flex: 1; }
 .form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
+/* MODERNISATION C' (14/11/2026) — le pied des fenêtres : le bouton principal en grand (52 px, coins de 16), et
+   « Supprimer » réduit à une POUBELLE carrée à sa droite (le libellé reste, masqué : c'est le nom lu du bouton). */
+.form-actions > .btn { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.form-actions > .btn-delete-line { width: 52px; padding: 0; gap: 0; font-size: 0; border: 0; border-radius: 16px; }
+.form-actions > .btn-delete-line svg { width: 18px; height: 18px; }
+/* Le bouton principal prend la couleur de la rubrique ouverte (`data-rubrique`, posé par app.js) ; ambre pour les
+   tickets resto. Le compte courant et l'accueil gardent l'indigo de --accent. */
+[data-rubrique="savings"] .btn-accent { background: #0e7490; border-color: #0e7490; }
+[data-rubrique="investments"] .btn-accent { background: #047857; border-color: #047857; }
+[data-rubrique="physical"] .btn-accent { background: #b45309; border-color: #b45309; }
+.btn-accent.btn-tr { background: #a95b00; border-color: #a95b00; }
+@media (hover: hover) {
+  [data-rubrique="savings"] .btn-accent:hover { background: #155e75; box-shadow: none; }
+  [data-rubrique="investments"] .btn-accent:hover { background: #065f46; box-shadow: none; }
+  [data-rubrique="physical"] .btn-accent:hover { background: #92400e; box-shadow: none; }
+  .btn-accent.btn-tr:hover { background: #8a4a00; box-shadow: none; }
+}
+/* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
+.btn.btn-fen { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* Le bandeau d'indicateurs des fenêtres (BandeauIndicateurs, ui.js). */
+.bandeau-ind { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: 16px; padding: 10px 14px; margin-bottom: 14px; color: #fff; }
+.bandeau-ind-cel { min-width: 0; }
+.bandeau-ind-cel + .bandeau-ind-cel { border-left: 1px solid rgba(255,255,255,0.22); padding-left: 12px; }
+.bandeau-ind-cel small { display: block; font-size: 11.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bandeau-ind-cel b { display: block; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bandeau-ind--physical { color: #2b1d00; }
+.bandeau-ind--physical .bandeau-ind-cel + .bandeau-ind-cel { border-left-color: rgba(43,29,0,0.16); }
 .btn-icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; padding: 0;

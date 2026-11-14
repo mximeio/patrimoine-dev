@@ -788,16 +788,10 @@ function CheckingView({ ctx, onBack }) {
             className={frozen ? 'frozen-month' : undefined}
             onClickCapture={gardeMoisFige}
           >
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-              <div style={{ flex: 1, background: 'var(--warning-light)', border: '1px solid #fcd9a3', borderRadius: 10, padding: '9px 12px' }}>
-                <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--warning-fonce)', fontWeight: 600 }}>Total du mois</div>
-                <div className="num" style={{ fontSize: 17, fontWeight: 600, color: 'var(--warning-fonce)', marginTop: 2 }}>{eur(stats.trTotal)}</div>
-              </div>
-              <div style={{ flex: 1, background: 'var(--surface-alt, #f8fafc)', border: '1px solid var(--border)', borderRadius: 10, padding: '9px 12px' }}>
-                <div style={{ fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', fontWeight: 600 }}>De ma poche</div>
-                <div className="num" style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}>{eur(stats.trUserShare)}</div>
-              </div>
-            </div>
+            <BandeauIndicateurs fond="tr" cellules={[
+              { label: 'Total du mois', value: eur(stats.trTotal) },
+              { label: 'De ma poche', value: eur(stats.trUserShare) },
+            ]} />
             <TrSection
               showToast={showToast}
               items={m.tr || []}
@@ -1950,7 +1944,7 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
             datesMode={datesMode}
             mKey={mKey}
             initialType="out"
-            allowTr={true}
+            allowTr={false}
             onDelete={editing ? () => {
               const label = (editing.label || '').trim() || 'cette ligne';
               const msg = editing.isComposite
@@ -1977,7 +1971,10 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
 // ⚠️ `showToast` est requis depuis le 10/08/2026 : c'est par lui que passent les
 // refus de saisie (cf. `REFUS` dans utils.js). Il descend de `CheckingView` via
 // `OpsSection`/`TrSection` — deux niveaux, aucun n'en disposait avant.
-function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefund, trRefundAmount = 0, datesMode, mKey, initialType = 'out', allowTr = false, showToast }) {
+// `trSeul` (modernisation C', 14/11/2026) : la fenêtre « Nouveau paiement TR », ouverte depuis « Tickets resto payés ».
+// Le type est fixé, donc pas de sélecteur. En MODIFICATION d'un paiement, le sélecteur revient : c'est lui qui permet de
+// déplacer un paiement TR vers les opérations du mois.
+function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefund, trRefundAmount = 0, datesMode, mKey, initialType = 'out', allowTr = false, trSeul = false, showToast }) {
   const isEdit = !!initial;
   const isTRAuto = isEdit && initial.isTRRefund && !initial.isComposite;
   const initIsComposite = !!(initial?.isComposite || (initial?.components || []).length > 0);
@@ -2143,7 +2140,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type : grille 2 colonnes (Entrée/Sortie), « Paiement TR »
           en pleine largeur sur sa propre ligne. */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      {!trSeul && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {types.map((t) => {
           const active = type === t.id;
           return (
@@ -2172,7 +2169,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
             </button>
           );
         })}
-      </div>
+      </div>}
 
       {/* Toggle composite — masqué en mode Paiement TR (composite sans objet). */}
       {!isTr ? (
@@ -2320,7 +2317,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-accent btn-lg">{isEdit ? 'Modifier' : 'Ajouter'}</button>
+        <button type="submit" className={`btn btn-accent btn-lg${isTr ? ' btn-tr' : ''}`}>{isEdit ? 'Modifier' : 'Ajouter'}</button>
         {isEdit && onDelete && (
           <button type="button" className="btn-delete-line" onClick={onDelete}>
             <Icon name="trash" size={14} /> Supprimer
@@ -2587,14 +2584,15 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
         {items.length === 0 && <div className="empty-state" style={{ padding: 20 }}>Aucun paiement TR ce mois.</div>}
       </div>
       <div className="section-footer">
-        <button className="btn-add" onClick={openCreate}>+ Nouveau paiement TR</button>
+        <button className="btn btn-accent btn-lg btn-tr btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouveau paiement TR</button>
       </div>
 
       {showForm && (
-        <Modal title={editing ? 'Modifier une opération' : 'Nouvelle opération'} onClose={() => { setShowForm(false); setEditing(null); }}>
+        <Modal title={editing ? 'Modifier un paiement TR' : 'Nouveau paiement TR'} onClose={() => { setShowForm(false); setEditing(null); }}>
           <OperationForm
             showToast={showToast}
             initial={editing ? { ...editing, type: 'tr' } : null}
+            trSeul={!editing}
             onSubmit={submitForm}
             trEnabled={true}
             hasGlobalTRRefund={false}

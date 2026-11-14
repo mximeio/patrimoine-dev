@@ -837,6 +837,21 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children }) {
   );
 }
 
+// LE BANDEAU D'INDICATEURS DES FENÊTRES (modernisation C', 14/11/2026) : les chiffres de tête d'une fenêtre, sur le fond
+// de la couleur de sa rubrique — la même famille que la carte de tête, en petit. `fond` : une clé de CARTE_FONDS, ou
+// 'tr' pour l'ambre des tickets resto. `cellules` : [{ label, value }].
+const FOND_TR = 'linear-gradient(150deg, #c27b12, #a95b00)';
+function BandeauIndicateurs({ fond, cellules }) {
+  const liste = (cellules || []).filter(Boolean);
+  return (
+    <div className={`bandeau-ind bandeau-ind--${fond}`} style={{ background: fond === 'tr' ? FOND_TR : (CARTE_FONDS[fond] || CARTE_FONDS.overview) }}>
+      {liste.map((c, i) => (
+        <div key={i} className="bandeau-ind-cel"><small>{c.label}</small><b className="num">{c.value}</b></div>
+      ))}
+    </div>
+  );
+}
+
 function EmptyState({ icon, title, hint }) {
   return (
     <div className="empty-state">
