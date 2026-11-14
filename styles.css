@@ -1289,6 +1289,13 @@ input[type="month"] {
 .ops-c .composite-comps { margin: 0 0 6px 44px; padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 .ops-c .composite-comp-row { border-bottom: 0; padding: 3px 0; min-height: 36px; }
 
+/* ── LES AUTRES LISTES D'OPÉRATIONS À LA HAUTEUR DU COMPTE COURANT (15/11/2026, demande de l'utilisateur) : 46 px, 3 px de
+   marge haute et basse — opérations d'un livret et d'une enveloppe (récentes et « Toutes »), opérations récurrentes,
+   paiements de tickets resto ; leurs composantes à 41 px comme celles du compte. Pas les listes d'ENTITÉS (comptes,
+   livrets, enveloppes, supports, actifs). Classe doublée : les règles du téléphone posent 8 px. ── */
+.op-row.op-row, .recurring-row.recurring-row, .tx-row.tr-row.tr-row { min-height: 46px; padding-top: 3px; padding-bottom: 3px; align-items: center; }
+.recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row { min-height: 36px; padding-top: 3px; padding-bottom: 3px; }
+
 /* ── L'ÉCRAN DE CONNEXION C' (modernisation, 14/11/2026 — auth.js) ── */
 .auth { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 20px; background: var(--bg); }
 .auth-colonne { width: 100%; max-width: 400px; }
