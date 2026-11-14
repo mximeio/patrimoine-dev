@@ -2314,8 +2314,11 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
 // poignée (appui long au doigt, glisser à la souris — dnd.js) ET la porte de la modification (simple toucher). Ni sur un
 // mois figé (le crayon y était déjà masqué), ni au clic qui termine un glisser, ni sur un bouton du libellé (chevron,
 // bulle de note).
+// ⚠️ PAS AU DOIGT (15/11/2026, demande de l'utilisateur) : sur téléphone, un toucher sur la ligne ouvrait la modification sans
+// le vouloir (en pointant, en faisant défiler) ; le crayon, revenu sur chaque ligne, suffit. À la souris, le clic reste.
 function ouvrirDepuisLibelle(e, onEdit, actif) {
   if (!onEdit || !actif) return;
+  if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
   if (e.target.closest('button, a, input, .op-note, .infotip-txt')) return;
   if (glisserVientDeFinir()) return;
   onEdit();
