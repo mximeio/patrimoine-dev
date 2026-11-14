@@ -18,10 +18,16 @@ const COLORS = {
   info: '#06b6d4',
 };
 
+// LA COULEUR DES REPÈRES D'UNE RUBRIQUE (points des onglets, carrés de la bulle de la courbe, points de la recherche).
+// 15/11/2026, choix de l'utilisateur (_maquettes/Mockup-Couleurs-Rubriques) : chaque couleur vient de l'app — indigo = la
+// carte du compte, ambre = le repère des actifs (presque la carte, plus lisible sur blanc), et pour l'épargne et les
+// investissements la nuance 600, celle du texte de leurs avatars (#06b6d4 et #10b981 avant) : deux fois plus près de leur
+// carte, à peine moins distincts l'un de l'autre (0,118 contre 0,125 en OKLab), 3,7:1 sur blanc au lieu de 2,4.
+// ⚠️ Les avatars ne bougent pas : `fondPastille` et `couleurIcone` reconnaissent ces deux 600 (tables ci-dessous).
 const MODULE_COLORS = {
   checking: '#4f46e5',
-  savings: '#06b6d4',
-  investments: '#10b981',
+  savings: '#0891b2',
+  investments: '#059669',
   physical: '#f59e0b',
 };
 
@@ -45,6 +51,7 @@ const PORTFOLIO_PALETTE = ['#4f46e5', '#f59e0b', '#06b6d4', '#ec4899', '#10b981'
 const NUANCE_ICONE = {
   '#10b981': '#059669', '#ef4444': '#dc2626', '#f59e0b': '#a8730a', '#06b6d4': '#0891b2',
   '#ec4899': '#db2777', '#8b5cf6': '#7c3aed', '#4f46e5': '#4f46e5', '#64748b': '#64748b',
+  '#0891b2': '#0891b2', '#059669': '#059669', // les repères de l'épargne et des investissements, déjà en 600 (15/11/2026)
 };
 const couleurIcone = (couleur) => NUANCE_ICONE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 75%, #0f172a)`;
 
@@ -55,6 +62,7 @@ const couleurIcone = (couleur) => NUANCE_ICONE[String(couleur).toLowerCase()] ||
 const FOND_PASTILLE = {
   '#10b981': '#ecfdf5', '#ef4444': '#fef2f2', '#f59e0b': '#fffbeb', '#06b6d4': '#ecfeff',
   '#ec4899': '#fdf2f8', '#8b5cf6': '#f5f3ff', '#4f46e5': '#eef2ff', '#64748b': '#f1f5f9',
+  '#0891b2': '#ecfeff', '#059669': '#ecfdf5', // repères de l'épargne et des investissements (15/11/2026) : même fond pâle qu'avant
 };
 const fondPastille = (couleur) => FOND_PASTILLE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 8%, #ffffff)`;
 
