@@ -1496,18 +1496,18 @@ input[type="month"] {
 .mode-dates .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
 /* La case dessinée se place à 11 px du bord gauche de la liste, l'écart du crayon au bord droit (mesuré : 11 px sur téléphone
    et ordinateur ; demande de l'utilisateur, 14/11/2026). Sa zone de toucher reprend les 5 px de l'écart vide et part du bord.
-   Le libellé garde sa place dans la grille (40 px) ; les composantes suivent (trait 10 px avant). Tickets resto, sans case :
+   Le libellé garde sa place dans la grille (40 px) ; les composantes suivent (trait sous sa 1re lettre, piste A). Tickets resto, sans case :
    le libellé prend lui aussi les 11 px (calé sur le bord, il paraissait collé au fond de la ligne — remarque de l'utilisateur). */
 .mode-dates .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
-.ops-c.mode-dates .composite-comps { margin-left: 30px; }
+.ops-c.mode-dates .composite-comps { margin-left: 40px; }
 .modal .mode-dates .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
 /* Récurrents (Paramètres) : triés par jour du mois en mode dates, ils ne se glissent pas non plus — même règle que les tickets
-   resto : la colonne sort, le libellé à 11 px du bord ; les composantes suivent (trait 10 px avant le libellé du parent). */
+   resto : la colonne sort, le libellé à 11 px du bord ; les composantes suivent (trait sous la 1re lettre du parent, piste A). */
 .liste-rec.mode-dates .recurring-row.recurring-row > .tx-grip { width: 0; overflow: hidden; }
 .liste-rec.mode-dates .recurring-row.recurring-row > .op-main { margin-left: -5px; padding-left: 11px; }
-.liste-rec.mode-dates .recurring-row.composite-row + .composite-comps { margin-left: 1px; }
-.liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
-/* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
+.liste-rec.mode-dates .recurring-row.composite-row + .composite-comps { margin-left: 11px; }
+.liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 24px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+/* Composantes des récurrents = celles du compte (15/11/2026) : trait sous la 1re lettre du libellé du parent, texte 14 px après (piste A, 14/11/2026),
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
 .liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row,
 .liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row.with-edit { grid-template-columns: minmax(0, 1fr) var(--amt-w, 112px) 22px; gap: 5px; position: relative; padding-left: 0; }
@@ -1548,7 +1548,7 @@ input[type="month"] {
 .section-block.ops-c .composite-comps,
 .section-block.ops-c .tx-row.composite-row + .composite-comps { padding-left: 12px; padding-right: 4px; } /* le bloc téléphone pose 35 px à gauche */
 .ops-c .tx-check.checked::after { font-size: 11px; }
-.ops-c .composite-comps { margin: -5px 0 6px 44px; /* −5 px : composite → 1re composante = 36 px, l'écart entre deux composantes (41 avant) */ padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+.ops-c .composite-comps { margin: -5px 0 6px 54px; /* piste A (14/11/2026) : le trait sous la 1re lettre du libellé parent (54 px), le texte 14 px après */ /* −5 px : composite → 1re composante = 36 px, l'écart entre deux composantes (41 avant) */ padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 .ops-c .composite-comp-row { border-bottom: 0; padding: 3px 0; min-height: 36px; }
 
 /* ── LES AUTRES LISTES D'OPÉRATIONS À LA HAUTEUR DU COMPTE COURANT (15/11/2026, demande de l'utilisateur) : 46 px, 3 px de
