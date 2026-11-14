@@ -33,7 +33,7 @@
 //      cible à chaque frame.
 // ============================================================
 
-const DND_ROW_SELECTOR = '.tx-row, .composite-comp-row, .recurring-row, .charge-row';
+const DND_ROW_SELECTOR = '.tx-row, .composite-comp-row, .recurring-row, .charge-row, .ch-ligne'; // .ch-ligne : charges, version 2 (15/11/2026)
 const DND_THRESHOLD = 5;      // px : seuil d'armement à la SOURIS
 const DND_EDGE = 64;          // px : bande d'auto-scroll près des bords
 const DND_MAX_SPEED = 13;     // px/frame max d'auto-scroll

@@ -839,7 +839,10 @@ input[type="month"] {
 .ch-montant-val--neutre { color: var(--text); }
 .ch-montant-val .cur { color: var(--text-muted); }
 .ch-montant .charge-montant-tip { color: var(--danger-fonce); }
-.ch-montant .charge-montant-tip .ch-montant-val { border-bottom: 1px dotted currentColor; } /* le pointillé sous le chiffre, pas sous la zone de toucher (padding de .infotip-txt) */
+/* Le soulignement est celui de la PROD (.charge-montant-tip plus bas : pointillé gris discret, décalé de 3 px) — plus de bordure rouge. */
+.ch-ligne.dragging { opacity: 0.15; }
+.ch-ligne.drag-over-top { box-shadow: inset 0 2px 0 0 var(--accent); }
+.ch-ligne.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--accent); }
 .ch-ligne .tx-edit { justify-self: center; }
 .ch-av { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
 .ch-av.ch-av--petit { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
