@@ -88,7 +88,7 @@ function MiniCourbe({ valeurs }) {
 
 // L'ACCUEIL C' (modernisation, 14/11/2026 — maquette _maquettes/Mockup-Modernisation-Design/cartes2.html) :
 // - la carte de tête, avec la courbe des douze derniers mois en pied et la variation sur la période en pastille ;
-// - sur ordinateur, à sa droite, l'encart « Ce mois-ci » (ce qui reste à pointer) et l'alerte de valorisation ;
+// - (l'encart « Ce mois-ci » et l'alerte de valorisation, à sa droite sur ordinateur, sont retirés depuis le 15/11/2026) ;
 // - « Mes rubriques » : une carte pleine de sa couleur par rubrique, EMPILÉES sur téléphone (le haut de chacune
 //   dépasse, la dernière est entière), côte à côte sur ordinateur ;
 // - « Évolution » : la courbe du total, avec la période en tête de section.
@@ -178,22 +178,16 @@ function ConsolidatedView({ ctx, onNavigate }) {
 
   const evolution = period === '3' ? series.slice(-3) : period === '12' ? series.slice(-12) : series;
 
-  // Encart « Ce mois-ci » (ordinateur) : le mois calendaire, tous comptes confondus — seulement s'il est créé.
-  const duMois = checkingPerAccount.filter(p => p.refKey === cur && p.stats).map(p => p.stats);
-  const ceMois = checkingEnabled && duMois.length > 0 ? {
-    projection: duMois.reduce((s, st) => s + st.balanceProjected, 0),
-    sorties: duMois.reduce((s, st) => s + st.exitsAll - st.exitsPointed, 0),
-    entrees: duMois.reduce((s, st) => s + st.entriesAll - st.entriesPointed, 0),
-  } : null;
   // Plus d'alerte de valorisation sur l'accueil (15/11/2026, décision de l'utilisateur, ordinateur compris) : elle reste en haut
-  // de la page Investissements.
+  // de la page Investissements. Plus d'encart « Ce mois-ci » non plus (même jour) : la projection est déjà sur la carte du compte
+  // courant, et « à pointer » ne sert à rien à qui pointe au jour le jour. La carte de tête prend toute la largeur.
 
   const periods = [{ key: '3', label: '3M' }, { key: '12', label: '12M' }, { key: 'all', label: 'Tout' }];
   const signe = (n) => `${n >= 0 ? '+' : ''}${fmt(n)} €`;
 
   return (
     <div>
-      <div className={`accueil-haut${ceMois ? ' accueil-haut--cote' : ''}`}>
+      <div className="accueil-haut">
         <CarteDeTete
           module="overview" libelle="Patrimoine total" montant={totalPatrimoine}
           droite={avecCourbe && <span className="ct-pill">{signe(variation)} depuis {monthLabelShort(douze[0].monthKey)}</span>}
@@ -201,19 +195,6 @@ function ConsolidatedView({ ctx, onNavigate }) {
         >
           {avecCourbe && <MiniCourbe valeurs={douze.map(p => p.total)} />}
         </CarteDeTete>
-        {ceMois && (
-          <aside className="accueil-cote">
-            {ceMois && (
-              <div className="encart-mois">
-                <h3>Ce mois-ci</h3>
-                <div className="encart-k"><span>Projection fin de mois</span><b className="num">{eur(ceMois.projection)}</b></div>
-                <div className="encart-k"><span>Sorties à pointer</span><b className="num">{eur(ceMois.sorties)}</b></div>
-                <div className="encart-k"><span>Entrées à pointer</span><b className="num">{eur(ceMois.entrees)}</b></div>
-                <button type="button" className="encart-lien" onClick={() => onNavigate('checking')}>Pointer <span aria-hidden="true">›</span></button>
-              </div>
-            )}
-          </aside>
-        )}
       </div>
 
       <section className="section-accueil">

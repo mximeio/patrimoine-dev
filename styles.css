@@ -1601,15 +1601,6 @@ input[type="month"] {
 .evo-carte { padding: 14px 14px 10px !important; }
 .evo-sous { color: var(--text-muted); font-size: 13px; font-weight: 400; margin: 0 0 4px; }
 .evo-sous b { color: var(--text); font-weight: 600; }
-/* L'encart et l'alerte ne vivent que sur ordinateur, à droite de la carte de tête. */
-.accueil-cote { display: none; }
-/* Le panneau de droite (« Ce mois-ci », « Valorisation à rafraîchir ») est réservé aux ORDINATEURS (15/11/2026, décision de
-   l'utilisateur) : à la largeur seule, l'iPhone en paysage (≈ 956 px) l'affichait aussi. Souris + survol en plus de la largeur. */
-@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
-  .accueil-haut--cote { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
-  .accueil-haut--cote .carte-tete { margin-bottom: 0; }
-  .accueil-cote { display: grid; gap: 12px; }
-}
 @media (min-width: 900px) {
   .pile-rub { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px; }
   .carte-rub-pc { display: none; } .carte-rub-pc-bas { display: inline; }
@@ -1621,12 +1612,6 @@ input[type="month"] {
   .carte-rub-mt { font-size: 22px; }
   .carte-rub-bas { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 24px; }
 }
-.encart-mois { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; }
-.encart-mois h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
-.encart-k { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--text-light); font-weight: 500; }
-.encart-k + .encart-k { border-top: 1px solid var(--border); }
-.encart-k b { color: var(--text); font-weight: 600; white-space: nowrap; }
-.encart-lien { margin-top: 4px; padding: 4px 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .alerte-valo { display: flex; gap: 10px; background: var(--warning-light); border: 1px solid #fde7c2; border-radius: 18px; padding: 14px 16px; }
 .alerte-valo-ico { color: var(--warning-fonce); flex: none; margin-top: 1px; }
 .alerte-valo b { font-size: 14px; font-weight: 600; }
