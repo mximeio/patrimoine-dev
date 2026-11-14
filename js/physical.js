@@ -111,7 +111,7 @@ function PhysicalRow({ item, onEdit, onDelete }) {
   // Ligne C' (maquette cartes2.html, 15/11/2026) : avatar à deux lettres et TOUTE la ligne ouvre la modification — le
   // crayon est retiré, ce qui rend au nom la place qu'il n'avait pas (« Napoléon 20 Fra… » relevé à 390 px).
   return (
-    <button type="button" className="portfolio-list-row" data-locate={`phys-${item.id}`} onClick={onEdit} aria-label={`Modifier ${item.name}`}>
+    <button type="button" className="portfolio-list-row asset-l" data-locate={`phys-${item.id}`} onClick={onEdit} aria-label={`Modifier ${item.name}`}>
       <div className="portfolio-list-icon portfolio-list-av" style={{ background: 'var(--warning-light)', color: '#8a5a00' }}>{initiales(item.name)}</div>
       <div className="portfolio-list-main">
         <div className="portfolio-list-name">{item.name}</div>

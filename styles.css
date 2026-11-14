@@ -1244,6 +1244,8 @@ input[type="month"] {
 /* L'avatar de 42 px a SA colonne : dans celle de 26 px des pastilles, il chevauchait le nom (relevé iPhone, 15/11/2026). */
 .portfolio-list-row:has(> .portfolio-list-av) { grid-template-columns: 42px minmax(0, 1fr) auto 14px; gap: 12px; }
 .section-block .portfolio-list-row { padding-left: 4px; padding-right: 4px; }
+/* Le nom d'un actif passe à la ligne plutôt que d'être coupé : la colonne de droite porte gain ET pourcentage. */
+.asset-l .portfolio-list-name { white-space: normal; overflow: visible; line-height: 1.25; }
 .portfolio-list-name { font-weight: 700; }
 .alerte-valo--page { margin: -4px 0 16px; }
 .pastille-cc-ouvre { cursor: pointer; }
