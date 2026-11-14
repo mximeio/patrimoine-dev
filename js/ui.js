@@ -904,7 +904,8 @@ function ChoixType({ types, value, onChange, compact = false }) {
 // LE BANDEAU D'INDICATEURS DES FENÊTRES (modernisation C', 14/11/2026) : les chiffres de tête d'une fenêtre, sur le fond
 // de la couleur de sa rubrique — la même famille que la carte de tête, en petit. `fond` : une clé de CARTE_FONDS, ou
 // 'tr' pour l'ambre des tickets resto. `cellules` : [{ label, value }].
-const FOND_TR = 'linear-gradient(150deg, #c27b12, #a95b00)';
+// Même ambre clair que les actifs physiques depuis le 15/11/2026 (le brun #a95b00 faisait sombre) ; texte foncé en CSS.
+const FOND_TR = 'linear-gradient(150deg, #f2b33d, #e09a1a)';
 function BandeauIndicateurs({ fond, cellules }) {
   const liste = (cellules || []).filter(Boolean);
   return (

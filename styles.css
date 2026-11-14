@@ -230,12 +230,14 @@ input[type="month"] {
 [data-rubrique="investments"] .btn-accent { background: #047857; border-color: #047857; }
 /* Actifs : ambre CLAIR et texte foncé, comme la pastille d'en-tête et la maquette (le brun #b45309 faisait trop sombre, 15/11/2026). */
 [data-rubrique="physical"] .btn-accent { background: #f2b33d; border-color: #f2b33d; color: #2b1d00; }
-.btn-accent.btn-tr { background: #a95b00; border-color: #a95b00; }
+/* Tickets resto : le même ambre CLAIR que les actifs physiques, texte foncé (demande de l'utilisateur, 15/11/2026 :
+   « pas très joli en foncé »). */
+.btn-accent.btn-tr { background: #f2b33d; border-color: #f2b33d; color: #2b1d00; }
 @media (hover: hover) {
   [data-rubrique="savings"] .btn-accent:hover { background: #155e75; box-shadow: none; }
   [data-rubrique="investments"] .btn-accent:hover { background: #065f46; box-shadow: none; }
   [data-rubrique="physical"] .btn-accent:hover { background: #e8a521; box-shadow: none; }
-  .btn-accent.btn-tr:hover { background: #8a4a00; box-shadow: none; }
+  .btn-accent.btn-tr:hover { background: #e8a521; box-shadow: none; }
 }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
 .btn.btn-fen { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -245,8 +247,9 @@ input[type="month"] {
 .bandeau-ind-cel + .bandeau-ind-cel { border-left: 1px solid rgba(255,255,255,0.22); padding-left: 12px; }
 .bandeau-ind-cel small { display: block; font-size: 11.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bandeau-ind-cel b { display: block; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bandeau-ind--physical { color: #2b1d00; }
-.bandeau-ind--physical .bandeau-ind-cel + .bandeau-ind-cel { border-left-color: rgba(43,29,0,0.16); }
+.bandeau-ind--physical, .bandeau-ind--tr { color: #2b1d00; }
+.bandeau-ind--physical .bandeau-ind-cel + .bandeau-ind-cel,
+.bandeau-ind--tr .bandeau-ind-cel + .bandeau-ind-cel { border-left-color: rgba(43,29,0,0.16); }
 .btn-icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; padding: 0;
@@ -342,7 +345,7 @@ input[type="month"] {
 [data-rubrique="savings"] .modal-ico { background: #0e7490; }
 [data-rubrique="investments"] .modal-ico { background: #047857; }
 [data-rubrique="physical"] .modal-ico { background: #f2b33d; color: #2b1d00; }
-.modal-ico.modal-ico--tr { background: #a95b00; color: #fff; }
+.modal-ico.modal-ico--tr { background: #f2b33d; color: #2b1d00; }
 .modal-ico.modal-ico--neutre { background: #475569; color: #fff; }
 .modal .modal-header { border-bottom: 0; }
 .modal .modal-header + .modal-body { padding-top: 6px; }
