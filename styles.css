@@ -322,7 +322,8 @@ input[type="month"] {
   /* v566 : padding vertical réduit 18→12px (en-tête plus compact sur
      desktop). Titre et bouton ✕ inchangés. Le mobile garde ses réglages
      dédiés plus bas (dont la marge d'encoche en PWA), non touchés. */
-  padding: 12px 24px; border-bottom: 1px solid var(--border);
+  padding: 22px 24px 12px; border-bottom: 1px solid var(--border); /* 22 en haut (15/11/2026) : l'icône tombe à 24 px du bord, autant que sur les côtés et en bas
+     de la fenêtre — 12 donnait un contenu décalé vers le haut. Le téléphone garde ses propres règles (encoche), plus bas. */
   background: var(--surface); flex-shrink: 0;
 }
 .modal-title { font-size: 15px; font-weight: 600; margin: 0; }
