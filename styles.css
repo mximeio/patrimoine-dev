@@ -334,7 +334,7 @@ input[type="month"] {
 .modal .btn.btn-lg { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
 .total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 2px 0; }
 .total-fen span { font-weight: 700; color: var(--text-light); }
-.total-fen b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.total-fen b { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
 .unite-eur { position: relative; }
 .unite-eur .input { padding-right: 38px; }
 .unite-eur::after { content: "€"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 500; color: var(--text-muted); pointer-events: none; }
@@ -342,7 +342,7 @@ input[type="month"] {
 /* EN-TÊTE C' (15/11/2026) : pastille d'icône de la couleur de la rubrique, titre en gras, sous-titre gris, croix ronde. */
 .modal-header { gap: 12px; }
 .modal-titres { flex: 1; min-width: 0; }
-.modal-header .modal-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+.modal-header .modal-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
 .modal-sous { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* PISTE A (15/11/2026, choisie par l'utilisateur sur _maquettes/Mockup-Entete-Fenetres) : la pastille est PLEINE, de la
    couleur de la rubrique (celle des cartes de tête), icône en blanc ; plus de trait sous l'en-tête. La fenêtre s'ouvre et se
@@ -1193,7 +1193,9 @@ input[type="month"] {
 .ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
 .ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 10px; /* 10 px comme les boutons (15/11/2026) */ font-size: 13px; font-weight: 600;
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
+/* Échelle typographique allégée (15/11/2026, choix de l'utilisateur, version « v1 ») : plus aucun 800 ; titres de section
+   17/700, montants et noms des cartes de l'accueil 17/700 et 15/600, libellés de liste 500, chiffres des pastilles 600. */
+.ct-montant { font-size: 32px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
 .ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
 /* 1 px d'air avant les centimes : la barre plate d'un « 2 » final touchait presque le point (« 2 272.78 », relevé sur
    iPhone le 15/11/2026). Seulement sur la première partie des centimes, pas devant le « € ». */
@@ -1209,7 +1211,7 @@ input[type="month"] {
   .ct-cel .ct-long { display: none; }
   .ct-cel .ct-court { display: inline; }
 }
-.ct-cel b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-cel b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Avec des jauges, le pied gagne 6 px : on les reprend sur son padding et la marge du montant, pour rester à 136. */
 .ct-pied:has(.ct-fil) { padding-top: 4px; }
 .carte-tete:has(.ct-fil) .ct-montant { margin-bottom: 4px; }
@@ -1219,7 +1221,7 @@ input[type="month"] {
 .ct-cel small.ct-cel-fait { display: flex; align-items: center; gap: 5px; opacity: 1; }
 .ct-cel small.ct-cel-fait > span:not(.ct-coche) { opacity: 0.82; } /* l'intitulé garde son ton, la coche reste pleine */
 .ct-coche { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; flex: none;
-  background: #6ee7b7; color: #064e3b; font-size: 9px; font-weight: 800; line-height: 1; }
+  background: #6ee7b7; color: #064e3b; font-size: 9px; font-weight: 700; line-height: 1; }
 .ct-fil.ct-fil--fait i { background: #6ee7b7; }
 .ct-courbe { margin: auto -16px -10px; height: 44px; overflow: hidden; border-radius: 0 0 22px 22px; } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
@@ -1229,14 +1231,14 @@ input[type="month"] {
    trois ronds. Les Paramètres : titres de groupe en gras sans capitales, cartes grises sans bordure. */
 .bottom-sheet .sheet-id { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 6px 4px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
 .bottom-sheet .sheet-id .sheet-avatar-lg { grid-row: span 2; width: 44px; height: 44px; font-size: 18px; }
-.bottom-sheet .sheet-id .sheet-id-name { margin-top: 0; font-weight: 800; }
+.bottom-sheet .sheet-id .sheet-id-name { margin-top: 0; font-weight: 700; }
 .bottom-sheet .sheet-id .sheet-id-mail { margin-top: 0; max-width: none; }
 .bottom-sheet .sheet-actions { flex-direction: column; gap: 2px; padding: 4px 0; }
 .bottom-sheet .sheet-act { flex-direction: row; justify-content: flex-start; gap: 14px; width: 100%; min-height: 52px; padding: 0 6px; border-radius: 14px; }
 .bottom-sheet .sheet-act .sheet-act-circle { width: 36px; height: 36px; background: var(--surface-alt); }
 .bottom-sheet .sheet-act .sheet-act-lbl { font-size: 15.5px; font-weight: 700; color: var(--text); }
 .bottom-sheet .sheet-act.danger .sheet-act-lbl { color: var(--danger-fonce); }
-.modal .settings-group-title { font-size: 15px; font-weight: 800; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
+.modal .settings-group-title { font-size: 15px; font-weight: 700; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
 .modal .settings-card { background: var(--surface-alt); border: 0; border-radius: 18px; }
 /* Répartition des charges (15/11/2026) : ses listes vivent dans un .settings-card, que la règle ci-dessus grisait depuis la
    v1169 (effet de bord des Paramètres). Elles reprennent le format des autres listes : fond blanc, trait en haut, lignes de
@@ -1259,8 +1261,8 @@ input[type="month"] {
 .rang-reglage + .rang-reglage { border-top: 1px solid var(--border); }
 .rang-reglage-ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; }
 .rang-reglage-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
-.rang-reglage-txt b { font-size: 14.5px; font-weight: 700; color: var(--text); }
-.rang-reglage-txt small { font-size: 12.5px; font-weight: 500; color: var(--text-muted); line-height: 1.35; }
+.rang-reglage-txt b { font-size: 14px; font-weight: 600; color: var(--text); }
+.rang-reglage-txt small { font-size: 12.5px; font-weight: 400; color: var(--text-muted); line-height: 1.35; }
 .settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 .settings-card.settings-ligne small { overflow-wrap: anywhere; }
 .btn.btn-danger-doux { background: var(--danger-light); color: var(--danger-fonce); border-color: transparent; flex: none; }
@@ -1269,7 +1271,7 @@ input[type="month"] {
 /* ── LA NAVIGATION C' (15/11/2026, maquette cartes2.html) ──
    Ordinateur : le logo à gauche, les onglets au centre sur un rail gris, l'actif en pastille BLANCHE (texte foncé, point
    de couleur), les boutons ronds à droite. Téléphone : la bulle de l'onglet actif prend la couleur de sa rubrique. */
-.app-bar-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; flex: none; }
+.app-bar-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; letter-spacing: -0.02em; flex: none; }
 .app-bar-inner .app-bar-nav { margin: 0 auto; border-radius: 999px; padding: 4px; background: #f1f3f7; }
 .app-bar-nav .seg-indicator { background: #fff; border-radius: 999px; box-shadow: 0 1px 2px rgba(11,16,32,0.08), 0 4px 10px -4px rgba(11,16,32,0.15); }
 .app-bar-nav .module-tab { border-radius: 999px; font-weight: 700; gap: 8px; }
@@ -1289,22 +1291,22 @@ input[type="month"] {
    19 px (l'icône de section se retire), le nombre d'éléments à droite, des lignes séparées par un filet, le bouton
    « + Ajouter » en pointillés sur toute la largeur. Les avatars des listes portent deux lettres. ── */
 .section-block > .section-header { padding: 0 2px 12px; border-bottom: 0; }
-.section-block > .section-header .section-title { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.section-block > .section-header .section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .section-block > .section-header .section-icon { display: none; }
 .section-block > .section-header + * { border-top: 1px solid var(--border); }
 .section-block .section-footer { padding: 10px 0 0; background: transparent; }
 .section-block .section-footer .btn-add {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: 16px;
-  border: 1.5px dashed #d5d9e2; color: var(--text-light); font-size: 14px; font-weight: 700;
+  border: 1.5px dashed #d5d9e2; color: var(--text-light); font-size: 13px; font-weight: 500;
 }
-.portfolio-list-icon.portfolio-list-av { width: 42px; height: 42px; border-radius: 14px; font-size: 14px; font-weight: 800; letter-spacing: 0; }
+.portfolio-list-icon.portfolio-list-av { width: 42px; height: 42px; border-radius: 14px; font-size: 13px; font-weight: 700; letter-spacing: 0; }
 .portfolio-list-row { min-height: 64px; }
 /* L'avatar de 42 px a SA colonne : dans celle de 26 px des pastilles, il chevauchait le nom (relevé iPhone, 15/11/2026). */
 .portfolio-list-row:has(> .portfolio-list-av) { grid-template-columns: 42px minmax(0, 1fr) auto 14px; gap: 12px; }
 .section-block .portfolio-list-row { padding-left: 4px; padding-right: 4px; }
 /* Le nom d'un actif passe à la ligne plutôt que d'être coupé : la colonne de droite porte gain ET pourcentage. */
 .asset-l .portfolio-list-name { white-space: normal; overflow: visible; line-height: 1.25; }
-.portfolio-list-name { font-weight: 700; }
+.portfolio-list-name { font-weight: 500; }
 .alerte-valo--page { margin: -4px 0 16px; }
 .pastille-cc-ouvre { cursor: pointer; }
 @media (hover: hover) { .pastille-cc-ouvre:hover { border-color: var(--border-strong); } }
@@ -1313,7 +1315,7 @@ input[type="month"] {
    Plus de carte autour : le titre « Opérations » à gauche, l'œil et « + Nouvelle » à droite, des lignes séparées par un
    filet. Cases arrondies de 22 px, composantes dépliées en retrait sous un trait. */
 .ops-c > .section-header { padding: 0 2px 12px; border-bottom: 0; }
-.ops-titre { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.ops-titre { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .ops-outils { display: flex; align-items: center; gap: 8px; margin: -8px 0; } /* le bouton (38 px) déborde de l'en-tête sans l'agrandir : « Opérations » à la hauteur des titres des autres rubriques */
 .btn.ops-nouvelle { display: inline-flex; align-items: center; gap: 6px; } /* taille, graisse et coins des boutons de l'app (« Mettre à jour ») : uniformité relevée par l'utilisateur le 15/11/2026 */
 .ops-c .tx-list { border-top: 1px solid var(--border); }
@@ -1416,7 +1418,7 @@ input[type="month"] {
 .ops-c .ops-eye-pill .num { font-weight: 700; }
 .ops-eye-lib { display: none; }
 @media (min-width: 641px) { .ops-c .ops-eye-lib { display: inline; } }
-.ops-c .op-label { font-weight: 600; }
+.ops-c .op-label { font-weight: 500; }
 /* Composantes dépliées : libellé et montant seulement (la poignée reste, invisible, à gauche). */
 .section-block.ops-c .composite-comp-row > .tx-edit { display: none; }
 /* La poignée d'une composante reste (on peut toujours la glisser) mais SORT de la grille : posée en absolu sur la marge
@@ -1471,19 +1473,19 @@ input[type="month"] {
 
 /* Supports d'une enveloppe : avatar à deux lettres de 42 px, comme les autres listes d'entités (maquette C', 15/11/2026). */
 .support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 4px; padding-right: 4px; min-height: 64px; }
-.support-row .support-icon { width: 42px; height: 42px; border-radius: 14px; font-size: 14px; font-weight: 800; }
+.support-row .support-icon { width: 42px; height: 42px; border-radius: 14px; font-size: 13px; font-weight: 700; }
 
 /* Recherche : titre de groupe en gras, sans capitales, précédé du point de la rubrique (maquette C', 15/11/2026). */
-.search-group .search-group-title { font-size: 12.5px; font-weight: 800; text-transform: none; letter-spacing: 0; color: var(--text-light); }
+.search-group .search-group-title { font-size: 12.5px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--text-light); }
 .search-group-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
 
 /* ── FENÊTRES DANS LE DÉTAIL (15/11/2026, maquette cartes2.html) : zone de suppression d'une enveloppe, totaux des
    valeurs, étiquette « Composite » des récurrents. ── */
 .zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 14px; border: 1.5px solid #f5c2c0; border-radius: 16px; }
-.zone-danger b { font-size: 14px; font-weight: 800; color: var(--danger-fonce); }
+.zone-danger b { font-size: 14px; font-weight: 700; color: var(--danger-fonce); }
 .zone-danger small { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
 .zone-danger .btn { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
-.modal .maj-total b { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.modal .maj-total b { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 /* « Mettre à jour les valeurs » façon maquette C' (fenValeurs, 15/11/2026) : enveloppe en groupe gris sans bordure, lignes de
    support à deux étages (nom, libellé dessous) séparées d'un filet, sous-total en tête. */
 .modal .maj-env { background: var(--surface-alt); border: 0; border-radius: 18px; padding: 4px 14px; }
@@ -1500,8 +1502,8 @@ input[type="month"] {
 /* `.total-fen span` (gris de l'intitulé) attrapait aussi le delta : on lui rend sa couleur. */
 .total-fen .maj-delta.value-positive { color: var(--success-fonce); }
 .total-fen .maj-delta.value-negative { color: var(--danger-fonce); }
-.modal .maj-sous-total b { font-weight: 800; }
-@media (min-width: 641px) { .recurring-row .composite-tag { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: var(--surface-alt); color: var(--text-light); margin-left: 6px; } } /* sur téléphone, le chevron suffit (comme le compte) : l'étiquette coupait le libellé */
+.modal .maj-sous-total b { font-weight: 700; }
+@media (min-width: 641px) { .recurring-row .composite-tag { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: var(--surface-alt); color: var(--text-light); margin-left: 6px; } } /* sur téléphone, le chevron suffit (comme le compte) : l'étiquette coupait le libellé */
 
 /* ── LES FENÊTRES SUR ORDINATEUR (15/11/2026, relevé de l'utilisateur : « c'est écrit très gros sur ordi ») ──
    Les 16 px des champs (sous 16 px, Safari iPhone zoome) et les 52 px des boutons (cible du doigt) n'ont pas lieu d'être
@@ -1535,7 +1537,7 @@ input[type="month"] {
 }
 .auth-carte::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.18), transparent 55%); }
 .auth-carte::after { content: ""; position: absolute; right: -50px; bottom: -80px; width: 220px; height: 220px; z-index: -1; border-radius: 50%; border: 32px solid rgba(255,255,255,0.07); }
-.auth-carte h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+.auth-carte h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
 .auth-carte p { margin: 2px 0 0; font-size: 14px; font-weight: 600; opacity: 0.75; }
 .auth-form { display: flex; flex-direction: column; gap: 14px; }
 .auth-bouton { margin-top: 6px; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
@@ -1553,7 +1555,7 @@ input[type="month"] {
 /* ── L'ACCUEIL C' (modernisation, 14/11/2026 — maquette cartes2.html, écran « accueil ») ── */
 .section-accueil { margin-top: 24px; }
 .section-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
-.section-tete h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.section-tete h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .section-aide { color: var(--text-muted); font-size: 13px; font-weight: 600; }
 /* La pile : chaque carte fait 159 px ; la suivante remonte de 94, donc on voit 65 px de chacune (le nom et le
    montant) et la dernière entière. Sur ordinateur, côte à côte. */
@@ -1570,18 +1572,18 @@ input[type="month"] {
   border-radius: 50%; border: 28px solid rgba(255,255,255,0.08); }
 @media (hover: hover) { .carte-rub:hover { transform: translateY(-6px); } }
 .carte-rub-rang { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.carte-rub-nom { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; min-width: 0; }
+.carte-rub-nom { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; min-width: 0; }
 .carte-rub-nom i { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
-.carte-rub-mt { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; white-space: nowrap; }
+.carte-rub-mt { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; white-space: nowrap; }
 /* Téléphone (cartes empilées) : le pourcentage sous le montant, dans la bande visible de chaque carte (15/11/2026). */
 .carte-rub-droite { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
-.carte-rub-pc { font-size: 12.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; margin-top: 1px; }
+.carte-rub-pc { font-size: 12.5px; font-weight: 500; opacity: 0.85; white-space: nowrap; margin-top: 1px; }
 .carte-rub-pc-bas { display: none; }
 /* Téléphone (piste B) : l'info sous le nom, plus de pied ; la carte aligne son contenu en haut (un bouton le centre sinon) et la
    dernière, qu'aucune autre ne recouvre, n'a que la hauteur de sa bande. */
 .carte-rub { display: flex; flex-direction: column; justify-content: flex-start; }
 .carte-rub-nomw { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-.carte-rub-sub { font-size: 12.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.carte-rub-sub { font-size: 12.5px; font-weight: 500; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .pile-rub .carte-rub-bas { display: none; } /* .pile-rub : passe devant la règle d'origine de .carte-rub-bas, plus bas */
 .carte-rub:last-child { min-height: 0; }
 .carte-rub-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 32px; font-size: 13px; font-weight: 600; opacity: 0.9; }
@@ -1611,7 +1613,7 @@ input[type="month"] {
   .carte-rub-bas { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 24px; }
 }
 .encart-mois { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; }
-.encart-mois h3 { margin: 0 0 6px; font-size: 14px; font-weight: 800; }
+.encart-mois h3 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
 .encart-k { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--text-light); font-weight: 600; }
 .encart-k + .encart-k { border-top: 1px solid var(--border); }
 .encart-k b { color: var(--text); font-weight: 700; white-space: nowrap; }
@@ -1634,18 +1636,18 @@ input[type="month"] {
 .ind-fen + .section-block .tx-list:has(.tx-row) { border-top: 1px solid var(--border); }
 .ind-fen-cel { min-width: 0; padding: 8px 10px; /* 10 px de côté, comme les pastilles : « +1 431.00 € » tient à 375 px (78 px pour 76) */ border-radius: 12px; background: var(--surface-alt); border: 1px solid var(--border); }
 .ind-fen-cel small { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ind-fen-cel b { display: block; margin-top: 1px; font-size: 13px; font-weight: 700; /* 13 px partout, comme les pastilles du compte (15/11/2026) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ind-fen-cel b { display: block; margin-top: 1px; font-size: 13px; font-weight: 600; /* 13 px partout, comme les pastilles du compte (15/11/2026) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pastille-cc {
   display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; padding: 0 10px; border-radius: 12px;
   background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); font: inherit; text-align: left;
 }
 .pastille-cc-ico { color: var(--text-muted); display: inline-flex; flex: none; }
-.pastille-cc-lib { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pastille-cc-lib { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 641px) { .pastilles-cc { grid-template-columns: repeat(2, 260px); } }
 .pcc-court { display: none; }
 /* 460 px (420 avant le 15/11/2026) : sur iPhone 440 px, « Reste mois préc. » se coupait dès un montant à quatre chiffres. */
 @media (max-width: 460px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
-.pastille-cc b { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.pastille-cc b { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .pastille-cc-tr { cursor: pointer; }
 .pastille-cc-tr .pastille-cc-ico { color: var(--tr-clair); } /* exception TR, cf. --tr-clair */
 .pastille-cc-chev { color: var(--text-subtle); font-size: 16px; line-height: 1; margin-left: -2px; }
@@ -3559,7 +3561,7 @@ button.stat-card {
 .backup-row .figs b { color: var(--text-muted); font-weight: 700; }
 .backup-row .figs .cc b { color: var(--accent); }
 .backup-tag {
-  font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+  font-size: 9px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
   padding: 2px 6px; border-radius: var(--radius-full);
 }
 .backup-tag.manual { background: var(--accent-light); color: var(--accent); }
@@ -3614,7 +3616,7 @@ button.stat-card {
 .restore-confirm .rc-summary b { color: var(--accent); }
 .restore-confirm .rc-head {
   display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 0 12px 6px;
-  font-size: 9.5px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted);
+  font-size: 9.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted);
 }
 .restore-confirm .rc-head span:nth-child(2), .restore-confirm .rc-head span:nth-child(3) { text-align: right; }
 .restore-confirm .rc-grid { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -3646,8 +3648,8 @@ button.stat-card {
 .restore-confirm .rc-counts b { color: var(--danger-fonce); font-weight: 700; }
 .restore-confirm .rc-r.chgd-count { box-shadow: inset 3px 0 0 var(--danger); }
 .restore-confirm .rc-r.chgd-count .gb { color: var(--danger-fonce); }
-.restore-confirm .rc-r.total { background: #f8fafc; font-weight: 800; }
-.restore-confirm .rc-r.total .gl, .restore-confirm .rc-r.total .gb { font-weight: 800; color: var(--text); }
+.restore-confirm .rc-r.total { background: #f8fafc; font-weight: 700; }
+.restore-confirm .rc-r.total .gl, .restore-confirm .rc-r.total .gb { font-weight: 700; color: var(--text); }
 /* ⚠️ APRÈS la règle `.total` ci-dessus, qui force le noir : sans cette ligne le
    total gardait une valeur noire alors que son liseré passait au rouge. */
 .restore-confirm .rc-r.total.chgd-count .gb { color: var(--danger-fonce); }
@@ -4683,7 +4685,7 @@ button.stat-card {
   display: inline-flex; align-items: center; gap: 5px;
   background: transparent; color: var(--text-muted); /* cf. .tx-edit (DEV v1095) */
   border-radius: var(--radius-full); padding: 6px 9px; margin: -6px 0;
-  font-family: inherit; font-size: 11.5px; font-weight: 800; line-height: 1;
+  font-family: inherit; font-size: 11.5px; font-weight: 700; line-height: 1;
   transition: background 0.15s, color 0.15s;
 }
 @media (hover: hover) { .ops-eye-pill:hover { background: var(--surface-hover); color: var(--text); } }
