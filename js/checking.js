@@ -816,7 +816,7 @@ function CheckingView({ ctx, onBack }) {
       )}
 
       {showRecurring && (
-        <Modal title="Opérations récurrentes" icon="rotate" subtitle={currentAccount.name || 'Compte courant'} onClose={() => setShowRecurring(false)} size="lg">
+        <Modal title="Opérations récurrentes" icon="arrowLeftRight" subtitle={currentAccount.name || 'Compte courant'} onClose={() => setShowRecurring(false)} size="lg">
           <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
             {checkingDatesEnabled(profile)
               ? "Ces lignes seront pré-remplies à la création d'un nouveau mois. Définis un jour du mois pour qu'il soit reporté automatiquement comme date sur la ligne créée (si le jour n'existe pas dans le mois cible, la date est laissée vide)."

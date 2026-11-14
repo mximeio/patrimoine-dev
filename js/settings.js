@@ -559,7 +559,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
       </div>
 
       {showForm && (
-        <Modal title={editing ? 'Modifier une opération récurrente' : 'Nouvelle opération récurrente'} icon="rotate" subtitle="Opérations récurrentes" onClose={() => { setShowForm(false); setEditing(null); }}>
+        <Modal title={editing ? 'Modifier une opération récurrente' : 'Nouvelle opération récurrente'} icon="arrowLeftRight" subtitle="Opérations récurrentes" onClose={() => { setShowForm(false); setEditing(null); }}>
           <RecurringForm
             showToast={showToast}
             initial={editing}
