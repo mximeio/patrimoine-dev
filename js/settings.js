@@ -854,7 +854,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
               </div>
               );
             })}
-            <div style={{ display: 'grid', gridTemplateColumns: canAddTRComp ? '1fr 1fr' : '1fr', gap: 8 }}>
+            <div className="ajouts-comp">
               <button type="button" className="btn-add" onClick={addComp}><Icon name="plus" size={14} /> Composante</button>
               {canAddTRComp && (
                 <button type="button" className="btn-add" onClick={addTrComp}><Icon name="plus" size={14} /> Tickets resto (auto)</button>

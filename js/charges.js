@@ -633,7 +633,13 @@ function ChargesModal({ ctx, onClose }) {
   const railLabels = data.scenarios
     .map(s => (s.name || '(sans nom)') + (s.id === baseScenario.id ? ' ★' : ''))
     .join('|');
-  useSlideIndicator(railRef, railIndRef, '.seg-tab-active', [activeId, view, railLabels], undefined, true);
+  useSlideIndicator(railRef, railIndRef, '.seg-tab-active', [activeId, view, railLabels], view, true);
+  // « COMPARER » N'EST PAS UN ONGLET DU RAIL (15/11/2026, relevé de l'utilisateur) : la pastille se rétractait vers sa gauche
+  // pendant que « Comparer » fonçait, et l'œil y voyait une couleur glisser du scénario jusqu'au bouton. `view` est passé en
+  // `followKey` : à chaque bascule scénario ↔ comparaison, useSlideIndicator colle la pastille SANS transition (son suivi
+  // image par image) — effacée d'un coup vers « Comparer », posée sans grandir au retour. Entre deux scénarios, `view` ne
+  // change pas : elle glisse toujours. ⚠️ Une coupure de transition posée HORS du hook est annulée par son nettoyage (piège
+  // noté dans useSlideIndicator, app.js) — d'où ce paramètre. La classe `.en-comparaison` masque la pastille dès le rendu.
   // null = fermé, 'new' = création, objet charge = édition
   const [editingCharge, setEditingCharge] = useState(null);
   const [editingScenario, setEditingScenario] = useState(false); // fenêtre « Scénario » (nom, référence, suppression)
@@ -685,7 +691,7 @@ function ChargesModal({ ctx, onClose }) {
           droite — TOUJOURS visible, icône + texte, même sur mobile. */}
       <div className="charges-tabbar">
         <div className="seg-bar" style={{ flex: 1, minWidth: 0 }}>
-          <div className="seg-rail" ref={railRef}>
+          <div className={`seg-rail${view === 'compare' ? ' en-comparaison' : ''}`} ref={railRef}>
             <div className="seg-indicator" ref={railIndRef} />
             {data.scenarios.map(s => (
               <button

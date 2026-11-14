@@ -339,7 +339,7 @@ input[type="month"] {
 .types-c button[aria-checked="true"] { border-color: var(--t); background: var(--tp); color: var(--t); }
 .types-c--compact button { min-height: 48px; display: flex; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; }
 .modal .btn.btn-lg { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
-.total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 2px 0; }
+.total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 0 0; } /* sur les bords des champs (15/11/2026 : 2 px de retrait de chaque côté avant) */
 .total-fen span { font-weight: 600; color: var(--text-light); }
 .total-fen b { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 .unite-eur { position: relative; }
@@ -491,6 +491,9 @@ input[type="month"] {
 /* La forme standard, en plus : un `scrollbar-color` (posé sur écran tactile et
    hérité, DEV v1088) peut faire ignorer `::-webkit-scrollbar` au navigateur. */
 .seg-rail { scrollbar-width: none; }
+/* Vue « Comparer » de la répartition des charges : la pastille du scénario s'efface D'UN COUP (15/11/2026) — sa rétraction
+   animée se lisait comme un glissement jusqu'au bouton « Comparer », qui n'est pas dans le rail. Cf. charges.js. */
+.seg-rail.en-comparaison .seg-indicator { opacity: 0; transition: none; }
 .seg-tab {
   display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
   padding: 7px 13px; background: transparent;
@@ -2221,12 +2224,23 @@ button.stat-card {
    .input (bord + fond + radius) pour qu'il soit clairement identifié
    comme champ saisissable, au même titre que le champ libellé à côté. */
 .modal-comp-row .tx-amount-wrap {
-  border: 1px solid var(--border);
+  border: 1.5px solid #e1e4ec;
   background: var(--surface);
-  border-radius: var(--radius-md);
-  height: 42px; padding: 0 10px 0 36px;
+  border-radius: 14px;
+  height: 46px; padding: 0 12px 0 36px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
+/* 15/11/2026 (relevé de l'utilisateur) : le montant d'une composante prend les mesures d'un CHAMP, comme le libellé à côté —
+   bordure 1,5 px, 46 px et coins de 14 au téléphone, 37 px et coins de 12 sur ordinateur, texte 16 / 14 px en 400 (valeur
+   saisie, échelle typographique). Avant : 42 px et coins de 10 partout, 16 px et 500 même sur ordinateur. */
+.modal-comp-row .tx-amount-wrap input { font-size: 16px; font-weight: 400; padding: 0; }
+@media (min-width: 641px) and (hover: hover) {
+  .modal-comp-row .tx-amount-wrap { height: 37px; border-radius: 12px; }
+  .modal-comp-row .tx-amount-wrap input { font-size: 14px; }
+}
+/* Boutons « + Composante » et « + Tickets resto (auto) » : côte à côte, calés à gauche (15/11/2026) — dans une grille à deux
+   colonnes, le second partait du milieu, à aucun bord. */
+.ajouts-comp { display: flex; flex-wrap: wrap; gap: 8px; }
 .modal-comp-row .tx-amount-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-light);
