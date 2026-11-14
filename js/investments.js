@@ -269,7 +269,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
             )}
           </div>
         ) : (
-          <div className="num" style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>— · —</div>
+          <div className="num" style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>{fmt(0)} € · {fmtPct(0, { signe: false })}</div> /* enveloppe sans support : « 0.00 € · 0.00 % » au lieu de « — · — » (15/11/2026, décision de l'utilisateur) */
         )}
       </div>
       <span className="portfolio-list-arrow" aria-hidden="true">›</span>
@@ -2120,7 +2120,8 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   return (
                     <div key={e.id} className="cp-tableau-ligne">
                       <span className="cp-lbl">
-                        <span className="cp-pastille" style={{ background: e.color || COLORS.accent }} />
+                        {/* Plus de point de couleur à l'étape 1 (15/11/2026, décision de l'utilisateur) : on y saisit des
+                            valeurs, le point n'y servait pas. L'étape 2 garde les siens. */}
                         <b>{supportName(e)}</b>
                         <span className="cp-lbl-sec"><LibelleSupport etf={e} prefixe=" — " /></span>
                         {/* Le delta se lit SUR LA LIGNE du support, pas seulement

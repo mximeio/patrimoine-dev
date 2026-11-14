@@ -278,20 +278,23 @@ function PatrimoineEvolutionChart({ data, enabled, profile }) {
 // La courbe du total, rendue PAR `ResponsiveContainer` : la durée s'y décide, et le nom finit par `Chart` pour
 // recevoir son `style` (cf. le commentaire de `useDureeAnimationGraphique`). Un changement de période la redessine
 // sans la remonter : la transition courte montre ce qui a bougé.
+// La courbe du TOTAL en gris ardoise, la couleur de la carte « Patrimoine total » (15/11/2026, décision de l'utilisateur) :
+// en indigo, elle se lisait comme celle du compte courant, dont la carte est juste au-dessus.
+const COURBE_TOTAL = '#2a2f4a';
 function EvolutionAiresChart({ data, categories, width, height, style }) {
   const duree = useDureeAnimationGraphique();
   return (
     <AreaChart width={width} height={height} style={style} data={data} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
       <defs>
         <linearGradient id="evo-fond" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor={MODULE_COLORS.checking} stopOpacity={0.2} />
-          <stop offset="1" stopColor={MODULE_COLORS.checking} stopOpacity={0} />
+          <stop offset="0" stopColor={COURBE_TOTAL} stopOpacity={0.18} />
+          <stop offset="1" stopColor={COURBE_TOTAL} stopOpacity={0} />
         </linearGradient>
       </defs>
       <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLORS.muted }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />
       <YAxis hide domain={['dataMin', 'dataMax']} />
       <Tooltip content={<EvolutionTooltip categories={categories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
-      <Area type="monotone" dataKey="total" stroke={MODULE_COLORS.checking} strokeWidth={2.5} fill="url(#evo-fond)"
+      <Area type="monotone" dataKey="total" stroke={COURBE_TOTAL} strokeWidth={2.5} fill="url(#evo-fond)"
         animationBegin={0} animationDuration={duree} />
     </AreaChart>
   );
