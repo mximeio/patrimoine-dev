@@ -241,7 +241,11 @@ function ConsolidatedView({ ctx, onNavigate }) {
               {/* Le pourcentage est écrit DEUX fois : sous le montant (téléphone, où les cartes se chevauchent et où seul le haut
                   de chacune se voit — 15/11/2026) et en pied de carte (ordinateur, cartes côte à côte) ; le CSS n'en montre qu'un. */}
               <span className="carte-rub-rang">
-                <span className="carte-rub-nom"><i><Icon name={c.icon} size={17} /></i>{c.label}</span>
+                {/* L'info de la rubrique (« 3 comptes », « 2 actifs »…) sous le nom au téléphone, comme le pourcentage sous le
+                    montant (maquette Mockup-Cartes-Accueil-Telephone, piste B, 15/11/2026) ; en pied sur ordinateur. */}
+                <span className="carte-rub-nom"><i><Icon name={c.icon} size={17} /></i>
+                  <span className="carte-rub-nomw"><span>{c.label}</span><span className="carte-rub-sub">{c.sub}</span></span>
+                </span>
                 <span className="carte-rub-droite">
                   <span className="carte-rub-mt num">{eur(c.value)}</span>
                   <span className="carte-rub-pc num">{totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'} % du total</span>

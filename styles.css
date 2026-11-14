@@ -1569,6 +1569,13 @@ input[type="month"] {
 .carte-rub-droite { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
 .carte-rub-pc { font-size: 12.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; margin-top: 1px; }
 .carte-rub-pc-bas { display: none; }
+/* Téléphone (piste B) : l'info sous le nom, plus de pied ; la carte aligne son contenu en haut (un bouton le centre sinon) et la
+   dernière, qu'aucune autre ne recouvre, n'a que la hauteur de sa bande. */
+.carte-rub { display: flex; flex-direction: column; justify-content: flex-start; }
+.carte-rub-nomw { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.carte-rub-sub { font-size: 12.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.pile-rub .carte-rub-bas { display: none; } /* .pile-rub : passe devant la règle d'origine de .carte-rub-bas, plus bas */
+.carte-rub:last-child { min-height: 0; }
 .carte-rub-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 32px; font-size: 13px; font-weight: 600; opacity: 0.9; }
 .carte-rub--physical { color: #2b1d00; }
 .carte-rub--physical .carte-rub-nom i { background: rgba(43,29,0,0.10); }
@@ -1587,6 +1594,7 @@ input[type="month"] {
 @media (min-width: 900px) {
   .pile-rub { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px; }
   .carte-rub-pc { display: none; } .carte-rub-pc-bas { display: inline; }
+  .carte-rub-sub { display: none; } .pile-rub .carte-rub-bas { display: flex; } .carte-rub:last-child { min-height: 150px; }
   .carte-rub-bas { margin-top: 24px; }
   .carte-rub + .carte-rub { margin-top: 0; }
   .carte-rub { min-height: 150px; box-shadow: 0 14px 30px -18px rgba(11,16,32,0.5); }
