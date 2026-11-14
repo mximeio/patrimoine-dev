@@ -1052,10 +1052,7 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
 
       {/* Section : Solde initial */}
       <div>
-        <h3 className="settings-group-title">Solde initial</h3>
-        <p style={{ fontSize: 12, color: COLORS.muted, margin: '0 0 12px' }}>
-          Le solde reporté au début du premier mois disponible.
-        </p>
+        <h3 className="settings-group-title">Solde initial<AideChamp>Le solde reporté au début du premier mois disponible.</AideChamp></h3>
         <div className="field-grid">
           <div>
             <label className="label">Mois de référence</label>
@@ -1088,28 +1085,23 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
         {enabled && (
           <div className="field-grid" style={{ marginTop: 12 }}>
             <div>
-              <label className="label">Valeur d'un TR</label>
+              <label className="label">Valeur d'un TR<AideChamp>Montant facial du ticket.</AideChamp></label>
               <div className="unite-eur"><AmountInput className="input" value={face} onChange={(n) => setFace(n)} /></div>
-              <div className="field-hint">Montant facial du ticket</div>
             </div>
             <div>
-              <label className="label">Part de ma poche</label>
+              <label className="label">Part de ma poche<AideChamp>Part employeur : {eur(employer)} ({fmt(employerPct)} %).</AideChamp></label>
               <div className="unite-eur"><AmountInput className="input" value={own} onChange={(n) => setOwn(n)} /></div>
-              <div className="field-hint">Part employeur : {eur(employer)} ({fmt(employerPct)} %)</div>
             </div>
           </div>
         )}
         {enabled && (
           <div className="field-grid" style={{ marginTop: 12 }}>
             <div>
-              <label className="label">Taux en vigueur depuis</label>
+              <label className="label">Taux en vigueur depuis<AideChamp>Les tickets des mois antérieurs ne seront pas recalculés : leur taux d'époque n'est pas connu.</AideChamp></label>
               <MonthInputPicker
                 value={since}
                 onChange={(k) => { sinceTouched.current = true; setSince(k); }}
               />
-              <div className="field-hint">
-                Les tickets des mois antérieurs ne seront pas recalculés : leur taux d'époque n'est pas connu.
-              </div>
             </div>
             <div />
           </div>
@@ -2205,7 +2197,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       {/* Montant ou Composantes (en mode TR : toujours montant simple) */}
       {(!isComposite || isTr) ? (
         <div>
-          <label className="label">Montant</label>
+          <label className="label">Montant<AideChamp>{isTRAuto && 'Cette ligne est calculée automatiquement à partir des tickets resto du mois précédent.'}</AideChamp></label>
           {isTr ? (
             <div className="unite-eur">
               <SignedAmountField
@@ -2229,9 +2221,6 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
                 title={isTRAuto ? 'Calculé automatiquement à partir des TR du mois précédent' : undefined}
               />
             </div>
-          )}
-          {isTRAuto && (
-            <div className="field-hint">Cette ligne est calculée automatiquement à partir des TR du mois précédent.</div>
           )}
         </div>
       ) : (

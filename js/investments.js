@@ -302,9 +302,8 @@ function NewPortfolioForm({ onSubmit, showToast }) {
   return (
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
-        <label className="label">Nom de l'enveloppe</label>
+        <label className="label">Nom de l'enveloppe<AideChamp>Tu pourras ajouter et configurer les supports une fois l'enveloppe créée.</AideChamp></label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: PEA (XTB)" required />
-        <div className="field-hint">Tu pourras ajouter et configurer les supports une fois l'enveloppe créée.</div>
       </div>
       {/* Grisé tant que le nom est vide — aligné sur la création d'un compte
           courant (`!trimmed || isDuplicate`), la référence de l'app. Sans ça le
@@ -1156,7 +1155,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       {/* Support — pour tous sauf deposit */}
       {needsEtf && (
         <div>
-          <label className="label">Support</label>
+          <label className="label">Support<AideChamp>{opType === 'dividend' && 'Seuls les supports configurés comme distribuants apparaissent ici.'}</AideChamp></label>
           <select value={etf} onChange={e => setEtf(e.target.value)} className="input" required>
             {/* 🔴 Le nom COMPLET après le tiret, plus le nom court — demande de
                 l'utilisateur du 11/08/2026 : c'est ici qu'on choisit un support,
@@ -1175,36 +1174,30 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
               </option>
             ))}
           </select>
-          {opType === 'dividend' && (
-            <div className="field-hint">Seuls les supports configurés comme distribuants apparaissent ici.</div>
-          )}
         </div>
       )}
 
       {/* Montant — pour deposit / purchase / dividend / sale */}
       {needsAmount && (
         <div>
-          <label className="label">{amountLabel.replace(' (€)', '')}</label>
+          <label className="label">{amountLabel.replace(' (€)', '')}<AideChamp>{opType === 'dividend' && 'Le cash sera crédité sur le compte (sans gonfler le « versé »).'}</AideChamp></label>
           <div className="unite-eur"><AmountInput value={amount} onChange={(n) => setAmount(n)} className="input" placeholder="0.00" /></div>
-          {opType === 'dividend' && <div className="field-hint">Le cash sera crédité sur le compte (sans gonfler le "versé").</div>}
         </div>
       )}
 
       {/* Coût d'acquisition vendu — uniquement pour sale */}
       {opType === 'sale' && (
         <div>
-          <label className="label">Coût d'acquisition de la part vendue</label>
+          <label className="label">Coût d'acquisition de la part vendue<AideChamp>Combien tu avais investi pour la part que tu revends. La différence avec le montant récupéré devient ton gain réalisé.</AideChamp></label>
           <div className="unite-eur"><AmountInput value={costBasis} onChange={(n) => setCostBasis(n)} className="input" placeholder="0.00" /></div>
-          <div className="field-hint">Combien tu avais investi pour la part que tu revends. La différence avec le montant récupéré devient ton gain réalisé.</div>
         </div>
       )}
 
       {/* Valeur de marché — uniquement pour gift */}
       {opType === 'gift' && (
         <div>
-          <label className="label">Valeur de marché à la réception</label>
+          <label className="label">Valeur de marché à la réception<AideChamp>Stockée pour l'historique. Le coût d'acquisition reste à 0 € (tu n'as rien déboursé).</AideChamp></label>
           <div className="unite-eur"><AmountInput value={marketValue} onChange={(n) => setMarketValue(n)} className="input" placeholder="0.00" /></div>
-          <div className="field-hint">Stockée pour l'historique. Le coût d'acquisition reste à 0 € (tu n'as rien déboursé).</div>
         </div>
       )}
 

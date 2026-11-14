@@ -396,7 +396,9 @@ function ChargeForm({ initial, people, nets, onSubmit, onDelete, defaultPeriod =
       </div>
 
       <div>
-        <label className="label">Répartition</label>
+        <label className="label">Répartition<AideChamp>{people.map((p, i) => (
+          <span key={p.id}>{i > 0 ? ' · ' : 'Part : '}<strong style={{ color: personTextAt(i) }}>{p.label}</strong> {eur(chargeShareOf(tempCharge, p.id, nets, people.length))}</span>
+        ))}</AideChamp></label>
         <div className="seg">
           {['percent', 'prorata', 'perso'].map(m => (
             <button type="button" key={m} className={`seg-btn${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>{SPLIT_LABELS[m]}</button>
@@ -418,10 +420,12 @@ function ChargeForm({ initial, people, nets, onSubmit, onDelete, defaultPeriod =
       ) : (
         <>
           <div>
-            <label className="label">{annual ? 'Total annuel (€)' : 'Total mensuel (€)'}</label>
+            <label className="label">{annual ? 'Total annuel (€)' : 'Total mensuel (€)'}<AideChamp>{(annual || mode === 'prorata') && <>
+              {annual && <>Réparti sur 12 mois : ≈ {eur((Number(total) || 0) / 12)} / mois.</>}
+              {annual && mode === 'prorata' && ' '}
+              {mode === 'prorata' && 'Réparti au prorata des salaires nets.'}
+            </>}</AideChamp></label>
             <AmountInput className="input" value={total} onChange={setTotal} placeholder="0.00" />
-            {annual && <div className="field-hint">Réparti sur 12 mois → ≈ {eur((Number(total) || 0) / 12)} / mois.</div>}
-            {mode === 'prorata' && <div className="field-hint">Réparti au prorata des salaires nets.</div>}
           </div>
           {mode === 'percent' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -438,11 +442,6 @@ function ChargeForm({ initial, people, nets, onSubmit, onDelete, defaultPeriod =
         </>
       )}
 
-      <div className="field-hint">
-        {people.map((p, i) => (
-          <span key={p.id}>{i > 0 ? ' · ' : 'Part : '}<strong style={{ color: personTextAt(i) }}>{p.label}</strong> {eur(chargeShareOf(tempCharge, p.id, nets, people.length))}</span>
-        ))}
-      </div>
 
       <div className="charge-mensuel-row">
         <span>{annual ? 'Provision mensuelle (livret)' : 'Virement mensuel (compte joint)'}</span>

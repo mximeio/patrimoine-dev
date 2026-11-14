@@ -739,7 +739,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
           "Effacer" inline. */}
       {datesMode && (
         <div>
-          <label className="label">Jour du mois <span className="aide-c">facultatif</span></label>
+          <label className="label">Jour du mois <span className="aide-c">facultatif</span><AideChamp>Reporté automatiquement comme date sur les lignes créées.</AideChamp></label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <DayInputPicker value={dayOfMonth} onChange={setDayOfMonth} />
@@ -753,7 +753,6 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
               >Effacer</button>
             )}
           </div>
-          <div className="field-hint">Reporté automatiquement comme date sur les lignes créées.</div>
         </div>
       )}
 

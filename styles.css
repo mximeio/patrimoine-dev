@@ -3916,6 +3916,11 @@ button.stat-card {
 }
 /* v596 : variante multi-ligne pour un commentaire (texte long) */
 .infotip-pop.infotip-pop--wrap { white-space: normal; max-width: min(420px, calc(100vw - 16px)); line-height: 1.4; }
+/* Le « ? » d'aide d'un champ (AideChamp, ui.js) : collé au libellé, cible de 33 px au doigt sans grandir la ligne. La bulle est
+   celle des notes du compte courant (.infotip-pop--wrap), sans réglage à part. */
+.infotip.aide-champ { margin-left: 5px; vertical-align: -3px; }
+.infotip.aide-champ::after { content: ""; position: absolute; inset: -9px; }
+.settings-group-title .infotip.aide-champ { margin-left: 0; } /* le titre de groupe est un flex à 6 px d'écart : pas de marge en plus */
 /* 26/10/2026 : seconde ligne discrète d'une bulle (prop `content` d'InfoTip) —
    ticker · ISIN sous le nom complet d'un support, total annuel sous les parts
    d'une charge. */

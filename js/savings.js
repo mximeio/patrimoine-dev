@@ -208,9 +208,8 @@ function NewSavingsForm({ onSubmit, showToast }) {
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: Livret A (Boursorama)" required />
       </div>
       <div>
-        <label className="label">Solde initial</label>
+        <label className="label">Solde initial<AideChamp>Le solde affiché sera calculé : ce solde initial + tes opérations (versements, retraits, intérêts).</AideChamp></label>
         <div className="unite-eur"><AmountInput value={balance} onChange={(n) => setBalance(n)} className="input" placeholder="0.00" /></div>
-        <div className="field-hint">Le solde affiché sera calculé : ce solde initial + tes opérations (versements, retraits, intérêts).</div>
       </div>
       {/* Grisé tant que le nom est vide — aligné sur la création d'un compte
           courant (`!trimmed || isDuplicate`), la référence de l'app. Sans ça le
@@ -482,11 +481,8 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" required />
       </div>
       <div>
-        <label className="label">Solde initial</label>
+        <label className="label">Solde initial<AideChamp>Point de départ pour le calcul du solde affiché. Toutes les opérations enregistrées s'y ajoutent.</AideChamp></label>
         <div className="unite-eur"><AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" /></div>
-        <div className="field-hint">
-          Point de départ pour le calcul du solde affiché. Toutes les opérations enregistrées s'y ajoutent.
-        </div>
       </div>
       <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
 

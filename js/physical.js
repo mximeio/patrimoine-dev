@@ -213,9 +213,8 @@ function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
         </div>
       </div>
       <div>
-        <label className="label">Prix actuel unitaire</label>
+        <label className="label">Prix actuel unitaire<AideChamp>Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</AideChamp></label>
         <div className="unite-eur"><AmountInput value={unitCurrentPrice} onChange={(n) => setCurrent(n)} className="input" /></div>
-        <div className="field-hint">Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</div>
       </div>
       <div className="form-actions">
         <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Mettre à jour' : 'Créer'}</button>

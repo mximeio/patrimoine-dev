@@ -463,6 +463,17 @@ function InfoTip({ iconName = 'target', size = 13, label, content = null, classN
   );
 }
 
+
+// Le « ? » d'aide d'un champ (15/11/2026, décision de l'utilisateur : version B de `_maquettes/Mockup-Aides-Champs`) : posé
+// sur la ligne du libellé, il remplace TOUT texte d'aide sous un champ — explications fixes comme chiffres calculés (« Part
+// employeur… »). La bulle est EXACTEMENT celle des notes du compte courant (`InfoTip` + `infotip-pop--wrap`) : survol à la souris,
+// toucher sur téléphone. Ne s'affiche que s'il y a un texte.
+// ⚠️ Les messages d'ERREUR (« Ce nom est déjà utilisé ») ne passent jamais par ici : ils restent sous le champ, en rouge.
+function AideChamp({ children, label = 'Aide' }) {
+  if (children == null || children === false || children === '') return null;
+  return <InfoTip iconName="aide" size={15} label={label} content={children} className="aide-champ" popClassName="infotip-pop--wrap" />;
+}
+
 function Icon({ name, size = 16, color }) {
   const props = {
     width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
@@ -524,6 +535,7 @@ function Icon({ name, size = 16, color }) {
     // Icône d'information (DEV v1098) : appelée par la fenêtre de restauration (« elle ne contient pas la répartition
     // des charges ») mais jamais dessinée — la ligne s'affichait avec un vide à la place. Dessin de lucide « info ».
     info: <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></>,
+    aide: <><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></>,
     // Recentrée (DEV v1095) : encre 0,5 unité trop haut.
     check: <g transform="translate(0 0.5)"><polyline points="20 6 9 17 4 12"/></g>,
     layers: <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>,
