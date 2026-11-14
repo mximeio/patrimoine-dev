@@ -1451,8 +1451,8 @@ input[type="month"] {
 /* Récurrents ALIGNÉS sur les lignes du compte (15/11/2026, demande de l'utilisateur) : poignée collée au bord (colonne de 14 px,
    écart 5 px), crayon au même endroit (même décalage que .ops-c), libellé là où commence la case dans le compte (24 px) — il n'y a
    pas de case ici. Classe doublée : passe devant les grilles téléphone / ordinateur de .recurring-row déclarées plus bas. */
-.liste-rec .recurring-row.recurring-row { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
-.liste-rec .recurring-row.recurring-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
+.liste-rec .recurring-row.recurring-row { grid-template-columns: var(--grip-col, 14px) minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
+.liste-rec .recurring-row.recurring-row.with-edit { grid-template-columns: var(--grip-col, 14px) minmax(0, 1fr) var(--amt-w, 112px) 22px; }
 .liste-rec .recurring-row.recurring-row > .op-main { padding-left: 5px; }
 .liste-rec .recurring-row.recurring-row > .tx-edit { transform: none; margin-left: -3px; }
 @media (max-width: 768px) { .liste-rec .recurring-row.recurring-row > .tx-edit { margin-left: -2px; } }
@@ -1501,6 +1501,11 @@ input[type="month"] {
 .mode-dates .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
 .ops-c.mode-dates .composite-comps { margin-left: 30px; }
 .modal .mode-dates .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
+/* Récurrents (Paramètres) : triés par jour du mois en mode dates, ils ne se glissent pas non plus — même règle que les tickets
+   resto : la colonne sort, le libellé à 11 px du bord ; les composantes suivent (trait 10 px avant le libellé du parent). */
+.liste-rec.mode-dates .recurring-row.recurring-row > .tx-grip { width: 0; overflow: hidden; }
+.liste-rec.mode-dates .recurring-row.recurring-row > .op-main { margin-left: -5px; padding-left: 11px; }
+.liste-rec.mode-dates .recurring-row.composite-row + .composite-comps { margin-left: 1px; }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */

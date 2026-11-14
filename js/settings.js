@@ -553,7 +553,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
   return (
     <>
       {/* Sans cadre depuis la modernisation C' (maquette, 15/11/2026) : un filet en haut, des lignes séparées, comme les autres listes. */}
-      <div className="liste-rec" style={{ '--amt-w': amountColVar(items), borderTop: `1px solid ${COLORS.border}`, marginTop: 8 }}>
+      <div className={`liste-rec${datesMode ? ' mode-dates' : ''}`} style={{ '--amt-w': amountColVar(items), borderTop: `1px solid ${COLORS.border}`, marginTop: 8 }}>
         {/* En mode dates : tri par dayOfMonth, sans muter le tableau. */}
         {(datesMode ? sortItemsBySortKey(items, (it) => it.dayOfMonth) : items).map((item) => {
           const idx = items.findIndex(x => x.id === item.id);
