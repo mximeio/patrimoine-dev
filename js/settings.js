@@ -319,7 +319,7 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
           );
         })}
         {etfs.length === 0 && (
-          <div className="empty-state" style={{ padding: 14 }}>Aucun support.</div>
+          <EmptyState icon="list" title="Aucun support" />
         )}
         {targeted.length > 0 && (
           <div className={`support-total ${Math.round(totalTarget) === 100 ? 'ok' : 'warn'}`}>
@@ -584,7 +584,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
             />
           );
         })}
-        {items.length === 0 && <div className="empty-state" style={{ padding: 20 }}>Aucune ligne récurrente.</div>}
+        {items.length === 0 && <EmptyState icon="refresh" title="Aucune opération récurrente" />}
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
         <button className="btn btn-accent btn-lg btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouvelle opération récurrente</button>

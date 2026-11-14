@@ -1197,7 +1197,8 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
             >
               {/* Un point de la couleur de la rubrique à la place de l'icône (maquette C') ; l'accueil n'en a pas. */}
               {MODULE_COLORS[t.id] && <i className="module-tab-dot" style={{ background: MODULE_COLORS[t.id] }} aria-hidden="true" />}
-              {t.label}
+              {/* Libellé court sous 1024 px (15/11/2026) : à 820 px, « Actifs physiques » passait sous la recherche et le menu. */}
+              <span className="mt-long">{t.label}</span><span className="mt-court">{t.short || t.label}</span>
             </button>
           ))}
         </nav>

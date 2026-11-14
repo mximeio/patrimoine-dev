@@ -1371,6 +1371,8 @@ input[type="month"] {
 .app-bar-nav .module-tab-active { color: var(--text); }
 @media (hover: hover) { .app-bar-nav .module-tab-active:hover { color: var(--text); } }
 .module-tab-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.mt-court { display: none; }
+@media (max-width: 1023px) { .mt-long { display: none; } .mt-court { display: inline; } } /* tablette : libellés courts (« Invest. », « Actifs ») */
 .app-bar-user { margin-left: 0; }
 .app-bar-user .btn-icon { width: 38px; height: 38px; border-radius: 50%; background: #f1f3f7; }
 .tab-slide-ind::before { transition: background-color .3s ease, box-shadow .2s ease; }
@@ -1726,6 +1728,9 @@ input[type="month"] {
 .pcc-court { display: none; }
 /* 460 px (420 avant le 15/11/2026) : sur iPhone 440 px, « Reste mois préc. » se coupait dès un montant à quatre chiffres. */
 @media (max-width: 460px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
+/* Pastille SEULE (tickets resto coupés) : elle a toute la largeur, elle garde son intitulé long (15/11/2026). */
+.pastilles-cc > .pastille-cc:only-child .pcc-long { display: inline; }
+.pastilles-cc > .pastille-cc:only-child .pcc-court { display: none; }
 .pastille-cc b { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .pastille-cc-tr { cursor: pointer; }
 .pastille-cc-tr .pastille-cc-ico { color: var(--tr-clair); } /* exception TR, cf. --tr-clair */
@@ -3695,7 +3700,7 @@ button.stat-card {
 .restore-confirm .rc-summary b { color: var(--accent); }
 .restore-confirm .rc-head {
   display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 0 12px 6px;
-  font-size: 10px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted);
+  font-size: 12px; font-weight: 500; color: var(--text-muted); /* en clair, plus de capitales (15/11/2026) */
 }
 .restore-confirm .rc-head span:nth-child(2), .restore-confirm .rc-head span:nth-child(3) { text-align: right; }
 .restore-confirm .rc-grid { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -4626,7 +4631,7 @@ button.stat-card {
 /* Sur une ligne de support, le delta est repoussé à DROITE du libellé — même
    motif que l'en-tête replié : identité à gauche, montant à droite. */
 .maj-sup-lbl .maj-delta { margin-left: auto; flex: none; white-space: nowrap; }
-.maj-vide { color: var(--text-muted); font-style: italic; font-size: 12px; padding: 4px 0 2px; }
+.maj-vide { color: var(--text-muted); font-size: 13px; padding: 4px 0 2px; } /* ligne simple dans une carte, comme les charges vides — plus d'italique (15/11/2026) */
 /* Zone d'actions en FIN DE CORPS (total, bouton, note) — la convention des
    27 autres modales de l'app. Pas de liseré : `.form-actions` n'en a pas non
    plus, l'espacement suffit à séparer. */
@@ -4974,8 +4979,7 @@ button.cp-seg-item { cursor: pointer; }
    l'était, c'est de teinter une carte pour un motif que rien d'autre dans l'app ne
    teinte — aucun précédent de `--surface-alt` pour marquer « cette carte contient un
    champ ». Décision de l'utilisateur. */
-.cp-carte-lbl { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase;
-  letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px; }
+.cp-carte-lbl { display: block; font-size: 13px; font-weight: 500; color: var(--text-light); margin-bottom: 6px; } /* comme un libellé de champ, plus de capitales (15/11/2026) */
 .cp-carte-val { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
 .cp-carte-detail { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
 .cp-carte-detail b { color: var(--text); }
@@ -4985,8 +4989,7 @@ button.cp-seg-item { cursor: pointer; }
 .cp-barre-bloc { margin-top: 2px; }
 .cp-barre-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   margin-bottom: 7px; }
-.cp-barre-tete span:first-child { font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .08em; color: var(--text-muted); }
+.cp-barre-tete span:first-child { font-size: 13px; font-weight: 500; color: var(--text-light); } /* en clair (15/11/2026) */
 /* ⚠️ Le second `span` a disparu du JSX le 13/08/2026 (la légende « le trait blanc
    marque la cible »). La règle est retirée avec lui — `span:first-child` porte seul
    le titre, et le `justify-content: space-between` du parent n'a plus qu'un enfant

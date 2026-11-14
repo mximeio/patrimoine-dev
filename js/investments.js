@@ -1930,6 +1930,8 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
     setVersement(propre);
   };
 
+  const [refusPrix, setRefusPrix] = useState(false); // après un refus « aucun prix » : les champs vides en rouge
+
   // ---- Étape 1 → 2 : on ÉCRIT les valeurs, puis on répartit -----------------
   const validerLesValeurs = async () => {
     if (busy) return;
@@ -1938,6 +1940,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
     // Refus DUR seulement s'il n'y a rien à répartir : sans un seul prix, il n'y
     // a pas de plan possible.
     if (sansPrix.length === avecCible.length) {
+      setRefusPrix(true); // les champs de prix vides passent en rouge (règle des erreurs, DEV v1208)
       return refuser(showToast, REFUS.prixObligatoire);
     }
     // Le passage à l'étape 2, commun aux deux voies (avec ou sans écriture).
@@ -2108,7 +2111,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                   {/* En portrait téléphone, l'intitulé court garde l'unité (26/10/2026) :
                       « Valeur (€) » et « Prix (€) » tiennent sur une ligne, les longs non. */}
                   <span><span className="cp-th-long">Valeur actuelle (€)</span><span className="cp-th-court">Valeur (€)</span></span>
-                  <span><span className="cp-th-long">Prix d'une part (€)</span><span className="cp-th-court">Prix (€)</span></span>
+                  <span><span className="cp-th-long">Prix d'une part (€)</span><span className="cp-th-court">Prix (€)</span><AideChamp>Le prix d'une part est demandé pour chaque support qui porte une cible non nulle. La valorisation et sa date ne sont enregistrées que si une valeur a changé.</AideChamp></span>
                 </div>
                 {etfs.map((e) => {
                   const saisie = valeurSaisie(valeurAffichee(e));
@@ -2128,7 +2131,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                         onFocus={selectionnerAuFocus}
                         onChange={(ev) => setValeurs((v) => ({ ...v, [e.id]: nettoyerMontant(ev.target.value) }))} />
                       {aUneCible(e) ? (
-                        <input type="text" inputMode="decimal" className="input num" value={prixAffiche(e)}
+                        <input type="text" inputMode="decimal" className={`input num${refusPrix && (valeurSaisie(prixAffiche(e)) || 0) <= 0 ? ' input-erreur' : ''}`} value={prixAffiche(e)}
                           onFocus={selectionnerAuFocus}
                           onChange={(ev) => setPrix((p) => ({ ...p, [e.id]: nettoyerMontant(ev.target.value) }))} />
                       ) : (
@@ -2165,10 +2168,6 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                 </div>
               ))}
 
-              <div className="cp-note">
-                Le prix d'une part est demandé pour chaque support qui porte une cible non nulle.
-                La valorisation et sa date ne sont enregistrées que si une valeur a changé.
-              </div>
               <button type="button" className="btn btn-accent btn-lg" disabled={busy} onClick={validerLesValeurs}>
                 {busy ? 'Enregistrement…' : 'Valider et continuer'}
               </button>

@@ -196,7 +196,7 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [], showToast }) {
       style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
     >
       <div>
-        <label className="label">Nom du compte</label>
+        <label className="label">Nom du compte<AideChamp>Tu pourras configurer les récurrents et les réglages des tickets resto depuis le compte créé.</AideChamp></label>
         <input
           type="text"
           value={name}
@@ -219,9 +219,6 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [], showToast }) {
           <div className="unite-eur"><AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" placeholder="0.00" /></div>
         </div>
       </div>
-      <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>
-        Tu pourras configurer les récurrents et réglages TR depuis le compte créé.
-      </p>
       <button type="submit" className="btn btn-accent btn-lg">Créer</button>
     </form>
   );
@@ -1908,7 +1905,7 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
           );
         })}
         {items.length === 0 && (
-          <div className="empty-state" style={{ padding: 20 }}>Aucune opération pour ce mois.</div>
+          <EmptyState icon="list" title="Aucune opération pour ce mois" />
         )}
         {/* Tout est pointé : la liste masquée ne devient jamais un vide
             inquiétant (v509). */}
@@ -2533,7 +2530,7 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
             />
           );
         })}
-        {items.length === 0 && <div className="empty-state" style={{ padding: 20 }}>Aucun paiement TR ce mois.</div>}
+        {items.length === 0 && <EmptyState icon="utensils" title="Aucun paiement de tickets resto ce mois" />}
       </div>
       <div className="section-footer">
         <button className="btn btn-accent btn-lg btn-tr btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouveau paiement TR</button>
