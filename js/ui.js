@@ -819,7 +819,9 @@ function MontantTete({ value }) {
 // laissait la pastille collée à l'intitulé à 390 pt (relevé sur iPhone le 15/11/2026). La maquette ne l'y met pas.
 function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIcone = false }) {
   const cellules = (pied || []).filter(Boolean);
-  const icone = sansIcone ? null : module === 'overview' ? 'patrimoine' : MODULE_ICONS[module];
+  // Plus d'icône dans aucune carte de tête (15/11/2026, comme la maquette C' et à la demande de l'utilisateur) : retirée
+  // d'abord du compte courant, où elle serrait la pastille de projection. `sansIcone` reste accepté, sans effet.
+  const icone = null;
   return (
     <div className={`card carte-tete carte-tete--${module}`} style={{ background: CARTE_FONDS[module] || CARTE_FONDS.overview }}>
       {/* Le reflet et l'anneau décoratifs vivent dans ce calque, SEUL rogné : la carte, elle, laisse dépasser le menu « ⋯ »

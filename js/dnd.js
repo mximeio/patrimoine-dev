@@ -247,8 +247,14 @@ function onPointerMove(e) {
   updateAutoScroll();
 }
 
+// La fin du dernier glisser RÉEL (modernisation C', 15/11/2026) : le libellé d'une ligne est à la fois la poignée et
+// la porte de la modification ; le clic qui suit le relâché d'un glisser à la souris ne doit pas ouvrir la fenêtre.
+let derniereFinGlisser = 0;
+function glisserVientDeFinir() { return Date.now() - derniereFinGlisser < 400; }
+
 function onPointerUp() {
   if (dnd) {
+    derniereFinGlisser = Date.now();
     const cur = dnd.current;
     const src = dnd.source;
     cleanup();

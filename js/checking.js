@@ -2304,6 +2304,17 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
   );
 }
 
+// MODERNISATION C' (15/11/2026, maquette cartes2.html) : la ligne n'a plus de flèche ni de crayon. Le LIBELLÉ devient la
+// poignée (appui long au doigt, glisser à la souris — dnd.js) ET la porte de la modification (simple toucher). Ni sur un
+// mois figé (le crayon y était déjà masqué), ni au clic qui termine un glisser, ni sur un bouton du libellé (chevron,
+// bulle de note).
+function ouvrirDepuisLibelle(e, onEdit, actif) {
+  if (!onEdit || !actif) return;
+  if (e.target.closest('button, a, input, .op-note, .infotip-txt')) return;
+  if (glisserVientDeFinir()) return;
+  onEdit();
+}
+
 function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, onEdit, onDrop, datesMode, mKey, noDrag = false, fading = false }) {
   // En mode dates OU mois figé (noDrag, v489) : pas de drag handle ni de
   // drop target — plus d'attribut draggable, de curseur de prise ni
@@ -2316,7 +2327,7 @@ function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, on
   const labelText = (item.label || '').trim();
   return (
     <div ref={rowRef} data-locate={`op-${item.id}`} className={`tx-row ${onEdit ? 'with-edit' : ''} ${item.pointed ? '' : 'unpointed'} ${item.isTRRefund ? 'auto' : ''} ${fading ? 'fading' : ''}`}>
-      <span ref={handleRef} className={`tx-icon ${variant} ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}>
+      <span className={`tx-icon ${variant} ${dndOff ? 'no-drag' : ''}`} aria-hidden="true">
         {variant === 'income' ? <Icon name="arrowDown" size={12} />
           : variant === 'expense' ? <Icon name="arrowUp" size={12} />
           : variant === 'tr' ? <Icon name="utensils" size={12} />
@@ -2327,7 +2338,8 @@ function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, on
       <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
         <div className={`tx-check ${item.pointed ? 'checked' : ''}`} />
       </div>
-      <div className="op-main" title={item.label || 'Cliquer sur le crayon pour modifier'}>
+      <div ref={handleRef} className={`op-main${onEdit && !noDrag ? ' op-main-ouvre' : ''}`} title={item.label || ''}
+        onClick={(e) => ouvrirDepuisLibelle(e, onEdit, !noDrag)}>
         <span className="op-label">
           {labelText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>(sans libellé)</span>}
         </span>
@@ -2375,7 +2387,7 @@ function CompositeTxRow({ item, variant, scope, list, index, expanded, onToggle,
   return (
     <div className={`tx-composite-wrap ${expanded ? 'expanded' : ''} ${item.pointed ? '' : 'unpointed'} ${fading ? 'fading' : ''}`}>
       <div ref={rowRef} data-locate={`op-${item.id}`} className={`tx-row composite-row ${onEdit ? 'with-edit' : ''} ${item.pointed ? '' : 'unpointed'}`}>
-        <span ref={handleRef} className={`tx-icon ${variant || 'expense'} ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}>
+        <span className={`tx-icon ${variant || 'expense'} ${dndOff ? 'no-drag' : ''}`} aria-hidden="true">
           {variant === 'income' ? <Icon name="arrowDown" size={12} />
             : variant === 'tr' ? <Icon name="utensils" size={12} />
             : (variant || 'expense') === 'expense' ? <Icon name="arrowUp" size={12} />
@@ -2384,7 +2396,8 @@ function CompositeTxRow({ item, variant, scope, list, index, expanded, onToggle,
         <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
           <div className={`tx-check ${item.pointed ? 'checked' : ''}`} />
         </div>
-        <div className="op-main" title={item.label || 'Cliquer sur le crayon pour modifier'}>
+        <div ref={handleRef} className={`op-main${onEdit && !noDrag ? ' op-main-ouvre' : ''}`} title={item.label || ''}
+          onClick={(e) => ouvrirDepuisLibelle(e, onEdit, !noDrag)}>
           <span className="op-label-chevron">
             <span className="op-label">
               {labelText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>(sans libellé)</span>}
