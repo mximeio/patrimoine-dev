@@ -90,8 +90,8 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
                 onClick={() => onOpenAccount(acc.id)}
                 aria-label={`Ouvrir ${acc.name || 'compte sans nom'}`}
               >
-                <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
-                  <Icon name="creditCard" size={14} />
+                <div className="portfolio-list-icon portfolio-list-av" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
+                  {initiales(acc.name)}
                 </div>
                 <div className="portfolio-list-main">
                   <div className="portfolio-list-name">
@@ -625,7 +625,7 @@ function CheckingView({ ctx, onBack }) {
                 si le mois précédent est entièrement pointé, reste projeté et
                 reste pointé sont identiques — rien à justifier (v518). */}
       <CarteDeTete
-        module="checking" libelle="Solde pointé" montant={stats.balancePointed}
+        module="checking" libelle="Solde pointé" montant={stats.balancePointed} sansIcone
         droite={<><MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} />
           {/* La projection en PASTILLE (modernisation C', 14/11/2026, haut de la fusion A + C) : le pied de la carte
               porte désormais le pointage. Toucher la pastille déplie toujours le détail du calcul (v517). */}

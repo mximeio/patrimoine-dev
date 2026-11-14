@@ -815,9 +815,11 @@ function MontantTete({ value }) {
 // `pied` : une liste de cellules { label, court?, value, fil? } (court = intitulé du portrait téléphone, où trois
 // cellules se partagent ~330 px ; fil = jauge de 0 à 100) ; `droite` : les commandes de l'intitulé ;
 // `children` : ce qui se déplie sous la carte (le détail de la projection du compte courant).
-function CarteDeTete({ module, libelle, droite, montant, pied, children }) {
+// `sansIcone` : la carte du compte courant porte déjà la pastille de projection et le « ⋯ » ; l'icône, décorative, y
+// laissait la pastille collée à l'intitulé à 390 pt (relevé sur iPhone le 15/11/2026). La maquette ne l'y met pas.
+function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIcone = false }) {
   const cellules = (pied || []).filter(Boolean);
-  const icone = module === 'overview' ? 'patrimoine' : MODULE_ICONS[module];
+  const icone = sansIcone ? null : module === 'overview' ? 'patrimoine' : MODULE_ICONS[module];
   return (
     <div className={`card carte-tete carte-tete--${module}`} style={{ background: CARTE_FONDS[module] || CARTE_FONDS.overview }}>
       <div className="ct-l1">
@@ -842,6 +844,13 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children }) {
       {children}
     </div>
   );
+}
+
+// Les deux lettres d'un avatar de liste (modernisation C', 15/11/2026) : « PEA (XTB) » → « PE », « Livret A » → « LI ».
+// Les lettres du nom seulement, sans les signes ; « ? » si le nom n'en a pas.
+function initiales(nom) {
+  const lettres = String(nom || '').replace(/[^\p{L}\p{N}]/gu, '');
+  return (lettres.slice(0, 2) || '?').toUpperCase();
 }
 
 // LE CHOIX DU TYPE D'UNE OPÉRATION (modernisation C', 15/11/2026) : une rangée de boutons radio. `compact` (Entrée /

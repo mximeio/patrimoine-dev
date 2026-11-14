@@ -117,6 +117,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
             <span className="section-icon savings"><Icon name="piggy" size={14} /></span>
             Mes comptes d'épargne
           </div>
+          <span className="section-aide">{savings.length}</span>
         </div>
         <div>
           {sortByNumber(savings, s => computeSavingsBalance(s)).map(s => {
@@ -159,8 +160,8 @@ function SavingsListRow({ saving, colorIndex, onClick }) {
     .reduce((latest, o) => (!latest || o.date > latest.date) ? o : latest, null);
   return (
     <button className="portfolio-list-row" data-locate={`saving-${saving.id}`} onClick={onClick} aria-label={`Ouvrir ${saving.name}`}>
-      <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
-        <Icon name="piggy" size={14} />
+      <div className="portfolio-list-icon portfolio-list-av" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
+        {initiales(saving.name)}
       </div>
       <div className="portfolio-list-main">
         <div className="portfolio-list-name">{saving.name}</div>
@@ -342,7 +343,14 @@ function SavingsDetailView({ ctx, saving, onBack }) {
                 Réglages
               </button>
             </Dropdown>}
-        pied={[{ label: 'Intérêts perçus', value: `+ ${fmt(stats.interets)} €` }]}
+        pied={[
+          { label: 'Intérêts perçus', value: `+ ${fmt(stats.interets)} €` },
+          // 2ᵉ cellule de la maquette C' (15/11/2026) : la date de la dernière opération datée du livret.
+          { label: 'Dernière opération', court: 'Dernière op.', value: (() => {
+            const d = (saving.operations || []).map(o => o.date).filter(Boolean).sort().pop();
+            return d ? fmtDateNumeric(d) : '—';
+          })() },
+        ]}
       />
 
       {/* OPÉRATIONS RÉCENTES (8 dernières) + lien "Voir toutes" */}

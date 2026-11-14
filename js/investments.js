@@ -182,50 +182,20 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
         ]}
       />
 
-      {/* STAT CARDS */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-card-icon"><Icon name="layers" size={14} /></div>
-          <div className="stat-card-label">Enveloppes</div>
-          <div className="stat-card-value num">{portfolios.length}</div>
-          <div
-            className="stat-card-sub"
-            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-            title={portfoliosByValue.map(p => p.name).join(', ')}
-          >
-            {portfoliosByValue.map(p => shortName(p.name)).slice(0, 3).join(', ') + (portfolios.length > 3 ? '…' : '')}
+      {/* MODERNISATION C' (15/11/2026, maquette cartes2.html) : les quatre cartes chiffrées sont retirées — la plus-value
+          et le cash sont dans la carte de tête, le nombre d'enveloppes en tête de liste. Il reste ce qui demande d'agir :
+          l'alerte de valorisation, avec la même règle que l'ancienne carte « À rafraîchir » (la plus ancienne, au-delà de
+          30 jours, quand les enveloppes ne sont pas toutes à la même date). */}
+      {staleWarn && (
+        <div className="alerte-valo alerte-valo--page">
+          <span className="alerte-valo-ico"><Icon name="calendar" size={16} /></span>
+          <div>
+            <b>Valorisation à rafraîchir</b>
+            <p title={oldestNamesFull || undefined}>{oldestNames}, il y a {staleDays} jours.</p>
+            <button type="button" className="btn btn-accent" onClick={() => setMajGroupee(true)}>Mettre à jour</button>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-card-icon income"><Icon name="trendUp" size={14} /></div>
-          <div className="stat-card-label">+/- value</div>
-          <div className={`stat-card-value num ${positive ? 'value-positive' : 'value-negative'}`}>
-            {positive ? '+' : ''}{fmt(consolidated.totalGain)} €
-          </div>
-          <div className="stat-card-sub">{consolidated.totalPurchased > 0 ? `${positive ? '+' : ''}${consolidated.totalGainPct.toFixed(2)} %` : '—'}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-icon tr"><Icon name="coin" size={14} /></div>
-          <div className="stat-card-label">Cash non investi</div>
-          <div className="stat-card-value num">{fmt(consolidated.cashRemaining)} €</div>
-          <div className="stat-card-sub">{consolidated.totalDeposited > 0 ? (consolidated.cashRemaining / consolidated.totalDeposited * 100).toFixed(2) : '0.00'} % du versé</div>
-        </div>
-        <div className="stat-card">
-          <div className={`stat-card-icon ${staleWarn ? 'tr-utensils' : 'stale-neutral'}`}><Icon name="calendar" size={14} /></div>
-          <div className="stat-card-label">{allSameDate ? 'Valorisations' : 'À rafraîchir'}</div>
-          <div className="stat-card-value num" style={staleWarn ? { color: 'var(--warning-fonce)' } : undefined}>
-            {oldestUpdate ? fmtDateNumeric(oldestUpdate.d) : '—'}
-            {staleWarn && <span className="stale-tag">{staleDays} j</span>}
-          </div>
-          <div
-            className="stat-card-sub"
-            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-            title={oldestNamesFull || undefined}
-          >
-            {!oldestUpdate ? 'Aucune valorisation' : allSameDate ? 'Toutes les enveloppes' : oldestNames}
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* LIST */}
       <div className="section-block">
@@ -234,6 +204,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
             <span className="section-icon invest"><Icon name="layers" size={14} /></span>
             Mes enveloppes
           </div>
+          <span className="section-aide">{portfolios.length}</span>
         </div>
         <div>
           {sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue).map((p, i) => (
@@ -274,8 +245,8 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
 
   return (
     <button className="portfolio-list-row" data-locate={`pf-${portfolio.id}`} onClick={onClick} aria-label={`Ouvrir ${portfolio.name}`}>
-      <div className="portfolio-list-icon" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
-        <Icon name="chart" size={14} />
+      <div className="portfolio-list-icon portfolio-list-av" style={{ background: fondPastille(color), color: couleurIcone(color) }}>
+        {initiales(portfolio.name)}
       </div>
       <div className="portfolio-list-main">
         <div className="portfolio-list-name">{portfolio.name}</div>
@@ -500,50 +471,20 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         ]}
       />
 
-      {/* STAT CARDS — ordre posé le 14/08/2026 : UTILITÉ DÉCROISSANTE, la carte de
-          fraîcheur restant en dernier (seule convention d'ordre de l'app, partagée
-          avec la vue liste). Il était auparavant cash → versé → investi, où le total
-          se trouvait au milieu et où l'ordre ne disait rien.
-          🔴 NE PAS LE RELIRE COMME UN CALCUL. `Investi + Cash` ne vaut `Versé` que
-          sans dividende, sans vente et sans retrait — la relation exacte est
-          `Investi + Cash = Versé + dividendes + plus-value réalisée − retraits`
-          (cf. `cashRemaining`, compute.js). L'égalité est DÉJÀ fausse dans une
-          enveloppe qui touche un dividende, donc un ordre qui suggérerait une
-          addition mentirait précisément là. C'est ce qui a fait écarter les deux
-          ordres « en équation » proposés à la conception.
-          ⚠️ ÉCART CONNU ET ACCEPTÉ : « Cash non investi » est ici en 2ᵉ position et
-          en 3ᵉ sur la vue liste. Arbitrage de l'utilisateur (14/08/2026) après avoir
-          vu les deux côte à côte : garder la carte la plus actionnable en haut vaut
-          mieux qu'une position identique d'une page à l'autre. **Ne pas « aligner »
-          les deux vues en croyant réparer un oubli.**
-          ⚠️ `fmt` sur les trois montants : le hero affiche « Investi » à 2 décimales
-          et le répète à l'identique ici. Une carte laissée à l'unité ferait cohabiter
-          deux précisions sur le même écran — et pour l'investi, sur le MÊME nombre. */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-card-icon income"><Icon name="trendUp" size={14} /></div>
-          <div className="stat-card-label">Investi</div>
-          <div className="stat-card-value num">{fmt(stats.totalInvested)} €</div>
-          <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'purchase').length} achat(s)</div>
+      {/* MODERNISATION C' (15/11/2026) : « Investi » et « Cash non investi » sont dans la carte de tête ; restent deux
+          pastilles fines, « Versé » et « Màj » — celle-ci ouvre la mise à jour des valeurs. */}
+      <div className="pastilles-cc">
+        <div className="pastille-cc" title={`${stats.sortedOperations.filter(o => o.type === 'deposit').length} versement(s)`}>
+          <span className="pastille-cc-ico"><Icon name="arrowDown" size={13} /></span>
+          <span className="pastille-cc-lib">Versé</span>
+          <b className="num">{eur(stats.totalDeposited)}</b>
         </div>
-        <div className="stat-card">
-          <div className="stat-card-icon tr"><Icon name="coin" size={14} /></div>
-          <div className="stat-card-label">Cash non investi</div>
-          <div className="stat-card-value num">{fmt(stats.cashRemaining)} €</div>
-          <div className="stat-card-sub">{stats.totalDeposited > 0 ? (stats.cashRemaining / stats.totalDeposited * 100).toFixed(2) : '0.00'} % du versé</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-icon income"><Icon name="arrowDown" size={14} /></div>
-          <div className="stat-card-label">Versé</div>
-          <div className="stat-card-value num">{fmt(stats.totalDeposited)} €</div>
-          <div className="stat-card-sub">{stats.sortedOperations.filter(o => o.type === 'deposit').length} versement(s)</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-icon expense"><Icon name="calendar" size={14} /></div>
-          <div className="stat-card-label">Dernière MaJ</div>
-          <div className="stat-card-value num">{data.currentValuesDate ? fmtDateNumeric(data.currentValuesDate) : '—'}</div>
-          <div className="stat-card-sub">{data.currentValuesDate ? 'Valorisations' : 'Pas encore valorisé'}</div>
-        </div>
+        <button type="button" className="pastille-cc pastille-cc-ouvre" onClick={() => setModal('values')} aria-label="Mettre à jour les valeurs">
+          <span className="pastille-cc-ico"><Icon name="calendar" size={13} /></span>
+          <span className="pastille-cc-lib">Màj</span>
+          <b className="num">{data.currentValuesDate ? fmtDateNumeric(data.currentValuesDate) : '—'}</b>
+          <span className="pastille-cc-chev" aria-hidden="true">›</span>
+        </button>
       </div>
 
       {/* SUPPORTS DÉTENUS */}
@@ -553,6 +494,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
             <span className="section-icon invest"><Icon name="list" size={14} /></span>
             Supports détenus
           </div>
+          <span className="section-aide">{stats.positions.length}</span>
         </div>
         <div>
           {sortByNumber(stats.positions, p => p.current).map(p => (

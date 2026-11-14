@@ -69,6 +69,7 @@ function PhysicalView({ ctx }) {
             <span className="section-icon physical"><Icon name="coin" size={14} /></span>
             Mes actifs physiques
           </div>
+          <span className="section-aide">{physical.length}</span>
         </div>
         <div>
           {sortByNumber(physical, p => physicalCurrentValue(p)).map(p => (

@@ -1189,10 +1189,28 @@ input[type="month"] {
 .ct-courbe { margin: auto -16px -10px; height: 44px; }
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
 
+/* ── LES LISTES C' (15/11/2026, maquette cartes2.html) — TOUS les blocs de section : plus de carte autour, un titre de
+   19 px (l'icône de section se retire), le nombre d'éléments à droite, des lignes séparées par un filet, le bouton
+   « + Ajouter » en pointillés sur toute la largeur. Les avatars des listes portent deux lettres. ── */
+.section-block > .section-header { padding: 0 2px 12px; border-bottom: 0; }
+.section-block > .section-header .section-title { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.section-block > .section-header .section-icon { display: none; }
+.section-block > .section-header + * { border-top: 1px solid var(--border); }
+.section-block .section-footer { padding: 10px 0 0; background: transparent; }
+.section-block .section-footer .btn-add {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: 16px;
+  border: 1.5px dashed #d5d9e2; color: var(--text-light); font-size: 14px; font-weight: 700;
+}
+.portfolio-list-icon.portfolio-list-av { width: 42px; height: 42px; border-radius: 14px; font-size: 14px; font-weight: 800; letter-spacing: 0; }
+.portfolio-list-row { min-height: 64px; }
+.portfolio-list-name { font-weight: 700; }
+.alerte-valo--page { margin: -4px 0 16px; }
+.pastille-cc-ouvre { cursor: pointer; }
+@media (hover: hover) { .pastille-cc-ouvre:hover { border-color: var(--border-strong); } }
+
 /* ── LA LISTE DU COMPTE COURANT C' (maquette cartes2.html, écran « compte courant ») ──
    Plus de carte autour : le titre « Opérations » à gauche, l'œil et « + Nouvelle » à droite, des lignes séparées par un
    filet. Cases arrondies de 22 px, composantes dépliées en retrait sous un trait. */
-.section-block.ops-c { background: transparent; border: 0; border-radius: 0; overflow: visible; margin-top: 22px; }
 .ops-c > .section-header { padding: 0 2px 12px; border-bottom: 0; }
 .ops-titre { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
 .ops-outils { display: flex; align-items: center; gap: 8px; }
@@ -1289,7 +1307,7 @@ input[type="month"] {
 .alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 600; }
 
 /* La projection du compte courant, en pastille dans l'intitulé de la carte (lot 3 de la modernisation). */
-.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 12px; font-weight: 700; gap: 5px; }
+.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 12px; font-weight: 700; gap: 5px; height: 26px; padding: 0 10px; }
 .carte-tete .ct-pill-btn .proj-chev { color: rgba(255,255,255,0.7); }
 @media (max-width: 360px) { .carte-tete .ct-pill-lib { display: none; } }
 /* Les deux pastilles fines sous la carte du compte courant : « Reste mois préc. » et « Tickets resto ». */
@@ -1445,10 +1463,8 @@ button.stat-card {
 }
 
 /* Sections */
-.section-block {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); margin-top: 14px; overflow: hidden;
-}
+/* Bloc de section : SANS CARTE depuis la modernisation C' (15/11/2026) — titre, filet, lignes ; cf. « LES LISTES C' ». */
+.section-block { background: transparent; border: 0; border-radius: 0; margin-top: 22px; overflow: visible; }
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px; border-bottom: 1px solid var(--border);
