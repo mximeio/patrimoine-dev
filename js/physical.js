@@ -45,7 +45,7 @@ function PhysicalView({ ctx }) {
   const editing = editId ? physical.find(p => p.id === editId) : null;
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* « Valeur totale » et non « actuelle » (15/08/2026) : cette hero card
               affiche exactement le même trio que celle des investissements —
               valeur, plus-value, investi. « Actuelle » y opposait la valeur à
@@ -54,6 +54,7 @@ function PhysicalView({ ctx }) {
               écrit nulle part ailleurs : c'est la SOMME du module, par opposition
               à la valeur d'un actif isolé. Un qualificatif se garde quand il
               apporte — comme « pointé » sur le compte courant. */}
+      <div className="colle">
       <CarteDeTete
         module="physical" libelle="Valeur totale" montant={totalCurrent}
         droite={<span className="ct-pill">{totalGain >= 0 ? '+' : ''}{totalGainPct.toFixed(2)}%</span>}
@@ -62,6 +63,7 @@ function PhysicalView({ ctx }) {
           { label: 'Investi', value: `${fmt(totalInvested)} €` },
         ]}
       />
+      </div>
 
       <div className="section-block">
         <div className="section-header">

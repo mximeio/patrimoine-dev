@@ -1302,6 +1302,37 @@ input[type="month"] {
 .op-row.op-row, .recurring-row.recurring-row, .tx-row.tr-row.tr-row { min-height: 46px; padding-top: 3px; padding-bottom: 3px; align-items: center; }
 .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row { min-height: 36px; padding-top: 3px; padding-bottom: 3px; }
 
+/* ── LES RUBRIQUES SUR ORDINATEUR (15/11/2026, maquette « rubrique-ord ») : la carte de tête et ses pastilles (ou l'alerte),
+   enveloppées dans `.colle`, restent fixes à gauche ; tout le reste de la vue (`.vue-rub`) va à droite. La colonne de
+   gauche couvre toutes les rangées, d'où l'absence d'écart sous la première section. ── */
+@media (min-width: 1100px) {
+  .vue-rub { display: grid; grid-template-columns: 380px minmax(0, 1fr); column-gap: 32px; align-items: start; }
+  .vue-rub > * { grid-column: 2; }
+  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 76px; }
+  .vue-rub > .colle .pastilles-cc { grid-template-columns: 1fr 1fr; }
+  .vue-rub > :not(.colle) { min-width: 0; }
+  .vue-rub > .section-block:first-of-type, .vue-rub > .colle + * { margin-top: 0; }
+}
+.colle > .carte-tete:last-child { margin-bottom: 16px; }
+
+/* Supports d'une enveloppe : avatar à deux lettres de 42 px, comme les autres listes d'entités (maquette C', 15/11/2026). */
+.support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 4px; padding-right: 4px; min-height: 64px; }
+.support-row .support-icon { width: 42px; height: 42px; border-radius: 14px; font-size: 14px; font-weight: 800; }
+
+/* Recherche : titre de groupe en gras, sans capitales, précédé du point de la rubrique (maquette C', 15/11/2026). */
+.search-group .search-group-title { font-size: 12.5px; font-weight: 800; text-transform: none; letter-spacing: 0; color: var(--text-light); }
+.search-group-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+/* ── FENÊTRES DANS LE DÉTAIL (15/11/2026, maquette cartes2.html) : zone de suppression d'une enveloppe, totaux des
+   valeurs, étiquette « Composite » des récurrents. ── */
+.zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 14px; border: 1.5px solid #f5c2c0; border-radius: 16px; }
+.zone-danger b { font-size: 14px; font-weight: 800; color: var(--danger-fonce); }
+.zone-danger small { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+.zone-danger .btn { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
+.modal .maj-total b { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.modal .maj-sous-total b { font-weight: 800; }
+.recurring-row .composite-tag { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: var(--surface-alt); color: var(--text-light); margin-left: 6px; }
+
 /* ── LES FENÊTRES SUR ORDINATEUR (15/11/2026, relevé de l'utilisateur : « c'est écrit très gros sur ordi ») ──
    Les 16 px des champs (sous 16 px, Safari iPhone zoome) et les 52 px des boutons (cible du doigt) n'ont pas lieu d'être
    avec une souris. Seulement sur un écran large ET à survol : un téléphone, même couché, garde ses tailles. */

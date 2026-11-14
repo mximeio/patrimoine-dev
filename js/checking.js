@@ -63,12 +63,14 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
   };
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* HERO consolidé — même structure que le hero Épargne pour cohérence visuelle */}
+      <div className="colle">
       <CarteDeTete
         module="checking" libelle="Solde total" montant={total}
         pied={[{ label: 'Nombre de comptes', value: accountsWithBalance.length }]}
       />
+      </div>
 
       {/* LIST */}
       <div className="section-block">
@@ -569,7 +571,7 @@ function CheckingView({ ctx, onBack }) {
   };
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* Fil d'Ariane SUPPRIMÉ le 15/08/2026 — cf. `investments.js`. Le retour et
           le nom du compte vivent dans la ligne de titre, posés plus haut par
           `useEnteteSousPage`.
@@ -624,6 +626,7 @@ function CheckingView({ ctx, onBack }) {
       {/* Note affichée SEULEMENT quand elle explique un vrai écart :
                 si le mois précédent est entièrement pointé, reste projeté et
                 reste pointé sont identiques — rien à justifier (v518). */}
+      <div className="colle">
       <CarteDeTete
         module="checking" libelle="Solde pointé" montant={stats.balancePointed} sansIcone
         droite={<><MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} />
@@ -735,6 +738,7 @@ function CheckingView({ ctx, onBack }) {
             <span className="pastille-cc-chev" aria-hidden="true">›</span>
           </button>
         )}
+      </div>
       </div>
 
       {/* Mois FIGÉ : verrou d'interface par-dessus le filet updateMonth. Le

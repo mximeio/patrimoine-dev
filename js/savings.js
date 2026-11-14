@@ -97,8 +97,9 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
   const totalInterest = savings.reduce((s, a) => s + computeSavingsStats(a).interets, 0);
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* HERO */}
+      <div className="colle">
       <CarteDeTete
         module="savings" libelle="Solde total" montant={totalBalance}
         pied={[
@@ -106,6 +107,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
           { label: 'Intérêts perçus', value: `+${fmt(totalInterest)} €` },
         ]}
       />
+      </div>
 
       {/* LIST — chaque livret reçoit une couleur indexée (comme les
           portefeuilles) via PORTFOLIO_PALETTE, en se basant sur l'ordre
@@ -319,7 +321,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
   const editingOp = editingOpId ? (saving.operations || []).find(o => o.id === editingOpId) : null;
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* Fil d'Ariane SUPPRIMÉ le 15/08/2026 — cf. le même commentaire dans
           `investments.js`. Le retour et le nom vivent dans la ligne de titre. */}
 
@@ -330,6 +332,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
       {/* Libellé du montant, comme les autres hero cards — cf. le commentaire
               détaillé dans `investments.js`. Le nom du livret vit dans la ligne
               de titre depuis le 15/08/2026. */}
+      <div className="colle">
       <CarteDeTete
         module="savings" libelle="Solde" montant={balance}
         droite={<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
@@ -352,6 +355,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
           })() },
         ]}
       />
+      </div>
 
       {/* OPÉRATIONS RÉCENTES (8 dernières) + lien "Voir toutes" */}
       <div className="section-block">

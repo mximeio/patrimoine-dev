@@ -555,7 +555,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
         {items.length === 0 && <div className="empty-state" style={{ padding: 20 }}>Aucune ligne récurrente.</div>}
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-        <button className="btn-add" onClick={openCreate}>+ Nouvelle opération récurrente</button>
+        <button className="btn btn-accent btn-lg btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouvelle opération récurrente</button>
         {trEnabled && !hasTR && (
           <button className="btn-add" onClick={addTrRefund}>+ Tickets resto (auto)</button>
         )}

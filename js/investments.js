@@ -146,7 +146,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
   const positive = consolidated.totalGain >= 0;
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* HERO */}
       {/* Comme la maquette C' (cartes2.html) : le pied porte Plus-value, Investi et CASH NON INVESTI ; les dividendes
                 montent dans la pastille du pourcentage (« +13.37 % · +1.65 € de div. »), seulement s'il y en a. Le
@@ -167,6 +167,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
                 plus-value et les dividendes sont déjà à 2 décimales — cette ligne
                 était la seule arrondie à l'unité, et elle affichait « 25 845 /
                 25 845 € » pour deux nombres pourtant différents. */}
+      <div className="colle">
       <CarteDeTete
         module="investments" libelle="Valeur totale" montant={consolidated.totalValue}
         droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
@@ -196,6 +197,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           </div>
         </div>
       )}
+      </div>
 
       {/* LIST */}
       <div className="section-block">
@@ -410,7 +412,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   };
 
   return (
-    <div>
+    <div className="vue-rub">
       {/* Le fil d'Ariane a été SUPPRIMÉ le 15/08/2026 : il insérait une ligne
           entre le titre de rubrique et la hero card, soit 36 px de saut vertical
           mesurés à l'ouverture. Le retour et le nom vivent désormais dans la
@@ -437,6 +439,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
                 ⚠️ Sur CETTE page, « Versé » et « Investi » ont chacun leur carte
                 juste en dessous : elles sont passées à `fmt` en même temps, sinon le
                 même nombre s'afficherait à deux précisions à quelques centimètres. */}
+      <div className="colle">
       <CarteDeTete
         module="investments" libelle="Valeur" montant={stats.totalValue}
         droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
@@ -485,6 +488,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
           <b className="num">{data.currentValuesDate ? fmtDateNumeric(data.currentValuesDate) : '—'}</b>
           <span className="pastille-cc-chev" aria-hidden="true">›</span>
         </button>
+      </div>
       </div>
 
       {/* SUPPORTS DÉTENUS */}
@@ -733,19 +737,11 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
 
       {/* Zone de danger : suppression du portefeuille */}
       <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
-      <div style={{ marginTop: 6, padding: 12, background: 'var(--danger-light)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger-fonce)' }}>Supprimer cette enveloppe</div>
-          <div style={{ fontSize: 12, color: 'var(--danger-fonce)', opacity: 0.85, marginTop: 2 }}>
-            Toutes les opérations seront perdues à jamais. Action irréversible.
-          </div>
-        </div>
-        <button
-          type="button"
-          className="btn"
-          onClick={onDelete}
-          style={{ background: 'var(--danger-fonce)', color: 'white', borderColor: 'var(--danger-fonce)', flexShrink: 0 }}
-        >
+      {/* Zone de suppression C' (maquette, 15/11/2026) : cadre au liseré rouge, titre, avertissement, bouton en dessous. */}
+      <div className="zone-danger">
+        <b>Supprimer cette enveloppe</b>
+        <small>Toutes les opérations seront perdues à jamais. Action irréversible.</small>
+        <button type="button" className="btn btn-danger" onClick={onDelete}>
           <Icon name="trash" size={14} /> Supprimer
         </button>
       </div>
@@ -790,7 +786,7 @@ function SupportRow({ position, lastDate }) {
           nom principal affiché : elle doit rester stable et courte, et le nom
           complet commence souvent par le même mot. */}
       <span className="support-icon" style={{ background: fondPastille(position.color || COLORS.muted), color: couleurIcone(position.color || COLORS.muted) }}>
-        {supportName(position).charAt(0)}
+        {initiales(position.ticker || supportName(position))}
       </span>
       <div className="support-main">
         <div className="support-name">
