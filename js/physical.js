@@ -192,9 +192,9 @@ function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
         const valeur = aEnvoyer.quantity * aEnvoyer.unitCurrentPrice;
         const investi = aEnvoyer.quantity * aEnvoyer.unitPurchasePrice;
         const pv = valeur - investi;
-        return <BandeauIndicateurs fond="physical" cellules={[
-          { label: 'Valeur actuelle', value: eur(valeur) },
-          { label: 'Plus-value', value: `${pv >= 0 ? '+' : ''}${fmt(pv)} €` },
+        return <IndicateursFenetre cellules={[
+          { label: 'Valeur actuelle', court: 'Valeur', value: eur(valeur) },
+          { label: 'Plus-value', value: `${pv >= 0 ? '+' : ''}${fmt(pv)} €`, classe: pv >= 0 ? 'value-positive' : 'value-negative' },
           { label: 'Investi', value: eur(investi) },
         ]} />;
       })()}

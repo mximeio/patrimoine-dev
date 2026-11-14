@@ -738,7 +738,9 @@ function CheckingView({ ctx, onBack }) {
           <button type="button" className="pastille-cc pastille-cc-tr" onClick={() => setShowTrManage(true)} aria-label="Ouvrir les tickets resto payés">
             <span className="pastille-cc-ico"><Icon name="utensils" size={13} /></span>
             <span className="pastille-cc-lib"><span className="pcc-long">Tickets resto</span><span className="pcc-court">Tickets</span></span>
-            <b className="num">{eur(stats.trTotal)}</b>
+            {/* La part DE MA POCHE (15/11/2026, demande de l'utilisateur) : c'est elle qui sort du compte ; le total du mois est
+                dans la fenêtre que la pastille ouvre. */}
+            <b className="num" title={`De ma poche · total du mois ${eur(stats.trTotal)}`}>{eur(stats.trUserShare)}</b>
             <span className="pastille-cc-chev" aria-hidden="true">›</span>
           </button>
         )}
@@ -796,7 +798,9 @@ function CheckingView({ ctx, onBack }) {
             className={frozen ? 'frozen-month' : undefined}
             onClickCapture={gardeMoisFige}
           >
-            <BandeauIndicateurs fond="tr" cellules={[
+            {/* Deux pastilles fines, comme « Reste mois préc. / Tickets resto » sous la carte du compte (15/11/2026, demande de
+                l'utilisateur : plus discret que le bandeau ambre plein). */}
+            <IndicateursFenetre cellules={[
               { label: 'Total du mois', value: eur(stats.trTotal) },
               { label: 'De ma poche', value: eur(stats.trUserShare) },
             ]} />

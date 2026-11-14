@@ -901,6 +901,24 @@ function ChoixType({ types, value, onChange, compact = false }) {
   );
 }
 
+
+// Les chiffres de tête d'une FENÊTRE (tickets resto payés, actif) : des pastilles grises à deux étages — l'intitulé en petit,
+// le montant dessous —, la famille des pastilles fines du compte courant, en plus haut (15/11/2026, demande de l'utilisateur :
+// plus discret que le bandeau plein de couleur, et rien de coupé). `cellules` : [{ label, court?, value, classe? }] ; `court`
+// = intitulé au téléphone (≤ 420 px) ; `classe` = couleur du montant (value-positive / value-negative).
+function IndicateursFenetre({ cellules }) {
+  return (
+    <div className="ind-fen">
+      {cellules.filter(Boolean).map((c, i) => (
+        <div key={i} className="ind-fen-cel">
+          <small>{c.court ? <><span className="pcc-long">{c.label}</span><span className="pcc-court">{c.court}</span></> : c.label}</small>
+          <b className={`num${c.classe ? ' ' + c.classe : ''}`}>{c.value}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // LE BANDEAU D'INDICATEURS DES FENÊTRES (modernisation C', 14/11/2026) : les chiffres de tête d'une fenêtre, sur le fond
 // de la couleur de sa rubrique — la même famille que la carte de tête, en petit. `fond` : une clé de CARTE_FONDS, ou
 // 'tr' pour l'ambre des tickets resto. `cellules` : [{ label, value }].
