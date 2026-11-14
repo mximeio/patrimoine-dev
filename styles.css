@@ -1324,6 +1324,10 @@ input[type="month"] {
   .vue-rub > .colle + * > .section-block:first-child { margin-top: 0; }
 }
 .colle > .carte-tete:last-child { margin-bottom: 16px; }
+/* En-tête d'ordinateur à hauteur EXACTE (56 px, bordure comprise) : avec un zoom du navigateur (110 %), sa bordure de 1 px
+   se dessinait à 0,909 px et la carte tombait à 68,13 px au lieu des 68 de son épinglage — en se collant, elle bougeait de
+   0,13 px et les chevrons se redessinaient un pixel plus loin (relevé de l'utilisateur, 15/11/2026). */
+@media (min-width: 641px) { .app-header { height: 56px; box-sizing: border-box; } .app-header .app-bar-inner { height: 100%; } }
 /* À la souris, masquer le défilement à l'ouverture d'une fenêtre ne doit pas décaler la page de la largeur de la barre. */
 @media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }
 
