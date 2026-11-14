@@ -1577,10 +1577,14 @@ input[type="month"] {
 .evo-sous b { color: var(--text); font-weight: 700; }
 /* L'encart et l'alerte ne vivent que sur ordinateur, à droite de la carte de tête. */
 .accueil-cote { display: none; }
-@media (min-width: 900px) {
+/* Le panneau de droite (« Ce mois-ci », « Valorisation à rafraîchir ») est réservé aux ORDINATEURS (15/11/2026, décision de
+   l'utilisateur) : à la largeur seule, l'iPhone en paysage (≈ 956 px) l'affichait aussi. Souris + survol en plus de la largeur. */
+@media (min-width: 900px) and (hover: hover) and (pointer: fine) {
   .accueil-haut--cote { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
   .accueil-haut--cote .carte-tete { margin-bottom: 0; }
   .accueil-cote { display: grid; gap: 12px; }
+}
+@media (min-width: 900px) {
   .pile-rub { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px; }
   .carte-rub-pc { display: none; } .carte-rub-pc-bas { display: inline; }
   .carte-rub-bas { margin-top: 24px; }
