@@ -1554,6 +1554,8 @@ input[type="month"] {
 .ind-fen { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin: 0; }
 /* Fenêtre des tickets resto : la liste suit les cases avec l'écart des formulaires (14 px), pas la marge de section de page (22). */
 .ind-fen + .section-block { margin-top: 14px; }
+/* … et elle commence par un trait, comme toutes les listes de l'app (trait en haut, aucun en bas) ; elle était la seule sans. */
+.ind-fen + .section-block .tx-list:has(.tx-row) { border-top: 1px solid var(--border); }
 .ind-fen-cel { min-width: 0; padding: 8px 10px; /* 10 px de côté, comme les pastilles : « +1 431.00 € » tient à 375 px (78 px pour 76) */ border-radius: 12px; background: var(--surface-alt); border: 1px solid var(--border); }
 .ind-fen-cel small { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ind-fen-cel b { display: block; margin-top: 1px; font-size: 13px; font-weight: 700; /* 13 px partout, comme les pastilles du compte (15/11/2026) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
