@@ -320,6 +320,9 @@ input[type="month"] {
 .types-c button small { font-size: 11px; font-weight: 600; opacity: 0.8; }
 .types-c button[aria-checked="true"] { border-color: var(--t); background: var(--tp); color: var(--t); }
 .types-c--compact button { min-height: 48px; display: flex; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; }
+.total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 2px 0; }
+.total-fen span { font-weight: 700; color: var(--text-light); }
+.total-fen b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .unite-eur { position: relative; }
 .unite-eur .input { padding-right: 38px; }
 .unite-eur::after { content: "€"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 600; color: var(--text-muted); pointer-events: none; }
@@ -1188,6 +1191,21 @@ input[type="month"] {
 .ct-fil i { display: block; height: 100%; background: #fff; border-radius: 999px; }
 .ct-courbe { margin: auto -16px -10px; height: 44px; }
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
+
+/* ── LE MENU « ⋯ », LES PARAMÈTRES (15/11/2026, maquette cartes2.html) ──
+   La feuille : l'identité en ligne (avatar à gauche), puis trois rangées pleine largeur — icône et libellé — au lieu des
+   trois ronds. Les Paramètres : titres de groupe en gras sans capitales, cartes grises sans bordure. */
+.bottom-sheet .sheet-id { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 6px 4px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.bottom-sheet .sheet-id .sheet-avatar-lg { grid-row: span 2; width: 44px; height: 44px; font-size: 18px; }
+.bottom-sheet .sheet-id .sheet-id-name { margin-top: 0; font-weight: 800; }
+.bottom-sheet .sheet-id .sheet-id-mail { margin-top: 0; max-width: none; }
+.bottom-sheet .sheet-actions { flex-direction: column; gap: 2px; padding: 4px 0; }
+.bottom-sheet .sheet-act { flex-direction: row; justify-content: flex-start; gap: 14px; width: 100%; min-height: 52px; padding: 0 6px; border-radius: 14px; }
+.bottom-sheet .sheet-act .sheet-act-circle { width: 36px; height: 36px; background: var(--surface-alt); }
+.bottom-sheet .sheet-act .sheet-act-lbl { font-size: 15.5px; font-weight: 700; color: var(--text); }
+.bottom-sheet .sheet-act.danger .sheet-act-lbl { color: var(--danger-fonce); }
+.modal .settings-group-title { font-size: 15px; font-weight: 800; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
+.modal .settings-card { background: var(--surface-alt); border: 0; border-radius: 18px; }
 
 /* ── LA NAVIGATION C' (15/11/2026, maquette cartes2.html) ──
    Ordinateur : le logo à gauche, les onglets au centre sur un rail gris, l'actif en pastille BLANCHE (texte foncé, point

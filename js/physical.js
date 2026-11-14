@@ -185,6 +185,17 @@ function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
       if (!name.trim()) return refuser(showToast, REFUS.nomObligatoire);
       onSubmit(aEnvoyer);
     }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Bandeau d'indicateurs (maquette C', 15/11/2026), en modification : il suit les champs en direct. */}
+      {initial && (() => {
+        const valeur = aEnvoyer.quantity * aEnvoyer.unitCurrentPrice;
+        const investi = aEnvoyer.quantity * aEnvoyer.unitPurchasePrice;
+        const pv = valeur - investi;
+        return <BandeauIndicateurs fond="physical" cellules={[
+          { label: 'Valeur actuelle', value: eur(valeur) },
+          { label: 'Plus-value', value: `${pv >= 0 ? '+' : ''}${fmt(pv)} €` },
+          { label: 'Investi', value: eur(investi) },
+        ]} />;
+      })()}
       <div>
         <label className="label">Nom</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: 20 Francs - Napoléon" required />
@@ -195,13 +206,13 @@ function PhysicalForm({ initial, onSubmit, onDelete, showToast }) {
           <AmountInput value={quantity} onChange={(n) => setQuantity(n)} className="input" />
         </div>
         <div>
-          <label className="label">Prix d'achat unitaire (€)</label>
-          <AmountInput value={unitPurchasePrice} onChange={(n) => setPurchase(n)} className="input" />
+          <label className="label">Prix d'achat unitaire</label>
+          <div className="unite-eur"><AmountInput value={unitPurchasePrice} onChange={(n) => setPurchase(n)} className="input" /></div>
         </div>
       </div>
       <div>
-        <label className="label">Prix actuel unitaire (€)</label>
-        <AmountInput value={unitCurrentPrice} onChange={(n) => setCurrent(n)} className="input" />
+        <label className="label">Prix actuel unitaire</label>
+        <div className="unite-eur"><AmountInput value={unitCurrentPrice} onChange={(n) => setCurrent(n)} className="input" /></div>
         <div className="field-hint">Mets à jour ce prix régulièrement pour suivre la valeur actuelle.</div>
       </div>
       <div className="form-actions">

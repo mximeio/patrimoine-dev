@@ -2231,7 +2231,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
         </div>
       ) : (
         <div>
-          <label className="label">Composantes (€)</label>
+          <label className="label">Composantes</label>
           <div className="modal-comp-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {components.map((c, idx) => {
               // Couleur de la composante selon son SIGNE RÉEL : une composante
@@ -2274,9 +2274,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
               )}
             </div>
           </div>
-          <div className="field-hint" style={{ marginTop: 8 }}>
-            Total calculé : <strong>{eur(compTotal)}</strong>
-          </div>
+          <div className="total-fen"><span>Total calculé</span><b className="num">{eur(compTotal)}</b></div>
         </div>
       )}
 

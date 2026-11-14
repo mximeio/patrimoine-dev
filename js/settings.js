@@ -774,7 +774,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
         </div>
       ) : (
         <div>
-          <label className="label">Composantes (€)</label>
+          <label className="label">Composantes</label>
           <div className="modal-comp-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {components.map((c, idx) => {
               // Couleur de la composante selon son SIGNE RÉEL (crédit négatif →
@@ -829,9 +829,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
               )}
             </div>
           </div>
-          <div className="field-hint" style={{ marginTop: 8 }}>
-            Total calculé : <strong>{eur(compTotal)}</strong>
-          </div>
+          <div className="total-fen"><span>Total calculé</span><b className="num">{eur(compTotal)}</b></div>
         </div>
       )}
 
