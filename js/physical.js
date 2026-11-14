@@ -122,7 +122,7 @@ function PhysicalRow({ item, onEdit, onDelete }) {
         </div>
       </div>
       <div className="portfolio-list-right">
-        <div className="num" style={{ fontSize: 14, fontWeight: 700 }}>{fmt(current)}<span className="currency-muted"> €</span></div>
+        <div className="num" style={{ fontSize: 14, fontWeight: 500 }}>{fmt(current)}<span className="currency-muted"> €</span></div>
         <div className="portfolio-list-sub num" style={{ color: gain >= 0 ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>
           {gain >= 0 ? '+' : ''}{fmt(gain)} € · {gain >= 0 ? '+' : ''}{gainPct.toFixed(2)}%
         </div>

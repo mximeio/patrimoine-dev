@@ -105,7 +105,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
                   </div>
                 </div>
                 <div className="portfolio-list-right">
-                  <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>
+                  <div className="num" style={{ fontSize: 14, fontWeight: 500 }}>
                     {fmt(acc._balance)}<span className="currency-muted"> €</span>
                   </div>
                   {hasMonth ? (

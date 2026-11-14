@@ -260,7 +260,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
         </div>
       </div>
       <div className="portfolio-list-right">
-        <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(stats.totalValue)}<span className="currency-muted"> €</span></div>
+        <div className="num" style={{ fontSize: 14, fontWeight: 500 }}>{fmt(stats.totalValue)}<span className="currency-muted"> €</span></div>
         {stats.totalPurchased > 0 || stats.totalGain !== 0 ? (
           <div className="num" style={{ fontSize: 12, color: positive ? 'var(--success-fonce)' : 'var(--danger-fonce)', marginTop: 2 }}>
             {positive ? '+' : ''}{fmt(stats.totalGain)} €
@@ -779,7 +779,7 @@ function SupportRow({ position, lastDate }) {
     <>
       <NomSupport etf={position} />
       <LibelleSupport etf={position} className="" prefixe=" — "
-        style={{ fontWeight: 400, color: COLORS.muted, fontSize: 11.5 }} />
+        style={{ fontWeight: 400, color: COLORS.muted, fontSize: 12 }} />
     </>
   );
   return (
@@ -842,7 +842,7 @@ function SupportsAllocationCard({ stats, onHide }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div>
           <div style={{ fontSize: 12, color: COLORS.muted, fontWeight: 500 }}>ALLOCATION</div>
-          <h3 style={{ margin: '2px 0 0', fontSize: 16, fontWeight: 600 }}>Répartition par support</h3>
+          <h3 style={{ margin: '2px 0 0', fontSize: 17, fontWeight: 700 }}>Répartition par support</h3>
         </div>
         <button className="btn btn-secondary btn-sm" onClick={onHide} title="Masquer ce graphique">
           <Icon name="eyeOff" size={12} /> Masquer

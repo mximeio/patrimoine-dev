@@ -328,7 +328,7 @@ function EvolutionTooltip({ active, payload, categories }) {
       background: COLORS.surface, color: COLORS.text,
       border: `1px solid ${COLORS.border}`,
       padding: '10px 14px', borderRadius: 10,
-      fontSize: 12.5, boxShadow: '0 8px 24px rgba(15,23,42,0.10)',
+      fontSize: 12, boxShadow: '0 8px 24px rgba(15,23,42,0.10)',
       minWidth: 200,
     }}>
       <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${COLORS.border}` }}>

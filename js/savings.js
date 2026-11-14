@@ -171,7 +171,7 @@ function SavingsListRow({ saving, colorIndex, onClick }) {
         </div>
       </div>
       <div className="portfolio-list-right">
-        <div className="num" style={{ fontSize: 14, fontWeight: 600 }}>{fmt(balance)}<span className="currency-muted"> €</span></div>
+        <div className="num" style={{ fontSize: 14, fontWeight: 500 }}>{fmt(balance)}<span className="currency-muted"> €</span></div>
       </div>
       <span className="portfolio-list-arrow" aria-hidden="true">›</span>
     </button>
