@@ -57,7 +57,7 @@ function PhysicalView({ ctx }) {
       <div className="colle">
       <CarteDeTete
         module="physical" libelle="Valeur totale" montant={totalCurrent}
-        droite={<span className="ct-pill">{totalGain >= 0 ? '+' : ''}{totalGainPct.toFixed(2)}%</span>}
+        droite={<span className="ct-pill">{fmtPct(totalGainPct)}</span>}
         pied={[
           { label: 'Plus-value', value: `${totalGain >= 0 ? '+' : ''}${fmt(totalGain)} €` },
           { label: 'Investi', value: `${fmt(totalInvested)} €` },
@@ -124,7 +124,7 @@ function PhysicalRow({ item, onEdit, onDelete }) {
       <div className="portfolio-list-right">
         <div className="num" style={{ fontSize: 14, fontWeight: 500 }}>{fmt(current)}<span className="currency-muted"> €</span></div>
         <div className="portfolio-list-sub num" style={{ color: gain >= 0 ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>
-          {gain >= 0 ? '+' : ''}{fmt(gain)} € · {gain >= 0 ? '+' : ''}{gainPct.toFixed(2)}%
+          {gain >= 0 ? '+' : ''}{fmt(gain)} € · {fmtPct(gainPct)}
         </div>
       </div>
       <span className="portfolio-list-arrow" aria-hidden="true">›</span>

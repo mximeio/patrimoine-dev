@@ -699,8 +699,8 @@ function CheckingView({ ctx, onBack }) {
         dessous={projOpen && (
           <div className="proj-detail num">
             <div className="pd-row"><span>Reste de {monthLabel(prevMonthKey(curKey))} (projeté)</span><b>{eur(stats.carryProjected)}</b></div>
-            <div className="pd-row"><span>+ Entrées du mois</span><b>+ {fmt(stats.entriesAll)} €</b></div>
-            <div className="pd-row"><span>− Sorties du mois</span><b>− {fmt(stats.exitsAll)} €</b></div>
+            <div className="pd-row"><span>+ Entrées du mois</span><b>+{fmt(stats.entriesAll)} €</b></div>
+            <div className="pd-row"><span>− Sorties du mois</span><b>−{fmt(stats.exitsAll)} €</b></div>
             <div className="pd-row pd-total"><span>= Projection fin de mois</span><b>{eur(stats.balanceProjected)}</b></div>
             {/* Note affichée SEULEMENT quand elle explique un vrai écart :
                 si le mois précédent est entièrement pointé, reste projeté et
@@ -1081,7 +1081,7 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
               <div className="unite-eur"><AmountInput className="input" value={face} onChange={(n) => setFace(n)} /></div>
             </div>
             <div>
-              <label className="label">Part de ma poche<AideChamp>Part employeur : {eur(employer)} ({fmt(employerPct)} %).</AideChamp></label>
+              <label className="label">Part de ma poche<AideChamp>Part employeur : {eur(employer)} ({fmt(employerPct)} %).</AideChamp></label>
               <div className="unite-eur"><AmountInput className="input" value={own} onChange={(n) => setOwn(n)} /></div>
             </div>
           </div>

@@ -377,7 +377,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
                   <span className="op-date">{fmtDateNumeric(op.date)}</span>
                 </div>
                 <div className="num op-amount" style={{ color: d.amountColor }}>
-                  {d.sign} {fmt(d.amount)}<span className="currency-muted"> €</span>
+                  {d.sign}{fmt(d.amount)}<span className="currency-muted"> €</span>
                 </div>
                 <button className="tx-edit" onClick={() => setEditingOpId(op.id)} title="Modifier">
                   <Icon name="pencil" size={12} />
@@ -554,7 +554,7 @@ function SavingsHistoryOpsTable({ ops, onEdit, onDelete }) {
               <span className="op-date">{fmtDateNumeric(op.date)}</span>
             </div>
             <div className="num op-amount" style={{ color: d.amountColor }}>
-              {d.sign} {fmt(d.amount)} €
+              {d.sign}{fmt(d.amount)} €
             </div>
             <button className="tx-edit" onClick={() => onEdit(op)} title="Modifier">
               <Icon name="pencil" size={12} />

@@ -1045,7 +1045,7 @@ function AmountInput({
 
   const handleChange = (e) => {
     // On garde uniquement chiffres, séparateurs, signe moins
-    let v = e.target.value.replace(/[^\d.,\-]/g, '');
+    let v = e.target.value.replace(/\u2212/g, '-').replace(/[^\d.,\-]/g, ''); // le vrai moins (collé, 14/11/2026) vaut un « - »
     // stripSign : le signe est géré ailleurs (bouton ±). On détecte un « - »
     // tapé pour le signaler (2e arg de onChange) puis on le RETIRE du champ
     // → le champ n'affiche jamais que la magnitude.

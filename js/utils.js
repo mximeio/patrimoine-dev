@@ -63,8 +63,22 @@ const fondPastille = (couleur) => FOND_PASTILLE[String(couleur).toLowerCase()] |
 // toujours du `12.5` (AmountInput → String(n)).
 // On part du format fr-FR puis on remplace la virgule par un point.
 const eurFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
-const fmt = (n) => new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0).replace(',', '.');
-const fmtNoDec = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n || 0).replace(',', '.');
+// SIGNES ET POURCENTAGES (14/11/2026, règle unique choisie par l'utilisateur, _maquettes/Mockup-Signes-Pourcentages) :
+//   1. le signe se COLLE au chiffre, partout, opérations comprises : « −50.00 € », « +3 160.00 € » ;
+//   2. le moins est le VRAI signe moins (U+2212), jamais le tiret : Intl rend « -1 234,56 », on le remplace ici ;
+//   3. une espace INSÉCABLE avant le % (U+00A0), comme avant le € : `fmtPct`.
+// ⚠️ Un montant formaté ne se relit pas avec parseFloat (« −12 » donne NaN) : passer par `lireMontant`.
+const moinsVrai = (s) => s.replace(/^-/, '\u2212');
+const fmt = (n) => moinsVrai(new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0).replace(',', '.'));
+const fmtNoDec = (n) => moinsVrai(new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n || 0).replace(',', '.'));
+// Relit un montant formaté par fmt (espaces de milliers, vrai moins).
+const lireMontant = (s) => parseFloat(String(s).replace(/\s/g, '').replace(/\u2212/g, '-'));
+// Pourcentage signé : « +9.52 % », « −100.00 % » (signe collé, vrai moins, espace insécable). `signe: false` pour une part.
+const fmtPct = (n, { signe = true, dec = 2 } = {}) => {
+  const v = Number(n) || 0;
+  const s = signe ? (v >= 0 ? '+' : '\u2212') : (v < 0 ? '\u2212' : '');
+  return `${s}${Math.abs(v).toFixed(dec)}\u00a0%`;
+};
 // 🔴 RÈGLE DU 13/08/2026 — UN POURCENTAGE S'AFFICHE TOUJOURS À DEUX DÉCIMALES.
 // Posée par l'utilisateur après avoir vu « 65.0 % » dans la liste des supports et
 // « 15.00 % » pour la même notion dans la fenêtre de versement. Il y avait TROIS
@@ -95,7 +109,7 @@ const fmtNoDec = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 
 // ⇒ Quand la compacité est vraiment nécessaire, c'est `.cmpd-exact` / `.cmpd-round` qui
 //   répond : pilotée par l'ÉCRAN, jamais par la valeur.
 // ⚠️ Ne concerne PAS les montants en euros : eux ont déjà `fmt` / `fmtNoDec`.
-const eur = (n) => eurFormatter.format(n || 0).replace(',', '.');
+const eur = (n) => eurFormatter.format(n || 0).replace(',', '.').replace(/^-/, '\u2212');
 const r2 = (n) => Math.round(n * 100) / 100;
 
 // Longueur minimale d'un NOUVEAU mot de passe — le miroir de la politique de la console
@@ -116,7 +130,7 @@ const opSignChar = (variant, amount) => {
 };
 // Montant formaté avec son signe et en valeur absolue (fmt gère déjà les
 // décimales). Aligné sur l'affichage de l'Épargne / des Investissements.
-const fmtSigned = (variant, amount) => `${opSignChar(variant, amount)} ${fmt(Math.abs(amount || 0))}`;
+const fmtSigned = (variant, amount) => `${opSignChar(variant, amount)}${fmt(Math.abs(amount || 0))}`; // signe collé (règle du 14/11/2026)
 const uid = () => Math.random().toString(36).slice(2, 10);
 // La date du jour au format AAAA-MM-JJ, en heure LOCALE — comme `currentMonthKey`.
 // 🔴 Jamais `toISOString()` : il rend la date UTC, donc la VEILLE entre minuit et

@@ -170,7 +170,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
       <div className="colle">
       <CarteDeTete
         module="investments" libelle="Valeur totale" montant={consolidated.totalValue}
-        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{fmtPct(consolidated.totalGainPct)}{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
                 Mettre à jour les valeurs
@@ -265,7 +265,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
           <div className="num" style={{ fontSize: 12, color: positive ? 'var(--success-fonce)' : 'var(--danger-fonce)', marginTop: 2 }}>
             {positive ? '+' : ''}{fmt(stats.totalGain)} €
             {stats.totalPurchased > 0 && (
-              <> · {positive ? '+' : ''}{stats.totalGainPct.toFixed(2)} %</>
+              <> · {fmtPct(stats.totalGainPct)}</>
             )}
           </div>
         ) : (
@@ -443,7 +443,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
       <div className="colle">
       <CarteDeTete
         module="investments" libelle="Valeur" montant={stats.totalValue}
-        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{fmtPct(stats.totalGainPct)}{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setModal('add')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
                 Nouvelle opération
@@ -756,7 +756,7 @@ function SupportRow({ position, lastDate }) {
   // v592 : cible de répartition (optionnelle) → icône cible grise + bulle
   // (survol desktop / tap mobile) affichant la cible et l'écart en points.
   const hasTarget = position.target != null && position.target !== '';
-  const targetTip = hasTarget ? `Cible ${fmt(position.target)} %` : '';
+  const targetTip = hasTarget ? `Cible ${fmt(position.target)} %` : '';
   // v593 : nom complet (nom exact) si la place le permet, nom court sinon —
   // décidé en CSS (media-query) : desktop + paysage = complet ; portrait = court.
   // 🔴 LE CALCUL A ÉTÉ RETIRÉ D'ICI le 11/08/2026 : c'était la troisième copie de
@@ -814,7 +814,7 @@ function SupportRow({ position, lastDate }) {
               ne sont comparés à rien — un raisonnement cas par cas que l'utilisateur a
               écarté au profit d'une règle globale, après un audit des 17 fichiers.
               Il n'y a plus AUCUN `toFixed(1)` dans le code. */}
-          {position.weight.toFixed(2)} %
+          {fmtPct(position.weight, { signe: false })}
           {hasTarget && <>{' '}<InfoTip iconName="target" label={targetTip} /></>}
           {lastDate ? ` · ${fmtDateNumeric(lastDate)}` : ''}
           {isDist && position.dividendsReceived > 0 && (
@@ -827,7 +827,7 @@ function SupportRow({ position, lastDate }) {
         <div className="support-gain num" style={{ color: isUp ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>
           {isUp ? '+' : ''}{fmt(position.gain)} €
           {position.purchased > 0 && (
-            <> · {isUp ? '+' : ''}{position.gainPct.toFixed(2)} %</>
+            <> · {fmtPct(position.gainPct)}</>
           )}
         </div>
       </div>
@@ -874,7 +874,7 @@ function SupportsAllocationCard({ stats, onHide }) {
             <LibelleSupport etf={p} className="" style={{ color: COLORS.muted, fontSize: 12 }} />
             <span style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
               <span className="num" style={{ fontWeight: 600 }}>{fmt(p.current)} €</span>
-              <span className="num" style={{ color: COLORS.muted, fontSize: 12, minWidth: 50, textAlign: 'right' }}>{p.weight.toFixed(2)} %</span>
+              <span className="num" style={{ color: COLORS.muted, fontSize: 12, minWidth: 50, textAlign: 'right' }}>{fmtPct(p.weight, { signe: false })}</span>
             </span>
           </div>
         ))}
@@ -912,7 +912,7 @@ function OperationsJournal({ stats, onShowAll, onAdd, onEdit, onDelete }) {
                 <span className="op-date">{fmtDate(op.date)}</span>
               </div>
               <div className="num op-amount" style={{ color: d.amountColor }}>
-                {d.sign} {fmt(d.amount)}<span className="currency-muted"> €</span>{d.amountSuffix || ''}
+                {d.sign}{fmt(d.amount)}<span className="currency-muted"> €</span>{d.amountSuffix || ''}
               </div>
               {isTransfer ? (
                 <span style={{ fontSize: 11, color: 'var(--info-fonce)', textAlign: 'center' }} title="Virement interne">⇄</span>
@@ -1662,7 +1662,7 @@ function HistoryOpsTable({ stats, data, onEdit, onDelete }) {
               <span className="op-date">{fmtDate(op.date)}</span>
             </div>
             <div className="num op-amount" style={{ color: d.amountColor }}>
-              {d.sign} {fmt(d.amount)} €{d.amountSuffix || ''}
+              {d.sign}{fmt(d.amount)} €{d.amountSuffix || ''}
             </div>
             {/* Action : crayon pour modifier (la suppression est dans la modale) ;
                 ⇄ pour les virements internes auto (non éditables). */}
@@ -2099,7 +2099,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
             <>
               {cibleTotale !== 100 && (
                 <div className="cp-cibles">
-                  Cibles à {fmt(cibleTotale)} % au total : {fmt(Math.min(100, cibleTotale))} % de l'assiette
+                  Cibles à {fmt(cibleTotale)} % au total : {fmt(Math.min(100, cibleTotale))} % de l'assiette
                   {' '}sera investie, le reste demeure en cash.
                 </div>
               )}
@@ -2305,7 +2305,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                           ⚠️ Le `title` garde le mot accessible au survol : l'icône est
                           parlante, mais elle n'est pas du texte. */}
                       <span className="cp-cible" title="Cible de répartition">
-                        <Icon name="target" size={12} />{fmt(step.target)} %
+                        <Icon name="target" size={12} />{fmt(step.target)} %
                       </span>
                       {/* 🔴 LE PRIX AFFICHÉ EST LE PRIX DÉDUIT dès qu'un montant est
                           forcé — « si je modifie le montant final, c'est que je viens
@@ -2359,7 +2359,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                       </div>
                       <div className="cp-bilan">
                         <div className="cp-bilan-pct num">
-                          {fmt(step.pctAfter)} %
+                          {fmt(step.pctAfter)} %
                           {/* ⚠️ VERT au-dessus de la cible, AMBRE en dessous — ce
                               n'est PAS la convention des montants signés de l'app
                               (vert = hausse) : ici on ne juge pas une variation,
@@ -2444,7 +2444,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
                     </div>
                   ) : plan.complete && plan.reserve > 0 ? (
                     <div className="cp-etat cp-etat--vert">
-                      {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
+                      {fmt(Math.min(100, cibleTotale))} % de l'assiette investie, comme tes cibles le demandent —
                       {' '}<b className="num">{fmt(plan.left)} €</b> restent en cash.
                     </div>
                   ) : plan.complete ? (

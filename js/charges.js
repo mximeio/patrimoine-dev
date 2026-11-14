@@ -69,7 +69,7 @@ function chargeShareOf(charge, personId, nets, peopleCount) {
 // fmt/eur). Indispensable ici : Math.round divergeait de l'affichage sur les
 // demi-centimes (9.995 affiché « 10.00 » mais Math.round(9.99499…) = 9.99).
 // On formate puis on re-parse (en retirant les espaces de milliers d'Intl).
-const roundDisp = (n) => parseFloat(fmt(n).replace(/\s/g, '')) || 0;
+const roundDisp = (n) => lireMontant(fmt(n)) || 0; // lireMontant : fmt rend le vrai moins (14/11/2026)
 
 function scenarioSummary(sc, people) {
   const nets = {};
@@ -201,7 +201,7 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
     </>
   );
   // Le pointillé ne souligne que le CHIFFRE : le « € » reste hors de la bulle, en gris, comme dans les listes d'opérations.
-  const chiffre = `${annuelle ? '' : '− '}${fmt(total)}`;
+  const chiffre = `${annuelle ? '' : '−'}${fmt(total)}`; // signe collé (règle du 14/11/2026)
   return (
     <div ref={dropRef} className="ch-ligne">
       <span ref={dragRef} className="ch-grip" title="Glisser pour réordonner"><Icon name="poignee" size={14} /></span>
@@ -663,11 +663,10 @@ function ChargesModal({ ctx, onClose }) {
     const d = (val - baseVal) / baseVal;
     if (Math.abs(d) < 0.0005) return <span className="cmp-delta neu">=</span>;
     const cls = dir === 'neutral' ? 'neu' : (((d > 0) === (dir === 'more-good')) ? 'up' : 'down');
-    const sign = d > 0 ? '+' : '';
     return (
       <span className={`cmp-delta ${cls}`}>
-        <span className="cmpd-exact">{sign}{(d * 100).toFixed(2)} %</span>
-        <span className="cmpd-round">{sign}{(d * 100).toFixed(0)} %</span>
+        <span className="cmpd-exact">{fmtPct(d * 100)}</span>
+        <span className="cmpd-round">{fmtPct(d * 100, { dec: 0 })}</span>
       </span>
     );
   };

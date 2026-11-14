@@ -313,7 +313,7 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
                 <span className="support-edit-l1"><NomSupport etf={e} Balise="b" />{tk && court && <span className="support-edit-lbl"> {court}</span>}</span>
                 {nomComplet && <small className="support-edit-complet">{nomComplet}</small>}
               </span>
-              <span className="support-edit-cible num">{e.target != null && e.target !== '' ? `${fmt(e.target)} %` : ''}</span>
+              <span className="support-edit-cible num">{e.target != null && e.target !== '' ? `${fmt(e.target)} %` : ''}</span>
               <span className="support-edit-chev" aria-hidden="true">›</span>
             </button>
           );
@@ -324,7 +324,7 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
         {targeted.length > 0 && (
           <div className={`support-total ${Math.round(totalTarget) === 100 ? 'ok' : 'warn'}`}>
             <b>Total des cibles</b>
-            <span className="num">{fmt(totalTarget)} %{Math.round(totalTarget) === 100 ? '' : ' · à ajuster'}</span>
+            <span className="num">{fmt(totalTarget)} %{Math.round(totalTarget) === 100 ? '' : ' · à ajuster'}</span>
           </div>
         )}
       </div>
