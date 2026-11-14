@@ -717,8 +717,8 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
           écran a mis du temps à éteindre. */}
       <div>
         <h3 className="settings-group-title">Versements</h3>
+        <div className="settings-groupe">
         <ModuleToggleRow
-          icon="percent"
           label="Calculer mes versements"
           hint="Ajoute au menu ⋯ un calcul du nombre de parts à acheter pour coller à tes cibles."
           enabled={!!draft.contributionPlanner}
@@ -728,6 +728,7 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
             if (onPersistData) onPersistData(neuf);
           }}
         />
+        </div>
       </div>
 
       <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>

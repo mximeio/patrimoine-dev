@@ -266,11 +266,13 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
 
   return (
     <>
-      <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, overflow: 'hidden' }}>
+      {/* Maquette C' (fenReglagesEnv, 15/11/2026) : groupe gris, toute la ligne ouvre le support (chevron), nom complet
+          dessous, cible en gras ; le total des cibles est la dernière ligne du groupe. */}
+      <div className="supports-groupe">
         {etfs.map(e => {
-          const hasBoth = (e.ticker || '').trim() && (e.label || '').trim();
+          const nomComplet = (e.fullName || '').trim();
           return (
-            <div key={e.id} className="support-edit-row">
+            <button type="button" key={e.id} className="support-edit-row" onClick={() => setEditing(e)} aria-label={`Modifier le support ${supportName(e)}`}>
               <span className="support-edit-dot" style={{ background: e.color || COLORS.muted }} />
               <span className="support-edit-name">
                 {/* Nom complet si la place le permet, nom court sinon — motif partagé
@@ -278,26 +280,24 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
                     l'avoir jamais employé : elle n'affichait que le nom court, alors
                     que c'est l'écran où l'on CONFIGURE un support. Relevé par
                     l'utilisateur le 10/08/2026. */}
-                <NomSupport etf={e} /><LibelleSupport etf={e} className="support-edit-lbl" prefixe=" — " />
+                <span className="support-edit-l1"><NomSupport etf={e} Balise="b" /><LibelleSupport etf={e} className="support-edit-lbl" prefixe=" " /></span>
+                {nomComplet && <small className="support-edit-complet">{nomComplet}</small>}
               </span>
-              {e.target != null && e.target !== ''
-                ? <span className="support-edit-cible"><Icon name="target" size={13} /> {fmt(e.target)} %</span>
-                : <span className="support-edit-cible" />}
-              <button type="button" className="tx-edit" onClick={() => setEditing(e)} aria-label="Modifier le support"><Icon name="pencil" size={14} /></button>
-            </div>
+              <span className="support-edit-cible num">{e.target != null && e.target !== '' ? `${fmt(e.target)} %` : ''}</span>
+              <span className="support-edit-chev" aria-hidden="true">›</span>
+            </button>
           );
         })}
         {etfs.length === 0 && (
           <div className="empty-state" style={{ padding: 14 }}>Aucun support.</div>
         )}
+        {targeted.length > 0 && (
+          <div className={`support-total ${Math.round(totalTarget) === 100 ? 'ok' : 'warn'}`}>
+            <b>Total des cibles</b>
+            <span className="num">{fmt(totalTarget)} %{Math.round(totalTarget) === 100 ? '' : ' · à ajuster'}</span>
+          </div>
+        )}
       </div>
-
-      {targeted.length > 0 && (
-        <div className={`target-sum ${Math.round(totalTarget) === 100 ? 'ok' : 'warn'}`}>
-          <span>Total des cibles</span>
-          <b>{fmt(totalTarget)} %{Math.round(totalTarget) === 100 ? '' : ' · à ajuster'}</b>
-        </div>
-      )}
 
       <button type="button" className="btn-add" style={{ marginTop: 10 }} onClick={openCreate}>+ Ajouter un support</button>
 
@@ -434,9 +434,12 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
 function ModuleToggleRow({ icon, label, hint, enabled, onChange, couleur = MODULE_COLORS.checking }) {
   return (
     <label className="rang-reglage">
-      <span className="rang-reglage-ico" style={{ background: fondPastille(couleur), color: couleurIcone(couleur) }}>
-        <Icon name={icon} size={17} />
-      </span>
+      {/* `icon` absent = bascule simple, sans tuile (maquette : « Calculer mes versements »). */}
+      {icon && (
+        <span className="rang-reglage-ico" style={{ background: fondPastille(couleur), color: couleurIcone(couleur) }}>
+          <Icon name={icon} size={17} />
+        </span>
+      )}
       <span className="rang-reglage-txt">
         <b>{label}</b>
         <small>{hint}</small>
