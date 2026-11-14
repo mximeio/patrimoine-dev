@@ -109,10 +109,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
       />
       </div>
 
-      {/* LIST — chaque livret reçoit une couleur indexée (comme les
-          portefeuilles) via PORTFOLIO_PALETTE, en se basant sur l'ordre
-          ORIGINAL de la collection (pas l'ordre de tri par solde),
-          pour que la couleur d'un livret reste stable. */}
+      {/* LIST — tous les livrets à la teinte de la rubrique (maquette C', 15/11/2026). */}
       <div className="section-block">
         <div className="section-header">
           <div className="section-title">
@@ -149,8 +146,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
 }
 
 // Ligne d'un livret dans la vue consolidée, calque sur PortfolioListRow.
-// La couleur de l'icône est indexée sur PORTFOLIO_PALETTE pour que chaque
-// livret ait sa propre teinte (comme les portefeuilles d'investissement).
+// L'avatar prend la teinte de la rubrique (plus une couleur par livret depuis le 15/11/2026).
 // Sous-titre : date de la dernière opération (la liste interne est
 // triée par date desc → la 1ère est la plus récente).
 function SavingsListRow({ saving, colorIndex, onClick }) {

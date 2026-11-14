@@ -242,7 +242,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
   const weight = total > 0 ? (stats.totalValue / total) * 100 : 0;
   const positive = stats.totalGain >= 0;
   // Avatar à la teinte de la RUBRIQUE, comme la maquette C' (15/11/2026, décision de l'utilisateur) : il prenait une couleur
-  // par enveloppe (PORTFOLIO_PALETTE), qui reste celle du point de la fenêtre « Mettre à jour les valeurs ».
+  // par enveloppe (PORTFOLIO_PALETTE). Le point de couleur de la fenêtre « Mettre à jour les valeurs » est retiré aussi (DEV v1202).
   const color = MODULE_COLORS.investments;
   const etfCount = (portfolio.data?.etfs || []).length;
   const lastDate = portfolio.data?.currentValuesDate;
@@ -1416,7 +1416,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     // ce que l'heuristique générique de Modal ne sait pas faire.
     <Modal title="Mettre à jour les valeurs" icon="calendar" subtitle="Investissements" size="lg" dirty={modifiees.length > 0} onClose={onClose}>
       {ordonnees.map((p, i) => {
-        const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
         const etfs = (p.data && p.data.etfs) || [];
         const ouverte = !!ouvertes[p.id];
         const modifiee = estModifiee(p.id);
@@ -1435,7 +1434,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
             <button type="button" className="maj-env-head" aria-expanded={ouverte}
               onClick={() => setOuvertes(o => ({ ...o, [p.id]: !o[p.id] }))}>
               <span className="maj-env-id" style={{ flex: 1 }}>
-                <span style={{ width: 8, height: 8, borderRadius: 2, background: couleur, flex: 'none' }} />
                 <span className="maj-env-nom">{p.name}</span>
               </span>
               {/* Repliée, la ligne porte le montant ET son delta — comme le
