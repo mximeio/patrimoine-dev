@@ -1282,6 +1282,15 @@ input[type="month"] {
 .ops-c .tx-check { width: 26px; height: 26px; border-radius: 9px; border: 2px solid #cfd4de; }
 .ops-c .tx-check.checked { background: var(--accent); border-color: var(--accent); }
 .ops-c .op-main-ouvre { cursor: pointer; }
+/* Crayon centré entre le « € » et le bout de la ligne : il était à 14 px du « € » et à 8 px du bord (mesuré, 15/11/2026). */
+.section-block.ops-c .tx-row > .tx-edit { margin-left: -3px; }
+/* Le bouton œil a la forme et la taille de « + Nouvelle », en bouton secondaire (demande de l'utilisateur, 15/11/2026). */
+.ops-c .ops-eye-pill { height: 37px; margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--text-light); font-size: 13px; font-weight: 500; }
+.ops-c .ops-eye-pill.on { background: var(--accent-light); border-color: var(--accent-pale); color: var(--accent); }
+.ops-c .ops-eye-pill .num { font-weight: 700; }
+.ops-eye-lib { display: none; }
+@media (min-width: 641px) { .ops-c .ops-eye-lib { display: inline; } }
 .ops-c .op-label { font-weight: 600; }
 /* Composantes dépliées : libellé et montant seulement (la poignée reste, invisible, à gauche). */
 .section-block.ops-c .composite-comp-row > .tx-edit { display: none; }

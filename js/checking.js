@@ -1867,6 +1867,8 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
                 tactile garde l'état courant, sans clignotement au tap. */}
             <span className="eye-ico eye-ico-rest"><Icon name={hideActive ? 'eyeOff' : 'eye'} size={13} /></span>
             <span className="eye-ico eye-ico-hover"><Icon name={hideActive ? 'eye' : 'eyeOff'} size={13} /></span>
+            {/* Libellé sur ordinateur seulement (maquette C') : sur téléphone, l'icône seule tient dans la ligne. */}
+            <span className="ops-eye-lib">{hideActive ? 'Afficher les pointées' : 'Masquer les pointées'}</span>
             {hideActive && pointedCount > 0 && <span className="num">{pointedCount}</span>}
           </button>
         )}
