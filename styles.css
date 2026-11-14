@@ -1262,7 +1262,7 @@ input[type="month"] {
    filet. Cases arrondies de 22 px, composantes dépliées en retrait sous un trait. */
 .ops-c > .section-header { padding: 0 2px 12px; border-bottom: 0; }
 .ops-titre { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
-.ops-outils { display: flex; align-items: center; gap: 8px; }
+.ops-outils { display: flex; align-items: center; gap: 8px; margin: -8px 0; } /* le bouton (38 px) déborde de l'en-tête sans l'agrandir : « Opérations » à la hauteur des titres des autres rubriques */
 .btn.ops-nouvelle { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 700; }
 .ops-c .tx-list { border-top: 1px solid var(--border); }
 .ops-c .section-footer { border-top: 1px solid var(--border); padding-left: 0; padding-right: 0; background: transparent; }
