@@ -849,6 +849,7 @@ function SupportsAllocationCard({ stats, onHide }) {
         </button>
       </div>
       <div style={{ position: 'relative', minHeight: 220 }}>
+        <RedessinARotation>
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
             <Pie data={stats.positions} dataKey="current" nameKey="id" cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={3} stroke="none">
@@ -857,6 +858,7 @@ function SupportsAllocationCard({ stats, onHide }) {
             <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
+        </RedessinARotation>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
           <div style={{ fontSize: 11, color: COLORS.muted }}>TOTAL</div>
           <div className="num" style={{ fontSize: 20, fontWeight: 600 }}>{fmtNoDec(stats.totalCurrent)} €</div>

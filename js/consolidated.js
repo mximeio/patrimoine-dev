@@ -293,9 +293,11 @@ function PatrimoineEvolutionChart({ data, enabled, profile }) {
   const moyenne = (k) => data.reduce((s, d) => s + (d[k] || 0), 0) / data.length;
   const sortedCategories = [...categories].sort((a, b) => moyenne(b.key) - moyenne(a.key));
   return (
+    <RedessinARotation>
     <ResponsiveContainer width="100%" height={200}>
       <EvolutionAiresChart data={data} categories={sortedCategories} />
     </ResponsiveContainer>
+    </RedessinARotation>
   );
 }
 

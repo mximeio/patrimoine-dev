@@ -666,6 +666,21 @@ function useEcranCompact() {
   return compact;
 }
 
+// Un graphique (Recharts) REDESSINÉ à chaque passage portrait ↔ paysage : au doigt, l'infobulle ouverte d'un toucher reste
+// affichée, à la position calculée pour l'ANCIENNE largeur — revenue en portrait, elle sortait de l'écran et poussait toute la
+// page sur le côté (relevé sur iPhone le 15/11/2026). Changer la clé remonte le graphique : l'infobulle se ferme.
+// Déclencheur : la LARGEUR de la fenêtre (événement `resize`), que toute rotation change — et que le défilement d'iOS (barre
+// d'adresse qui se replie) ne change pas : il ne touche que la hauteur. Ce n'est pas un second `matchMedia` abonné (§10).
+function RedessinARotation({ children }) {
+  const [largeur, setLargeur] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const surResize = () => setLargeur((l) => (l === window.innerWidth ? l : window.innerWidth));
+    window.addEventListener('resize', surResize);
+    return () => window.removeEventListener('resize', surResize);
+  }, []);
+  return <React.Fragment key={largeur}>{children}</React.Fragment>;
+}
+
 // En-tête de SOUS-PAGE (15/08/2026) — la vue de détail déclare son nom et son
 // retour ; la coquille (`app.js`) rend la ligne de titre en conséquence. Remplace
 // les TROIS fils d'Ariane (compte courant, épargne, investissements), supprimés
