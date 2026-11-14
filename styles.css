@@ -1275,6 +1275,15 @@ input[type="month"] {
 .rang-reglage .toggle { position: relative; }
 .rang-reglage .toggle::after { content: ""; position: absolute; inset: -8px; } /* cible de 62 × 44 au doigt autour de l'interrupteur, maintenant qu'il est seul à agir */
 .rang-reglage-ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+/* Tuile PLEINE d'un module (Paramètres, 15/11/2026) : la couleur de la rubrique, icône blanche — sombre sur l'ambre — comme ses
+   cartes de l'accueil et l'en-tête de ses fenêtres (.modal-ico). */
+.rang-reglage-ico--checking { background: #4f46e5; color: #fff; }
+.rang-reglage-ico--savings { background: #0e7490; color: #fff; }
+.rang-reglage-ico--investments { background: #047857; color: #fff; }
+.rang-reglage-ico--physical { background: #f2b33d; color: #2b1d00; }
+/* Option d'un module, rangée sous lui : en retrait jusqu'au texte (14 + tuile 34 + écart 12), filet en retrait aussi. */
+.rang-reglage.rang-reglage--sous { padding-left: 60px; border-top: 0; position: relative; }
+.rang-reglage.rang-reglage--sous::before { content: ""; position: absolute; top: 0; left: 60px; right: 0; border-top: 1px solid var(--border); }
 .rang-reglage-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
 .rang-reglage-txt b { font-size: 14px; font-weight: 500; color: var(--text); }
 .rang-reglage-txt small { font-size: 12px; font-weight: 400; color: var(--text-muted); line-height: 1.35; }

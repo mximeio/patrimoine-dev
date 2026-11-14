@@ -74,46 +74,39 @@ function SettingsView({ ctx }) {
 
   return (
     <div>
-      {/* Maquette C' (fenParametres) : titre de section hors du cadre, note courte, puis un groupe gris de rangées
-          séparées par un filet ; la tuile d'icône prend la couleur de sa rubrique. */}
-      {/* Une ligne par réglage, les explications dans des « ? » (15/11/2026, maquette Mockup-Parametres-Raccourcis). */}
+      {/* Maquette C' (fenParametres) : titre de section hors du cadre, puis un groupe gris de rangées séparées par un filet.
+          Une ligne par réglage, les explications dans des « ? » (Mockup-Parametres-Raccourcis). Version B de
+          Mockup-Parametres-Icones-Options (15/11/2026) : tuiles PLEINES de la couleur de la rubrique, comme ses cartes et ses
+          en-têtes de fenêtre ; les deux options du compte courant rangées SOUS lui, en retrait, et absentes quand il est coupé
+          (elles gardent leur état et reviennent avec lui). Plus de section « Options avancées ». */}
       <h3 className="settings-group-title">Modules actifs<AideChamp>Active ou désactive les modules selon tes besoins. Les données restent conservées et seront retrouvées à une réactivation.</AideChamp></h3>
       <div className="settings-groupe">
-          <ModuleToggleRow couleur={MODULE_COLORS.checking} icon="creditCard" label="Compte courant" hint="Entrées, sorties, pointage, tickets resto" enabled={checkingEnabled} onChange={garde(pasLaDerniere('checking', toggleChecking))} />
-          <ModuleToggleRow couleur={MODULE_COLORS.savings} icon="piggy" label="Épargne" hint="Livret A, LDDS, … (suivi manuel du solde)" enabled={modules.savings} onChange={garde(pasLaDerniere('savings', (v) => { if (confirmToggle(v, 'Épargne')) setModule('savings', v); }))} />
-          <ModuleToggleRow couleur={MODULE_COLORS.investments} icon="chart" label="Investissements" hint="PEA, PEI, supports, valorisations" enabled={modules.investments} onChange={garde(pasLaDerniere('investments', (v) => { if (confirmToggle(v, 'Investissements')) setModule('investments', v); }))} />
-          <ModuleToggleRow couleur={MODULE_COLORS.physical} icon="coin" label="Actifs physiques" hint="Pièces d'or, métaux (prix manuel)" enabled={modules.physical} onChange={garde(pasLaDerniere('physical', (v) => { if (confirmToggle(v, 'Actifs physiques')) setModule('physical', v); }))} />
-      </div>
-
-      <h3 className="settings-group-title">Options avancées</h3>
-      <div className="settings-groupe" style={{ opacity: checkingEnabled ? 1 : 0.5 }}>
-          <ModuleToggleRow
-            couleur="#475569"
-            icon="creditCard"
-            label="Plusieurs comptes courants"
-            hint={checkingEnabled
-              ? "Mois, récurrents et TR par compte"
-              : "Demande le module Compte courant"}
-            enabled={!!modules.multiCheckingAccounts}
-            onChange={garde(toggleMulti)}
-          />
-          <ModuleToggleRow
-            couleur="#475569"
-            icon="calendar"
-            label="Dates sur le compte courant"
-            aide={checkingEnabled && "Un champ date sur les entrées, sorties, tickets resto et récurrents. Le glisser-déposer est alors désactivé. Les dates restent gardées si tu désactives l'option."}
-            hint={checkingEnabled
-              ? "Une date sur chaque ligne"
-              : "Demande le module Compte courant"}
-            enabled={!!modules.checkingDates}
-            onChange={garde((v) => {
-              if (!checkingEnabled) {
-                return refuser(showToast, REFUS.compteCourantRequis);
-              }
-              if (!confirmToggle(v, 'Dates sur le compte courant')) return;
-              setModule('checkingDates', v);
-            })}
-          />
+          <ModuleToggleRow module="checking" icon="creditCard" label="Compte courant" hint="Entrées, sorties, pointage, tickets resto" enabled={checkingEnabled} onChange={garde(pasLaDerniere('checking', toggleChecking))} />
+          {checkingEnabled && (
+            <ModuleToggleRow
+              sous
+              label="Plusieurs comptes courants"
+              hint="Mois, récurrents et TR par compte"
+              enabled={!!modules.multiCheckingAccounts}
+              onChange={garde(toggleMulti)}
+            />
+          )}
+          {checkingEnabled && (
+            <ModuleToggleRow
+              sous
+              label="Dates sur le compte courant"
+              aide="Un champ date sur les entrées, sorties, tickets resto et récurrents. Le glisser-déposer est alors désactivé. Les dates restent gardées si tu désactives l'option."
+              hint="Une date sur chaque ligne"
+              enabled={!!modules.checkingDates}
+              onChange={garde((v) => {
+                if (!confirmToggle(v, 'Dates sur le compte courant')) return;
+                setModule('checkingDates', v);
+              })}
+            />
+          )}
+          <ModuleToggleRow module="savings" icon="piggy" label="Épargne" hint="Livret A, LDDS, … (suivi manuel du solde)" enabled={modules.savings} onChange={garde(pasLaDerniere('savings', (v) => { if (confirmToggle(v, 'Épargne')) setModule('savings', v); }))} />
+          <ModuleToggleRow module="investments" icon="chart" label="Investissements" hint="PEA, PEI, supports, valorisations" enabled={modules.investments} onChange={garde(pasLaDerniere('investments', (v) => { if (confirmToggle(v, 'Investissements')) setModule('investments', v); }))} />
+          <ModuleToggleRow module="physical" icon="coin" label="Actifs physiques" hint="Pièces d'or, métaux (prix manuel)" enabled={modules.physical} onChange={garde(pasLaDerniere('physical', (v) => { if (confirmToggle(v, 'Actifs physiques')) setModule('physical', v); }))} />
       </div>
 
       <h3 className="settings-group-title">Données</h3>
@@ -429,14 +422,16 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
 }
 
 
-function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, couleur = MODULE_COLORS.checking }) {
+function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, module = null, couleur = MODULE_COLORS.checking, sous = false }) {
   return (
     // Seul l'INTERRUPTEUR bascule l'option (15/11/2026, demande de l'utilisateur) : la rangée entière était un <label>, si bien
     // qu'un toucher pour fermer la bulle du « ? » — ou un toucher distrait sur le texte — activait l'option par mégarde.
-    <div className="rang-reglage">
+    <div className={`rang-reglage${sous ? ' rang-reglage--sous' : ''}`}>
       {/* `icon` absent = bascule simple, sans tuile (maquette : « Calculer mes versements »). */}
       {icon && (
-        <span className="rang-reglage-ico" style={{ background: fondPastille(couleur), color: couleurIcone(couleur) }}>
+        // `module` = tuile PLEINE de la rubrique (styles.css, `.rang-reglage-ico--*`, mêmes couleurs que `.modal-ico`) ; sinon
+        // l'ancienne tuile pâle de `couleur` (« Calculer mes versements » n'a pas d'icône, elle n'est pas concernée).
+        <span className={`rang-reglage-ico${module ? ' rang-reglage-ico--' + module : ''}`} style={module ? undefined : { background: fondPastille(couleur), color: couleurIcone(couleur) }}>
           <Icon name={icon} size={17} />
         </span>
       )}
