@@ -180,7 +180,7 @@ input[type="month"] {
 }
 .label {
   display: block; font-size: 13px; font-weight: 500; /* 600 depuis le 15/11/2026 (700 avant) */
-  color: var(--text-light); margin: 0 2px 6px;
+  color: var(--text-light); margin: 0 0 6px; /* bord gauche = bord du champ, comme l'aide dessous (15/11/2026 : +2 px avant) */
 }
 
 .btn {
@@ -813,7 +813,7 @@ input[type="month"] {
 .pcard-alloc-val .cur { color: var(--text-muted); font-weight: 400; }
 .charge-legend .charge-vir-dot { margin-right: 5px; }
 /* Légende globale de la page charges. */
-.charges-legend-global { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin: 8px 2px 4px; }
+.charges-legend-global { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin: 8px 0 4px; }
 .charges-legend-global .charge-vir-dot, .charges-legend-global .charge-prov-dot { margin-right: 5px; }
 .csm-name { font-weight: 600; }
 .charge-row--ro .tx-edit, .charge-row--ro .tx-delete { flex-shrink: 0; }
@@ -827,7 +827,7 @@ input[type="month"] {
 .charge-mensuel-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 14px; font-weight: 500;
-  padding: 10px 12px; background: var(--surface-alt); border-radius: var(--radius-md);
+  padding: 10px 14px; background: var(--surface-alt); border-radius: var(--radius-md);
 }
 @media (max-width: 640px) {
   /* 16px uniquement sur les CHAMPS de saisie : empêche le zoom auto d'iOS au
@@ -1041,7 +1041,7 @@ input[type="month"] {
 .title-row {
   display: none;
   align-items: center; justify-content: space-between; gap: 8px;
-  margin: 0 2px 12px;
+  margin: 0 0 12px; /* titre de page aligné sur le bord des cartes (+2 px avant, 15/11/2026) */
 }
 .mobile-page-title {
   font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
@@ -1257,12 +1257,12 @@ input[type="month"] {
 .modal .charge-badge { width: 20px; height: 20px; border-radius: 6px; }
 .modal .charge-list-footer { padding: 12px 0; }
 .modal .inc-name, .modal .inc-lbl, .modal .pc-name, .modal .pcard-hero-label { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; color: var(--text-light); }
-.modal .settings-card { padding: 14px 16px; }
+.modal .settings-card { padding: 14px; } /* 14 px de côté, comme les rangées de réglage (.rang-reglage) : un seul bord intérieur dans les Paramètres */
 .modal .settings-card h2 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .modal .settings-card .muted { font-size: 12px; font-weight: 400; }
 .settings-deux-b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .settings-deux-b .btn { justify-content: center; }
-.settings-note { font-size: 13px; font-weight: 400; color: var(--text-muted); margin: -4px 2px 10px; }
+.settings-note { font-size: 13px; font-weight: 400; color: var(--text-muted); margin: -4px 0 10px; }
 /* Groupe gris de rangées de réglage (maquette C' : .groupe-r / .rang-r) : tuile de couleur, titre, aide, interrupteur ;
    un filet entre deux rangées, toute la rangée est cliquable (c'est un <label>). */
 .settings-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; margin-bottom: 14px; }
@@ -1299,7 +1299,7 @@ input[type="month"] {
 /* ── LES LISTES C' (15/11/2026, maquette cartes2.html) — TOUS les blocs de section : plus de carte autour, un titre de
    19 px (l'icône de section se retire), le nombre d'éléments à droite, des lignes séparées par un filet, le bouton
    « + Ajouter » en pointillés sur toute la largeur. Les avatars des listes portent deux lettres. ── */
-.section-block > .section-header { padding: 0 2px 12px; border-bottom: 0; }
+.section-block > .section-header { padding: 0 0 12px; border-bottom: 0; }
 .section-block > .section-header .section-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .section-block > .section-header .section-icon { display: none; }
 .section-block > .section-header + * { border-top: 1px solid var(--border); }
@@ -1323,7 +1323,7 @@ input[type="month"] {
 /* ── LA LISTE DU COMPTE COURANT C' (maquette cartes2.html, écran « compte courant ») ──
    Plus de carte autour : le titre « Opérations » à gauche, l'œil et « + Nouvelle » à droite, des lignes séparées par un
    filet. Cases arrondies de 22 px, composantes dépliées en retrait sous un trait. */
-.ops-c > .section-header { padding: 0 2px 12px; border-bottom: 0; }
+.ops-c > .section-header { padding: 0 0 12px; border-bottom: 0; }
 .ops-titre { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .ops-outils { display: flex; align-items: center; gap: 8px; margin: -8px 0; } /* le bouton (38 px) déborde de l'en-tête sans l'agrandir : « Opérations » à la hauteur des titres des autres rubriques */
 .btn.ops-nouvelle { display: inline-flex; align-items: center; gap: 6px; } /* taille, graisse et coins des boutons de l'app (« Mettre à jour ») : uniformité relevée par l'utilisateur le 15/11/2026 */
@@ -1490,7 +1490,7 @@ input[type="month"] {
 
 /* ── FENÊTRES DANS LE DÉTAIL (15/11/2026, maquette cartes2.html) : zone de suppression d'une enveloppe, totaux des
    valeurs, étiquette « Composite » des récurrents. ── */
-.zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 14px; border: 1.5px solid #f5c2c0; border-radius: 16px; }
+.zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 12.5px; border: 1.5px solid #f5c2c0; /* 12,5 + 1,5 de bordure = 14 : texte aligné sur les rangées de réglage */ border-radius: 16px; }
 .zone-danger b { font-size: 14px; font-weight: 600; color: var(--danger-fonce); }
 .zone-danger small { font-size: 12px; font-weight: 400; color: var(--text-muted); }
 .zone-danger .btn { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
@@ -1563,7 +1563,7 @@ input[type="month"] {
 
 /* ── L'ACCUEIL C' (modernisation, 14/11/2026 — maquette cartes2.html, écran « accueil ») ── */
 .section-accueil { margin-top: 24px; }
-.section-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
+.section-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
 .section-tete h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .section-aide { color: var(--text-muted); font-size: 13px; font-weight: 400; }
 /* La pile : chaque carte fait 159 px ; la suivante remonte de 94, donc on voit 65 px de chacune (le nom et le
@@ -1599,7 +1599,7 @@ input[type="month"] {
 .carte-rub--physical { color: #2b1d00; }
 .carte-rub--physical .carte-rub-nom i { background: rgba(43,29,0,0.10); }
 .evo-carte { padding: 14px 14px 10px !important; }
-.evo-sous { color: var(--text-muted); font-size: 13px; font-weight: 400; margin: 0 2px 4px; }
+.evo-sous { color: var(--text-muted); font-size: 13px; font-weight: 400; margin: 0 0 4px; }
 .evo-sous b { color: var(--text); font-weight: 600; }
 /* L'encart et l'alerte ne vivent que sur ordinateur, à droite de la carte de tête. */
 .accueil-cote { display: none; }
@@ -2322,7 +2322,7 @@ button.stat-card {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin: 24px 4px 10px;
+  margin: 24px 0 10px; /* aligné sur les champs et les textes (+4 px avant, 15/11/2026) */
   display: flex; align-items: center; gap: 6px;
 }
 .settings-group-title:first-child { margin-top: 0; }

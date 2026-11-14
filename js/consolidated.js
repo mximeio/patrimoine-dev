@@ -217,7 +217,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
       </div>
 
       <section className="section-accueil">
-        <div className="section-tete"><h2>Mes rubriques</h2><span className="section-aide">Touchez une carte pour l'ouvrir</span></div>
+        <div className="section-tete"><h2>Mes rubriques</h2></div>
         <div className="pile-rub" style={{ '--n': categories.length }}>
           {categories.map(c => (
             <button key={c.id} type="button" className={`carte-rub carte-rub--${c.id}`} style={{ background: CARTE_FONDS[c.id] }}
