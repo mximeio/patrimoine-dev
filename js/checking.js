@@ -1118,27 +1118,16 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
 
       <button type="submit" className="btn btn-accent btn-lg">Enregistrer</button>
 
-      {/* Zone de danger : suppression du compte (mode multi uniquement) */}
+      {/* Zone de danger : suppression du compte (mode multi uniquement) — même zone que l'épargne et les enveloppes
+          (15/11/2026 : plus de filet au-dessus, bouton rouge doux). */}
       {isMultiMode && onDelete && (
-        <>
-          <div style={{ height: 1, background: COLORS.border, margin: '8px 0 4px' }} />
-          <div style={{ marginTop: 4, padding: 12, background: 'var(--danger-light)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger-fonce)' }}>Supprimer ce compte</div>
-              <div style={{ fontSize: 12, color: 'var(--danger-fonce)', opacity: 0.85, marginTop: 2 }}>
-                Tous ses mois, entrées/sorties et TR seront effacés. Action irréversible.
-              </div>
-            </div>
-            <button
-              type="button"
-              className="btn"
-              onClick={onDelete}
-              style={{ background: 'var(--danger-fonce)', color: 'white', borderColor: 'var(--danger-fonce)', flexShrink: 0 }}
-            >
-              <Icon name="trash" size={14} /> Supprimer
-            </button>
-          </div>
-        </>
+        <div className="zone-danger">
+          <b>Supprimer ce compte</b>
+          <small>Tous ses mois, entrées/sorties et TR seront effacés. Action irréversible.</small>
+          <button type="button" className="btn btn-danger" onClick={onDelete}>
+            <Icon name="trash" size={14} /> Supprimer
+          </button>
+        </div>
       )}
     </form>
   );

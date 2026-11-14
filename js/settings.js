@@ -270,7 +270,10 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
           dessous, cible en gras ; le total des cibles est la dernière ligne du groupe. */}
       <div className="supports-groupe">
         {etfs.map(e => {
-          const nomComplet = (e.fullName || '').trim();
+          // Ligne 1 : ticker + nom COURT ; ligne 2 : nom complet. `LibelleSupport` rendait le nom complet sur ordinateur, qui
+          // se retrouvait alors deux fois (relevé de l'utilisateur, 15/11/2026).
+          const tk = (e.ticker || '').trim(), court = (e.label || '').trim(), complet = (e.fullName || '').trim();
+          const nomComplet = complet && complet !== court && complet !== supportName(e) ? complet : '';
           return (
             <button type="button" key={e.id} className="support-edit-row" onClick={() => setEditing(e)} aria-label={`Modifier le support ${supportName(e)}`}>
               <span className="support-edit-name">
@@ -279,7 +282,7 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
                     l'avoir jamais employé : elle n'affichait que le nom court, alors
                     que c'est l'écran où l'on CONFIGURE un support. Relevé par
                     l'utilisateur le 10/08/2026. */}
-                <span className="support-edit-l1"><NomSupport etf={e} Balise="b" /><LibelleSupport etf={e} className="support-edit-lbl" prefixe=" " /></span>
+                <span className="support-edit-l1"><NomSupport etf={e} Balise="b" />{tk && court && <span className="support-edit-lbl"> {court}</span>}</span>
                 {nomComplet && <small className="support-edit-complet">{nomComplet}</small>}
               </span>
               <span className="support-edit-cible num">{e.target != null && e.target !== '' ? `${fmt(e.target)} %` : ''}</span>

@@ -739,7 +739,6 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
           déjà en base. La phrase transforme le piège en information. */}
 
       {/* Zone de danger : suppression du portefeuille */}
-      <div style={{ height: 1, background: COLORS.border, margin: '6px 0 0' }} />
       {/* Zone de suppression C' (maquette, 15/11/2026) : cadre au liseré rouge, titre, avertissement, bouton en dessous. */}
       <div className="zone-danger">
         <b>Supprimer cette enveloppe</b>
