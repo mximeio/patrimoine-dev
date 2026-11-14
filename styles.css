@@ -1313,7 +1313,10 @@ input[type="month"] {
 /* LA POIGNÉE (six points, 15/11/2026, demande de l'utilisateur) : à gauche des lignes du compte, des récurrents, des tickets
    resto et de leurs composantes. Grise, curseur de prise ; invisible là où l'on ne glisse pas (mois figé, mode dates),
    sans libérer sa colonne pour que rien ne bouge d'un mois à l'autre. */
-.tx-icon.tx-grip { background: transparent; color: var(--text-subtle); cursor: grab; border-radius: 6px; }
+/* La poignée GARDE la classe du type (income / expense / tr) : c'est elle qui colore le montant de la ligne (règles
+   `:has(.tx-icon.income)` plus bas) — perdue en v1164, montants devenus gris (relevé de l'utilisateur, 15/11/2026).
+   Classe doublée pour passer devant `.tx-icon.income` & co., déclarées plus bas : la poignée reste grise et sans fond. */
+.tx-icon.tx-grip.tx-grip { background: transparent; color: var(--text-subtle); cursor: grab; border-radius: 6px; }
 .tx-icon.tx-grip.no-drag { visibility: hidden; }
 /* Pas de poignée AFFICHÉE sur les composantes, dans le compte et les récurrents (demande de l'utilisateur, 15/11/2026) :
    elle reste saisissable à sa place, invisible. */

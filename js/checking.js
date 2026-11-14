@@ -2334,7 +2334,7 @@ function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, on
   const labelText = (item.label || '').trim();
   return (
     <div ref={rowRef} data-locate={`op-${item.id}`} className={`tx-row ${onEdit ? 'with-edit' : ''} ${item.pointed ? '' : 'unpointed'} ${item.isTRRefund ? 'auto' : ''} ${fading ? 'fading' : ''}`}>
-      <span ref={handleRef} className={`tx-icon tx-grip ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
+      <span ref={handleRef} className={`tx-icon tx-grip ${variant} ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
       {/* Zone de tap élargie (v538, idée 10) : toute la hauteur de la
           colonne, sans déborder sur la poignée — plus facile au pouce. */}
       <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
@@ -2389,7 +2389,7 @@ function CompositeTxRow({ item, variant, scope, list, index, expanded, onToggle,
   return (
     <div className={`tx-composite-wrap ${expanded ? 'expanded' : ''} ${item.pointed ? '' : 'unpointed'} ${fading ? 'fading' : ''}`}>
       <div ref={rowRef} data-locate={`op-${item.id}`} className={`tx-row composite-row ${onEdit ? 'with-edit' : ''} ${item.pointed ? '' : 'unpointed'}`}>
-        <span ref={handleRef} className={`tx-icon tx-grip ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
+        <span ref={handleRef} className={`tx-icon tx-grip ${variant || 'expense'} ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
         <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
           <div className={`tx-check ${item.pointed ? 'checked' : ''}`} />
         </div>
@@ -2450,7 +2450,7 @@ function CompositeComponentRow({ c, parent, variant, scope, list, index, onDrop,
   const compVariant = c.isTRRefund ? 'tr' : signVariant;
   return (
     <div ref={dropRef} className={`composite-comp-row ${withEdit ? 'with-edit' : ''}`}>
-      <span ref={dragRef} className={`tx-icon tx-grip${noDrag ? ' no-drag' : ''}`} title={noDrag ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
+      <span ref={dragRef} className={`tx-icon tx-grip ${compVariant}${noDrag ? ' no-drag' : ''}`} title={noDrag ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
       <input
         type="text"
         value={c.label || ''}
@@ -2611,7 +2611,7 @@ function TrItemRow({ item, scope, list, index, onRemove, onEdit, onDrop, datesMo
   const labelText = (item.label || '').trim();
   return (
     <div ref={rowRef} data-locate={`tr-${item.id}`} className={`tx-row tr-row ${onEdit ? 'with-edit' : ''}`}>
-      <span ref={handleRef} className={`tx-icon tx-grip ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
+      <span ref={handleRef} className={`tx-icon tx-grip tr ${dndOff ? 'no-drag' : ''}`} title={dndOff ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
       {/* v577 : plus de cellule fantôme « case à cocher ». La classe .tr-row
           (CSS) retire la colonne de pointage de la grille — inutile hors des
           entrées/sorties (les TR ne se pointent pas), et TR vit dans sa popup. */}
