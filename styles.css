@@ -1262,13 +1262,16 @@ input[type="month"] {
 .ops-c .section-footer { border-top: 1px solid var(--border); padding-left: 0; padding-right: 0; background: transparent; }
 /* Ligne C' : ni flèche ni crayon (masqués, la flèche reste dans le DOM sans rôle) ; la case de 26 px dans sa zone de 44 px
    à gauche, le libellé, le montant. Sélecteurs renforcés : les règles du téléphone et du mois figé sont plus spécifiques. */
-.section-block.ops-c .tx-row > .tx-icon,
-.section-block.ops-c .tx-row > .tx-edit { display: none; }
+.section-block.ops-c .tx-row > .tx-icon { display: none; }
 .section-block.ops-c .tx-row,
 .section-block.ops-c .tx-row.with-edit,
 .section-block.ops-c .tx-row.composite-row.with-edit,
 .frozen-month .section-block.ops-c .tx-row.with-edit,
 .frozen-month .section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: 34px minmax(0, 1fr) var(--amt-w, 112px); gap: 8px; padding: 3px 4px; min-height: 46px; } /* 46 px : resserré à la demande de l'utilisateur (56 sur la maquette, ~45 avant) */
+/* Le crayon REVIENT (15/11/2026, demande de l'utilisateur) : comme les autres listes d'opérations. Le libellé reste
+   touchable. Sur un mois figé, il reste masqué (règle d'origine), d'où la colonne sans crayon juste au-dessus. */
+.section-block.ops-c .tx-row.with-edit,
+.section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: 34px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
 .section-block.ops-c .tx-check-hit { margin: -3px 0 -3px -4px; padding-left: 4px; }
 .ops-c .tx-check { width: 26px; height: 26px; border-radius: 9px; border: 2px solid #cfd4de; }
 .ops-c .tx-check.checked { background: var(--accent); border-color: var(--accent); }
