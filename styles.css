@@ -1343,7 +1343,20 @@ input[type="month"] {
 .ops-c .composite-comp-row > .tx-grip, .liste-rec .composite-comp-row > .tx-grip { opacity: 0; }
 /* Récurrents : lignes calées sur les bords de la liste (plus de cadre), composantes en retrait sous un trait, comme le compte. */
 .liste-rec .recurring-row { padding-left: 0; padding-right: 4px; }
-.liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 40px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+/* Récurrents ALIGNÉS sur les lignes du compte (15/11/2026, demande de l'utilisateur) : poignée collée au bord (colonne de 14 px,
+   écart 5 px), crayon au même endroit (même décalage que .ops-c), libellé là où commence la case dans le compte (24 px) — il n'y a
+   pas de case ici. Classe doublée : passe devant les grilles téléphone / ordinateur de .recurring-row déclarées plus bas. */
+.liste-rec .recurring-row.recurring-row { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
+.liste-rec .recurring-row.recurring-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
+.liste-rec .recurring-row.recurring-row > .op-main { padding-left: 5px; }
+.liste-rec .recurring-row.recurring-row > .tx-edit { transform: none; margin-left: -3px; }
+@media (max-width: 768px) { .liste-rec .recurring-row.recurring-row > .tx-edit { margin-left: -2px; } }
+.liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+/* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
+   montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
+.liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row,
+.liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row.with-edit { grid-template-columns: minmax(0, 1fr) var(--amt-w, 112px) 22px; gap: 5px; position: relative; padding-left: 0; }
+.liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row > .tx-icon { position: absolute; left: -13px; top: 50%; transform: translateY(-50%); width: 12px; height: 24px; }
 .liste-rec .composite-comp-row { border-bottom: 0; }
 /* Les libellés des composantes sont des champs en lecture seule : sur ordinateur, un clic y posait un curseur. */
 .composite-comp-row input[readonly] { pointer-events: none; caret-color: transparent; cursor: default; }
