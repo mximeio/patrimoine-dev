@@ -410,7 +410,8 @@ function InfoTip({ iconName = 'target', size = 13, label, content = null, classN
       title="" /* v599 : neutralise l'info-bulle système héritée du parent (ex. le title du libellé d'opération) — la bulle blanche suffit */
       onMouseEnter={() => { if (hoverable()) { cancelClose(); openTip(true); } }}
       onMouseLeave={() => { if (hoverable()) scheduleClose(); }}
-      onClick={(e) => { e.stopPropagation(); open ? setOpen(false) : openTip(); }}
+      // preventDefault : posé dans un <label> qui enveloppe un interrupteur (rangées des Paramètres), le toucher basculait l'option.
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); open ? setOpen(false) : openTip(); }}
     >
       {children || <span className="infotip-ico"><Icon name={iconName} size={size} /></span>}
       {open && pos && ReactDOM.createPortal(
