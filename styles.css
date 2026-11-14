@@ -1286,6 +1286,9 @@ input[type="month"] {
    sans libérer sa colonne pour que rien ne bouge d'un mois à l'autre. */
 .tx-icon.tx-grip { background: transparent; color: var(--text-subtle); cursor: grab; border-radius: 6px; }
 .tx-icon.tx-grip.no-drag { visibility: hidden; }
+/* Pas de poignée AFFICHÉE sur les composantes, dans le compte et les récurrents (demande de l'utilisateur, 15/11/2026) :
+   elle reste saisissable à sa place, invisible. */
+.ops-c .composite-comp-row > .tx-grip, .liste-rec .composite-comp-row > .tx-grip { opacity: 0; }
 /* Récurrents : lignes calées sur les bords de la liste (plus de cadre), composantes en retrait sous un trait, comme le compte. */
 .liste-rec .recurring-row { padding-left: 0; padding-right: 4px; }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 40px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
