@@ -65,25 +65,10 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
   return (
     <div>
       {/* HERO consolidé — même structure que le hero Épargne pour cohérence visuelle */}
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.checking)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Solde total
-          </div>
-          <ModuleBadge module="checking" />
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6, color: total >= 0 ? '#86efac' : '#fca5a5' }}>
-          {fmt(total)} €
-        </div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Nombre de comptes</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {accountsWithBalance.length}
-            </div>
-          </div>
-        </div>
-      </div>
+      <CarteDeTete
+        module="checking" libelle="Solde total" montant={total}
+        pied={[{ label: 'Nombre de comptes', value: accountsWithBalance.length }]}
+      />
 
       {/* LIST */}
       <div className="section-block">
@@ -613,21 +598,35 @@ function CheckingView({ ctx, onBack }) {
         titleSlot
       )}
 
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.checking)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            {/* Pas de nom du compte dans la hero card : en multi-mode c'est la
+      {/* Pas de nom du compte dans la hero card : en multi-mode c'est la
                 LIGNE DE TITRE qui identifie le compte ouvert (elle portait le
                 fil d'Ariane jusqu'au 15/08/2026), et la modification du nom passe
                 par Réglages. */}
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-              Solde pointé
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} />
-            <ModuleBadge module="checking" />
-            <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+      {/* Mois figé : pas de création d'opération. Figer/Défiger et
+                  Supprimer partagent le même groupe (les deux actions
+                  « cycle de vie » du mois) — décision maquette v485. */}
+      {/* Groupe 1 « mouvements du mois » : Nouvelle opération, masquée
+                  si figé. v574.
+                  L'entrée « Tickets resto » (et sa pastille de comptage) a été
+                  RETIRÉE le 14/08/2026 : c'est la CARTE « Tickets resto » de la
+                  grille, juste en dessous, qui ouvre désormais la fenêtre — y
+                  compris sur un mois figé, la carte étant hors du garde
+                  .frozen-month. Décision de l'utilisateur, seul usager de cette
+                  fonction : deux portes vers la même fenêtre n'apportaient rien,
+                  et les deux vivaient de toute façon dans le même bloc défilant
+                  (seul .app-header est sticky). Ne pas la remettre.
+                  ⚠️ Le séparateur suit donc « Nouvelle opération » SEULE : il
+                  testait aussi `trEnabled`, et le garder ainsi afficherait un
+                  trait sans rien au-dessus sur un mois figé. */}
+      {/* Projection EXPLIQUÉE (v517, maquette Mockup-Quatuor-Confort) :
+                tap sur la valeur → détail du calcul déplié dessous. On
+                comprend le rouge en une seconde, sans reconstituer de tête. */}
+      {/* Note affichée SEULEMENT quand elle explique un vrai écart :
+                si le mois précédent est entièrement pointé, reste projeté et
+                reste pointé sont identiques — rien à justifier (v518). */}
+      <CarteDeTete
+        module="checking" libelle="Solde pointé" montant={stats.balancePointed}
+        droite={<><MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} /><Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               {/* Mois figé : pas de création d'opération. Figer/Défiger et
                   Supprimer partagent le même groupe (les deux actions
                   « cycle de vie » du mois) — décision maquette v485. */}
@@ -679,36 +678,23 @@ function CheckingView({ ctx, onBack }) {
                 <span style={{ color: frozen ? COLORS.subtle : 'var(--danger-fonce)', display: 'inline-flex' }}><Icon name="trash" size={14} /></span>
                 Supprimer ce mois
               </button>
-            </Dropdown>
-          </div>
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6, color: stats.balancePointed >= 0 ? '#86efac' : '#fca5a5' }}>
-          {eur(stats.balancePointed)}
-        </div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Projection fin de mois</div>
-            {/* Projection EXPLIQUÉE (v517, maquette Mockup-Quatuor-Confort) :
-                tap sur la valeur → détail du calcul déplié dessous. On
-                comprend le rouge en une seconde, sans reconstituer de tête. */}
-            <button
+            </Dropdown></>}
+        pied={[{ label: 'Projection fin de mois', value: (<button
               className="num proj-value"
               onClick={() => setProjOpen(o => !o)}
-              style={{ color: stats.balanceProjected >= 0 ? '#86efac' : '#fca5a5' }}
               aria-expanded={projOpen}
               title="Voir le détail du calcul"
             >
               {eur(stats.balanceProjected)}
               <span className={`proj-chev${projOpen ? ' open' : ''}`}><Icon name="chevronDown" size={11} /></span>
-            </button>
-          </div>
-        </div>
+            </button>) }]}
+      >
         {projOpen && (
           <div className="proj-detail num">
             <div className="pd-row"><span>Reste de {monthLabel(prevMonthKey(curKey))} (projeté)</span><b>{eur(stats.carryProjected)}</b></div>
             <div className="pd-row"><span>+ Entrées du mois</span><b>+ {fmt(stats.entriesAll)} €</b></div>
             <div className="pd-row"><span>− Sorties du mois</span><b>− {fmt(stats.exitsAll)} €</b></div>
-            <div className="pd-row pd-total"><span>= Projection fin de mois</span><b style={{ color: stats.balanceProjected >= 0 ? '#86efac' : '#fca5a5' }}>{eur(stats.balanceProjected)}</b></div>
+            <div className="pd-row pd-total"><span>= Projection fin de mois</span><b>{eur(stats.balanceProjected)}</b></div>
             {/* Note affichée SEULEMENT quand elle explique un vrai écart :
                 si le mois précédent est entièrement pointé, reste projeté et
                 reste pointé sont identiques — rien à justifier (v518). */}
@@ -721,7 +707,7 @@ function CheckingView({ ctx, onBack }) {
             )}
           </div>
         )}
-      </div>
+      </CarteDeTete>
 
       <div className={`stats-grid ${!trEnabled ? 'cols-3' : ''}`}>
         <div className="stat-card">
@@ -1709,7 +1695,7 @@ function getCheckingOpDisplay(op) {
 // est couvert par la marge.
 const _amtCanvas = (typeof document !== 'undefined') ? document.createElement('canvas') : null;
 const _amtCtx = _amtCanvas ? _amtCanvas.getContext('2d') : null;
-if (_amtCtx) _amtCtx.font = '500 14px Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
+if (_amtCtx) _amtCtx.font = '500 14px Manrope, system-ui, -apple-system, "Segoe UI", sans-serif';
 
 function amountColVar(items) {
   let maxW = 0;    // largeur texte max mesurée (px)

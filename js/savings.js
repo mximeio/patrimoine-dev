@@ -99,25 +99,13 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
   return (
     <div>
       {/* HERO */}
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.savings)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Solde total
-          </div>
-          <ModuleBadge module="savings" />
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(totalBalance)} €</div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Nombre de comptes</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>{savings.length}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Intérêts perçus</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600, color: '#67e8f9' }}>+ {fmt(totalInterest)} €</div>
-          </div>
-        </div>
-      </div>
+      <CarteDeTete
+        module="savings" libelle="Solde total" montant={totalBalance}
+        pied={[
+          { label: 'Nombre de comptes', value: savings.length },
+          { label: 'Intérêts perçus', value: `+ ${fmt(totalInterest)} €` },
+        ]}
+      />
 
       {/* LIST — chaque livret reçoit une couleur indexée (comme les
           portefeuilles) via PORTFOLIO_PALETTE, en se basant sur l'ordre
@@ -338,17 +326,12 @@ function SavingsDetailView({ ctx, saving, onBack }) {
           ⚠️ Ce commentaire annonçait un « nom éditable in-place » : c'était FAUX
           depuis longtemps — la classe posée était `hero-name-static`, et le
           renommage passe par Réglages. Corrigé le 15/08/2026 en retirant le nom. */}
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.savings)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          {/* Libellé du montant, comme les autres hero cards — cf. le commentaire
+      {/* Libellé du montant, comme les autres hero cards — cf. le commentaire
               détaillé dans `investments.js`. Le nom du livret vit dans la ligne
               de titre depuis le 15/08/2026. */}
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Solde
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <ModuleBadge module="savings" />
-            <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+      <CarteDeTete
+        module="savings" libelle="Solde" montant={balance}
+        droite={<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setModal('add')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
                 Nouvelle opération
@@ -358,17 +341,9 @@ function SavingsDetailView({ ctx, saving, onBack }) {
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="settings" size={14} /></span>
                 Réglages
               </button>
-            </Dropdown>
-          </div>
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(balance)} €</div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Intérêts perçus</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600, color: '#67e8f9' }}>+ {fmt(stats.interets)} €</div>
-          </div>
-        </div>
-      </div>
+            </Dropdown>}
+        pied={[{ label: 'Intérêts perçus', value: `+ ${fmt(stats.interets)} €` }]}
+      />
 
       {/* OPÉRATIONS RÉCENTES (8 dernières) + lien "Voir toutes" */}
       <div className="section-block">

@@ -783,6 +783,60 @@ function ModuleBadge({ module, size = 32, iconSize = 16 }) {
   );
 }
 
+// ── LA CARTE DE TÊTE « C' » (modernisation du design, 14/11/2026 — BACKLOG.md, fiche « la modernisation du design ») ──
+// Pleine de la couleur de sa rubrique, 136 px de haut sur toutes les vues, et toujours la même structure : l'intitulé
+// (avec, à droite, les commandes de la carte), le grand montant, puis la rangée des petits chiffres calée en bas.
+// Elle remplace les huit cartes sombres, qui portaient chacune leurs couleurs en ligne. `styleCarteDeTete`, `lisereUni`
+// et `ModuleBadge` restent définis plus haut (le smoke test les attend), mais plus aucune vue ne les rend.
+// Maquette de référence : _maquettes/Mockup-Modernisation-Design/cartes2.html (la hauteur de 136 px y est choisie face à 156).
+const CARTE_FONDS = {
+  overview: 'linear-gradient(150deg, #2a2f4a, #0b1020)',
+  checking: 'linear-gradient(150deg, #4f46e5, #3730a3)',
+  savings: 'linear-gradient(150deg, #0e7490, #155e75)',
+  investments: 'linear-gradient(150deg, #047857, #065f46)',
+  physical: 'linear-gradient(150deg, #f2b33d, #e09a1a)',
+};
+// Le grand montant, découpé : partie entière en gras, centimes et « € » plus petits et plus clairs.
+// L'espace fine des milliers (U+202F) ne fait que 0,1 em en Manrope, et l'interlettrage serré du gros montant
+// l'avale (« 42613 ») : ici seulement, elle devient une espace insécable pleine (0,2 em).
+function MontantTete({ value }) {
+  const s = eur(value).replace(/ /g, ' ');
+  const m = /^(.*)(\.\d{2})\s*€$/.exec(s);
+  if (!m) return <span>{s}</span>;
+  return <><span>{m[1]}</span><span className="ct-dec">{m[2]}</span><span className="ct-dec ct-eur">€</span></>;
+}
+// `pied` : une liste de cellules { label, court?, value, fil? } (court = intitulé du portrait téléphone, où trois
+// cellules se partagent ~330 px ; fil = jauge de 0 à 100) ; `droite` : les commandes de l'intitulé ;
+// `children` : ce qui se déplie sous la carte (le détail de la projection du compte courant).
+function CarteDeTete({ module, libelle, droite, montant, pied, children }) {
+  const cellules = (pied || []).filter(Boolean);
+  const icone = module === 'overview' ? 'patrimoine' : MODULE_ICONS[module];
+  return (
+    <div className={`card carte-tete carte-tete--${module}`} style={{ background: CARTE_FONDS[module] || CARTE_FONDS.overview }}>
+      <div className="ct-l1">
+        <span className="ct-lib">{libelle}</span>
+        <div className="ct-droite">
+          {droite}
+          {icone && <span className="ct-ico"><Icon name={icone} size={15} /></span>}
+        </div>
+      </div>
+      <div className="num ct-montant"><MontantTete value={montant} /></div>
+      {cellules.length > 0 && (
+        <div className="ct-pied">
+          {cellules.map((c, i) => (
+            <div key={i} className="ct-cel">
+              <small>{c.court ? <><span className="ct-long">{c.label}</span><span className="ct-court">{c.court}</span></> : c.label}</small>
+              <b className="num">{c.value}</b>
+              {c.fil !== undefined && c.fil !== null && <div className="ct-fil"><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
+            </div>
+          ))}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
 function EmptyState({ icon, title, hint }) {
   return (
     <div className="empty-state">

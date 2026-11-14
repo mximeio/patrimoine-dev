@@ -120,23 +120,10 @@ function ConsolidatedView({ ctx, onNavigate }) {
   const totalGainPositive = totalGain >= 0;
   return (
     <div>
-      <div className="card hero-card" style={{ ...styleCarteDeTete(LISERE_PATRIMOINE), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>Patrimoine total</div>
-          <ModuleBadge module="overview" />
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(totalPatrimoine)} €</div>
-        {(enabled.investments || enabled.physical) && (
-          <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Plus-value totale</div>
-              <div className="num" style={{ fontSize: 16, fontWeight: 600, color: totalGainPositive ? '#86efac' : '#fca5a5' }}>
-                {totalGainPositive ? '+' : ''}{fmt(totalGain)} €
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <CarteDeTete
+        module="overview" libelle="Patrimoine total" montant={totalPatrimoine}
+        pied={[(enabled.investments || enabled.physical) && { label: 'Plus-value totale', value: `${totalGainPositive ? '+' : ''}${fmt(totalGain)} €` }]}
+      />
 
       {/* La répartition en UNE carte (21/10/2026, maquette Mockup-Vue-Ensemble-Rubriques, P2) : l'anneau, puis la
           liste des rubriques, qui en est la légende. Chaque rubrique était une carte à part (≈ 70 px + 12 px d'écart,

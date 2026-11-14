@@ -46,9 +46,7 @@ function PhysicalView({ ctx }) {
 
   return (
     <div>
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.physical)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          {/* « Valeur totale » et non « actuelle » (15/08/2026) : cette hero card
+      {/* « Valeur totale » et non « actuelle » (15/08/2026) : cette hero card
               affiche exactement le même trio que celle des investissements —
               valeur, plus-value, investi. « Actuelle » y opposait la valeur à
               l'investi, or cette opposition est déjà écrite en toutes lettres
@@ -56,25 +54,14 @@ function PhysicalView({ ctx }) {
               écrit nulle part ailleurs : c'est la SOMME du module, par opposition
               à la valeur d'un actif isolé. Un qualificatif se garde quand il
               apporte — comme « pointé » sur le compte courant. */}
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>Valeur totale</div>
-          <ModuleBadge module="physical" />
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(totalCurrent)} €</div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Plus-value</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600, color: totalGain >= 0 ? '#86efac' : '#fca5a5' }}>
-              {totalGain >= 0 ? '+' : ''}{fmt(totalGain)} € · {totalGain >= 0 ? '+' : ''}{totalGainPct.toFixed(2)}%
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {fmt(totalInvested)} €
-            </div>
-          </div>
-        </div>
-      </div>
+      <CarteDeTete
+        module="physical" libelle="Valeur totale" montant={totalCurrent}
+        droite={<span className="ct-pill">{totalGain >= 0 ? '+' : ''}{totalGainPct.toFixed(2)}%</span>}
+        pied={[
+          { label: 'Plus-value', value: `${totalGain >= 0 ? '+' : ''}${fmt(totalGain)} €` },
+          { label: 'Investi', value: `${fmt(totalInvested)} €` },
+        ]}
+      />
 
       <div className="section-block">
         <div className="section-header">

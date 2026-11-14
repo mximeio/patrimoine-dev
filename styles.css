@@ -1,5 +1,5 @@
 :root {
-  --bg: #fafafa;
+  --bg: #ffffff; /* fond blanc : modernisation du design, 14/11/2026 (« ça me bloque » sinon) */
   --surface: #ffffff;
   --surface-alt: #f8fafc;
   --surface-hover: #f1f5f9;
@@ -76,8 +76,9 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  /* Manrope depuis la modernisation du design (14/11/2026), servie par Google Fonts comme l'était Inter : la CSP ne change
+     pas. Les réglages `cv02…cv11` étaient propres à Inter, ils sont retirés. */
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -113,12 +114,14 @@ input[type="number"] {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Les champs (modernisation, 14/11/2026) : tous identiques, montants compris — 16 px partout (sous 16 px, Safari zoome au
+   toucher), graisse 600, bord de 1,5 px, rayon 14. Le gras ne reste qu'aux montants AFFICHÉS (listes, totaux). */
 .input {
-  width: 100%; padding: 10px 14px;
-  border: 1px solid var(--border);
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid #e1e4ec;
   background: var(--surface);
-  font-size: 14px; color: var(--text);
-  border-radius: var(--radius-md);
+  font-size: 16px; font-weight: 600; color: var(--text);
+  border-radius: 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -153,8 +156,8 @@ input[type="month"] {
    coins arrondis → liseré propre sur les 4 côtés, même quand le texte défile
    (avant, la barre du textarea « cassait » le liseré à droite). */
 .note-field {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border: 1.5px solid #e1e4ec;
+  border-radius: 14px;
   background: var(--surface);
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -163,12 +166,12 @@ input[type="month"] {
 .note-field textarea {
   display: block; width: 100%;
   border: 0; outline: none; background: transparent;
-  color: var(--text); font-size: 14px; font-family: inherit; line-height: 1.4;
-  padding: 10px 14px;
+  color: var(--text); font-size: 16px; font-weight: 600; font-family: inherit; line-height: 1.4;
+  padding: 12px 14px;
 }
 .label {
-  display: block; font-size: 12px; font-weight: 500;
-  color: var(--text-muted); margin-bottom: 6px;
+  display: block; font-size: 13px; font-weight: 700;
+  color: var(--text-light); margin: 0 2px 6px;
 }
 
 .btn {
@@ -868,7 +871,7 @@ input[type="month"] {
    ============================================================ */
 .app-header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(250,250,250,0.92);
+  background: rgba(255,255,255,0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
@@ -1081,6 +1084,53 @@ input[type="month"] {
    "gonflée" par l'icône — le gros montant colle ainsi au libellé. */
 .hero-card > div:first-child > :first-child { padding-right: 44px; }
 .hero-card > div:first-child > :last-child { position: absolute; top: 24px; right: 24px; margin: 0; }
+
+/* ── LA CARTE DE TÊTE « C' » (modernisation du design, 14/11/2026) ─────────────────────────────────────────────
+   Pleine de la couleur de sa rubrique (le fond est posé en ligne par `CarteDeTete`, ui.js), 136 px sur toutes les vues
+   — la hauteur de l'app d'avant, choisie face à 156 sur maquette —, et la même structure partout : intitulé et commandes,
+   grand montant, rangée de petits chiffres calée en bas. `min-height` et non `height` : le détail de la projection du
+   compte courant se déplie DANS la carte. Les valeurs sont en blanc : le signe dit le sens, la couleur ne s'y ajoute pas
+   (sur un fond de couleur, un vert ou un rouge clairs ne se lisent pas). Les actifs physiques, sur fond ambre, passent
+   en texte foncé. ⚠️ `.card.carte-tete` et `!important` sur le padding : le bloc téléphone pose
+   `.card { padding: 18px !important }` PLUS BAS dans le fichier, qui gagnerait à spécificité égale (mesuré : 145 px). */
+.carte-tete {
+  min-height: 136px; border: 0; border-radius: 22px; color: #fff;
+  display: flex; flex-direction: column; position: relative; overflow: hidden; isolation: isolate; margin-bottom: 16px;
+}
+.card.carte-tete { padding: 11px 16px 10px !important; }
+.carte-tete::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
+.carte-tete::after { content: ""; position: absolute; right: -44px; bottom: -70px; width: 210px; height: 210px; z-index: -1;
+  border-radius: 50%; border: 30px solid rgba(255,255,255,0.08); pointer-events: none; }
+.ct-l1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; font-size: 13px; font-weight: 600; }
+.ct-lib { opacity: 0.88; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-droite { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
+.ct-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
+.ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
+.ct-eur { margin-left: 3px; }
+.ct-pied { margin-top: auto; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px;
+  padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.18); }
+.ct-cel { min-width: 0; }
+.ct-cel small { display: block; font-size: 11px; opacity: 0.82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-cel .ct-court { display: none; }
+/* Écrit « orientation d'abord » À DESSEIN : tests.js retrouve LE bloc portrait 480 par son en-tête exact. */
+@media (orientation: portrait) and (max-width: 480px) {
+  .ct-cel .ct-long { display: none; }
+  .ct-cel .ct-court { display: inline; }
+}
+.ct-cel b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ct-fil { height: 3px; border-radius: 999px; background: rgba(255,255,255,0.22); margin-top: 3px; overflow: hidden; }
+.ct-fil i { display: block; height: 100%; background: #fff; border-radius: 999px; }
+.carte-tete .hero-kebab { width: 28px; height: 28px; color: rgba(255,255,255,0.75); }
+.carte-tete--physical { color: #2b1d00; }
+.carte-tete--physical .ct-ico, .carte-tete--physical .ct-pill { background: rgba(43,29,0,0.10); }
+.carte-tete--physical .ct-pied { border-top-color: rgba(43,29,0,0.16); }
+.carte-tete--physical .hero-kebab { color: rgba(43,29,0,0.6); }
+.carte-tete .proj-value { color: inherit; font-size: 13px; font-weight: 700; }
+.carte-tete .proj-detail { margin-top: 8px; }
 
 .stats-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
@@ -3509,16 +3559,6 @@ button.stat-card {
 }
 @media (max-width: 480px) {
   .hero-value-big { font-size: 26px; }
-}
-/* Mobile en portrait : on masque le chiffre « Dividendes perçus » de la carte de
-   tête, qui ferait passer la ligne en deux et grandir la carte (194 pt au lieu des
-   136 de toutes les cartes de tête). Les dividendes passent alors dans l'étiquette
-   « Plus-value, dont … de div. » (26/10/2026, maquette Mockup-Portrait-Complet) :
-   même hauteur, à 375 pt comme à 440. En paysage et sur desktop, le chiffre reste. */
-.hero-div-dont { display: none; }
-@media (max-width: 768px) and (orientation: portrait) {
-  .hero-dividends-stat { display: none; }
-  .hero-div-dont { display: inline; }
 }
 @media (max-width: 640px) {
   .hide-mobile { display: none !important; }

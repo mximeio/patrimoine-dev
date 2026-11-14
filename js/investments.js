@@ -148,39 +148,10 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
   return (
     <div>
       {/* HERO */}
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.investments)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Valeur totale
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <ModuleBadge module="investments" />
-            <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
-              <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
-                <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
-                Mettre à jour les valeurs
-              </button>
-            </Dropdown>
-          </div>
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(consolidated.totalValue)} €</div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            {/* « dont … de div. » : les dividendes en portrait téléphone, où le chiffre
-                « Dividendes perçus » est masqué (il ferait passer la ligne en deux et
-                grandir la carte de tête). Exact : la plus-value les inclut
-                (compute.js). « div. » est abrégé pour tenir sur une ligne à 375 pt,
-                même à quatre chiffres. Maquette Mockup-Portrait-Complet (26/10/2026). */}
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Plus-value{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="hero-div-dont">, dont {fmt(consolidated.totalDividends)} € de div.</span>}</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600, color: positive ? '#86efac' : '#fca5a5' }}>
-              {positive ? '+' : ''}{fmt(consolidated.totalGain)} €
-              {consolidated.totalPurchased > 0 && (
-                <> · {positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%</>
-              )}
-            </div>
-          </div>
-          <div>
-            {/* « Investi » SEUL depuis le 14/08/2026 — le « / versé » est retiré.
+      {/* Dividendes : une cellule du pied de la carte de tête depuis la modernisation (14/11/2026). Le pied ne passe
+                jamais à la ligne (cellules en largeur égale, texte coupé), donc la carte garde ses 136 px avec trois
+                cellules : le « dont … de div. » du portrait, qui servait à éviter cette ligne de plus, est retiré. */}
+      {/* « Investi » SEUL depuis le 14/08/2026 — le « / versé » est retiré.
                 Décision de l'utilisateur, sur deux motifs : la carte « Cash non
                 investi » juste en dessous porte l'information utile (combien dort),
                 et le module Actifs physiques n'affiche lui aussi que « Investi ».
@@ -196,21 +167,20 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
                 plus-value et les dividendes sont déjà à 2 décimales — cette ligne
                 était la seule arrondie à l'unité, et elle affichait « 25 845 /
                 25 845 € » pour deux nombres pourtant différents. */}
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {fmt(consolidated.totalInvested)} €
-            </div>
-          </div>
-          {consolidated.hasDistributing && (
-            <div className="hero-dividends-stat">
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Dividendes perçus</div>
-              <div className="num" style={{ fontSize: 16, fontWeight: 600, color: '#67e8f9' }}>
-                +{fmt(consolidated.totalDividends)} €
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <CarteDeTete
+        module="investments" libelle="Valeur totale" montant={consolidated.totalValue}
+        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+              <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
+                <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
+                Mettre à jour les valeurs
+              </button>
+            </Dropdown></>}
+        pied={[
+          { label: 'Plus-value', value: `${positive ? '+' : ''}${fmt(consolidated.totalGain)} €` },
+          { label: 'Investi', value: `${fmt(consolidated.totalInvested)} €` },
+          consolidated.hasDistributing && { label: 'Dividendes perçus', court: 'Dividendes', value: `+${fmt(consolidated.totalDividends)} €` },
+        ]}
+      />
 
       {/* STAT CARDS */}
       <div className="stats-grid">
@@ -477,9 +447,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
           composant). Ne pas le réintroduire. */}
 
       {/* HERO */}
-      <div className="card hero-card" style={{ ...styleCarteDeTete(lisereUni(MODULE_COLORS.investments)), marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          {/* Un LIBELLÉ qui dit ce qu'est le montant, comme toutes les hero cards
+      {/* Un LIBELLÉ qui dit ce qu'est le montant, comme toutes les hero cards
               de l'app. Le NOM de l'enveloppe était affiché ici jusqu'au
               15/08/2026 : il est désormais dans la ligne de titre, juste
               au-dessus, donc le répéter coûtait une ligne pour ne rien apprendre.
@@ -492,12 +460,15 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
               ⚠️ Ne pas citer ici les libellés des autres écrans : une première
               version de ce commentaire les énumérait, et ils ont changé le jour
               même. Le CHANGELOG porte le tableau complet. */}
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>
-            Valeur
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <ModuleBadge module="investments" />
-            <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+      {/* Même « dont … de div. » que la vue Investissements (motif écrit là-bas). */}
+      {/* Même décision que le hero de la vue Investissements (14/08/2026), où
+                le motif complet est écrit — ne pas le dupliquer ici.
+                ⚠️ Sur CETTE page, « Versé » et « Investi » ont chacun leur carte
+                juste en dessous : elles sont passées à `fmt` en même temps, sinon le
+                même nombre s'afficherait à deux précisions à quelques centimètres. */}
+      <CarteDeTete
+        module="investments" libelle="Valeur" montant={stats.totalValue}
+        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setModal('add')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
                 Nouvelle opération
@@ -521,42 +492,13 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="settings" size={14} /></span>
                 Réglages
               </button>
-            </Dropdown>
-          </div>
-        </div>
-        <div className="num hero-value-big" style={{ marginTop: 6 }}>{fmt(stats.totalValue)} €</div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, flexWrap: 'wrap' }}>
-          <div>
-            {/* Même « dont … de div. » que la vue Investissements (motif écrit là-bas). */}
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Plus-value{stats.hasDistributing && stats.totalDividends > 0 && <span className="hero-div-dont">, dont {fmt(stats.totalDividends)} € de div.</span>}</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600, color: positive ? '#86efac' : '#fca5a5' }}>
-              {positive ? '+' : ''}{fmt(stats.totalGain)} €
-              {stats.totalPurchased > 0 && (
-                <> · {positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%</>
-              )}
-            </div>
-          </div>
-          <div>
-            {/* Même décision que le hero de la vue Investissements (14/08/2026), où
-                le motif complet est écrit — ne pas le dupliquer ici.
-                ⚠️ Sur CETTE page, « Versé » et « Investi » ont chacun leur carte
-                juste en dessous : elles sont passées à `fmt` en même temps, sinon le
-                même nombre s'afficherait à deux précisions à quelques centimètres. */}
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Investi</div>
-            <div className="num" style={{ fontSize: 16, fontWeight: 600 }}>
-              {fmt(stats.totalInvested)} €
-            </div>
-          </div>
-          {stats.hasDistributing && (
-            <div className="hero-dividends-stat">
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Dividendes perçus</div>
-              <div className="num" style={{ fontSize: 16, fontWeight: 600, color: '#67e8f9' }}>
-                +{fmt(stats.totalDividends)} €
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+            </Dropdown></>}
+        pied={[
+          { label: 'Plus-value', value: `${positive ? '+' : ''}${fmt(stats.totalGain)} €` },
+          { label: 'Investi', value: `${fmt(stats.totalInvested)} €` },
+          stats.hasDistributing && { label: 'Dividendes perçus', court: 'Dividendes', value: `+${fmt(stats.totalDividends)} €` },
+        ]}
+      />
 
       {/* STAT CARDS — ordre posé le 14/08/2026 : UTILITÉ DÉCROISSANTE, la carte de
           fraîcheur restant en dernier (seule convention d'ordre de l'app, partagée
