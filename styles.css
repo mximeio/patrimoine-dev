@@ -1186,6 +1186,9 @@ input[type="month"] {
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
 .ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
+/* 1 px d'air avant les centimes : la barre plate d'un « 2 » final touchait presque le point (« 2 272.78 », relevé sur
+   iPhone le 15/11/2026). Seulement sur la première partie des centimes, pas devant le « € ». */
+.ct-dec:not(.ct-eur) { margin-left: 1px; }
 .ct-eur { margin-left: 3px; }
 .ct-pied { margin-top: auto; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px;
   padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.18); }
