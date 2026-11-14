@@ -1320,6 +1320,8 @@ input[type="month"] {
   .vue-rub > .colle .pastilles-cc { grid-template-columns: 1fr 1fr; }
   .vue-rub > :not(.colle) { min-width: 0; }
   .vue-rub > .section-block:first-of-type, .vue-rub > .colle + * { margin-top: 0; }
+  /* La liste du compte courant vit dans une enveloppe (garde du mois figé) : sa marge haute passait au travers (22 px). */
+  .vue-rub > .colle + * > .section-block:first-child { margin-top: 0; }
 }
 .colle > .carte-tete:last-child { margin-bottom: 16px; }
 /* À la souris, masquer le défilement à l'ouverture d'une fenêtre ne doit pas décaler la page de la largeur de la barre. */
