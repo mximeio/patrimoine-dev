@@ -375,7 +375,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
           {sortedOps.slice(0, 8).map(op => {
             const d = getSavingsOpDisplay(op);
             return (
-              <div key={op.id} data-locate={`sop-${op.id}`} className="op-row" style={{ gridTemplateColumns: '24px 1fr auto 24px' }}>
+              <div key={op.id} data-locate={`sop-${op.id}`} className="op-row">
                 <span className="tx-icon" style={{ background: d.bg, color: d.color }}><Icon name={d.iconName} size={12} /></span>
                 <div className="op-main">
                   <span className="op-label">{d.label}</span>
@@ -555,7 +555,7 @@ function SavingsHistoryOpsTable({ ops, onEdit, onDelete }) {
       {ops.map(op => {
         const d = getSavingsOpDisplay(op);
         return (
-          <div key={op.id} className="op-row" style={{ gridTemplateColumns: '24px 1fr auto 24px' }}>
+          <div key={op.id} className="op-row">
             <span className="tx-icon" style={{ background: d.bg, color: d.color }}><Icon name={d.iconName} size={12} /></span>
             <div className="op-main">
               <span className="op-label">{d.label}</span>

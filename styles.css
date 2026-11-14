@@ -1359,6 +1359,16 @@ input[type="month"] {
 .modal .tx-row.tr-row.tr-row > .op-main { padding-left: 5px; }
 .modal .tx-row.tr-row.tr-row > .tx-edit { transform: none; margin-left: -3px; }
 @media (max-width: 768px) { .modal .tx-row.tr-row.tr-row > .tx-edit { margin-left: -2px; } }
+/* Opérations récentes d'un livret / d'une enveloppe, et « Voir toutes les opérations » : même géométrie que le compte
+   (15/11/2026) — icône au bord, libellé 10 px après elle (l'écart case → libellé du compte), montant à 31 px et crayon à 6 px du
+   bord droit. La grille vivait en style en ligne ('24px 1fr auto 24px'), retirée des quatre listes. */
+.op-row.op-row { grid-template-columns: 20px minmax(0, 1fr) auto 22px; column-gap: 5px; padding-left: 0; padding-right: 4px; }
+.op-row.op-row > .tx-icon { width: 20px; height: 20px; }
+.op-row.op-row > .op-main { padding-left: 5px; }
+.op-row.op-row > .tx-edit { transform: none; margin-left: -3px; }
+@media (max-width: 768px) { .op-row.op-row > .tx-edit { margin-left: -2px; } }
+.modal-scroll-list .op-row.op-row { padding-left: 24px; padding-right: 8px; }
+@media (max-width: 640px) { .modal-scroll-list .op-row.op-row { padding-left: 16px; padding-right: 6px; } }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */

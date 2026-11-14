@@ -904,7 +904,7 @@ function OperationsJournal({ stats, onShowAll, onAdd, onEdit, onDelete }) {
           const d = getOpDisplay(op, nameOf);
           const isTransfer = op.isTransfer;
           return (
-            <div key={op.id} className="op-row" style={{ gridTemplateColumns: '24px 1fr auto 24px' }}>
+            <div key={op.id} className="op-row">
               <span className="tx-icon" style={{ background: d.bg, color: d.color }}><Icon name={d.iconName} size={12} /></span>
               <div className="op-main">
                 <span className="op-label">{d.label}</span>
@@ -1662,7 +1662,7 @@ function HistoryOpsTable({ stats, data, onEdit, onDelete }) {
         const d = getOpDisplay(op, nameOf);
         const isTransfer = op.isTransfer;
         return (
-          <div key={op.id} className="op-row" style={{ gridTemplateColumns: '24px 1fr auto 24px' }}>
+          <div key={op.id} className="op-row">
             <span className="tx-icon" style={{ background: d.bg, color: d.color }}><Icon name={d.iconName} size={12} /></span>
             <div className="op-main">
               <span className="op-label">{d.label}</span>
