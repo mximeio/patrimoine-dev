@@ -1313,14 +1313,17 @@ input[type="month"] {
      écrit et « Septembre 2026 » compris, avec de la marge. */
   .vue-rub { display: grid; grid-template-columns: 560px minmax(0, 1fr); column-gap: 32px; align-items: start; }
   .vue-rub > * { grid-column: 2; }
-  /* PAS de position: sticky : à l'ouverture d'une fenêtre, le gel du défilement la faisait sauter de ~65 px (relevé de
-     l'utilisateur, 15/11/2026). La colonne reste à gauche, sans suivre le défilement. */
-  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; }
+  /* Fixe au défilement (position: sticky, demande de l'utilisateur). ⚠️ Elle ne tient que parce que, à la souris, `Modal` ne
+     fige plus la page par `position: fixed` sur <body> (ui.js) : ce gel la faisait sauter de 68 px à l'ouverture d'une
+     fenêtre, d'où son retrait temporaire en DEV v1150. */
+  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 68px; }
   .vue-rub > .colle .pastilles-cc { grid-template-columns: 1fr 1fr; }
   .vue-rub > :not(.colle) { min-width: 0; }
   .vue-rub > .section-block:first-of-type, .vue-rub > .colle + * { margin-top: 0; }
 }
 .colle > .carte-tete:last-child { margin-bottom: 16px; }
+/* À la souris, masquer le défilement à l'ouverture d'une fenêtre ne doit pas décaler la page de la largeur de la barre. */
+@media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }
 
 /* Supports d'une enveloppe : avatar à deux lettres de 42 px, comme les autres listes d'entités (maquette C', 15/11/2026). */
 .support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 4px; padding-right: 4px; min-height: 64px; }

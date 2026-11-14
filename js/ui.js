@@ -113,7 +113,15 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const wasLockedBefore = window.__modalLockCount > 0;
     window.__modalLockCount++;
     let scrollY = 0;
-    if (!wasLockedBefore) {
+    // 🔴 Le gel par `position: fixed` n'est utile qu'au TACTILE (iOS fait défiler le fond sous la fenêtre). Sur ordinateur
+    // (souris), il déplaçait tout ce qui est en `position: sticky` — la colonne de la carte de tête sautait de 68 px ou
+    // sortait de l'écran (mesuré le 15/11/2026). Là, on se contente de masquer le défilement de la page.
+    const tactile = !(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    if (!wasLockedBefore && !tactile) {
+      window.__modalLockMode = 'souris';
+      document.documentElement.style.overflow = 'hidden';
+    } else if (!wasLockedBefore) {
+      window.__modalLockMode = 'tactile';
       scrollY = window.scrollY;
       window.__modalLockScrollY = scrollY;
       document.body.style.overflow = 'hidden';
@@ -129,7 +137,11 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     return () => {
       document.removeEventListener('keydown', onKey);
       window.__modalLockCount = Math.max(0, window.__modalLockCount - 1);
-      if (window.__modalLockCount === 0) {
+      if (window.__modalLockCount === 0 && window.__modalLockMode === 'souris') {
+        document.documentElement.style.overflow = '';
+        delete window.__modalLockMode;
+      } else if (window.__modalLockCount === 0) {
+        delete window.__modalLockMode;
         const restoredY = window.__modalLockScrollY || 0;
         document.body.style.overflow = '';
         document.body.style.position = '';
