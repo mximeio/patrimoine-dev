@@ -863,6 +863,25 @@ function MontantTete({ value }) {
 // `dessous` : ce qui se DÉPLIE sous la carte (le détail de la projection). Il vit hors du corps de la carte, dont la hauteur
 // est fixe : sans ça, la rangée du bas remontait de ~7 px à l'ouverture (relevé de l'utilisateur, 15/11/2026).
 // `children` reste DANS le corps (la courbe de l'accueil, posée en bas).
+// JAUGE DU PIED (14/11/2026, piste A de _maquettes/Mockup-Mini-Camemberts, choisie par l'utilisateur) : un anneau de 28 px
+// devant le texte au lieu de la barre de 3 px sous le montant. LA BARRE EST GARDÉE EN RÉSERVE, à la demande de l'utilisateur :
+// repasser cette constante à 'barre' la remet telle qu'elle était (rendu et CSS `.ct-fil` conservés, coche après l'intitulé).
+const JAUGE_TETE = 'anneau';
+// L'anneau : piste à 22 % de la couleur du texte, part pointée pleine (sens des aiguilles d'une montre, départ à midi) ;
+// tout pointé : anneau plein vert menthe et coche dedans (elle quitte l'intitulé).
+function AnneauTete({ part, fait }) {
+  const d = 28, ep = 4, r = (d - ep) / 2, c = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(100, part || 0)) / 100;
+  const coul = fait ? '#6ee7b7' : 'currentColor';
+  return (
+    <svg className="ct-anneau" width={d} height={d} viewBox={`0 0 ${d} ${d}`} role="img" aria-label={fait ? 'tout pointé' : `${Math.round(p * 100)} % pointé`}>
+      <circle cx={d / 2} cy={d / 2} r={r} fill="none" stroke="currentColor" strokeOpacity="0.22" strokeWidth={ep} />
+      {p > 0 && <circle cx={d / 2} cy={d / 2} r={r} fill="none" stroke={coul} strokeWidth={ep} strokeLinecap={p >= 1 ? 'butt' : 'round'}
+        strokeDasharray={`${(c * p).toFixed(2)} ${c.toFixed(2)}`} transform={`rotate(-90 ${d / 2} ${d / 2})`} />}
+      {fait && <path d="M8.7 14.6l3.6 3.6 7-7.8" fill="none" stroke="#6ee7b7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
+}
 function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous, sansIcone = false }) {
   const cellules = (pied || []).filter(Boolean);
   // Plus d'icône dans aucune carte de tête (15/11/2026, comme la maquette C' et à la demande de l'utilisateur) : retirée
@@ -884,18 +903,31 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous
       <div className="num ct-montant"><MontantTete value={montant} /></div>
       {cellules.length > 0 && (
         <div className="ct-pied">
-          {cellules.map((c, i) => (
-            <div key={i} className="ct-cel">
-              {/* `fait` : la cellule est terminée (tout pointé) — coche verte après l'intitulé, jauge pleine en vert
-                  (piste B de _maquettes/Mockup-Tout-Pointe, choisie par l'utilisateur le 15/11/2026). */}
-              <small className={c.fait ? 'ct-cel-fait' : undefined}>
-                {c.court ? <><span className="ct-long">{c.label}</span><span className="ct-court">{c.court}</span></> : c.label}
-                {c.fait && <span className="ct-coche" role="img" aria-label="tout pointé">✓</span>}
-              </small>
-              <b className="num">{c.value}</b>
-              {c.fil !== undefined && c.fil !== null && <div className={`ct-fil${c.fait ? ' ct-fil--fait' : ''}`}><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
-            </div>
-          ))}
+          {cellules.map((c, i) => {
+            const aJauge = c.fil !== undefined && c.fil !== null;
+            const anneau = aJauge && JAUGE_TETE === 'anneau';
+            // `reste` / `labelReste` : ce qui s'affiche quand la case est trop étroite pour « pointé / prévu » à côté de
+            // l'anneau (petit téléphone, < 140 px de texte, requête de conteneur) : le reste à pointer, un seul montant.
+            const reste = anneau && c.reste;
+            return (
+              <div key={i} className={`ct-cel${anneau ? ' ct-cel--anneau' : ''}`}>
+                {anneau && <AnneauTete part={c.fil} fait={c.fait} />}
+                <div className="ct-cel-tx">
+                  {/* `fait` : la cellule est terminée (tout pointé) — avec la barre, coche verte après l'intitulé et jauge
+                      pleine en vert (piste B de _maquettes/Mockup-Tout-Pointe, 15/11/2026) ; avec l'anneau, la coche est dedans. */}
+                  <small className={c.fait && !anneau ? 'ct-cel-fait' : undefined}>
+                    <span className={reste ? 'ct-plein' : undefined}>
+                      {c.court ? <><span className="ct-long">{c.label}</span><span className="ct-court">{c.court}</span></> : c.label}
+                    </span>
+                    {reste && <span className="ct-reste">{c.labelReste}</span>}
+                    {c.fait && !anneau && <span className="ct-coche" role="img" aria-label="tout pointé">✓</span>}
+                  </small>
+                  <b className="num">{reste ? <><span className="ct-plein">{c.value}</span><span className="ct-reste">{c.reste}</span></> : c.value}</b>
+                  {aJauge && !anneau && <div className={`ct-fil${c.fait ? ' ct-fil--fait' : ''}`}><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
       {children}

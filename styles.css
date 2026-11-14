@@ -1297,6 +1297,19 @@ input[type="month"] {
 .ct-coche { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; flex: none;
   background: #6ee7b7; color: #064e3b; font-size: 9px; font-weight: 700; line-height: 1; }
 .ct-fil.ct-fil--fait i { background: #6ee7b7; }
+/* L'ANNEAU (14/11/2026, piste A de _maquettes/Mockup-Mini-Camemberts) : 28 px devant le texte, à la place de la barre (gardée
+   en réserve : JAUGE_TETE dans ui.js). La case est plus basse qu'avec la barre (28-32 px contre 38) : la carte garde ses 144 px.
+   PETIT TÉLÉPHONE : quand le texte a moins de 140 px (≈ « 9 999.99 / 9 999.99 € »), il passe au reste à pointer — « Entrées à
+   pointer », un seul montant (idée de l'utilisateur). Requête de CONTENEUR, pas d'écran : elle suit la largeur réelle de la case. */
+.ct-cel--anneau { display: flex; align-items: center; gap: 9px; }
+.ct-anneau { flex: none; display: block; }
+.ct-cel-tx { min-width: 0; flex: 1; }
+.ct-cel--anneau .ct-cel-tx { container-type: inline-size; }
+.ct-cel .ct-reste { display: none; }
+@container (max-width: 139px) {
+  .ct-cel.ct-cel--anneau .ct-plein { display: none; }
+  .ct-cel.ct-cel--anneau .ct-reste { display: inline; }
+}
 .ct-courbe { margin: auto -16px -10px; height: 44px; overflow: hidden; border-radius: 0 0 22px 22px; } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
 

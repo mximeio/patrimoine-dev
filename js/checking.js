@@ -688,8 +688,10 @@ function CheckingView({ ctx, onBack }) {
           // Même règle qu'avant la modernisation : il faut au moins une ligne (`> 0`), et un reste nul au centime près.
           const cellule = (label, court, pointe, total) => {
             const fait = total > 0 && r2(total - pointe) <= 0;
+            // `reste` / `labelReste` : la forme courte à côté de l'anneau sur petit téléphone (14/11/2026, idée de l'utilisateur).
             return { label, court, fait, value: fait ? `${fmt(total)} €` : `${fmt(pointe)} / ${fmt(total)} €`,
-              fil: total > 0 ? (pointe / total) * 100 : 0 };
+              fil: total > 0 ? (pointe / total) * 100 : 0,
+              reste: fait ? `${fmt(total)} €` : `${fmt(r2(Math.max(0, total - pointe)))} €`, labelReste: fait ? court : `${court} à pointer` };
           };
           return [cellule('Entrées pointées', 'Entrées', stats.entriesPointed, stats.entriesAll),
             cellule('Sorties pointées', 'Sorties', stats.exitsPointed, stats.exitsAll)];
