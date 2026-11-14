@@ -1191,7 +1191,7 @@ input[type="month"] {
 .ct-lib { opacity: 0.88; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-droite { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
-.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 10px; /* 10 px comme les boutons (15/11/2026) */ font-size: 13px; font-weight: 600;
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
 .ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
@@ -2341,10 +2341,12 @@ button.stat-card {
 .support-edit-cible { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* Maquette C' (fenReglagesEnv, 15/11/2026) : la liste des supports en groupe gris, ligne entière cliquable. */
-.supports-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; }
+/* Liste des supports au format des autres listes (15/11/2026, simulation Mockup-Arrondis-Supports) : fond blanc, trait en
+   haut, un trait entre les lignes, total en dernière ligne sans trait final. */
+.supports-groupe { background: transparent; border-top: 1px solid var(--border); }
 .supports-groupe .support-edit-row {
   width: 100%; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer;
-  grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 14px; min-height: 56px; /* plus de pastille de couleur (15/11/2026) */
+  grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 2px; min-height: 56px; /* plus de pastille de couleur (15/11/2026) */
   border-bottom: 1px solid var(--border);
 }
 @media (hover: hover) { .supports-groupe .support-edit-row:hover { background: var(--surface-hover); } }
@@ -2356,7 +2358,7 @@ button.stat-card {
 .support-edit-complet { font-size: 12.5px; font-weight: 500; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .supports-groupe .support-edit-cible { font-size: 14.5px; font-weight: 700; color: var(--text); }
 .support-edit-chev { color: var(--text-muted); font-size: 18px; line-height: 1; text-align: center; }
-.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; font-size: 14.5px; }
+.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 2px; font-size: 14.5px; }
 .support-total b { font-weight: 700; }
 .support-total span { font-weight: 700; }
 .support-total.ok span { color: var(--success-fonce); }
@@ -2454,7 +2456,7 @@ button.stat-card {
    ============================================================ */
 .month-chip {
   display: inline-flex; align-items: center; gap: 2px;
-  border-radius: var(--radius-full); padding: 3px;
+  border-radius: 10px; padding: 3px; /* 10 px, l'arrondi des boutons (15/11/2026 ; pilule avant) */
   position: relative;
   /* Hauteur VERROUILLÉE (v493) : 26px de chevrons + 2×3px de padding.
      C'était déjà la hauteur naturelle, mais l'explicite garantit qu'AUCUN
@@ -2479,7 +2481,7 @@ button.stat-card {
 }
 .mc-chev {
   width: 26px; height: 26px; border: none; background: transparent;
-  border-radius: var(--radius-full); font-size: 13px; cursor: pointer;
+  border-radius: 7px; /* concentrique à la pastille : 10 − 3 px de marge */ font-size: 13px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
