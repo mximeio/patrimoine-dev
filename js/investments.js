@@ -1617,7 +1617,7 @@ function getOpDisplay(op, nameOf) {
     case 'gift':
       return {
         iconName: 'gift', bg: '#fdf2f8', color: couleurIcone('#ec4899'),
-        label: `Réception gratuite ${etfLbl}`,
+        label: `Réception ${etfLbl}`, // « Réception » seul, comme « Achat » (demande de l'utilisateur, 15/11/2026)
         amount: op.marketValue || 0, sign: '', amountColor: 'var(--rose-fonce)',
         amountSuffix: ' (valeur)', isInformative: true,
       };
