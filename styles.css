@@ -160,6 +160,10 @@ input[type="month"] {
   outline: none;
 }
 .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+/* Champ en ERREUR (15/11/2026) : la règle de l'app pour toute erreur de saisie — le champ en rouge, rien dessous ; l'explication
+   vient en notification (refuser / REFUS) quand on enregistre. */
+.input.input-erreur, .input.input-erreur:focus { border-color: var(--danger-fonce); }
+.input.input-erreur:focus { box-shadow: 0 0 0 3px var(--danger-light); }
 /* v600 : champ Note — le liseré indigo au focus est porté par le CONTENEUR
    (focus-within), qui rogne (overflow:hidden) la barre de défilement dans les
    coins arrondis → liseré propre sur les 4 côtés, même quand le texte défile

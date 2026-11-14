@@ -201,17 +201,13 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [], showToast }) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="input"
+          className={`input${isDuplicate ? ' input-erreur' : ''}`}
+          aria-invalid={isDuplicate ? 'true' : undefined}
           placeholder="ex: Boursorama, BNP, ING…"
           required
         />
-        {/* Avertissement de CHAMP, conservé : il paraît pendant la frappe, à côté
-            du champ concerné — ce n'est pas le refus du bouton, qui passe par un toast. */}
-        {isDuplicate && (
-          <div className="field-hint" style={{ color: 'var(--danger-fonce)', marginTop: 4 }}>
-            {`Le nom "${trimmed}" est déjà utilisé.`}
-          </div>
-        )}
+        {/* Erreur de CHAMP (15/11/2026, décision de l'utilisateur) : le champ passe en ROUGE pendant la frappe, sans texte
+            dessous (il décalait la fenêtre) ; l'explication vient en notification si l'on enregistre quand même. */}
       </div>
       <div className="field-grid">
         <div>
@@ -1037,16 +1033,13 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
         <label className="label">Nom du compte</label>
         <input
           type="text"
-          className="input"
+          className={`input${isDuplicateName ? ' input-erreur' : ''}`}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={isMultiMode ? 'ex: Compte joint, Boursorama, …' : 'Compte principal'}
+          aria-invalid={isDuplicateName ? 'true' : undefined}
         />
-        {isDuplicateName && (
-          <div className="field-hint" style={{ color: 'var(--danger-fonce)' }}>
-            Le nom "{trimmedNameNow}" est déjà utilisé par un autre compte.
-          </div>
-        )}
+        {/* Nom déjà pris : champ en rouge, explication en notification à l'enregistrement (15/11/2026). */}
       </div>
       <div style={{ height: 1, background: COLORS.border, margin: '4px 0' }} />
 
