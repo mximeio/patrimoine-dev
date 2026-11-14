@@ -38,11 +38,12 @@ const PORTFOLIO_PALETTE = ['#4f46e5', '#f59e0b', '#06b6d4', '#ec4899', '#10b981'
 // faisait que 2,1 à 2,4:1 pour le vert, le cyan et l'ambre — sous le minimum de 3:1 d'une icône qui porte un sens
 // (WCAG 2.1, 1.4.11). La 600 donne 3,1 à 5,6:1 en restant douce ; la 700 (4,8 à 7,1:1) a été écartée, jugée plus
 // agressive. ⚠️ L'ambre est un cran plus sombre que sa 600 (#d97706) : sur une pastille teintée à 15 %, celle-ci
-// tombait à 2,8:1 (attrapé par le test) ; #c96a07 donne 3,4 à 3,7:1. L'indigo et le gris passaient déjà : inchangés. Une couleur hors de cette table (choisie
+// tombait à 2,8:1 (attrapé par le test) ; #c96a07 donnait 3,4 à 3,7:1, et depuis le 15/11/2026 c'est l'ambre DORÉ #a8730a
+// (famille de l'ambre clair #f2b33d des actifs et des tickets resto, 3,95:1 sur son fond pâle). L'indigo et le gris passaient déjà : inchangés. Une couleur hors de cette table (choisie
 // librement pour un compte ou une enveloppe) est assombrie d'un quart vers le bleu nuit.
 // Le pendant CSS : les variables `--*-fonce` de styles.css — la même nuance sert aussi au TEXTE depuis le 22/10/2026.
 const NUANCE_ICONE = {
-  '#10b981': '#059669', '#ef4444': '#dc2626', '#f59e0b': '#c96a07', '#06b6d4': '#0891b2',
+  '#10b981': '#059669', '#ef4444': '#dc2626', '#f59e0b': '#a8730a', '#06b6d4': '#0891b2',
   '#ec4899': '#db2777', '#8b5cf6': '#7c3aed', '#4f46e5': '#4f46e5', '#64748b': '#64748b',
 };
 const couleurIcone = (couleur) => NUANCE_ICONE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 75%, #0f172a)`;

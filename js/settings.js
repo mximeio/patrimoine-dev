@@ -818,7 +818,8 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
                   className="tx-delete"
                   onClick={() => removeComp(idx)}
                   title="Supprimer la composante"
-                >×</button>
+                  aria-label="Supprimer la composante"
+                ><Icon name="trash" size={17} /></button>
               </div>
               );
             })}

@@ -37,7 +37,8 @@
      ⚠️ Sur les cartes de tête SOMBRES, c'est l'inverse : teintes claires (`#86efac`, `#fca5a5`, `#67e8f9`, posées en JS). */
   --success-fonce: #059669;
   --danger-fonce: #dc2626;
-  --warning-fonce: #c96a07; /* un cran au-dessus de la 600 : elle restait sous 3:1 sur pastille à 15 % */
+  --warning-fonce: #a8730a; /* ambre DORÉ depuis le 15/11/2026 (était l'orangé #c96a07) : la famille de l'ambre clair des fenêtres
+     TR et des actifs (#f2b33d), un cran plus foncé pour rester lisible en texte — 4,1:1 sur blanc, 3,9:1 sur --warning-light */
   --info-fonce: #0891b2;
   --rose-fonce: #db2777;
   --violet-fonce: #7c3aed;
@@ -1556,7 +1557,7 @@ input[type="month"] {
 @media (max-width: 420px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
 .pastille-cc b { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .pastille-cc-tr { cursor: pointer; }
-.pastille-cc-tr .pastille-cc-ico { color: var(--warning-fonce); }
+.pastille-cc-tr .pastille-cc-ico { color: var(--warning-fonce); } /* ambre doré, comme tout l'ambre hors des fenêtres TR (15/11/2026) */
 .pastille-cc-chev { color: var(--text-subtle); font-size: 16px; line-height: 1; margin-left: -2px; }
 @media (hover: hover) { .pastille-cc-tr:hover { border-color: var(--border-strong); } }
 
@@ -1995,9 +1996,11 @@ button.stat-card {
   display: flex; gap: 6px; align-items: center;
 }
 /* Croix de retrait en petite tuile grise (maquette C' : .x-c 28px). */
+/* Retrait d'une composante : la POUBELLE du bouton « Supprimer » des fenêtres (même icône), grise et sans tuile — maquette
+   _maquettes/Mockup-TR-Croix, piste A (15/11/2026 ; l'ancienne croix en tuile grise se lisait mal). */
 .modal-comp-row .tx-delete {
   opacity: 1; width: 28px; height: 28px; flex: none; border-radius: 9px;
-  background: var(--surface-hover); font-size: 15px; line-height: 1;
+  background: transparent; color: var(--text-muted); line-height: 1;
   display: inline-flex; align-items: center; justify-content: center;
 }
 /* Wrapper du montant en mode modale : on lui donne le même look que

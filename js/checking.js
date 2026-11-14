@@ -2275,7 +2275,8 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
                   className="tx-delete"
                   onClick={() => removeComp(idx)}
                   title="Supprimer la composante"
-                >×</button>
+                  aria-label="Supprimer la composante"
+                ><Icon name="trash" size={17} /></button>
               </div>
               );
             })}
