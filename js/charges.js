@@ -665,7 +665,7 @@ function ChargesModal({ ctx, onClose }) {
   ];
 
   return (
-    <Modal title="Répartition des charges" size="xl" onClose={onClose}>
+    <Modal title="Répartition des charges" icon="receipt" subtitle="Compte partagé" size="xl" onClose={onClose}>
       {/* Barre d'onglets : rail segmented des scénarios (défilant, pastille
           glissante) + « + » (action, hors rail) + « Comparer » épinglé à
           droite — TOUJOURS visible, icône + texte, même sur mobile. */}
@@ -908,7 +908,7 @@ function ChargesModal({ ctx, onClose }) {
       {editingCharge !== null && (() => {
         const isNew = editingCharge === 'new' || editingCharge === 'new-annual';
         return (
-        <Modal title={isNew ? 'Nouvelle charge' : 'Modifier la charge'} onClose={() => setEditingCharge(null)}>
+        <Modal title={isNew ? 'Nouvelle charge' : 'Modifier la charge'} icon="receipt" subtitle="Répartition des charges" onClose={() => setEditingCharge(null)}>
           <ChargeForm
             initial={isNew ? null : editingCharge}
             defaultPeriod={editingCharge === 'new-annual' ? 'annual' : 'monthly'}

@@ -84,12 +84,12 @@ function PhysicalView({ ctx }) {
       </div>
 
       {showNew && (
-        <Modal title="Nouvel actif physique" onClose={() => setShowNew(false)}>
+        <Modal title="Nouvel actif physique" icon="coin" subtitle="Actifs physiques" onClose={() => setShowNew(false)}>
           <PhysicalForm showToast={showToast} onSubmit={handleCreate} />
         </Modal>
       )}
       {editing && (
-        <Modal title="Modifier l'actif" onClose={() => setEditId(null)}>
+        <Modal title="Modifier l'actif" icon="coin" subtitle="Actifs physiques" onClose={() => setEditId(null)}>
           <PhysicalForm
             showToast={showToast}
             initial={editing}

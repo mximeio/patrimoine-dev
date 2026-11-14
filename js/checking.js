@@ -127,7 +127,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
       </div>
 
       {showCreate && (
-        <Modal title="Nouveau compte courant" onClose={() => setShowCreate(false)}>
+        <Modal title="Nouveau compte courant" icon="creditCard" onClose={() => setShowCreate(false)}>
           <NewCheckingAccountForm
             showToast={showToast}
             onSubmit={handleCreate}
@@ -778,7 +778,7 @@ function CheckingView({ ctx, onBack }) {
       </div>
 
       {showTrManage && trEnabled && (
-        <Modal title={`Tickets resto payés — ${monthLabel(curKey)}`} onClose={() => setShowTrManage(false)} noDirtyGuard>
+        <Modal title="Tickets resto payés" icon="utensils" tone="tr" subtitle={monthLabel(curKey)} onClose={() => setShowTrManage(false)} noDirtyGuard>
           {/* Mois figé : consultation seule. MÊME garde que le corps (wrapper
               .frozen-month + capture) — c'est le CSS qui fait le travail ici
               (crayons et bouton d'ajout masqués), le handler n'ayant aucun
@@ -808,7 +808,7 @@ function CheckingView({ ctx, onBack }) {
       )}
 
       {showRecurring && (
-        <Modal title="Opérations récurrentes" onClose={() => setShowRecurring(false)} size="lg">
+        <Modal title="Opérations récurrentes" icon="rotate" subtitle={currentAccount.name || 'Compte courant'} onClose={() => setShowRecurring(false)} size="lg">
           <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
             {checkingDatesEnabled(profile)
               ? "Ces lignes seront pré-remplies à la création d'un nouveau mois. Définis un jour du mois pour qu'il soit reporté automatiquement comme date sur la ligne créée (si le jour n'existe pas dans le mois cible, la date est laissée vide)."
@@ -826,7 +826,7 @@ function CheckingView({ ctx, onBack }) {
       )}
 
       {showReglages && (
-        <Modal title="Réglages" dirty={reglagesDirty} onClose={closeReglages}>
+        <Modal title="Réglages" icon="settings" subtitle={currentAccount.name || 'Compte courant'} dirty={reglagesDirty} onClose={closeReglages}>
           <ReglagesForm
             showToast={showToast}
             checking={checking}
@@ -1838,12 +1838,12 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
   const openEdit = (item) => { setEditing(item); setShowForm(true); };
 
   return (
-    <div className="section-block">
+    <div className="section-block ops-c">
+      {/* MODERNISATION C' (maquette cartes2.html, écran « compte courant ») : la liste n'est plus dans une carte ; son
+          titre « Opérations » porte l'œil et le bouton « + Nouvelle », qui remplace « + Nouvelle opération » du bas. */}
       <div className="section-header">
-        <div className="section-title">
-          <span className="section-icon checking"><Icon name="arrowLeftRight" size={14} /></span>
-          Entrées et sorties d'argent
-        </div>
+        <h2 className="ops-titre">Opérations</h2>
+        <div className="ops-outils">
         {/* PASTILLE œil+compteur fusionnés (v515, maquette Mockup-Oeil-
             Compteur-Compact, forme B) : LE contrôle unique du masquage.
             TOUJOURS visible sur un mois actif (v516) : on peut ARMER le
@@ -1867,6 +1867,12 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
             {hideActive && pointedCount > 0 && <span className="num">{pointedCount}</span>}
           </button>
         )}
+        {!frozen && (
+          <button type="button" className="btn btn-accent ops-nouvelle" onClick={openCreate}>
+            <Icon name="plus" size={15} /> Nouvelle
+          </button>
+        )}
+        </div>
       </div>
       <div className="tx-list" style={{ '--amt-w': amountColVar(items) }}>
         {(datesMode ? sortItemsBySortKey(items, (it) => it.date || '') : items)
@@ -1925,15 +1931,14 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
           </div>
         )}
       </div>
-      <div className="section-footer" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button className="btn-add" onClick={openCreate}>+ Nouvelle opération</button>
-        {trEnabled && !hasTR && (
+      {trEnabled && !hasTR && (
+        <div className="section-footer" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn-add" onClick={addTrRefund}>+ Tickets resto (auto)</button>
-        )}
-      </div>
+        </div>
+      )}
 
       {showForm && (
-        <Modal title={editing ? 'Modifier une opération' : 'Nouvelle opération'} onClose={() => { setShowForm(false); setEditing(null); }}>
+        <Modal title={editing ? 'Modifier une opération' : 'Nouvelle opération'} icon="creditCard" subtitle={`Compte courant · ${monthLabel(mKey)}`} onClose={() => { setShowForm(false); setEditing(null); }}>
           <OperationForm
             showToast={showToast}
             initial={editing}
@@ -2140,36 +2145,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type : grille 2 colonnes (Entrée/Sortie), « Paiement TR »
           en pleine largeur sur sa propre ligne. */}
-      {!trSeul && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {types.map((t) => {
-          const active = type === t.id;
-          return (
-            <button
-              key={t.id} type="button" onClick={() => setType(t.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 12px', textAlign: 'left',
-                border: `1px solid ${active ? t.color : COLORS.border}`,
-                borderRadius: 10,
-                background: active ? t.bg : 'white',
-                cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: 'inherit',
-                gridColumn: t.id === 'tr' ? '1 / -1' : undefined,
-              }}
-            >
-              <span style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: t.bg, color: t.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}><Icon name={t.icon} size={16} /></span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: active ? t.color : COLORS.text, lineHeight: 1.2 }}>{t.label}</span>
-                <span style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>}
+      {!trSeul && <ChoixType types={types} value={type} onChange={setType} compact />}
 
       {/* Toggle composite — masqué en mode Paiement TR (composite sans objet). */}
       {!isTr ? (
@@ -2206,7 +2182,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       {/* Date (uniquement si la gestion des dates est activée). */}
       {datesMode && (
         <div>
-          <label className="label">Date (optionnel)</label>
+          <label className="label">Date <span className="aide-c">facultative</span></label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <DateInputPicker value={date} onChange={setDate} />
@@ -2226,7 +2202,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       {/* Montant ou Composantes (en mode TR : toujours montant simple) */}
       {(!isComposite || isTr) ? (
         <div>
-          <label className="label">Montant (€)</label>
+          <label className="label">Montant</label>
           {isTr ? (
             <SignedAmountField
               value={amount}
@@ -2237,15 +2213,17 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
               block
             />
           ) : (
-            <AmountInput
-              value={amount}
-              onChange={setAmount}
-              className="input"
-              placeholder="0.00"
-              readOnly={isTRAuto}
-              noNegative
-              title={isTRAuto ? 'Calculé automatiquement à partir des TR du mois précédent' : undefined}
-            />
+            <div className="unite-eur">
+              <AmountInput
+                value={amount}
+                onChange={setAmount}
+                className="input"
+                placeholder="0.00"
+                readOnly={isTRAuto}
+                noNegative
+                title={isTRAuto ? 'Calculé automatiquement à partir des TR du mois précédent' : undefined}
+              />
+            </div>
           )}
           {isTRAuto && (
             <div className="field-hint">Cette ligne est calculée automatiquement à partir des TR du mois précédent.</div>
@@ -2303,7 +2281,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
       )}
 
       <div>
-        <label className="label">Note (optionnel)</label>
+        <label className="label">Note <span className="aide-c">facultative</span></label>
         <div className="note-field">
           <textarea
             ref={noteRef}
@@ -2588,7 +2566,7 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
       </div>
 
       {showForm && (
-        <Modal title={editing ? 'Modifier un paiement TR' : 'Nouveau paiement TR'} onClose={() => { setShowForm(false); setEditing(null); }}>
+        <Modal title={editing ? 'Modifier un paiement TR' : 'Nouveau paiement TR'} icon="utensils" tone="tr" subtitle={`Tickets resto · ${monthLabel(mKey)}`} onClose={() => { setShowForm(false); setEditing(null); }}>
           <OperationForm
             showToast={showToast}
             initial={editing ? { ...editing, type: 'tr' } : null}

@@ -962,7 +962,7 @@ function App() {
         </div>
       )}
       {showSettings && (
-        <Modal title="Paramètres" size="lg" noDirtyGuard onClose={() => setShowSettings(false)}>
+        <Modal title="Paramètres" icon="settings" tone="neutre" subtitle="Général · Données · Mon compte" size="lg" noDirtyGuard onClose={() => setShowSettings(false)}>
           <SettingsView ctx={ctx} />
         </Modal>
       )}

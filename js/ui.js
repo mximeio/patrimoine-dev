@@ -56,7 +56,10 @@ const ModalDirtyContext = React.createContext(null);
 // garde « modifications non enregistrées » : c'est une zone d'ACTIONS, pas de
 // saisie. Un champ qu'on y placerait un jour échapperait donc à cette garde —
 // il faudrait alors passer par `dirty` contrôlé.
-function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer }) {
+// En-tête C' (modernisation, 15/11/2026) : `icon` (nom d'icône) pose une pastille de la couleur de la rubrique ouverte
+// (`data-rubrique`, ou `tone="tr"` pour l'ambre des tickets resto), `subtitle` une ligne grise sous le titre. Les deux sont
+// optionnels : une fenêtre qui ne les passe pas garde son titre seul.
+function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone }) {
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
   // contient un <form> (les listes, la lecture seule « Toutes les opérations »,
@@ -201,8 +204,12 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     >
       <div className="modal" style={{ maxWidth: size === 'xl' ? 880 : size === 'lg' ? 680 : 500 }}>
         <div className="modal-header">
-          <h3 className="modal-title">{title}</h3>
-          <button className="btn-icon" onClick={attemptClose} aria-label="Fermer">✕</button>
+          {icon && <span className={`modal-ico${tone ? ` modal-ico--${tone}` : ''}`} aria-hidden="true"><Icon name={icon} size={18} /></span>}
+          <div className="modal-titres">
+            <h3 className="modal-title">{title}</h3>
+            {subtitle && <small className="modal-sous">{subtitle}</small>}
+          </div>
+          <button className="btn-icon modal-x" onClick={attemptClose} aria-label="Fermer">✕</button>
         </div>
         <div
           className="modal-body"
@@ -833,6 +840,24 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children }) {
         </div>
       )}
       {children}
+    </div>
+  );
+}
+
+// LE CHOIX DU TYPE D'UNE OPÉRATION (modernisation C', 15/11/2026) : une rangée de boutons radio. `compact` (Entrée /
+// Sortie) : icône et libellé sur une ligne ; sinon une grille de trois colonnes, libellé et précision (`desc`). Chaque
+// type garde sa couleur (`color`, `bg`), posée en variables CSS. Remplace les quatre grilles écrites en ligne.
+function ChoixType({ types, value, onChange, compact = false }) {
+  return (
+    <div className={`types-c${compact ? ' types-c--compact' : ''}`} role="radiogroup" aria-label="Type"
+      style={{ '--n': Math.min(types.length, 3) }}>
+      {types.map(t => (
+        <button key={t.id} type="button" role="radio" aria-checked={value === t.id} onClick={() => onChange(t.id)}
+          style={{ '--t': t.color, '--tp': t.bg }}>
+          {compact ? <><Icon name={t.icon} size={16} /><span>{t.label}</span></>
+            : <><b>{t.label}</b>{t.desc && <small>{t.desc}</small>}</>}
+        </button>
+      ))}
     </div>
   );
 }

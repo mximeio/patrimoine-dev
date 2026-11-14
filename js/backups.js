@@ -1519,7 +1519,7 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
   const euro = (v) => fmtNoDec(v) + ' €';
 
   return (
-    <Modal title={estImport ? 'Importer un fichier' : 'Restaurer une sauvegarde'} size="md" noDirtyGuard onClose={onClose}>
+    <Modal title={estImport ? 'Importer un fichier' : 'Restaurer une sauvegarde'} icon="download" tone="neutre" subtitle="Paramètres · Données" size="md" noDirtyGuard onClose={onClose}>
       <div className="restore-confirm">
         <p className="rc-lead">
           {estImport

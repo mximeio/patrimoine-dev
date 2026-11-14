@@ -562,7 +562,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
       </div>
 
       {showForm && (
-        <Modal title={editing ? 'Modifier une opération récurrente' : 'Nouvelle opération récurrente'} onClose={() => { setShowForm(false); setEditing(null); }}>
+        <Modal title={editing ? 'Modifier une opération récurrente' : 'Nouvelle opération récurrente'} icon="rotate" subtitle="Opérations récurrentes" onClose={() => { setShowForm(false); setEditing(null); }}>
           <RecurringForm
             showToast={showToast}
             initial={editing}
@@ -706,35 +706,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
   return (
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {types.map((t) => {
-          const active = type === t.id;
-          return (
-            <button
-              key={t.id} type="button" onClick={() => setType(t.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 12px', textAlign: 'left',
-                border: `1px solid ${active ? t.color : COLORS.border}`,
-                borderRadius: 10,
-                background: active ? t.bg : 'white',
-                cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: 'inherit',
-              }}
-            >
-              <span style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: t.bg, color: t.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}><Icon name={t.icon} size={16} /></span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: active ? t.color : COLORS.text, lineHeight: 1.2 }}>{t.label}</span>
-                <span style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <ChoixType types={types} value={type} onChange={setType} compact />
 
       {/* Toggle composite */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 10 }}>
@@ -767,7 +739,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
           "Effacer" inline. */}
       {datesMode && (
         <div>
-          <label className="label">Jour du mois (optionnel)</label>
+          <label className="label">Jour du mois <span className="aide-c">facultatif</span></label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <DayInputPicker value={dayOfMonth} onChange={setDayOfMonth} />
@@ -788,15 +760,17 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       {/* Montant ou Composantes */}
       {!isComposite ? (
         <div>
-          <label className="label">Montant (€)</label>
-          <AmountInput
-            value={amount}
-            onChange={setAmount}
-            className="input"
-            placeholder="0.00"
-            readOnly={isTRAuto}
-            noNegative
-          />
+          <label className="label">Montant</label>
+          <div className="unite-eur">
+            <AmountInput
+              value={amount}
+              onChange={setAmount}
+              className="input"
+              placeholder="0.00"
+              readOnly={isTRAuto}
+              noNegative
+            />
+          </div>
         </div>
       ) : (
         <div>

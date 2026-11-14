@@ -57,7 +57,7 @@ function SavingsView({ ctx }) {
           </div>
         </div>
         {showCreate && (
-          <Modal title="Nouveau compte d'épargne" onClose={() => setShowCreate(false)}>
+          <Modal title="Nouveau compte d'épargne" icon="piggy" subtitle="Épargne" onClose={() => setShowCreate(false)}>
             <NewSavingsForm showToast={showToast} onSubmit={handleCreate} />
           </Modal>
         )}
@@ -137,7 +137,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
       </div>
 
       {showCreate && (
-        <Modal title="Nouveau compte d'épargne" onClose={() => setShowCreate(false)}>
+        <Modal title="Nouveau compte d'épargne" icon="piggy" subtitle="Épargne" onClose={() => setShowCreate(false)}>
           <NewSavingsForm showToast={showToast} onSubmit={onCreate} />
         </Modal>
       )}
@@ -387,12 +387,12 @@ function SavingsDetailView({ ctx, saving, onBack }) {
       </div>
 
       {modal === 'add' && (
-        <Modal title="Nouvelle opération" onClose={() => setModal(null)}>
+        <Modal title="Nouvelle opération" icon="piggy" subtitle={saving.name} onClose={() => setModal(null)}>
           <SavingsOperationForm showToast={showToast} defaultType="in" onSubmit={handleAddOp} />
         </Modal>
       )}
       {modal === 'history-ops' && (
-        <Modal title="Toutes les opérations" onClose={() => setModal(null)} size="lg">
+        <Modal title="Toutes les opérations" icon="piggy" subtitle={saving.name} onClose={() => setModal(null)} size="lg">
           <SavingsHistoryOpsTable
             ops={sortedOps}
             onEdit={(op) => setEditingOpId(op.id)}
@@ -401,7 +401,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
         </Modal>
       )}
       {editingOp && (
-        <Modal title="Modifier l'opération" onClose={() => setEditingOpId(null)}>
+        <Modal title="Modifier l'opération" icon="piggy" subtitle={saving.name} onClose={() => setEditingOpId(null)}>
           <SavingsOperationForm
             showToast={showToast}
             initial={editingOp}
@@ -411,7 +411,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
         </Modal>
       )}
       {modal === 'configure' && (
-        <Modal title="Réglages" onClose={closeReglages}>
+        <Modal title="Réglages" icon="settings" subtitle={saving.name} onClose={closeReglages}>
           <SavingsConfigureForm
             showToast={showToast}
             saving={saving}
@@ -637,47 +637,15 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete, showTo
   return (
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type — grille 2 colonnes, mimétique avec
-          AddOperationForm des Investissements. Avec 3 items, le dernier
-          (Intérêts) prend toute la largeur via grid-column: span 2. */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {types.map((t, idx) => {
-          const active = type === t.id;
-          // Dernier item d'une liste impaire → pleine largeur
-          const isLastOdd = idx === types.length - 1 && (types.length % 2 === 1);
-          return (
-            <button
-              key={t.id} type="button" onClick={() => setType(t.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 12px', textAlign: 'left',
-                border: `1px solid ${active ? t.color : COLORS.border}`,
-                borderRadius: 10,
-                background: active ? t.bg : 'white',
-                cursor: 'pointer', transition: 'all 0.15s',
-                fontFamily: 'inherit',
-                gridColumn: isLastOdd ? 'span 2' : 'auto',
-              }}
-            >
-              <span style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: t.bg, color: t.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}><Icon name={t.icon} size={16} /></span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: active ? t.color : COLORS.text, lineHeight: 1.2 }}>{t.label}</span>
-                <span style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+          AddOperationForm des Investissements — `ChoixType` (ui.js) depuis le 15/11/2026, trois colonnes. */}
+      <ChoixType types={types} value={type} onChange={setType} />
 
       <div>
         <label className="label">Date</label>
         <DateInputPicker value={date} onChange={setDate} />
       </div>
       <div>
-        <label className="label">Libellé (optionnel)</label>
+        <label className="label">Libellé <span className="aide-c">facultatif</span></label>
         <input type="text" value={label} onChange={e => setLabel(e.target.value)} className="input" placeholder={labelPlaceholder} />
       </div>
       <div>

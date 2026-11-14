@@ -66,7 +66,7 @@ function InvestmentsView({ ctx }) {
           </div>
         </div>
         {showCreate && (
-          <Modal title="Nouvelle enveloppe" onClose={() => setShowCreate(false)}>
+          <Modal title="Nouvelle enveloppe" icon="chart" subtitle="Investissements" onClose={() => setShowCreate(false)}>
             <NewPortfolioForm showToast={showToast} onSubmit={handleCreate} />
           </Modal>
         )}
@@ -148,9 +148,9 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
   return (
     <div>
       {/* HERO */}
-      {/* Dividendes : une cellule du pied de la carte de tête depuis la modernisation (14/11/2026). Le pied ne passe
-                jamais à la ligne (cellules en largeur égale, texte coupé), donc la carte garde ses 136 px avec trois
-                cellules : le « dont … de div. » du portrait, qui servait à éviter cette ligne de plus, est retiré. */}
+      {/* Comme la maquette C' (cartes2.html) : le pied porte Plus-value, Investi et CASH NON INVESTI ; les dividendes
+                montent dans la pastille du pourcentage (« +13.37 % · +1.65 € de div. »), seulement s'il y en a. Le
+                « dont … de div. » du portrait (26/10/2026) est retiré : le pied ne passe jamais à la ligne. */}
       {/* « Investi » SEUL depuis le 14/08/2026 — le « / versé » est retiré.
                 Décision de l'utilisateur, sur deux motifs : la carte « Cash non
                 investi » juste en dessous porte l'information utile (combien dort),
@@ -169,7 +169,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
                 25 845 € » pour deux nombres pourtant différents. */}
       <CarteDeTete
         module="investments" libelle="Valeur totale" montant={consolidated.totalValue}
-        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div"> · +{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
                 Mettre à jour les valeurs
@@ -178,7 +178,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
         pied={[
           { label: 'Plus-value', value: `${positive ? '+' : ''}${fmt(consolidated.totalGain)} €` },
           { label: 'Investi', value: `${fmt(consolidated.totalInvested)} €` },
-          consolidated.hasDistributing && { label: 'Dividendes perçus', court: 'Dividendes', value: `+${fmt(consolidated.totalDividends)} €` },
+          { label: 'Cash non investi', court: 'Cash', value: `${fmt(consolidated.cashRemaining)} €` },
         ]}
       />
 
@@ -252,7 +252,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
       </div>
 
       {showCreate && (
-        <Modal title="Nouvelle enveloppe" onClose={() => setShowCreate(false)}>
+        <Modal title="Nouvelle enveloppe" icon="chart" subtitle="Investissements" onClose={() => setShowCreate(false)}>
           <NewPortfolioForm showToast={showToast} onSubmit={onCreate} />
         </Modal>
       )}
@@ -468,7 +468,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
                 même nombre s'afficherait à deux précisions à quelques centimètres. */}
       <CarteDeTete
         module="investments" libelle="Valeur" montant={stats.totalValue}
-        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div"> · +{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setModal('add')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
                 Nouvelle opération
@@ -496,7 +496,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         pied={[
           { label: 'Plus-value', value: `${positive ? '+' : ''}${fmt(stats.totalGain)} €` },
           { label: 'Investi', value: `${fmt(stats.totalInvested)} €` },
-          stats.hasDistributing && { label: 'Dividendes perçus', court: 'Dividendes', value: `+${fmt(stats.totalDividends)} €` },
+          { label: 'Cash non investi', court: 'Cash', value: `${fmt(stats.cashRemaining)} €` },
         ]}
       />
 
@@ -597,14 +597,14 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
 
       {/* MODALES */}
       {modal === 'add' && (
-        <Modal title="Nouvelle opération" onClose={() => setModal(null)}>
+        <Modal title="Nouvelle opération" icon="chart" subtitle={portfolio.name} onClose={() => setModal(null)}>
           <AddOperationForm showToast={showToast} data={data} onSubmit={async (newData) => {
             if (await handleUpdateData(newData)) { setModal(null); showToast('Opération ajoutée', 'success'); }
           }} />
         </Modal>
       )}
       {modal === 'values' && (
-        <Modal title="Mettre à jour les valeurs" dirty={valuesDirty}
+        <Modal title="Mettre à jour les valeurs" icon="calendar" subtitle={portfolio.name} dirty={valuesDirty}
           onClose={() => { setValuesDirty(false); setModal(null); }}>
           <UpdateValuesForm
             showToast={showToast}
@@ -631,7 +631,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         />
       )}
       {modal === 'history-ops' && (
-        <Modal title="Toutes les opérations" onClose={() => setModal(null)} size="lg">
+        <Modal title="Toutes les opérations" icon="chart" subtitle={portfolio.name} onClose={() => setModal(null)} size="lg">
           <HistoryOpsTable
             stats={stats}
             data={data}
@@ -648,7 +648,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         const opToEdit = data.operations.find(o => o.id === editingOpId);
         if (!opToEdit) { setEditingOpId(null); return null; }
         return (
-          <Modal title="Modifier l'opération" onClose={() => setEditingOpId(null)}>
+          <Modal title="Modifier l'opération" icon="chart" subtitle={portfolio.name} onClose={() => setEditingOpId(null)}>
             <AddOperationForm
               showToast={showToast}
               data={data}
@@ -687,7 +687,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
         );
       })()}
       {modal === 'configure' && (
-        <Modal title="Réglages" dirty={configureDirty} onClose={closeConfigure} size="lg">
+        <Modal title="Réglages" icon="settings" subtitle={portfolio.name} dirty={configureDirty} onClose={closeConfigure} size="lg">
           <PortfolioConfigureForm
             showToast={showToast}
             data={data}
@@ -1200,34 +1200,7 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
   return (
     <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Sélecteur de type — grille 2 cols */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {types.map(t => {
-          const active = opType === t.id;
-          return (
-            <button
-              key={t.id} type="button" onClick={() => setOpType(t.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 12px', textAlign: 'left',
-                border: `1px solid ${active ? t.color : COLORS.border}`,
-                borderRadius: 10,
-                background: active ? t.bg : 'white',
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
-            >
-              <span style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: t.bg, color: t.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}><Icon name={t.icon} size={16} /></span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: active ? t.color : COLORS.text, lineHeight: 1.2 }}>{t.label}</span>
-                <span style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t.desc}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <ChoixType types={types} value={opType} onChange={setOpType} />
 
       {/* Date — toujours */}
       <div><label className="label">Date</label><DateInputPicker value={date} onChange={setDate} /></div>
@@ -1492,7 +1465,7 @@ function UpdateAllValuesModal({ ctx, onClose }) {
   return (
     // dirty CONTRÔLÉ : il retombe à faux si l'on retape la valeur d'origine,
     // ce que l'heuristique générique de Modal ne sait pas faire.
-    <Modal title="Mettre à jour les valeurs" size="lg" dirty={modifiees.length > 0} onClose={onClose}>
+    <Modal title="Mettre à jour les valeurs" icon="calendar" subtitle="Investissements" size="lg" dirty={modifiees.length > 0} onClose={onClose}>
       {ordonnees.map((p, i) => {
         const couleur = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
         const etfs = (p.data && p.data.etfs) || [];
@@ -2139,7 +2112,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   const coche = valeursAJour ? <Icon name="check" size={13} /> : null;
 
   return (
-    <Modal title="Calculer un versement" size="lg" dirty={aSaisi} onClose={onClose}>
+    <Modal title="Calculer un versement" icon="chart" size="lg" dirty={aSaisi} onClose={onClose}>
       {rienASaisir && (
         <EmptyState icon="percent" title="Aucun support à répartir"
           hint="Ajoute un support et fixe sa cible dans les Réglages de l'enveloppe." />
