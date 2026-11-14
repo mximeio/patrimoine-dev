@@ -1643,7 +1643,7 @@ function getCheckingOpDisplay(op) {
 // est couvert par la marge.
 const _amtCanvas = (typeof document !== 'undefined') ? document.createElement('canvas') : null;
 const _amtCtx = _amtCanvas ? _amtCanvas.getContext('2d') : null;
-if (_amtCtx) _amtCtx.font = '500 14px Manrope, system-ui, -apple-system, "Segoe UI", sans-serif';
+if (_amtCtx) _amtCtx.font = '500 14px Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
 
 function amountColVar(items) {
   let maxW = 0;    // largeur texte max mesurée (px)

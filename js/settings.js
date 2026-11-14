@@ -74,40 +74,37 @@ function SettingsView({ ctx }) {
 
   return (
     <div>
-      <h3 className="settings-group-title">Général</h3>
-      <div className="settings-card">
-        <h2>Modules actifs</h2>
-        <p className="muted">
-          Active ou désactive les modules selon tes besoins. Les données restent conservées en base et seront retrouvées lors d'une éventuelle réactivation.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-          <ModuleToggleRow icon="creditCard" label="Compte courant" hint="Entrées, sorties, pointage, tickets resto" enabled={checkingEnabled} onChange={garde(pasLaDerniere('checking', toggleChecking))} />
-          <ModuleToggleRow icon="piggy" label="Épargne" hint="Livret A, LDDS, … (suivi manuel du solde)" enabled={modules.savings} onChange={garde(pasLaDerniere('savings', (v) => { if (confirmToggle(v, 'Épargne')) setModule('savings', v); }))} />
-          <ModuleToggleRow icon="chart" label="Investissements" hint="PEA, PEI, supports, opérations, valorisations" enabled={modules.investments} onChange={garde(pasLaDerniere('investments', (v) => { if (confirmToggle(v, 'Investissements')) setModule('investments', v); }))} />
-          <ModuleToggleRow icon="coin" label="Actifs physiques" hint="Pièces d'or, métaux précieux (suivi manuel du prix)" enabled={modules.physical} onChange={garde(pasLaDerniere('physical', (v) => { if (confirmToggle(v, 'Actifs physiques')) setModule('physical', v); }))} />
-        </div>
+      {/* Maquette C' (fenParametres) : titre de section hors du cadre, note courte, puis un groupe gris de rangées
+          séparées par un filet ; la tuile d'icône prend la couleur de sa rubrique. */}
+      <h3 className="settings-group-title">Modules actifs</h3>
+      <p className="settings-note">
+        Active ou désactive les modules selon tes besoins. Les données restent conservées et seront retrouvées à une réactivation.
+      </p>
+      <div className="settings-groupe">
+          <ModuleToggleRow couleur={MODULE_COLORS.checking} icon="creditCard" label="Compte courant" hint="Entrées, sorties, pointage, tickets resto" enabled={checkingEnabled} onChange={garde(pasLaDerniere('checking', toggleChecking))} />
+          <ModuleToggleRow couleur={MODULE_COLORS.savings} icon="piggy" label="Épargne" hint="Livret A, LDDS, … (suivi manuel du solde)" enabled={modules.savings} onChange={garde(pasLaDerniere('savings', (v) => { if (confirmToggle(v, 'Épargne')) setModule('savings', v); }))} />
+          <ModuleToggleRow couleur={MODULE_COLORS.investments} icon="chart" label="Investissements" hint="PEA, PEI, supports, opérations, valorisations" enabled={modules.investments} onChange={garde(pasLaDerniere('investments', (v) => { if (confirmToggle(v, 'Investissements')) setModule('investments', v); }))} />
+          <ModuleToggleRow couleur={MODULE_COLORS.physical} icon="coin" label="Actifs physiques" hint="Pièces d'or, métaux précieux (suivi manuel du prix)" enabled={modules.physical} onChange={garde(pasLaDerniere('physical', (v) => { if (confirmToggle(v, 'Actifs physiques')) setModule('physical', v); }))} />
       </div>
 
-      <div className="settings-card">
-        <h2>Options avancées</h2>
-        <p className="muted">
-          Paramètres transverses qui touchent à l'organisation globale de l'application.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8, opacity: checkingEnabled ? 1 : 0.5 }}>
+      <h3 className="settings-group-title">Options avancées</h3>
+      <div className="settings-groupe" style={{ opacity: checkingEnabled ? 1 : 0.5 }}>
           <ModuleToggleRow
+            couleur="#475569"
             icon="creditCard"
             label="Plusieurs comptes courants"
             hint={checkingEnabled
-              ? "Active la gestion de plusieurs comptes courants (Boursorama, BNP, …). Chaque compte a ses propres mois, récurrents et réglages TR."
+              ? "Chaque compte a ses propres mois, récurrents et réglages TR."
               : "Disponible uniquement si le module Compte courant est activé."}
             enabled={!!modules.multiCheckingAccounts}
             onChange={garde(toggleMulti)}
           />
           <ModuleToggleRow
+            couleur="#475569"
             icon="calendar"
             label="Gestion des dates sur le compte courant"
             hint={checkingEnabled
-              ? "Affiche un champ date sur les entrées, sorties, tickets resto et opérations récurrentes. Le glisser-déposer est désactivé tant que ce mode est actif. Les dates restent en base si tu désactives l'option ensuite."
+              ? "Un champ date sur les entrées, sorties, TR et récurrents ; le glisser-déposer est désactivé. Les dates restent gardées si tu désactives l'option."
               : "Disponible uniquement si le module Compte courant est activé."}
             enabled={!!modules.checkingDates}
             onChange={garde((v) => {
@@ -118,7 +115,6 @@ function SettingsView({ ctx }) {
               setModule('checkingDates', v);
             })}
           />
-        </div>
       </div>
 
       <h3 className="settings-group-title">Données</h3>
@@ -139,12 +135,12 @@ function SignOutCard({ ctx }) {
     Adapter.signOut();
   };
   return (
-    <div className="settings-card">
-      <h2>Déconnexion</h2>
-      <p className="muted">
-        Compte connecté : <strong style={{ color: COLORS.text }}>{user.email}</strong>
-      </p>
-      <button className="btn btn-accent" onClick={handleSignOut} style={{ marginTop: 8 }}>
+    <div className="settings-card settings-ligne">
+      <span className="rang-reglage-txt">
+        <b>Compte connecté</b>
+        <small>{user.email}</small>
+      </span>
+      <button className="btn btn-danger-doux" onClick={handleSignOut}>
         <Icon name="logout" size={14} /> Se déconnecter
       </button>
     </div>
@@ -435,21 +431,21 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
 }
 
 
-function ModuleToggleRow({ icon, label, hint, enabled, onChange }) {
+function ModuleToggleRow({ icon, label, hint, enabled, onChange, couleur = MODULE_COLORS.checking }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 10 }}>
-      <div style={{ width: 32, height: 32, borderRadius: 8, background: 'white', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.accent, flexShrink: 0 }}>
-        <Icon name={icon} size={16} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 11.5, color: COLORS.muted }}>{hint}</div>
-      </div>
-      <label className="toggle">
+    <label className="rang-reglage">
+      <span className="rang-reglage-ico" style={{ background: fondPastille(couleur), color: couleurIcone(couleur) }}>
+        <Icon name={icon} size={17} />
+      </span>
+      <span className="rang-reglage-txt">
+        <b>{label}</b>
+        <small>{hint}</small>
+      </span>
+      <span className="toggle">
         <input type="checkbox" checked={!!enabled} onChange={(e) => onChange(e.target.checked)} />
         <span className="toggle-slider"></span>
-      </label>
-    </div>
+      </span>
+    </label>
   );
 }
 
@@ -700,8 +696,8 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
   };
 
   const types = [
-    { id: 'in',  label: 'Entrée d\'argent', icon: 'arrowDown', color: 'var(--success-fonce)', bg: 'var(--success-light)', desc: 'Cash entrant' },
-    { id: 'out', label: 'Sortie d\'argent', icon: 'arrowUp',   color: 'var(--danger-fonce)', bg: 'var(--danger-light)',  desc: 'Cash sortant' },
+    { id: 'in',  label: 'Entrée', icon: 'arrowDown', color: 'var(--success-fonce)', bg: 'var(--success-light)', desc: 'Cash entrant' },
+    { id: 'out', label: 'Sortie', icon: 'arrowUp',   color: 'var(--danger-fonce)', bg: 'var(--danger-light)',  desc: 'Cash sortant' },
   ];
 
   return (
@@ -1227,19 +1223,18 @@ function DataActionsCard({ ctx }) {
   return (
     <div className="settings-card">
       <h2>Export / Import</h2>
-      <p className="muted">Tes données sont stockées dans Firebase Firestore.</p>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+      <p className="muted">
+        L'export inclut la répartition des charges si tu y as accès. À l'import, tes données sont remplacées ; les charges demandent une confirmation à part.
+      </p>
+      <div className="settings-deux-b">
         <button className="btn btn-secondary" onClick={doExport}>
-          <Icon name="download" size={14} /> Exporter (JSON complet)
+          <Icon name="download" size={14} /> Exporter (JSON)
         </button>
         <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>
-          <Icon name="upload" size={14} /> Importer (JSON complet)
+          <Icon name="upload" size={14} /> Importer (JSON)
         </button>
         <input ref={fileRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) doImport(f); e.target.value = ''; }} />
       </div>
-      <p className="muted" style={{ marginTop: 12, fontSize: 12 }}>
-        L'export inclut aussi la répartition des charges (partagée), si tu y as accès. À l'import, tes données perso sont remplacées ; pour les charges, une confirmation à part te sera demandée car elles sont communes aux deux comptes.
-      </p>
 
       {/* La MÊME fenêtre que la restauration (backups.js), en mode import :
           comparaison avant/après plutôt qu'un texte. Elle remplace l'ancien

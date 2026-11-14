@@ -76,9 +76,10 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  /* Manrope depuis la modernisation du design (14/11/2026), servie par Google Fonts comme l'était Inter : la CSP ne change
-     pas. Les réglages `cv02…cv11` étaient propres à Inter, ils sont retirés. */
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Inter, revenue le 14/11/2026 après un essai de Manrope (lot 1 de la modernisation) : comparés sur le même écran,
+     les chiffres, le « − » et le « < » d'Inter restaient plus nets et plus noirs aux petites tailles. */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -1218,6 +1219,25 @@ input[type="month"] {
 .bottom-sheet .sheet-act.danger .sheet-act-lbl { color: var(--danger-fonce); }
 .modal .settings-group-title { font-size: 15px; font-weight: 800; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
 .modal .settings-card { background: var(--surface-alt); border: 0; border-radius: 18px; }
+.modal .settings-card { padding: 14px 16px; }
+.modal .settings-card h2 { font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
+.modal .settings-card .muted { font-size: 12.5px; font-weight: 500; }
+.settings-deux-b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.settings-deux-b .btn { justify-content: center; }
+.settings-note { font-size: 13px; font-weight: 500; color: var(--text-muted); margin: -4px 2px 10px; }
+/* Groupe gris de rangées de réglage (maquette C' : .groupe-r / .rang-r) : tuile de couleur, titre, aide, interrupteur ;
+   un filet entre deux rangées, toute la rangée est cliquable (c'est un <label>). */
+.settings-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; margin-bottom: 14px; }
+.rang-reglage { display: flex; align-items: center; gap: 12px; padding: 11px 14px; cursor: pointer; }
+.rang-reglage + .rang-reglage { border-top: 1px solid var(--border); }
+.rang-reglage-ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+.rang-reglage-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.rang-reglage-txt b { font-size: 14.5px; font-weight: 700; color: var(--text); }
+.rang-reglage-txt small { font-size: 12.5px; font-weight: 500; color: var(--text-muted); line-height: 1.35; }
+.settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.settings-card.settings-ligne small { overflow-wrap: anywhere; }
+.btn.btn-danger-doux { background: var(--danger-light); color: var(--danger-fonce); border-color: transparent; flex: none; }
+@media (hover: hover) { .btn.btn-danger-doux:hover { background: var(--danger-light); filter: brightness(0.96); } }
 
 /* ── LA NAVIGATION C' (15/11/2026, maquette cartes2.html) ──
    Ordinateur : le logo à gauche, les onglets au centre sur un rail gris, l'actif en pastille BLANCHE (texte foncé, point
@@ -1837,7 +1857,16 @@ button.stat-card {
 .signed-amount-btn.is-ro:active { transform: none; }
 /* Zone montant des composantes : largeur fixe → les boutons ± et les champs
    s'alignent sur toutes les lignes (TR comprise), et le montant ne se coupe plus. */
-.modal-comp-row .signed-amount { width: 150px; }
+.modal-comp-row .signed-amount { width: 128px; }
+/* Maquette C' (fenComposite, 14/11/2026) : le bouton de signe est DANS le champ montant, en petite tuile à gauche ;
+   la boîte bordée est portée par .signed-amount, le libellé gagne la place de l'ancien bouton séparé. */
+.modal-comp-row .signed-amount { position: relative; gap: 0; }
+.modal-comp-row .signed-amount > .signed-amount-btn {
+  position: absolute; left: 7px; top: 50%; transform: translateY(-50%); z-index: 1;
+  width: 24px; height: 24px; border-radius: 8px; font-size: 15px; font-weight: 700;
+}
+.modal-comp-row .signed-amount > .signed-amount-btn:active { transform: translateY(-50%) scale(0.94); }
+.modal-comp-row .signed-amount > .signed-amount-btn.is-ro:active { transform: translateY(-50%); }
 
 /* Variante « pleine largeur » pour un champ de formulaire principal (ex. TR
    autonome) : on reprend le MÊME petit bouton ± séparé que les composantes,
@@ -1925,9 +1954,14 @@ button.stat-card {
    layout flex et croix toujours visible (pas de hover dans une modale
    tactile, et la croix de suppression est l'action principale). */
 .modal-comp-row {
-  display: flex; gap: 8px; align-items: center;
+  display: flex; gap: 6px; align-items: center;
 }
-.modal-comp-row .tx-delete { opacity: 1; }
+/* Croix de retrait en petite tuile grise (maquette C' : .x-c 28px). */
+.modal-comp-row .tx-delete {
+  opacity: 1; width: 28px; height: 28px; flex: none; border-radius: 9px;
+  background: var(--surface-hover); font-size: 15px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
 /* Wrapper du montant en mode modale : on lui donne le même look que
    .input (bord + fond + radius) pour qu'il soit clairement identifié
    comme champ saisissable, au même titre que le champ libellé à côté. */
@@ -1935,12 +1969,9 @@ button.stat-card {
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: var(--radius-md);
-  height: 42px; padding: 0 12px;
+  height: 42px; padding: 0 10px 0 36px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-/* Bouton ± et boîte montant à la même hauteur que le champ libellé (.input)
-   → ligne de composante alignée comme une ligne simple. */
-.modal-comp-row .signed-amount-btn { height: 42px; width: 40px; border-radius: var(--radius-md); font-size: 17px; }
 .modal-comp-row .tx-amount-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-light);
@@ -1986,6 +2017,13 @@ button.stat-card {
   cursor: pointer; transition: all 0.15s;
 }
 @media (hover: hover) { .btn-add:hover { border-color: var(--text-light); color: var(--text); } }
+/* « + Composante » dans les fenêtres : petite pastille pointillée calée à gauche (maquette C' : .ajout-c). */
+.modal-comp-list .btn-add {
+  justify-self: start; display: inline-flex; align-items: center; gap: 6px;
+  height: 36px; padding: 0 14px; margin-top: 2px; border-radius: 999px;
+  border: 1.5px dashed var(--border-strong); color: var(--text-muted);
+  font-size: 13.5px; font-weight: 600;
+}
 
 /* Composite row */
 .tx-composite-wrap {

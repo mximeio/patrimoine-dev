@@ -818,7 +818,7 @@ const CARTE_FONDS = {
   physical: 'linear-gradient(150deg, #f2b33d, #e09a1a)',
 };
 // Le grand montant, découpé : partie entière en gras, centimes et « € » plus petits et plus clairs.
-// L'espace fine des milliers (U+202F) ne fait que 0,1 em en Manrope, et l'interlettrage serré du gros montant
+// L'espace fine des milliers (U+202F) est étroite (0,1 em en Manrope, à peine plus en Inter), et l'interlettrage serré du gros montant
 // l'avale (« 42613 ») : ici seulement, elle devient une espace insécable pleine (0,2 em).
 function MontantTete({ value }) {
   const s = eur(value).replace(/ /g, ' ');
