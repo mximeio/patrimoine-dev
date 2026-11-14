@@ -431,7 +431,9 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
 
 function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, couleur = MODULE_COLORS.checking }) {
   return (
-    <label className="rang-reglage">
+    // Seul l'INTERRUPTEUR bascule l'option (15/11/2026, demande de l'utilisateur) : la rangée entière était un <label>, si bien
+    // qu'un toucher pour fermer la bulle du « ? » — ou un toucher distrait sur le texte — activait l'option par mégarde.
+    <div className="rang-reglage">
       {/* `icon` absent = bascule simple, sans tuile (maquette : « Calculer mes versements »). */}
       {icon && (
         <span className="rang-reglage-ico" style={{ background: fondPastille(couleur), color: couleurIcone(couleur) }}>
@@ -442,11 +444,11 @@ function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, co
         <b>{label}<AideChamp>{aide}</AideChamp></b>
         <small>{hint}</small>
       </span>
-      <span className="toggle">
-        <input type="checkbox" checked={!!enabled} onChange={(e) => onChange(e.target.checked)} />
+      <label className="toggle">
+        <input type="checkbox" aria-label={label} checked={!!enabled} onChange={(e) => onChange(e.target.checked)} />
         <span className="toggle-slider"></span>
-      </span>
-    </label>
+      </label>
+    </div>
   );
 }
 

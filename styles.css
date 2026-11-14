@@ -1270,8 +1270,10 @@ input[type="month"] {
 /* Groupe gris de rangées de réglage (maquette C' : .groupe-r / .rang-r) : tuile de couleur, titre, aide, interrupteur ;
    un filet entre deux rangées, toute la rangée est cliquable (c'est un <label>). */
 .settings-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; margin-bottom: 14px; }
-.rang-reglage { display: flex; align-items: center; gap: 12px; padding: 11px 14px; cursor: pointer; }
+.rang-reglage { display: flex; align-items: center; gap: 12px; padding: 11px 14px; } /* plus de curseur main : seul l'interrupteur agit */
 .rang-reglage + .rang-reglage { border-top: 1px solid var(--border); }
+.rang-reglage .toggle { position: relative; }
+.rang-reglage .toggle::after { content: ""; position: absolute; inset: -8px; } /* cible de 62 × 44 au doigt autour de l'interrupteur, maintenant qu'il est seul à agir */
 .rang-reglage-ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; }
 .rang-reglage-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
 .rang-reglage-txt b { font-size: 14px; font-weight: 500; color: var(--text); }
