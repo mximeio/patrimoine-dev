@@ -1235,20 +1235,20 @@ input[type="month"] {
    en texte foncé. ⚠️ `.card.carte-tete` et `!important` sur le padding : le bloc téléphone pose
    `.card { padding: 18px !important }` PLUS BAS dans le fichier, qui gagnerait à spécificité égale (mesuré : 145 px). */
 .carte-tete {
-  min-height: 144px; border: 0; border-radius: 22px; color: #fff; /* 144 depuis le 15/11/2026 (136 avant) : ligne d'intitulé à 32 px, la hauteur de la pastille du mois */
+  min-height: 136px; border: 0; border-radius: 22px; color: #fff; /* 136 (14/11/2026, choix de l'utilisateur, _maquettes/Mockup-Cartes-136) : 144 depuis la v1150 pour la ligne d'intitulé à 32 px ; les 8 px retirés sont l'espace vide sous le montant, la ligne d'intitulé garde ses 32 px */
   display: flex; flex-direction: column; position: relative; isolation: isolate; margin-bottom: 16px;
   /* Pas d'overflow: hidden (cf. .ct-deco) ; z-index pour que le menu « ⋯ » passe AU-DESSUS de la liste qui suit. */
   z-index: 5;
 }
 .card.carte-tete { padding: 11px 16px 10px !important; overflow: visible; }
-/* Le CORPS de la carte (intitulé, montant, rangée du bas) a une hauteur FIXE : 144 − 21 px de padding. Ce qui se déplie
+/* Le CORPS de la carte (intitulé, montant, rangée du bas) a une hauteur FIXE : 136 − 21 px de padding. Ce qui se déplie
    (`dessous`, le détail de la projection) vient après, sans rien déplacer au-dessus. */
-.ct-corps { display: flex; flex-direction: column; min-height: 123px; flex: none; }
+.ct-corps { display: flex; flex-direction: column; min-height: 115px; flex: none; }
 .ct-deco { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -1; pointer-events: none; }
 /* Reflet et anneau ANCRÉS EN HAUT et dimensionnés pour 136 px : quand la carte grandit (détail de la projection déplié),
    ils restent en place au lieu de glisser et de s'étirer avec le bas (relevé de l'utilisateur, 15/11/2026). Mêmes
    positions qu'avant à 136 px : 136 + 70 − 210 = −4 px. */
-.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 144px; z-index: -1; pointer-events: none;
+.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 136px; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
 .ct-deco::after { content: ""; position: absolute; right: -44px; top: 4px; width: 210px; height: 210px; z-index: -1;
   border-radius: 50%; border: 30px solid rgba(255,255,255,0.08); pointer-events: none; }
@@ -1298,7 +1298,7 @@ input[type="month"] {
   background: #6ee7b7; color: #064e3b; font-size: 9px; font-weight: 700; line-height: 1; }
 .ct-fil.ct-fil--fait i { background: #6ee7b7; }
 /* L'ANNEAU (14/11/2026, piste A de _maquettes/Mockup-Mini-Camemberts) : 28 px devant le texte, à la place de la barre (gardée
-   en réserve : JAUGE_TETE dans ui.js). La case est plus basse qu'avec la barre (28-32 px contre 38) : la carte garde ses 144 px.
+   en réserve : JAUGE_TETE dans ui.js). La case est plus basse qu'avec la barre (28-32 px contre 38) : la carte garde sa hauteur.
    PETIT TÉLÉPHONE : quand le texte a moins de 140 px (≈ « 9 999.99 / 9 999.99 € »), il passe au reste à pointer — « Entrées à
    pointer », un seul montant (idée de l'utilisateur). Requête de CONTENEUR, pas d'écran : elle suit la largeur réelle de la case. */
 .ct-cel--anneau { display: flex; align-items: center; gap: 9px; }
@@ -1538,7 +1538,7 @@ input[type="month"] {
   .op-row > .tx-edit { transform: translateX(3px); }
 }
 /* Le bouton œil a la forme et la taille de « + Nouvelle », en bouton secondaire (demande de l'utilisateur, 15/11/2026). */
-.ops-c .ops-eye-pill { height: 37px; margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: 10px;
+.ops-c .ops-eye-pill { height: 36px; /* 36 comme « Nouvelle » (14/11/2026) : à 37, l'en-tête « Opérations » faisait 33 px et la liste partait 1 px plus bas que celles des autres rubriques */ margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--surface); color: var(--text-light); font-size: 13px; font-weight: 500; }
 .ops-c .ops-eye-pill.on { background: var(--accent-light); border-color: var(--accent-pale); color: var(--accent); }
 .ops-c .ops-eye-pill .num { font-weight: 600; }
@@ -1686,7 +1686,7 @@ input[type="month"] {
 .auth-note { color: var(--text-muted); font-size: 12px; font-weight: 400; }
 
 /* ── L'ACCUEIL C' (modernisation, 14/11/2026 — maquette cartes2.html, écran « accueil ») ── */
-.section-accueil { margin-top: 24px; }
+.section-accueil { margin-top: 22px; } /* 22 comme .section-block des rubriques (14/11/2026) : à 24, « Mes rubriques » tombait 2 px plus bas que les titres des autres vues */
 .section-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
 .section-tete h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
 .section-aide { color: var(--text-muted); font-size: 13px; font-weight: 400; }
