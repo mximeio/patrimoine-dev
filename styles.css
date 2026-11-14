@@ -1122,6 +1122,9 @@ input[type="month"] {
   .ct-cel .ct-court { display: inline; }
 }
 .ct-cel b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Avec des jauges, le pied gagne 6 px : on les reprend sur son padding et la marge du montant, pour rester à 136. */
+.ct-pied:has(.ct-fil) { padding-top: 4px; }
+.carte-tete:has(.ct-fil) .ct-montant { margin-bottom: 4px; }
 .ct-fil { height: 3px; border-radius: 999px; background: rgba(255,255,255,0.22); margin-top: 3px; overflow: hidden; }
 .ct-fil i { display: block; height: 100%; background: #fff; border-radius: 999px; }
 .ct-courbe { margin: auto -16px -10px; height: 44px; }
@@ -1179,6 +1182,27 @@ input[type="month"] {
 .alerte-valo-ico { color: var(--warning-fonce); flex: none; margin-top: 1px; }
 .alerte-valo b { font-size: 14px; font-weight: 700; }
 .alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 600; }
+
+/* La projection du compte courant, en pastille dans l'intitulé de la carte (lot 3 de la modernisation). */
+.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 12px; font-weight: 700; gap: 5px; }
+.carte-tete .ct-pill-btn .proj-chev { color: rgba(255,255,255,0.7); }
+@media (max-width: 360px) { .carte-tete .ct-pill-lib { display: none; } }
+/* Les deux pastilles fines sous la carte du compte courant : « Reste mois préc. » et « Tickets resto ». */
+.pastilles-cc { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: -4px 0 16px; }
+.pastille-cc {
+  display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; padding: 0 10px; border-radius: 12px;
+  background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); font: inherit; text-align: left;
+}
+.pastille-cc-ico { color: var(--text-muted); display: inline-flex; flex: none; }
+.pastille-cc-lib { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 641px) { .pastilles-cc { grid-template-columns: repeat(2, 260px); } }
+.pcc-court { display: none; }
+@media (max-width: 420px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
+.pastille-cc b { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.pastille-cc-tr { cursor: pointer; }
+.pastille-cc-tr .pastille-cc-ico { color: var(--warning-fonce); }
+.pastille-cc-chev { color: var(--text-subtle); font-size: 16px; line-height: 1; margin-left: -2px; }
+@media (hover: hover) { .pastille-cc-tr:hover { border-color: var(--border-strong); } }
 
 .carte-tete .hero-kebab { width: 28px; height: 28px; color: rgba(255,255,255,0.75); }
 .carte-tete--physical { color: #2b1d00; }

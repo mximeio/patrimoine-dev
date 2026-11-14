@@ -626,7 +626,15 @@ function CheckingView({ ctx, onBack }) {
                 reste pointé sont identiques — rien à justifier (v518). */}
       <CarteDeTete
         module="checking" libelle="Solde pointé" montant={stats.balancePointed}
-        droite={<><MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} /><Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<><MonthChip id="hero" variant="hero" label={monthLabel(curKey)} {...chipProps} />
+          {/* La projection en PASTILLE (modernisation C', 14/11/2026, haut de la fusion A + C) : le pied de la carte
+              porte désormais le pointage. Toucher la pastille déplie toujours le détail du calcul (v517). */}
+          <button type="button" className="ct-pill ct-pill-btn num proj-value" onClick={() => setProjOpen(o => !o)}
+            aria-expanded={projOpen} title="Voir le détail du calcul">
+            <span className="ct-pill-lib">Projection </span>{eur(stats.balanceProjected)}
+            <span className={`proj-chev${projOpen ? ' open' : ''}`}><Icon name="chevronDown" size={11} /></span>
+          </button>
+          <Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               {/* Mois figé : pas de création d'opération. Figer/Défiger et
                   Supprimer partagent le même groupe (les deux actions
                   « cycle de vie » du mois) — décision maquette v485. */}
@@ -679,15 +687,12 @@ function CheckingView({ ctx, onBack }) {
                 Supprimer ce mois
               </button>
             </Dropdown></>}
-        pied={[{ label: 'Projection fin de mois', value: (<button
-              className="num proj-value"
-              onClick={() => setProjOpen(o => !o)}
-              aria-expanded={projOpen}
-              title="Voir le détail du calcul"
-            >
-              {eur(stats.balanceProjected)}
-              <span className={`proj-chev${projOpen ? ' open' : ''}`}><Icon name="chevronDown" size={11} /></span>
-            </button>) }]}
+        pied={[
+          { label: 'Entrées pointées', court: 'Entrées', value: `${fmt(stats.entriesPointed)} / ${fmt(stats.entriesAll)} €`,
+            fil: stats.entriesAll > 0 ? (stats.entriesPointed / stats.entriesAll) * 100 : 0 },
+          { label: 'Sorties pointées', court: 'Sorties', value: `${fmt(stats.exitsPointed)} / ${fmt(stats.exitsAll)} €`,
+            fil: stats.exitsAll > 0 ? (stats.exitsPointed / stats.exitsAll) * 100 : 0 },
+        ]}
       >
         {projOpen && (
           <div className="proj-detail num">
@@ -701,7 +706,7 @@ function CheckingView({ ctx, onBack }) {
             {stats.carryProjected !== stats.carry && (
               <div className="pd-note">
                 Ce « Reste de {monthLabel(prevMonthKey(curKey))} » inclut les opérations
-                non pointées du mois dernier — d'où l'écart avec la carte
+                non pointées du mois dernier — d'où l'écart avec la pastille
                 « Reste mois préc. » ({eur(stats.carry)}), qui ne compte que le pointé.
               </div>
             )}
@@ -709,79 +714,25 @@ function CheckingView({ ctx, onBack }) {
         )}
       </CarteDeTete>
 
-      <div className={`stats-grid ${!trEnabled ? 'cols-3' : ''}`}>
-        <div className="stat-card">
-          <div className="stat-card-icon"><Icon name="rotate" size={14} /></div>
-          <div className="stat-card-label">Reste mois préc.</div>
-          <div className={`stat-card-value ${stats.carry >= 0 ? 'value-positive' : 'value-negative'}`}>{eur(stats.carry)}</div>
-          <div className="stat-card-sub">Fin de {monthLabel(prevMonthKey(curKey))}</div>
+      {/* DEUX PASTILLES FINES à la place des quatre cartes chiffrées (modernisation C', 14/11/2026, haut de la
+          fusion A + C) : « Entrées / Sorties à pointer » sont passées dans le pied de la carte de tête, avec leur jauge.
+          La pastille « Tickets resto » reste la SEULE porte vers la fenêtre « Tickets resto payés » depuis cette vue
+          (depuis le retrait de l'entrée du menu ⋯, 14/08/2026 — la recherche l'ouvre aussi par requestOpen('tr')).
+          <button> et non <div onClick> : le seul motif atteignable au clavier.
+          ⚠️ Elle est HORS du garde .frozen-month (qui ne couvre que les deux sections en dessous) : sur un mois figé
+          elle ouvre donc la fenêtre, laquelle gère elle-même la consultation seule. C'est voulu. */}
+      <div className="pastilles-cc">
+        <div className="pastille-cc" title={`Ce qui restait, pointé, fin ${monthLabelDe(prevMonthKey(curKey)).toLowerCase()}`}>
+          <span className="pastille-cc-ico"><Icon name="rotate" size={13} /></span>
+          <span className="pastille-cc-lib"><span className="pcc-long">Reste mois préc.</span><span className="pcc-court">Mois préc.</span></span>
+          <b className="num">{eur(stats.carry)}</b>
         </div>
-        {(() => {
-          const entriesRemaining = r2(stats.entriesAll - stats.entriesPointed);
-          const entriesAllDone = entriesRemaining <= 0 && stats.entriesAll > 0;
-          return (
-            <div className="stat-card">
-              <div className="stat-card-icon income"><Icon name="arrowDown" size={14} /></div>
-              <div className="stat-card-label">Entrées à pointer</div>
-              {entriesAllDone ? (
-                <div className="stat-card-value value-positive">✓ Tout pointé</div>
-              ) : (
-                <div className="stat-card-value value-positive">{eur(entriesRemaining)}</div>
-              )}
-              <div className="stat-card-sub">
-                {entriesAllDone
-                  ? `${fmt(stats.entriesPointed)} € pointés`
-                  : `${fmt(stats.entriesPointed)} € / ${fmt(stats.entriesAll)} €`}
-              </div>
-            </div>
-          );
-        })()}
-        {(() => {
-          const exitsRemaining = r2(stats.exitsAll - stats.exitsPointed);
-          const exitsAllDone = exitsRemaining <= 0 && stats.exitsAll > 0;
-          return (
-            <div className="stat-card">
-              <div className="stat-card-icon expense"><Icon name="arrowUp" size={14} /></div>
-              <div className="stat-card-label">Sorties à pointer</div>
-              {exitsAllDone ? (
-                <div className="stat-card-value value-negative">✓ Tout pointé</div>
-              ) : (
-                <div className="stat-card-value value-negative">{eur(exitsRemaining)}</div>
-              )}
-              <div className="stat-card-sub">
-                {exitsAllDone
-                  ? `${fmt(stats.exitsPointed)} € pointés`
-                  : `${fmt(stats.exitsPointed)} € / ${fmt(stats.exitsAll)} €`}
-              </div>
-            </div>
-          );
-        })()}
-        {/* La SEULE porte vers la fenêtre « Tickets resto payés » depuis cette
-            vue, depuis le retrait de l'entrée du menu ⋯ (14/08/2026) — la
-            recherche globale l'ouvre par ailleurs (requestOpen('tr')).
-            <button> et non <div onClick> : c'est le motif des lignes ouvrables
-            de l'app (SavingsListRow, PortfolioListRow), le seul atteignable au
-            clavier. Le chevron reprend leur `›` textuel, pas une icône — il n'y
-            a pas de chevronRight au catalogue, et il ne faut pas en ajouter un
-            pour ça.
-            ⚠️ Cette carte est HORS du garde .frozen-month (qui ne couvre que les
-            deux sections en dessous) : sur un mois figé elle ouvre donc la
-            fenêtre, laquelle gère elle-même la consultation seule. C'est voulu,
-            et c'est ce que faisait déjà l'entrée du menu qu'elle remplace. */}
         {trEnabled && (
-          <button
-            type="button"
-            className="stat-card stat-card-clickable"
-            onClick={() => setShowTrManage(true)}
-            aria-label="Ouvrir les tickets resto payés"
-          >
-            <div className="stat-card-icon tr-utensils"><Icon name="utensils" size={14} /></div>
-            <div className="stat-card-label">Tickets resto</div>
-            <div className="stat-card-value" style={{ color: 'var(--warning-fonce)' }}>{eur(stats.trTotal)}</div>
-            <div className="stat-card-sub">
-              {eur(stats.trUserShare)} de ma poche
-            </div>
-            <span className="stat-card-arrow" aria-hidden="true">›</span>
+          <button type="button" className="pastille-cc pastille-cc-tr" onClick={() => setShowTrManage(true)} aria-label="Ouvrir les tickets resto payés">
+            <span className="pastille-cc-ico"><Icon name="utensils" size={13} /></span>
+            <span className="pastille-cc-lib"><span className="pcc-long">Tickets resto</span><span className="pcc-court">Tickets</span></span>
+            <b className="num">{eur(stats.trTotal)}</b>
+            <span className="pastille-cc-chev" aria-hidden="true">›</span>
           </button>
         )}
       </div>
