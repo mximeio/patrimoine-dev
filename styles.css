@@ -1306,9 +1306,13 @@ input[type="month"] {
    enveloppées dans `.colle`, restent fixes à gauche ; tout le reste de la vue (`.vue-rub`) va à droite. La colonne de
    gauche couvre toutes les rangées, d'où l'absence d'écart sous la première section. ── */
 @media (min-width: 1100px) {
-  .vue-rub { display: grid; grid-template-columns: 380px minmax(0, 1fr); column-gap: 32px; align-items: start; }
+  /* 460 px : la carte du compte courant porte la pastille du mois (« Septembre 2026 ») ET la projection ; à 380 elles
+     chassaient « Solde pointé ». Dans la colonne, la projection perd son mot « Projection » (le montant et le chevron
+     restent, la bulle du bouton dit ce que c'est). */
+  .vue-rub { display: grid; grid-template-columns: 460px minmax(0, 1fr); column-gap: 32px; align-items: start; }
+  .vue-rub > .colle .ct-pill-lib { display: none; }
   .vue-rub > * { grid-column: 2; }
-  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 76px; }
+  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 68px; }
   .vue-rub > .colle .pastilles-cc { grid-template-columns: 1fr 1fr; }
   .vue-rub > :not(.colle) { min-width: 0; }
   .vue-rub > .section-block:first-of-type, .vue-rub > .colle + * { margin-top: 0; }
