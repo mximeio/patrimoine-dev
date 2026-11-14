@@ -1475,7 +1475,7 @@ input[type="month"] {
 .carte-tete--physical .ct-ico, .carte-tete--physical .ct-pill { background: rgba(43,29,0,0.10); }
 .carte-tete--physical .ct-pied { border-top-color: rgba(43,29,0,0.16); }
 .carte-tete--physical .hero-kebab { color: rgba(43,29,0,0.6); }
-.carte-tete .proj-value { color: inherit; font-size: 13px; font-weight: 700; }
+.carte-tete .proj-value { color: inherit; font-size: 13px; font-weight: 600; } /* 600, comme la pastille du mois */
 .carte-tete .proj-detail { margin-top: 8px; }
 
 .stats-grid {
