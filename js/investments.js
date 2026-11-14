@@ -889,9 +889,11 @@ function OperationsJournal({ stats, onShowAll, onAdd, onEdit, onDelete }) {
           <span className="section-icon invest"><Icon name="list" size={14} /></span>
           Opérations récentes
         </div>
-        {total > 0 && (
-          <button className="btn btn-secondary btn-sm" onClick={onShowAll}>Voir toutes ({total})</button>
-        )}
+        {/* Comme le compte courant (15/11/2026, demande de l'utilisateur) : « + Nouvelle » en haut à droite, « Voir toutes »
+            passe sous la liste. */}
+        <div className="ops-outils">
+          <button type="button" className="btn btn-accent ops-nouvelle" onClick={onAdd}><Icon name="plus" size={15} /> Nouvelle</button>
+        </div>
       </div>
       <div>
         {recent.map(op => {
@@ -921,9 +923,11 @@ function OperationsJournal({ stats, onShowAll, onAdd, onEdit, onDelete }) {
           <EmptyState icon="list" title="Aucune opération" hint="Ajoute un versement ou un achat pour commencer." />
         )}
       </div>
-      <div className="section-footer">
-        <button className="btn-add" onClick={onAdd}>+ Ajouter une opération</button>
-      </div>
+      {total > 0 && (
+        <div className="section-footer">
+          <button className="btn-add" onClick={onShowAll}>Voir toutes les opérations ({total})</button>
+        </div>
+      )}
     </div>
   );
 }

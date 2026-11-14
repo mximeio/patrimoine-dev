@@ -364,11 +364,11 @@ function SavingsDetailView({ ctx, saving, onBack }) {
             <span className="section-icon savings"><Icon name="piggy" size={14} /></span>
             Opérations récentes
           </div>
-          {sortedOps.length > 8 && (
-            <button className="btn btn-secondary btn-sm" onClick={() => setModal('history-ops')}>
-              Voir toutes ({sortedOps.length})
-            </button>
-          )}
+          {/* Comme le compte courant (15/11/2026, demande de l'utilisateur) : « + Nouvelle » en haut à droite, « Voir toutes »
+              passe sous la liste. */}
+          <div className="ops-outils">
+            <button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setModal('add')}><Icon name="plus" size={15} /> Nouvelle</button>
+          </div>
         </div>
         <div>
           {sortedOps.slice(0, 8).map(op => {
@@ -393,9 +393,11 @@ function SavingsDetailView({ ctx, saving, onBack }) {
             <EmptyState icon="piggy" title="Aucune opération" hint="Ajoute un versement, un retrait ou des intérêts pour démarrer l'historique." />
           )}
         </div>
-        <div className="section-footer">
-          <button className="btn-add" onClick={() => setModal('add')}>+ Nouvelle opération</button>
-        </div>
+        {sortedOps.length > 8 && (
+          <div className="section-footer">
+            <button className="btn-add" onClick={() => setModal('history-ops')}>Voir toutes les opérations ({sortedOps.length})</button>
+          </div>
+        )}
       </div>
 
       {modal === 'add' && (
