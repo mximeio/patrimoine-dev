@@ -1306,11 +1306,13 @@ input[type="month"] {
    enveloppées dans `.colle`, restent fixes à gauche ; tout le reste de la vue (`.vue-rub`) va à droite. La colonne de
    gauche couvre toutes les rangées, d'où l'absence d'écart sous la première section. ── */
 @media (min-width: 1100px) {
-  /* 460 px : la carte du compte courant porte la pastille du mois (« Septembre 2026 ») ET la projection ; à 380 elles
-     chassaient « Solde pointé ». Dans la colonne, la projection perd son mot « Projection » (le montant et le chevron
-     restent, la bulle du bouton dit ce que c'est). */
-  .vue-rub { display: grid; grid-template-columns: 460px minmax(0, 1fr); column-gap: 32px; align-items: start; }
-  .vue-rub > .colle .ct-pill-lib { display: none; }
+  /* 510 px : la carte du compte courant porte la pastille du mois (« Septembre 2026 ») ET la projection ; à 380 elles
+     chassaient « Solde pointé ». */
+  .vue-rub { display: grid; grid-template-columns: 510px minmax(0, 1fr); column-gap: 32px; align-items: start; }
+  /* « Projection » reste écrit (demande de l'utilisateur) : la pastille du mois et les pastilles de la carte rétrécissent
+     un peu dans la colonne. Mesuré dans son Chrome : « Solde pointé » entier, avec la marge de « Septembre 2026 ». */
+  .vue-rub > .colle .carte-tete .ct-pill, .vue-rub > .colle .carte-tete .ct-pill-btn { font-size: 12px; padding: 0 10px; }
+  .vue-rub > .colle .month-chip-hero .mc-label { font-size: 12.5px; }
   .vue-rub > * { grid-column: 2; }
   /* PAS de position: sticky : à l'ouverture d'une fenêtre, le gel du défilement la faisait sauter de ~65 px (relevé de
      l'utilisateur, 15/11/2026). La colonne reste à gauche, sans suivre le défilement. */
