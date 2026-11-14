@@ -1302,6 +1302,22 @@ input[type="month"] {
 .op-row.op-row, .recurring-row.recurring-row, .tx-row.tr-row.tr-row { min-height: 46px; padding-top: 3px; padding-bottom: 3px; align-items: center; }
 .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row { min-height: 36px; padding-top: 3px; padding-bottom: 3px; }
 
+/* ── LES FENÊTRES SUR ORDINATEUR (15/11/2026, relevé de l'utilisateur : « c'est écrit très gros sur ordi ») ──
+   Les 16 px des champs (sous 16 px, Safari iPhone zoome) et les 52 px des boutons (cible du doigt) n'ont pas lieu d'être
+   avec une souris. Seulement sur un écran large ET à survol : un téléphone, même couché, garde ses tailles. */
+@media (min-width: 641px) and (hover: hover) {
+  .modal .input, .modal .note-field textarea, .modal select.input { font-size: 14px; }
+  .modal .input { padding: 9px 12px; border-radius: 12px; }
+  .modal .unite-eur::after { font-size: 14px; }
+  .modal .label { font-size: 12.5px; margin-bottom: 5px; }
+  .modal .btn.btn-lg, .modal .form-actions > .btn { min-height: 44px; font-size: 14.5px; border-radius: 13px; }
+  .modal .form-actions > .btn-delete-line { width: 44px; border-radius: 13px; }
+  .modal .types-c button { min-height: 46px; }
+  .modal .types-c--compact button { min-height: 40px; font-size: 13.5px; }
+  .modal .modal-header .modal-title { font-size: 16px; }
+  .modal .modal-ico { width: 34px; height: 34px; border-radius: 11px; }
+}
+
 /* ── L'ÉCRAN DE CONNEXION C' (modernisation, 14/11/2026 — auth.js) ── */
 .auth { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 20px; background: var(--bg); }
 .auth-colonne { width: 100%; max-width: 400px; }
