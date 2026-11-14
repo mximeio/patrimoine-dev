@@ -1549,6 +1549,13 @@ input[type="month"] {
 .section-block.ops-c .tx-row.composite-row + .composite-comps { padding-left: 12px; padding-right: 4px; } /* le bloc téléphone pose 35 px à gauche */
 .ops-c .tx-check.checked::after { font-size: 11px; }
 .ops-c .composite-comps { margin: -5px 0 6px 54px; /* piste A (14/11/2026) : le trait sous la 1re lettre du libellé parent (54 px), le texte 14 px après */ /* −5 px : composite → 1re composante = 36 px, l'écart entre deux composantes (41 avant) */ padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+/* Le trait ne longe que les composantes (14/11/2026, remarque de l'utilisateur) : la bordure, qui suivait tout le bloc, entrait
+   de 5 px dans la ligne parente (marge −5) et dépassait la dernière composante. Elle devient transparente (elle garde sa place,
+   rien ne bouge) et le trait est dessiné de la hauteur du texte de la 1re composante à celle de la dernière (8 px en retrait). */
+.ops-c .composite-comps,
+.liste-rec .recurring-row.composite-row + .composite-comps { position: relative; border-left-color: transparent; }
+.ops-c .composite-comps::before,
+.liste-rec .recurring-row.composite-row + .composite-comps::before { content: ""; position: absolute; left: -2px; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: #e1e4ec; pointer-events: none; }
 .ops-c .composite-comp-row { border-bottom: 0; padding: 3px 0; min-height: 36px; }
 
 /* ── LES AUTRES LISTES D'OPÉRATIONS À LA HAUTEUR DU COMPTE COURANT (15/11/2026, demande de l'utilisateur) : 46 px, 3 px de
