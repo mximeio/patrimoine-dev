@@ -496,6 +496,7 @@ function Icon({ name, size = 16, color }) {
     // ⚠️ Il REMPLACE `arrowLeft`, qui ne servait qu'aux trois fils d'Ariane et
     // part avec eux — ne pas réintroduire une seconde façon de dire « retour ».
     chevronLeft: <polyline points="15 18 9 12 15 6"/>,
+    chevronRight: <polyline points="9 18 15 12 9 6"/>,
     // Les quatre icônes de rubrique ont été uniformisées le 21/10/2026, mesurées sur la grille de 24 : l'encre
     // allait de 12,8 % (barres) à 33,6 % (pièce), elle va de 21,8 à 30,1 %, tout est centré. Barres posées sur
     // un axe (14 × 18 → 20 × 20), pièce réduite d'un cran (rayon 10 → 9), tirelire recentrée (décalée de 1,2

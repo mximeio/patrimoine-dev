@@ -114,76 +114,113 @@ function SettingsView({ ctx }) {
       <DataActionsCard ctx={ctx} />
 
       <h3 className="settings-group-title">Mon compte</h3>
-      <PasswordChangeCard ctx={ctx} />
-      <SignOutCard ctx={ctx} />
+      <MonCompteGroupe ctx={ctx} />
     </div>
   );
 }
 
-function SignOutCard({ ctx }) {
+// « Mon compte » (15/11/2026, Mockup-Mot-De-Passe, version A) : UNE carte de deux rangées — qui est connecté (avec « Se
+// déconnecter »), et le mot de passe, dont la rangée ouvre une petite fenêtre dédiée. Les trois champs n'occupent plus les
+// Paramètres en permanence pour un geste qu'on fait rarement.
+function MonCompteGroupe({ ctx }) {
   const { user } = ctx;
+  const [mdpOuvert, setMdpOuvert] = useState(false);
   const handleSignOut = () => {
     if (!confirm('Te déconnecter de ce compte ?')) return;
     Adapter.signOut();
   };
   return (
-    <div className="settings-card settings-ligne">
-      <span className="rang-reglage-txt">
-        <b>Compte connecté</b>
-        <small>{user.email}</small>
-      </span>
-      <button className="btn btn-danger-doux" onClick={handleSignOut}>
-        <Icon name="logout" size={14} /> Se déconnecter
+    <div className="settings-groupe">
+      <div className="rang-reglage">
+        <span className="rang-reglage-txt">
+          <b>Compte connecté</b>
+          <small>{user.email}</small>
+        </span>
+        <button className="btn btn-danger-doux" onClick={handleSignOut}>
+          <Icon name="logout" size={14} /> Se déconnecter
+        </button>
+      </div>
+      <div className="rang-reglage">
+        <span className="rang-reglage-txt">
+          <b>Mot de passe</b>
+          <small>{MOT_DE_PASSE_MIN} caractères minimum</small>
+        </span>
+        <button type="button" className="btn-modifier-rang" onClick={() => setMdpOuvert(true)}>
+          Modifier <Icon name="chevronRight" size={15} />
+        </button>
+      </div>
+      {mdpOuvert && <PasswordChangeModal ctx={ctx} onClose={() => setMdpOuvert(false)} />}
+    </div>
+  );
+}
+
+// Un champ mot de passe avec son œil (afficher / masquer ce qu'on tape).
+function ChampMotDePasse({ value, onChange, autoComplete, erreur }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="champ-mdp">
+      <input
+        type={visible ? 'text' : 'password'}
+        className={`input${erreur ? ' input-erreur' : ''}`}
+        aria-invalid={erreur ? 'true' : undefined}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        autoComplete={autoComplete}
+      />
+      <button type="button" className="champ-mdp-oeil" onClick={() => setVisible(v => !v)} aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+        <Icon name={visible ? 'eyeOff' : 'eye'} size={17} />
       </button>
     </div>
   );
 }
 
-function PasswordChangeCard({ ctx }) {
+// La fenêtre « Mot de passe ». Une erreur suit la règle de l'app (DEV v1208) : le champ fautif passe en rouge et
+// l'explication vient en notification ; plus de bandeau rouge dans le formulaire.
+function PasswordChangeModal({ ctx, onClose }) {
   const { showToast } = ctx;
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [confirmation, setConfirmation] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const [fautif, setFautif] = useState(null); // 'actuel' | 'nouveau' | 'confirmation'
 
   const submit = async (e) => {
     e.preventDefault();
-    setError(null);
-    if (next.length < MOT_DE_PASSE_MIN) { setError(MESSAGE_MOT_DE_PASSE_COURT); return; }
-    if (next !== confirm) { setError('Les deux nouveaux mots de passe ne correspondent pas.'); return; }
+    setFautif(null);
+    if (!current) { setFautif('actuel'); return showToast('Saisis ton mot de passe actuel.', 'error'); }
+    if (next.length < MOT_DE_PASSE_MIN) { setFautif('nouveau'); return showToast(MESSAGE_MOT_DE_PASSE_COURT, 'error'); }
+    if (next !== confirmation) { setFautif('confirmation'); return showToast('Les deux nouveaux mots de passe ne correspondent pas.', 'error'); }
     setBusy(true);
     try {
       await Adapter.changePassword(current, next);
-      setCurrent(''); setNext(''); setConfirm('');
       showToast('Mot de passe modifié', 'success');
+      onClose();
     } catch (err) {
-      setError(Adapter.translateAuthError(err));
+      setFautif('actuel');
+      showToast(Adapter.translateAuthError(err), 'error');
     } finally { setBusy(false); }
   };
 
   return (
-    <div className="settings-card">
-      <h2>Mot de passe</h2>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 380 }}>
-        {error && <div style={{ padding: 10, background: 'var(--danger-light)', color: 'var(--danger-fonce)', fontSize: 13, borderRadius: 8 }}>{error}</div>}
+    <Modal title="Mot de passe" icon="lock" tone="neutre" subtitle="Mon compte" onClose={onClose} dirty={!!(current || next || confirmation)}>
+      <form noValidate onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
           <label className="label">Mot de passe actuel</label>
-          <input type="password" className="input" value={current} onChange={e => setCurrent(e.target.value)} autoComplete="current-password" required />
+          <ChampMotDePasse value={current} onChange={setCurrent} autoComplete="current-password" erreur={fautif === 'actuel'} />
         </div>
         <div>
           <label className="label">Nouveau mot de passe<AideChamp>{MOT_DE_PASSE_MIN} caractères minimum.</AideChamp></label>
-          <input type="password" className="input" value={next} onChange={e => setNext(e.target.value)} autoComplete="new-password" minLength={MOT_DE_PASSE_MIN} required />
+          <ChampMotDePasse value={next} onChange={setNext} autoComplete="new-password" erreur={fautif === 'nouveau'} />
         </div>
         <div>
           <label className="label">Confirmer le nouveau mot de passe</label>
-          <input type="password" className="input" value={confirm} onChange={e => setConfirm(e.target.value)} autoComplete="new-password" minLength={MOT_DE_PASSE_MIN} required />
+          <ChampMotDePasse value={confirmation} onChange={setConfirmation} autoComplete="new-password" erreur={fautif === 'confirmation'} />
         </div>
-        <button type="submit" className="btn btn-secondary" disabled={busy} style={{ alignSelf: 'flex-start' }}>
-          {busy ? 'Modification…' : 'Modifier le mot de passe'}
+        <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>
+          {busy ? 'Enregistrement…' : 'Enregistrer'}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

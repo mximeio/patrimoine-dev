@@ -1288,6 +1288,14 @@ input[type="month"] {
 .rang-reglage-txt b { font-size: 14px; font-weight: 500; color: var(--text); }
 .rang-reglage-txt small { font-size: 12px; font-weight: 400; color: var(--text-muted); line-height: 1.35; }
 .settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+/* « Modifier › » au bout d'une rangée de réglage (mot de passe, 15/11/2026) : un lien-bouton discret, comme une rangée des
+   réglages de l'iPhone. */
+.btn-modifier-rang { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+@media (hover: hover) { .btn-modifier-rang:hover { color: var(--text); } }
+/* Champ mot de passe avec son œil. */
+.champ-mdp { position: relative; }
+.champ-mdp .input { padding-right: 46px; }
+.champ-mdp-oeil { position: absolute; top: 0; right: 0; bottom: 0; width: 46px; display: grid; place-items: center; border: 0; background: none; color: var(--text-muted); cursor: pointer; }
 .settings-card.settings-ligne small { overflow-wrap: anywhere; }
 .btn.btn-danger-doux { background: var(--danger-light); color: var(--danger-fonce); border-color: transparent; flex: none; }
 @media (hover: hover) { .btn.btn-danger-doux:hover { background: var(--danger-light); filter: brightness(0.96); } }
