@@ -169,7 +169,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
                 25 845 € » pour deux nombres pourtant différents. */}
       <CarteDeTete
         module="investments" libelle="Valeur totale" montant={consolidated.totalValue}
-        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div"> · +{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{consolidated.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{consolidated.totalGainPct.toFixed(2)}%{consolidated.hasDistributing && consolidated.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(consolidated.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setMajGroupee(true)}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="refresh" size={14} /></span>
                 Mettre à jour les valeurs
@@ -439,7 +439,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
                 même nombre s'afficherait à deux précisions à quelques centimètres. */}
       <CarteDeTete
         module="investments" libelle="Valeur" montant={stats.totalValue}
-        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div"> · +{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
+        droite={<>{stats.totalPurchased > 0 && <span className="ct-pill">{positive ? '+' : ''}{stats.totalGainPct.toFixed(2)}%{stats.hasDistributing && stats.totalDividends > 0 && <span className="ct-pill-div">{'\u00a0· +'}{fmt(stats.totalDividends)} € de div.</span>}</span>}<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
               <button className="dropdown-item" onClick={() => setModal('add')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
                 Nouvelle opération
