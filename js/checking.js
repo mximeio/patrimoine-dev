@@ -2310,19 +2310,8 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
   );
 }
 
-// MODERNISATION C' (15/11/2026, maquette cartes2.html) : la ligne n'a plus de flèche ni de crayon. Le LIBELLÉ devient la
-// poignée (appui long au doigt, glisser à la souris — dnd.js) ET la porte de la modification (simple toucher). Ni sur un
-// mois figé (le crayon y était déjà masqué), ni au clic qui termine un glisser, ni sur un bouton du libellé (chevron,
-// bulle de note).
-// ⚠️ PAS AU DOIGT (15/11/2026, demande de l'utilisateur) : sur téléphone, un toucher sur la ligne ouvrait la modification sans
-// le vouloir (en pointant, en faisant défiler) ; le crayon, revenu sur chaque ligne, suffit. À la souris, le clic reste.
-function ouvrirDepuisLibelle(e, onEdit, actif) {
-  if (!onEdit || !actif) return;
-  if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
-  if (e.target.closest('button, a, input, .op-note, .infotip-txt')) return;
-  if (glisserVientDeFinir()) return;
-  onEdit();
-}
+// Plus d'ouverture de la modification au clic / toucher du libellé (15/11/2026, décision de l'utilisateur : « il y a un bouton
+// crayon, ce n'est pas pour rien ») — elle datait de la v1140, quand la ligne n'avait plus de crayon. Seul le crayon modifie.
 
 function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, onEdit, onDrop, datesMode, mKey, noDrag = false, fading = false }) {
   // En mode dates OU mois figé (noDrag, v489) : pas de drag handle ni de
@@ -2342,8 +2331,7 @@ function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, on
       <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
         <div className={`tx-check ${item.pointed ? 'checked' : ''}`} />
       </div>
-      <div className={`op-main${onEdit && !noDrag ? ' op-main-ouvre' : ''}`} title={item.label || ''}
-        onClick={(e) => ouvrirDepuisLibelle(e, onEdit, !noDrag)}>
+      <div className="op-main" title={item.label || ''}>
         <span className="op-label">
           {labelText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>(sans libellé)</span>}
         </span>
@@ -2395,8 +2383,7 @@ function CompositeTxRow({ item, variant, scope, list, index, expanded, onToggle,
         <div className="tx-check-hit" onClick={() => onUpdate({ pointed: !item.pointed })} title={item.pointed ? 'Pointé' : 'Prévisionnel'}>
           <div className={`tx-check ${item.pointed ? 'checked' : ''}`} />
         </div>
-        <div className={`op-main${onEdit && !noDrag ? ' op-main-ouvre' : ''}`} title={item.label || ''}
-          onClick={(e) => ouvrirDepuisLibelle(e, onEdit, !noDrag)}>
+        <div className="op-main" title={item.label || ''}>
           <span className="op-label-chevron">
             <span className="op-label">
               {labelText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>(sans libellé)</span>}

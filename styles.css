@@ -1330,7 +1330,6 @@ input[type="month"] {
    a ainsi un repère de 20 px avant son libellé. Zone de toucher (.tx-check-hit) et colonne inchangées. */
 .ops-c .tx-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid #cfd4de; }
 .ops-c .tx-check.checked { background: var(--accent); border-color: var(--accent); }
-.ops-c .op-main-ouvre { cursor: pointer; }
 /* LA POIGNÉE (six points, 15/11/2026, demande de l'utilisateur) : à gauche des lignes du compte, des récurrents, des tickets
    resto et de leurs composantes. Grise, curseur de prise ; invisible là où l'on ne glisse pas (mois figé, mode dates),
    sans libérer sa colonne pour que rien ne bouge d'un mois à l'autre. */
