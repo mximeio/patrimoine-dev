@@ -1158,6 +1158,9 @@ input[type="month"] {
   z-index: 5;
 }
 .card.carte-tete { padding: 11px 16px 10px !important; overflow: visible; }
+/* Le CORPS de la carte (intitulé, montant, rangée du bas) a une hauteur FIXE : 144 − 21 px de padding. Ce qui se déplie
+   (`dessous`, le détail de la projection) vient après, sans rien déplacer au-dessus. */
+.ct-corps { display: flex; flex-direction: column; min-height: 123px; flex: none; }
 .ct-deco { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -1; pointer-events: none; }
 /* Reflet et anneau ANCRÉS EN HAUT et dimensionnés pour 136 px : quand la carte grandit (détail de la projection déplié),
    ils restent en place au lieu de glisser et de s'étirer avec le bas (relevé de l'utilisateur, 15/11/2026). Mêmes

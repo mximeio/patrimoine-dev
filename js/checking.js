@@ -696,8 +696,7 @@ function CheckingView({ ctx, onBack }) {
           { label: 'Sorties pointées', court: 'Sorties', value: `${fmt(stats.exitsPointed)} / ${fmt(stats.exitsAll)} €`,
             fil: stats.exitsAll > 0 ? (stats.exitsPointed / stats.exitsAll) * 100 : 0 },
         ]}
-      >
-        {projOpen && (
+        dessous={projOpen && (
           <div className="proj-detail num">
             <div className="pd-row"><span>Reste de {monthLabel(prevMonthKey(curKey))} (projeté)</span><b>{eur(stats.carryProjected)}</b></div>
             <div className="pd-row"><span>+ Entrées du mois</span><b>+ {fmt(stats.entriesAll)} €</b></div>
@@ -715,7 +714,7 @@ function CheckingView({ ctx, onBack }) {
             )}
           </div>
         )}
-      </CarteDeTete>
+      />
 
       {/* DEUX PASTILLES FINES à la place des quatre cartes chiffrées (modernisation C', 14/11/2026, haut de la
           fusion A + C) : « Entrées / Sorties à pointer » sont passées dans le pied de la carte de tête, avec leur jauge.

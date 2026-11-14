@@ -817,7 +817,10 @@ function MontantTete({ value }) {
 // `children` : ce qui se déplie sous la carte (le détail de la projection du compte courant).
 // `sansIcone` : la carte du compte courant porte déjà la pastille de projection et le « ⋯ » ; l'icône, décorative, y
 // laissait la pastille collée à l'intitulé à 390 pt (relevé sur iPhone le 15/11/2026). La maquette ne l'y met pas.
-function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIcone = false }) {
+// `dessous` : ce qui se DÉPLIE sous la carte (le détail de la projection). Il vit hors du corps de la carte, dont la hauteur
+// est fixe : sans ça, la rangée du bas remontait de ~7 px à l'ouverture (relevé de l'utilisateur, 15/11/2026).
+// `children` reste DANS le corps (la courbe de l'accueil, posée en bas).
+function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous, sansIcone = false }) {
   const cellules = (pied || []).filter(Boolean);
   // Plus d'icône dans aucune carte de tête (15/11/2026, comme la maquette C' et à la demande de l'utilisateur) : retirée
   // d'abord du compte courant, où elle serrait la pastille de projection. `sansIcone` reste accepté, sans effet.
@@ -827,6 +830,7 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIco
       {/* Le reflet et l'anneau décoratifs vivent dans ce calque, SEUL rogné : la carte, elle, laisse dépasser le menu « ⋯ »
           et le calendrier du mois (coupés sur iPhone tant que la carte rognait tout, relevé du 15/11/2026). */}
       <span className="ct-deco" aria-hidden="true" />
+      <div className="ct-corps">
       <div className="ct-l1">
         <span className="ct-lib">{libelle}</span>
         <div className="ct-droite">
@@ -847,6 +851,8 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, sansIco
         </div>
       )}
       {children}
+      </div>
+      {dessous}
     </div>
   );
 }
