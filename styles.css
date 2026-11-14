@@ -1159,9 +1159,12 @@ input[type="month"] {
 }
 .card.carte-tete { padding: 11px 16px 10px !important; overflow: visible; }
 .ct-deco { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -1; pointer-events: none; }
-.ct-deco::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+/* Reflet et anneau ANCRÉS EN HAUT et dimensionnés pour 136 px : quand la carte grandit (détail de la projection déplié),
+   ils restent en place au lieu de glisser et de s'étirer avec le bas (relevé de l'utilisateur, 15/11/2026). Mêmes
+   positions qu'avant à 136 px : 136 + 70 − 210 = −4 px. */
+.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 136px; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
-.ct-deco::after { content: ""; position: absolute; right: -44px; bottom: -70px; width: 210px; height: 210px; z-index: -1;
+.ct-deco::after { content: ""; position: absolute; right: -44px; top: -4px; width: 210px; height: 210px; z-index: -1;
   border-radius: 50%; border: 30px solid rgba(255,255,255,0.08); pointer-events: none; }
 /* Hauteur FIXÉE à 26 px : la pastille du mois (32 px, hauteur verrouillée depuis la v493) déborde de 3 px en haut et en
    bas, dans le padding, au lieu de faire grandir la carte (137,8 px mesurés sur ordinateur le 15/11/2026). */
