@@ -1283,7 +1283,14 @@ input[type="month"] {
 .ops-c .tx-check.checked { background: var(--accent); border-color: var(--accent); }
 .ops-c .op-main-ouvre { cursor: pointer; }
 /* Crayon centré entre le « € » et le bout de la ligne : il était à 14 px du « € » et à 8 px du bord (mesuré, 15/11/2026). */
+/* CRAYON CENTRÉ entre le « € » et le bord de la ligne, dans TOUTES les listes d'opérations (15/11/2026, mesuré à 430, 599
+   et 1 280 px) : les marges des lignes diffèrent d'une liste et d'un format à l'autre, d'où un décalage par cas. */
 .section-block.ops-c .tx-row > .tx-edit { margin-left: -3px; }
+.op-row > .tx-edit, .recurring-row > .tx-edit, .tx-row.tr-row > .tx-edit { transform: translateX(2px); }
+@media (max-width: 768px) {
+  .section-block.ops-c .tx-row > .tx-edit { margin-left: -2px; }
+  .op-row > .tx-edit { transform: translateX(3px); }
+}
 /* Le bouton œil a la forme et la taille de « + Nouvelle », en bouton secondaire (demande de l'utilisateur, 15/11/2026). */
 .ops-c .ops-eye-pill { height: 37px; margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--surface); color: var(--text-light); font-size: 13px; font-weight: 500; }
