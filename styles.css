@@ -1552,15 +1552,9 @@ input[type="month"] {
 /* Les deux pastilles fines sous la carte du compte courant : « Reste mois préc. » et « Tickets resto ». */
 .pastilles-cc { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: -4px 0 16px; }
 .ind-fen { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin: 0 0 4px; }
-.ind-fen-cel { min-width: 0; padding: 8px 12px; border-radius: 12px; background: var(--surface-alt); border: 1px solid var(--border); }
-.ind-fen-cel small { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ind-fen-cel b { display: block; margin-top: 1px; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Téléphone : trois cases (actif) ne laissent que ~100 px chacune — « +1 431.00 € » y demandait 88 px pour 74 (mesuré). */
-@media (max-width: 420px) {
-  .ind-fen { gap: 6px; }
-  .ind-fen-cel { padding: 7px 8px; }
-  .ind-fen-cel b { font-size: 13.5px; }
-}
+.ind-fen-cel { min-width: 0; padding: 8px 10px; /* 10 px de côté, comme les pastilles : « +1 431.00 € » tient à 375 px (78 px pour 76) */ border-radius: 12px; background: var(--surface-alt); border: 1px solid var(--border); }
+.ind-fen-cel small { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ind-fen-cel b { display: block; margin-top: 1px; font-size: 13px; font-weight: 700; /* 13 px partout, comme les pastilles du compte (15/11/2026) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pastille-cc {
   display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; padding: 0 10px; border-radius: 12px;
   background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); font: inherit; text-align: left;
