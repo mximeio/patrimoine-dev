@@ -2303,17 +2303,17 @@ button.stat-card {
 .toggle { display: inline-flex; align-items: center; cursor: pointer; }
 .toggle input { display: none; }
 .toggle-slider {
-  position: relative; width: 46px; height: 28px; /* 46 × 28 depuis la modernisation C' (15/11/2026) */
+  position: relative; width: 44px; height: 26px; /* 44 × 26 et indigo (15/11/2026, Mockup-Interrupteur, variante 2) : 46 × 28 vert foncé avant, 40 × 22 indigo en PROD */
   background: var(--border-strong); border-radius: 999px;
   transition: background 0.15s;
 }
 .toggle-slider::after {
   content: ''; position: absolute; top: 3px; left: 3px;
-  width: 22px; height: 22px; background: white;
+  width: 20px; height: 20px; background: white;
   border-radius: 50%; box-shadow: var(--shadow-xs);
   transition: transform 0.15s;
 }
-.toggle input:checked + .toggle-slider { background: var(--success-fonce); } /* vert depuis la modernisation C' (15/11/2026) */
+.toggle input:checked + .toggle-slider { background: var(--accent); } /* l'indigo de l'app : un vert se confondait avec les tuiles de module voisines */
 .toggle input:checked + .toggle-slider::after { transform: translateX(18px); }
 
 /* Settings */
