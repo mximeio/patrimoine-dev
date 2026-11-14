@@ -788,7 +788,9 @@ function SupportRow({ position, lastDate }) {
       {/* ⚠️ L'initiale reste celle de `supportName` (ticker ou nom court), pas du
           nom principal affiché : elle doit rester stable et courte, et le nom
           complet commence souvent par le même mot. */}
-      <span className="support-icon" style={{ background: fondPastille(position.color || COLORS.muted), color: couleurIcone(position.color || COLORS.muted) }}>
+      {/* Avatar VERT, la couleur de la rubrique, comme la maquette C' (15/11/2026, demande de l'utilisateur) : la couleur
+          propre du support ne sert plus qu'aux graphiques de répartition, où elle distingue les parts. */}
+      <span className="support-icon" style={{ background: fondPastille(MODULE_COLORS.investments), color: couleurIcone(MODULE_COLORS.investments) }}>
         {initiales(position.ticker || supportName(position))}
       </span>
       <div className="support-main">
@@ -1456,8 +1458,8 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                 {etfs.map(e => (
                   <div key={e.id} className="maj-sup">
                     <span className="maj-sup-lbl">
-                      <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
-                      {/* Maquette C' : le nom sur une ligne, le libellé secondaire DESSOUS (ils ne se disputent plus la largeur). */}
+                      {/* Maquette C' : pas de pastille de couleur sur la ligne du support ; le nom sur une ligne, le libellé
+                          secondaire DESSOUS (ils ne se disputent plus la largeur). */}
                       <span className="maj-sup-t">
                         <NomSupport etf={e} Balise="b" />
                         <LibelleSupport etf={e} />
@@ -1550,9 +1552,10 @@ function UpdateValuesForm({ data, onSubmit, onDirtyChange, showToast }) {
         {(data.etfs || []).map(e => (
           <div key={e.id} className="maj-sup">
             <span className="maj-sup-lbl">
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
-              <NomSupport etf={e} Balise="b" />
-              <LibelleSupport etf={e} prefixe=" — " />
+              <span className="maj-sup-t">
+                <NomSupport etf={e} Balise="b" />
+                <LibelleSupport etf={e} />
+              </span>
               <DeltaMontant valeur={deltaDuSupportSeul(e)} />
             </span>
             <input
