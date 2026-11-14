@@ -1821,7 +1821,7 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
   const openEdit = (item) => { setEditing(item); setShowForm(true); };
 
   return (
-    <div className="section-block ops-c">
+    <div className={`section-block ops-c${datesMode ? ' mode-dates' : ''}`}>
       {/* MODERNISATION C' (maquette cartes2.html, écran « compte courant ») : la liste n'est plus dans une carte ; son
           titre « Opérations » porte l'œil et le bouton « + Nouvelle », qui remplace « + Nouvelle opération » du bas. */}
       <div className="section-header">
@@ -2511,7 +2511,7 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
   const openEdit = (item) => { setEditing(item); setShowForm(true); };
 
   return (
-    <div className="section-block">
+    <div className={`section-block${datesMode ? ' mode-dates' : ''}`}>
       {/* v576 : pas d'en-tête interne — TrSection ne vit plus que dans la popup
           « Tickets resto payés — {mois} », dont le titre suffit (même principe
           que la modale des opérations récurrentes). */}

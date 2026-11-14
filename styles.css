@@ -1421,11 +1421,11 @@ input[type="month"] {
 .section-block.ops-c .tx-row.with-edit,
 .section-block.ops-c .tx-row.composite-row.with-edit,
 .frozen-month .section-block.ops-c .tx-row.with-edit,
-.frozen-month .section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: 14px 30px minmax(0, 1fr) var(--amt-w, 112px); gap: 5px; padding: 3px 4px 3px 0; min-height: 46px; } /* 46 px : resserré à la demande de l'utilisateur (56 sur la maquette, ~45 avant) */
+.frozen-month .section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) 30px minmax(0, 1fr) var(--amt-w, 112px); gap: 5px; padding: 3px 4px 3px 0; min-height: 46px; } /* 46 px : resserré à la demande de l'utilisateur (56 sur la maquette, ~45 avant) */
 /* Le crayon REVIENT (15/11/2026, demande de l'utilisateur) : comme les autres listes d'opérations. Le libellé reste
    touchable. Sur un mois figé, il reste masqué (règle d'origine), d'où la colonne sans crayon juste au-dessus. */
 .section-block.ops-c .tx-row.with-edit,
-.section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: 14px 30px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
+.section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) 30px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
 .section-block.ops-c .tx-check-hit { margin: -3px 0 -3px 0; }
 /* Case CENTRÉE dans sa colonne de 30 px (15/11/2026, demande de l'utilisateur) : depuis qu'elle fait 20 px, calée à gauche elle
    laissait 15 px d'air avant le libellé et touchait presque la poignée ; centrée, ~11 px de chaque côté. ⚠️ Le retour à gauche
@@ -1458,9 +1458,9 @@ input[type="month"] {
 @media (max-width: 768px) { .liste-rec .recurring-row.recurring-row > .tx-edit { margin-left: -2px; } }
 /* Tickets resto payés : même géométrie que les récurrents (15/11/2026) — poignée au bord, libellé à 24 px, montant et crayon
    aux places du compte. Classes doublées : passe devant les grilles .tx-row.tr-row (ordinateur, téléphone, mois figé). */
-.modal .tx-row.tr-row.tr-row { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
-.modal .tx-row.tr-row.tr-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
-.modal .frozen-month .tx-row.tr-row.tr-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); }
+.modal .tx-row.tr-row.tr-row { grid-template-columns: var(--grip-col, 14px) minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
+.modal .tx-row.tr-row.tr-row.with-edit { grid-template-columns: var(--grip-col, 14px) minmax(0, 1fr) var(--amt-w, 112px) 22px; }
+.modal .frozen-month .tx-row.tr-row.tr-row.with-edit { grid-template-columns: var(--grip-col, 14px) minmax(0, 1fr) var(--amt-w, 112px); }
 .modal .tx-row.tr-row.tr-row > .op-main { padding-left: 5px; }
 .modal .tx-row.tr-row.tr-row > .tx-edit { transform: none; margin-left: -3px; }
 @media (max-width: 768px) { .modal .tx-row.tr-row.tr-row > .tx-edit { margin-left: -2px; } }
@@ -1488,6 +1488,17 @@ input[type="month"] {
 .section-block.ops-c .tx-row > .tx-grip.dnd-handle::before,
 .liste-rec .recurring-row.recurring-row > .tx-grip.dnd-handle::before,
 .modal .tx-row.tr-row.tr-row > .tx-grip.dnd-handle::before { inset: 0; }
+/* MODE DATES (14/11/2026, demande de l'utilisateur) : les opérations y sont triées par date, on ne glisse donc rien — la
+   poignée sort et sa colonne avec, la case revient au bord. Réglage du profil, il ne change pas d'un mois à l'autre ; sur un
+   mois figé, la poignée reste invisible à sa place (rien ne bouge d'un mois à l'autre). La poignée reste dans le DOM, à 0 de
+   large, pour ne pas décaler le placement des cellules de la grille. */
+.mode-dates { --grip-col: 0px; }
+.mode-dates .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
+/* Reste l'écart de 5 px de la colonne vide : la case (et, dans les tickets resto, le libellé) le reprend pour toucher le bord
+   gauche, celui du titre « Opérations ». Le libellé garde sa place dans la grille ; les composantes suivent (trait 10 px avant). */
+.mode-dates .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 0; }
+.ops-c.mode-dates .composite-comps { margin-left: 30px; }
+.modal .mode-dates .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 0; }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
