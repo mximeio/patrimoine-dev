@@ -228,12 +228,13 @@ input[type="month"] {
    tickets resto. Le compte courant et l'accueil gardent l'indigo de --accent. */
 [data-rubrique="savings"] .btn-accent { background: #0e7490; border-color: #0e7490; }
 [data-rubrique="investments"] .btn-accent { background: #047857; border-color: #047857; }
-[data-rubrique="physical"] .btn-accent { background: #b45309; border-color: #b45309; }
+/* Actifs : ambre CLAIR et texte foncé, comme la pastille d'en-tête et la maquette (le brun #b45309 faisait trop sombre, 15/11/2026). */
+[data-rubrique="physical"] .btn-accent { background: #f2b33d; border-color: #f2b33d; color: #2b1d00; }
 .btn-accent.btn-tr { background: #a95b00; border-color: #a95b00; }
 @media (hover: hover) {
   [data-rubrique="savings"] .btn-accent:hover { background: #155e75; box-shadow: none; }
   [data-rubrique="investments"] .btn-accent:hover { background: #065f46; box-shadow: none; }
-  [data-rubrique="physical"] .btn-accent:hover { background: #92400e; box-shadow: none; }
+  [data-rubrique="physical"] .btn-accent:hover { background: #e8a521; box-shadow: none; }
   .btn-accent.btn-tr:hover { background: #8a4a00; box-shadow: none; }
 }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
@@ -1404,6 +1405,22 @@ input[type="month"] {
 .zone-danger small { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
 .zone-danger .btn { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
 .modal .maj-total b { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+/* « Mettre à jour les valeurs » façon maquette C' (fenValeurs, 15/11/2026) : enveloppe en groupe gris sans bordure, lignes de
+   support à deux étages (nom, libellé dessous) séparées d'un filet, sous-total en tête. */
+.modal .maj-env { background: var(--surface-alt); border: 0; border-radius: 18px; padding: 4px 14px; }
+.modal .maj-env-nom { font-weight: 700; font-size: 14.5px; }
+.modal .maj-env-montant { font-size: 14.5px; font-weight: 700; }
+.modal .maj-sup { border-top: 1px solid var(--border); min-height: 56px; padding: 6px 0; }
+.modal .maj-sup:first-child { margin-top: -2px; }
+.modal .maj-sup .input { height: 42px; text-align: right; }
+.maj-sup-t { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.maj-sup-t b { font-size: 14.5px; }
+/* Pas de display: block sur le libellé : la grille suffit, et le masquage long/court (.support-name-*) doit rester maître. */
+.modal .maj-vide { padding: 6px 0 10px; }
+.total-fen .maj-delta { margin: 0 8px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 0; }
+/* `.total-fen span` (gris de l'intitulé) attrapait aussi le delta : on lui rend sa couleur. */
+.total-fen .maj-delta.value-positive { color: var(--success-fonce); }
+.total-fen .maj-delta.value-negative { color: var(--danger-fonce); }
 .modal .maj-sous-total b { font-weight: 800; }
 @media (min-width: 641px) { .recurring-row .composite-tag { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: var(--surface-alt); color: var(--text-light); margin-left: 6px; } } /* sur téléphone, le chevron suffit (comme le compte) : l'étiquette coupait le libellé */
 
@@ -1872,9 +1889,15 @@ button.stat-card {
    autonome) : on reprend le MÊME petit bouton ± séparé que les composantes,
    suivi d'un champ bordé qui remplit la largeur (design cohérent avec la modale
    des lignes composites). */
-.signed-amount.is-block { width: 100%; gap: 8px; }
-.signed-amount.is-block .signed-amount-btn { height: 40px; width: 40px; font-size: 17px; }
-.signed-amount.is-block .input { flex: 1; min-width: 0; width: auto; }
+.signed-amount.is-block { width: 100%; gap: 0; position: relative; }
+.signed-amount.is-block .input { flex: 1; min-width: 0; width: auto; padding-left: 50px; }
+/* Maquette C' (fenTrOp, 15/11/2026) : le bouton de signe est DANS le champ, petite tuile à gauche — comme les composantes. */
+.signed-amount.is-block > .signed-amount-btn {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1;
+  width: 28px; height: 28px; border-radius: 9px; font-size: 17px; font-weight: 700;
+}
+.signed-amount.is-block > .signed-amount-btn:active { transform: translateY(-50%) scale(0.94); }
+.signed-amount.is-block > .signed-amount-btn.is-ro:active { transform: translateY(-50%); }
 
 /* Devise € grisée à droite des montants en texte (display non éditable).
    Utilisé sur Épargne, Investissements, Actifs physiques, etc. */
@@ -2017,12 +2040,14 @@ button.stat-card {
   cursor: pointer; transition: all 0.15s;
 }
 @media (hover: hover) { .btn-add:hover { border-color: var(--text-light); color: var(--text); } }
-/* « + Composante » dans les fenêtres : petite pastille pointillée calée à gauche (maquette C' : .ajout-c). */
-.modal-comp-list .btn-add {
-  justify-self: start; display: inline-flex; align-items: center; gap: 6px;
-  height: 36px; padding: 0 14px; margin-top: 2px; border-radius: 999px;
-  border: 1.5px dashed var(--border-strong); color: var(--text-muted);
-  font-size: 13.5px; font-weight: 600;
+/* Boutons d'ajout DANS une fenêtre (« + Composante », « + Tickets resto (auto) », « + Ajouter un support ») : la forme des
+   autres boutons secondaires des fenêtres (36 px, arrondi --radius-md, 13 px) — l'utilisateur veut des boutons tous pareils
+   dans les fenêtres (15/11/2026) ; seul le pointillé dit « ajouter ». Calés à gauche, comme l'.ajout-c de la maquette. */
+.modal .btn-add {
+  justify-self: start; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; padding: 0 16px; border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong); color: var(--text-muted);
+  font-size: 13px; font-weight: 500;
 }
 
 /* Composite row */

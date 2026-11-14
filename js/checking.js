@@ -2209,14 +2209,16 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
         <div>
           <label className="label">Montant</label>
           {isTr ? (
-            <SignedAmountField
-              value={amount}
-              onChange={setAmount}
-              naturalExpense={false}
-              isTR
-              readOnly={isTRAuto}
-              block
-            />
+            <div className="unite-eur">
+              <SignedAmountField
+                value={amount}
+                onChange={setAmount}
+                naturalExpense={false}
+                isTR
+                readOnly={isTRAuto}
+                block
+              />
+            </div>
           ) : (
             <div className="unite-eur">
               <AmountInput
@@ -2571,7 +2573,9 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
           <OperationForm
             showToast={showToast}
             initial={editing ? { ...editing, type: 'tr' } : null}
-            trSeul={!editing}
+            // Fenêtre TR en création COMME en modification (15/11/2026, demande de l'utilisateur) : plus de sélecteur de type.
+            // ⚠️ Conséquence assumée : un paiement TR ne se déplace plus vers les opérations ; on le supprime et on le ressaisit.
+            trSeul
             onSubmit={submitForm}
             trEnabled={true}
             hasGlobalTRRefund={false}

@@ -1388,7 +1388,8 @@ function UpdateAllValuesModal({ ctx, onClose }) {
     <div className="maj-actions">
       {/* ⚠️ Delta AVANT le montant, comme sur les lignes et les sous-totaux depuis le
           13/08/2026 : « pour que les deltas soient toujours avant » (utilisateur). */}
-      <div className="maj-total"><span>Total général</span>
+      {/* Le total des fenêtres (maquette C' : .total-fen), delta avant le montant. */}
+      <div className="total-fen"><span>Total général</span>
         <b className="num">{modifiees.length > 0 && <DeltaMontant valeur={deltaGeneral} />}{fmt(totalGeneral)} €</b>
       </div>
       {/* Note PERMANENTE — indépendante de l'état du bouton, donc sans mouvement.
@@ -1439,7 +1440,9 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   09/08/2026 : le delta vivait sur la ligne de meta supprimée.
                   La carte n'ayant plus qu'un étage, l'ensemble est centré en
                   hauteur sans rien demander. */}
-              {!ouverte && (
+              {/* Maquette C' (fenValeurs, 15/11/2026) : le sous-total vit TOUJOURS en tête, repliée comme dépliée —
+                  il ne change plus de place (règle de l'utilisateur du 09/08/2026), et le pied « Sous-total » disparaît. */}
+              {etfs.length > 0 && (
                 <span className="maj-env-montant num">
                   <span>{fmt(sousTotal(p))} €</span>
                   {deltaNode}
@@ -1453,8 +1456,11 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   <div key={e.id} className="maj-sup">
                     <span className="maj-sup-lbl">
                       <span style={{ width: 8, height: 8, borderRadius: 2, background: e.color, flex: 'none' }} />
-                      <NomSupport etf={e} Balise="b" />
-                      <LibelleSupport etf={e} prefixe=" — " />
+                      {/* Maquette C' : le nom sur une ligne, le libellé secondaire DESSOUS (ils ne se disputent plus la largeur). */}
+                      <span className="maj-sup-t">
+                        <NomSupport etf={e} Balise="b" />
+                        <LibelleSupport etf={e} />
+                      </span>
                       <DeltaMontant valeur={deltaDuSupport(p, e)} />
                     </span>
                     <input className="input num" inputMode="decimal" enterKeyHint="next"
@@ -1464,12 +1470,6 @@ function UpdateAllValuesModal({ ctx, onClose }) {
                   </div>
                 ))}
                 {!etfs.length && <div className="maj-vide">Aucun support</div>}
-                {!!etfs.length && (
-                  <div className="maj-sous-total">
-                    <span>Sous-total</span>
-                    <b className="num">{deltaNode}{fmt(sousTotal(p))} €</b>
-                  </div>
-                )}
               </div>
             )}
           </div>
