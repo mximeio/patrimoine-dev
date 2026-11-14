@@ -829,7 +829,8 @@ input[type="month"] {
 .seg-solo + .seg-kebab { margin-left: 0; }
 .ch-liste { border-top: 1px solid var(--border); }
 .ch-ligne { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto 22px; align-items: center; gap: 8px; min-height: 46px; padding: 4px 0; border-bottom: 1px solid var(--border); }
-.ch-ligne--revenu { grid-template-columns: 34px minmax(0, 1fr) auto 22px; gap: 12px; min-height: 52px; }
+.ch-ligne--revenu { grid-template-columns: 34px minmax(0, 1fr) auto 22px; gap: 8px; min-height: 52px; }
+.ch-ligne--revenu .ch-av { margin-right: 4px; } /* 12 px entre l'avatar et le nom, mais 8 avant le crayon : le « € » tombe sur celui des charges */
 .ch-grip { display: grid; place-items: center; height: 100%; color: var(--text-subtle); cursor: grab; touch-action: none; }
 .ch-nom { min-width: 0; display: grid; gap: 1px; }
 .ch-nom b { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -837,7 +838,7 @@ input[type="month"] {
 .ch-montant { white-space: nowrap; }
 .ch-montant-val { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--danger-fonce); }
 .ch-montant-val--neutre { color: var(--text); }
-.ch-montant-val .cur { color: var(--text-muted); }
+.ch-montant > .cur { font-size: 14px; color: var(--text-muted); }
 .ch-montant .charge-montant-tip { color: var(--danger-fonce); }
 /* Le soulignement est celui de la PROD (.charge-montant-tip plus bas : pointillé gris discret, décalé de 3 px) — plus de bordure rouge. */
 .ch-ligne.dragging { opacity: 0.15; }
@@ -846,7 +847,7 @@ input[type="month"] {
 .ch-ligne .tx-edit { justify-self: center; }
 .ch-av { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
 .ch-av.ch-av--petit { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
-.settings-group-title .ch-total { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--text-light); font-variant-numeric: tabular-nums; }
+.settings-group-title .ch-total { margin-left: auto; padding-right: 30px; font-size: 13px; font-weight: 600; color: var(--text-light); font-variant-numeric: tabular-nums; } /* 30 px = écart 8 + colonne du crayon 22 : le « € » du total tombe sur celui des lignes */
 .ch-ajout { margin-top: 10px; }
 .ch-vide { padding: 14px 0; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
 .ch-carte { background: var(--surface-alt); border-radius: 16px; padding: 2px 14px 4px; }
@@ -2501,7 +2502,7 @@ button.stat-card {
 .support-edit-complet { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .supports-groupe .support-edit-cible { font-size: 14px; font-weight: 500; color: var(--text); }
 .support-edit-chev { color: var(--text-muted); font-size: 18px; line-height: 1; text-align: center; }
-.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 2px; font-size: 14px; }
+.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 26px 12px 2px; font-size: 14px; } /* 26 px à droite : le total tombe sur la colonne des cibles, qui s'arrête avant le chevron des lignes (mesuré, 15/11/2026) */
 .support-total b { font-weight: 600; }
 .support-total span { font-weight: 600; }
 .support-total.ok span { color: var(--success-fonce); }

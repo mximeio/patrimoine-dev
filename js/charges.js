@@ -188,7 +188,8 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
       {annuelle && <span className="infotip-sous">{eur(total)} par an</span>}
     </>
   );
-  const montant = <span className="ch-montant-val">{annuelle ? '' : '− '}{eurEl(total)}</span>;
+  // Le pointillé ne souligne que le CHIFFRE : le « € » reste hors de la bulle, en gris, comme dans les listes d'opérations.
+  const chiffre = `${annuelle ? '' : '− '}${fmt(total)}`;
   return (
     <div ref={dropRef} className="ch-ligne">
       <span ref={dragRef} className="ch-grip" title="Glisser pour réordonner"><Icon name="poignee" size={14} /></span>
@@ -197,9 +198,11 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
         <small>{mots}</small>
       </span>
       <span className="ch-montant">
-        {parts.length > 0
-          ? <InfoTip className="charge-montant-tip" popClassName="infotip-pop--wrap" label={`${annuelle ? 'Par mois : ' : ''}${partsTexte}`} content={bulleParts}>{montant}</InfoTip>
-          : montant}
+        <span className="ch-montant-val">
+          {parts.length > 0
+            ? <InfoTip className="charge-montant-tip" popClassName="infotip-pop--wrap" label={`${annuelle ? 'Par mois : ' : ''}${partsTexte}`} content={bulleParts}>{chiffre}</InfoTip>
+            : chiffre}
+        </span> <span className="cur">€</span>
       </span>
       <button className="tx-edit" onClick={onEdit} title="Modifier"><Icon name="pencil" size={13} /></button>
     </div>
@@ -712,7 +715,7 @@ function ChargesModal({ ctx, onClose }) {
               <div key={p.id} className="ch-ligne ch-ligne--revenu">
                 <span className="ch-av" style={{ background: personLightAt(i), color: personTextAt(i) }}>{initials(p.label)}</span>
                 <span className="ch-nom"><b>{p.label}</b></span>
-                <span className="ch-montant"><span className="ch-montant-val ch-montant-val--neutre">{eurEl(Number(active.incomes?.[p.id]?.net) || 0)}</span></span>
+                <span className="ch-montant"><span className="ch-montant-val ch-montant-val--neutre">{fmt(Number(active.incomes?.[p.id]?.net) || 0)}</span> <span className="cur">€</span></span>
                 <button className="tx-edit" onClick={() => setEditingRevenu(p.id)} title="Modifier"><Icon name="pencil" size={13} /></button>
               </div>
             ))}
@@ -747,7 +750,7 @@ function ChargesModal({ ctx, onClose }) {
                 </div>
                 <button className="btn-add ch-ajout" onClick={() => setEditingCharge('new')}>Ajouter une charge mensuelle</button>
 
-                <h3 className="settings-group-title">Charges annuelles<AideChamp>Réparties sur 12 mois ; celles marquées « livret » sont provisionnées chaque mois sur le livret.</AideChamp><span className="ch-total">{eurEl(totalAnnuel / 12)} / mois</span></h3>
+                <h3 className="settings-group-title">Charges annuelles<AideChamp>Réparties sur 12 mois ; celles marquées « livret » sont provisionnées chaque mois sur le livret.</AideChamp><span className="ch-total">par mois : {eurEl(totalAnnuel / 12)}</span></h3>
                 <div className="ch-liste">
                   {annual.length ? annual.map(renderRow) : emptyMsg('Aucune charge annuelle.')}
                 </div>
