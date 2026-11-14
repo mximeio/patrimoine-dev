@@ -170,12 +170,24 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
     .map((p, i) => ({ p, i, v: chargeShareOf(c, p.id, nets, people.length) / (annuelle ? 12 : 1) }))
     .filter((x) => roundDisp(x.v) !== 0);
   const partsTexte = parts.map((x) => `${x.p.label} ${eur(x.v)}`).join(' · ');
-  const mots = [
-    partageEnMots(c, people),
-    c.joint ? 'compte joint' : null,
-    annuelle && c.provision !== false ? 'livret' : null,
-    annuelle ? `${eur(total / 12)}/mois` : null,
-  ].filter(Boolean).join(' · ');
+  // Repères (version A′ de Mockup-Charges-Reperes, 15/11/2026) : des pastilles SANS FOND — un filet clair, le texte en
+  // couleur — pour le partage, la personne qui paie seule, et le compte par lequel la charge passe. Elles disent leur nom :
+  // plus de légende. L'équivalent mensuel d'une charge annuelle reste en texte simple.
+  const sp = c.split || {};
+  const seule = sp.mode === 'perso'
+    ? (() => { const avec = people.filter(p => (Number(sp.amounts?.[p.id]) || 0) > 0); return avec.length === 1 ? avec[0] : null; })()
+    : null;
+  const iSeule = seule ? people.indexOf(seule) : -1;
+  const reperes = (
+    <>
+      {seule
+        ? <span className="ch-tag" style={{ color: personTextAt(iSeule), borderColor: `color-mix(in srgb, ${personColorAt(iSeule)} 35%, #fff)` }}>{seule.label}</span>
+        : <span className="ch-tag">{partageEnMots(c, people) === 'Au prorata' ? 'Prorata' : partageEnMots(c, people) === 'Montants fixés' ? 'Montants' : partageEnMots(c, people)}</span>}
+      {c.joint && <span className="ch-tag ch-tag--joint">Compte joint</span>}
+      {annuelle && c.provision !== false && <span className="ch-tag ch-tag--livret">Livret</span>}
+      {annuelle && <span className="ch-tag-txt">{eur(total / 12)}/mois</span>}
+    </>
+  );
   const bulleParts = (
     <>
       {annuelle && 'Par mois : '}
@@ -195,7 +207,7 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
       <span ref={dragRef} className="ch-grip" title="Glisser pour réordonner"><Icon name="poignee" size={14} /></span>
       <span className="ch-nom">
         <b>{c.label || '(sans libellé)'}</b>
-        <small>{mots}</small>
+        <small className="ch-reperes">{reperes}</small>
       </span>
       <span className="ch-montant">
         <span className="ch-montant-val">

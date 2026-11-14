@@ -363,11 +363,11 @@ input[type="month"] {
 .modal .modal-header { border-bottom: 0; }
 .modal .modal-header + .modal-body { padding-top: 6px; }
 /* Sur ordinateur (15/11/2026) : en-tête SYMÉTRIQUE — autant d'air sous l'icône qu'au-dessus (22 + 22), pour que le titre reste
-   centré dans la bande blanche quand la liste défile dessous. Le corps compense (2 px) : l'écart avec le premier champ reste de
-   24 px quand rien ne défile. Souris + survol seulement : le téléphone, même couché, garde ses règles (encoche). */
+   centré dans la bande blanche quand la liste défile dessous. Le corps n'a plus de marge haute : le premier contenu commence à
+   24 px sous l'icône (19 avant la v1219). Souris + survol seulement : le téléphone, même couché, garde ses règles (encoche). */
 @media (min-width: 641px) and (hover: hover) and (pointer: fine) {
   .modal .modal-header { padding-bottom: 22px; }
-  .modal .modal-header + .modal-body { padding-top: 2px; }
+  .modal .modal-header + .modal-body { padding-top: 0; } /* 24 px tout autour de l'icône (choix de l'utilisateur, 15/11/2026) */
 }
 .btn-icon.modal-x { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-alt); flex: none; }
 .modal-body { padding: 24px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
@@ -843,6 +843,12 @@ input[type="month"] {
 .ch-nom { min-width: 0; display: grid; gap: 1px; }
 .ch-nom b { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-nom small { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Repères d'une charge (version A′) : pastilles sans fond, un filet clair et le texte dans sa couleur. */
+.ch-nom small.ch-reperes { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.ch-tag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--text-light); white-space: nowrap; flex: none; }
+.ch-tag--joint { color: var(--accent); border-color: #d9d6fb; }
+.ch-tag--livret { color: var(--warning-fonce); border-color: #f5dfb0; }
+.ch-tag-txt { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 .ch-montant { white-space: nowrap; }
 .ch-montant-val { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--danger-fonce); }
 .ch-montant-val--neutre { color: var(--text); }
