@@ -1351,6 +1351,14 @@ input[type="month"] {
 .liste-rec .recurring-row.recurring-row > .op-main { padding-left: 5px; }
 .liste-rec .recurring-row.recurring-row > .tx-edit { transform: none; margin-left: -3px; }
 @media (max-width: 768px) { .liste-rec .recurring-row.recurring-row > .tx-edit { margin-left: -2px; } }
+/* Tickets resto payés : même géométrie que les récurrents (15/11/2026) — poignée au bord, libellé à 24 px, montant et crayon
+   aux places du compte. Classes doublées : passe devant les grilles .tx-row.tr-row (ordinateur, téléphone, mois figé). */
+.modal .tx-row.tr-row.tr-row { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); column-gap: 5px; padding: 3px 4px 3px 0; }
+.modal .tx-row.tr-row.tr-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px) 22px; }
+.modal .frozen-month .tx-row.tr-row.tr-row.with-edit { grid-template-columns: 14px minmax(0, 1fr) var(--amt-w, 112px); }
+.modal .tx-row.tr-row.tr-row > .op-main { padding-left: 5px; }
+.modal .tx-row.tr-row.tr-row > .tx-edit { transform: none; margin-left: -3px; }
+@media (max-width: 768px) { .modal .tx-row.tr-row.tr-row > .tx-edit { margin-left: -2px; } }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
