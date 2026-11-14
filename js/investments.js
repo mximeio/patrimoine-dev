@@ -241,7 +241,9 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
   // cohérent avec ce qui est affiché dans le hero et dans la liste.
   const weight = total > 0 ? (stats.totalValue / total) * 100 : 0;
   const positive = stats.totalGain >= 0;
-  const color = PORTFOLIO_PALETTE[colorIndex % PORTFOLIO_PALETTE.length];
+  // Avatar à la teinte de la RUBRIQUE, comme la maquette C' (15/11/2026, décision de l'utilisateur) : il prenait une couleur
+  // par enveloppe (PORTFOLIO_PALETTE), qui reste celle du point de la fenêtre « Mettre à jour les valeurs ».
+  const color = MODULE_COLORS.investments;
   const etfCount = (portfolio.data?.etfs || []).length;
   const lastDate = portfolio.data?.currentValuesDate;
 

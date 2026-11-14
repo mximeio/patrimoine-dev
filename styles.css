@@ -1304,9 +1304,13 @@ input[type="month"] {
 /* La poignée d'une composante reste (on peut toujours la glisser) mais SORT de la grille : posée en absolu sur la marge
    gauche, invisible. En colonne, elle creusait le retrait (38 pt entre le trait et le libellé, relevé iPhone 15/11/2026). */
 .section-block.ops-c .composite-comp-row > .tx-icon { position: absolute; left: -12px; top: 0; bottom: 0; width: 12px; height: auto; opacity: 0; }
+/* Une 3e colonne VIDE, de la largeur du crayon des lignes (22 px) : montants et « € » des composantes s'alignent sur ceux
+   des lignes (relevé de l'utilisateur, 15/11/2026). Sur un mois figé, les lignes n'ont pas de crayon : deux colonnes. */
 .section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row,
-.section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit,
-.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: minmax(0, 1fr) var(--amt-w, 112px); gap: 8px; }
+.section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: minmax(0, 1fr) var(--amt-w, 112px) 22px; gap: 8px; }
+.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row,
+.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit,
+.frozen-month .tx-row.composite-row + .composite-comps .composite-comp-row.with-edit { grid-template-columns: minmax(0, 1fr) var(--amt-w, 112px); }
 /* Montants des composantes alignés sur ceux des lignes (même marge droite de 4 px que .tx-row). */
 .section-block.ops-c .composite-comps,
 .section-block.ops-c .tx-row.composite-row + .composite-comps { padding-left: 12px; padding-right: 4px; } /* le bloc téléphone pose 35 px à gauche */

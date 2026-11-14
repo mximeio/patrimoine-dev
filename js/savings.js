@@ -155,7 +155,8 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
 // triée par date desc → la 1ère est la plus récente).
 function SavingsListRow({ saving, colorIndex, onClick }) {
   const balance = computeSavingsBalance(saving);
-  const color = PORTFOLIO_PALETTE[(colorIndex >= 0 ? colorIndex : 0) % PORTFOLIO_PALETTE.length];
+  // Avatar à la teinte de la RUBRIQUE, comme la maquette C' (15/11/2026, décision de l'utilisateur) — une couleur par livret avant.
+  const color = MODULE_COLORS.savings;
   // Recherche de la date la plus récente parmi les opérations du livret.
   const lastOp = (saving.operations || [])
     .filter(o => !!o.date)

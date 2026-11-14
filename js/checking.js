@@ -82,7 +82,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
         </div>
         <div>
           {accountsWithBalance.map((acc, i) => {
-            const color = PORTFOLIO_PALETTE[i % PORTFOLIO_PALETTE.length];
+            const color = MODULE_COLORS.checking; // teinte de la rubrique, comme la maquette C' (15/11/2026)
             const monthsCount = Object.keys(acc.months || {}).length;
             const hasMonth = !!acc._refKey;
             return (
