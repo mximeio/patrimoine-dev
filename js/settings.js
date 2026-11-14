@@ -521,7 +521,8 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
 
   return (
     <>
-      <div style={{ '--amt-w': amountColVar(items), border: `1px solid ${COLORS.border}`, borderRadius: 10, overflow: 'hidden', marginTop: 8 }}>
+      {/* Sans cadre depuis la modernisation C' (maquette, 15/11/2026) : un filet en haut, des lignes séparées, comme les autres listes. */}
+      <div className="liste-rec" style={{ '--amt-w': amountColVar(items), borderTop: `1px solid ${COLORS.border}`, marginTop: 8 }}>
         {/* En mode dates : tri par dayOfMonth, sans muter le tableau. */}
         {(datesMode ? sortItemsBySortKey(items, (it) => it.dayOfMonth) : items).map((item) => {
           const idx = items.findIndex(x => x.id === item.id);
@@ -854,12 +855,7 @@ function SimpleRecurringRow({ item, scope, list, index, onUpdate, onRemove, onEd
   const labelText = (item.label || '').trim();
   return (
     <div ref={rowRef} data-locate={`rec-${item.id}`} className={`recurring-row ${onEdit ? 'with-edit' : ''}`} style={{ paddingLeft: 14 }}>
-      <span ref={handleRef} className={`tx-icon ${variant} ${datesMode ? 'no-drag' : ''}`} title={datesMode ? '' : 'Glisser'}>
-        {variant === 'income' ? <Icon name="arrowDown" size={12} />
-          : variant === 'expense' ? <Icon name="arrowUp" size={12} />
-          : variant === 'tr' ? <Icon name="utensils" size={12} />
-          : '€'}
-      </span>
+      <span ref={handleRef} className={`tx-icon tx-grip ${datesMode ? 'no-drag' : ''}`} title={datesMode ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
       <div className="op-main" title={item.label || 'Cliquer sur le crayon pour modifier'}>
         <span className="op-label">
           {labelText || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>(sans libellé)</span>}
@@ -1018,12 +1014,7 @@ function CompositeRecurringRow({ item, scope, list, index, expanded, onToggle, o
   return (
     <div className={`tx-composite-wrap ${expanded ? 'expanded' : ''}`}>
       <div ref={rowRef} data-locate={`rec-${item.id}`} className={`recurring-row composite-row ${onEdit ? 'with-edit' : ''}`} style={{ paddingLeft: 14 }}>
-        <span ref={handleRef} className={`tx-icon ${variant} ${datesMode ? 'no-drag' : ''}`} title={datesMode ? '' : 'Glisser'}>
-          {variant === 'income' ? <Icon name="arrowDown" size={12} />
-            : variant === 'expense' ? <Icon name="arrowUp" size={12} />
-            : variant === 'tr' ? <Icon name="utensils" size={12} />
-            : '€'}
-        </span>
+        <span ref={handleRef} className={`tx-icon tx-grip ${datesMode ? 'no-drag' : ''}`} title={datesMode ? '' : 'Glisser pour réorganiser'}><Icon name="poignee" size={14} /></span>
         <div className="op-main" title={item.label || 'Cliquer sur le crayon pour modifier'}>
           <span className="op-label-chevron">
             <span className="op-label">
@@ -1077,12 +1068,7 @@ function CompositeRecurringCompRow({ c, parent, variant, scope, list, index, onD
   const compVariant = c.isTRRefund ? 'tr' : signVariant;
   return (
     <div ref={dropRef} className={`composite-comp-row ${withEdit ? 'with-edit' : ''}`}>
-      <span ref={dragRef} className={`tx-icon ${compVariant}`} title="Glisser">
-        {compVariant === 'income' ? <Icon name="arrowDown" size={12} />
-          : compVariant === 'expense' ? <Icon name="arrowUp" size={12} />
-          : compVariant === 'tr' ? <Icon name="utensils" size={12} />
-          : '€'}
-      </span>
+      <span ref={dragRef} className="tx-icon tx-grip" title="Glisser pour réorganiser"><Icon name="poignee" size={14} /></span>
       <input
         type="text"
         value={c.label || ''}
