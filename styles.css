@@ -2168,7 +2168,9 @@ button.stat-card {
 .composite-comp-label-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .composite-comp-label-wrap input { flex: 1; min-width: 0; }
 .tr-tag {
-  background: var(--warning-light); color: var(--warning-fonce);
+  /* Badge « AUTO » des TR : même forme que le signe « + » des TR — fond ambre pâle, texte ambre clair (choix de l'utilisateur,
+     15/11/2026, cf. --tr-clair). */
+  background: var(--warning-light); color: var(--tr-clair);
   padding: 2px 6px; border-radius: 4px;
   font-size: 10px; font-weight: 600;
   letter-spacing: 0.04em; text-transform: uppercase;
