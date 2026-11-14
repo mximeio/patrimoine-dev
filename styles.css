@@ -1369,6 +1369,20 @@ input[type="month"] {
 @media (max-width: 768px) { .op-row.op-row > .tx-edit { margin-left: -2px; } }
 .modal-scroll-list .op-row.op-row { padding-left: 24px; padding-right: 8px; }
 @media (max-width: 640px) { .modal-scroll-list .op-row.op-row { padding-left: 16px; padding-right: 6px; } }
+/* ZONES DE TOUCHER élargies sans rien déplacer (15/11/2026, simulation Mockup-Zones-Toucher validée par l'utilisateur) :
+   - la poignée couvre toute la hauteur de la ligne et 19 px de large (sa colonne de 14 + l'écart de 5), jusqu'à la case sans la
+     chevaucher — un déplacement ne s'arme qu'après l'appui long de 300 ms (dnd.js), faire défiler n'en déclenche pas ;
+   - la case couvre 35 × 45 px : elle reprend les 5 px morts avant le libellé ; la case dessinée reste à sa place (padding). */
+.section-block.ops-c .tx-row > .tx-grip,
+.liste-rec .recurring-row.recurring-row > .tx-grip,
+.modal .tx-row.tr-row.tr-row > .tx-grip { align-self: stretch; height: auto; width: 19px; margin: -3px 0; border-radius: 0; }
+.section-block.ops-c .tx-check-hit.tx-check-hit { width: 35px; margin-right: -5px; padding-left: 5px; justify-content: flex-start; }
+/* La zone invisible de 10 px tout autour de la poignée (v541, `.dnd-handle::before`) mordait sur la case : toucher le bord gauche
+   de la case attrapait la poignée (mesuré : x = 34 à 43 px). La poignée couvrant désormais toute sa bande, ce débord est retiré
+   ici — la case se coche sur toute sa zone. */
+.section-block.ops-c .tx-row > .tx-grip.dnd-handle::before,
+.liste-rec .recurring-row.recurring-row > .tx-grip.dnd-handle::before,
+.modal .tx-row.tr-row.tr-row > .tx-grip.dnd-handle::before { inset: 0; }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
