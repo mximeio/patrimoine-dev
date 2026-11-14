@@ -1124,6 +1124,62 @@ input[type="month"] {
 .ct-cel b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ct-fil { height: 3px; border-radius: 999px; background: rgba(255,255,255,0.22); margin-top: 3px; overflow: hidden; }
 .ct-fil i { display: block; height: 100%; background: #fff; border-radius: 999px; }
+.ct-courbe { margin: auto -16px -10px; height: 44px; }
+.ct-courbe svg { display: block; width: 100%; height: 100%; }
+
+/* ── L'ACCUEIL C' (modernisation, 14/11/2026 — maquette cartes2.html, écran « accueil ») ── */
+.section-accueil { margin-top: 24px; }
+.section-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
+.section-tete h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.section-aide { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+/* La pile : chaque carte fait 159 px ; la suivante remonte de 94, donc on voit 65 px de chacune (le nom et le
+   montant) et la dernière entière. Sur ordinateur, côte à côte. */
+.pile-rub { display: grid; --n: 4; } /* --n : le nombre de rubriques actives, reposé en ligne par la vue */
+.carte-rub {
+  position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; min-height: 159px; text-align: left;
+  border: 0; border-radius: 22px; padding: 18px; color: #fff; font: inherit; cursor: pointer;
+  box-shadow: 0 -10px 24px -14px rgba(11,16,32,0.45); transition: transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.carte-rub + .carte-rub { margin-top: -94px; }
+.carte-rub::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
+.carte-rub::after { content: ""; position: absolute; right: -40px; bottom: -60px; width: 200px; height: 200px; z-index: -1; pointer-events: none;
+  border-radius: 50%; border: 28px solid rgba(255,255,255,0.08); }
+@media (hover: hover) { .carte-rub:hover { transform: translateY(-6px); } }
+.carte-rub-rang { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.carte-rub-nom { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; min-width: 0; }
+.carte-rub-nom i { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
+.carte-rub-mt { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; white-space: nowrap; }
+.carte-rub-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 70px; font-size: 13px; font-weight: 600; opacity: 0.9; }
+.carte-rub--physical { color: #2b1d00; }
+.carte-rub--physical .carte-rub-nom i { background: rgba(43,29,0,0.10); }
+.evo-carte { padding: 14px 14px 10px !important; }
+.evo-sous { color: var(--text-muted); font-size: 13px; font-weight: 600; margin: 0 2px 4px; }
+.evo-sous b { color: var(--text); font-weight: 700; }
+/* L'encart et l'alerte ne vivent que sur ordinateur, à droite de la carte de tête. */
+.accueil-cote { display: none; }
+@media (min-width: 900px) {
+  .accueil-haut--cote { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+  .accueil-haut--cote .carte-tete { margin-bottom: 0; }
+  .accueil-cote { display: grid; gap: 12px; }
+  .pile-rub { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px; }
+  .carte-rub + .carte-rub { margin-top: 0; }
+  .carte-rub { min-height: 150px; box-shadow: 0 14px 30px -18px rgba(11,16,32,0.5); }
+  .carte-rub-rang { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .carte-rub-mt { font-size: 22px; }
+  .carte-rub-bas { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 24px; }
+}
+.encart-mois { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; }
+.encart-mois h3 { margin: 0 0 6px; font-size: 14px; font-weight: 800; }
+.encart-k { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--text-light); font-weight: 600; }
+.encart-k + .encart-k { border-top: 1px solid var(--border); }
+.encart-k b { color: var(--text); font-weight: 700; white-space: nowrap; }
+.encart-lien { margin-top: 4px; padding: 4px 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.alerte-valo { display: flex; gap: 10px; background: var(--warning-light); border: 1px solid #fde7c2; border-radius: 18px; padding: 14px 16px; }
+.alerte-valo-ico { color: var(--warning-fonce); flex: none; margin-top: 1px; }
+.alerte-valo b { font-size: 14px; font-weight: 700; }
+.alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 600; }
+
 .carte-tete .hero-kebab { width: 28px; height: 28px; color: rgba(255,255,255,0.75); }
 .carte-tete--physical { color: #2b1d00; }
 .carte-tete--physical .ct-ico, .carte-tete--physical .ct-pill { background: rgba(43,29,0,0.10); }
