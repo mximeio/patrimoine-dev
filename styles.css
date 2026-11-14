@@ -120,7 +120,7 @@ input[type="number"] {
   width: 100%; padding: 12px 14px;
   border: 1.5px solid #e1e4ec;
   background: var(--surface);
-  font-size: 16px; font-weight: 600; color: var(--text);
+  font-size: 16px; font-weight: 500; /* 500 depuis le 15/11/2026 (600 avant) : l'app paraissait trop grasse */ color: var(--text);
   border-radius: 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -166,11 +166,11 @@ input[type="month"] {
 .note-field textarea {
   display: block; width: 100%;
   border: 0; outline: none; background: transparent;
-  color: var(--text); font-size: 16px; font-weight: 600; font-family: inherit; line-height: 1.4;
+  color: var(--text); font-size: 16px; font-weight: 500; font-family: inherit; line-height: 1.4;
   padding: 12px 14px;
 }
 .label {
-  display: block; font-size: 13px; font-weight: 700;
+  display: block; font-size: 13px; font-weight: 600; /* 600 depuis le 15/11/2026 (700 avant) */
   color: var(--text-light); margin: 0 2px 6px;
 }
 
@@ -220,7 +220,7 @@ input[type="month"] {
 .form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
 /* MODERNISATION C' (14/11/2026) — le pied des fenêtres : le bouton principal en grand (52 px, coins de 16), et
    « Supprimer » réduit à une POUBELLE carrée à sa droite (le libellé reste, masqué : c'est le nom lu du bouton). */
-.form-actions > .btn { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.form-actions > .btn { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
 .form-actions > .btn-delete-line { width: 52px; padding: 0; gap: 0; font-size: 0; border: 0; border-radius: 16px; }
 .form-actions > .btn-delete-line svg { width: 18px; height: 18px; }
 /* Le bouton principal prend la couleur de la rubrique ouverte (`data-rubrique`, posé par app.js) ; ambre pour les
@@ -236,7 +236,7 @@ input[type="month"] {
   .btn-accent.btn-tr:hover { background: #8a4a00; box-shadow: none; }
 }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
-.btn.btn-fen { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.btn-fen { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 /* Le bandeau d'indicateurs des fenêtres (BandeauIndicateurs, ui.js). */
 .bandeau-ind { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: 16px; padding: 10px 14px; margin-bottom: 14px; color: #fff; }
 .bandeau-ind-cel { min-width: 0; }
@@ -316,22 +316,22 @@ input[type="month"] {
   min-height: 54px; border-radius: 14px; border: 1.5px solid #e1e4ec; background: var(--surface); color: var(--text-light);
   display: grid; place-items: center; align-content: center; gap: 1px; padding: 6px 4px; font-family: inherit; cursor: pointer; text-align: center;
 }
-.types-c button b { font-size: 13.5px; font-weight: 800; }
+.types-c button b { font-size: 13.5px; font-weight: 700; }
 .types-c button small { font-size: 11px; font-weight: 600; opacity: 0.8; }
 .types-c button[aria-checked="true"] { border-color: var(--t); background: var(--tp); color: var(--t); }
-.types-c--compact button { min-height: 48px; display: flex; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; }
-.modal .btn.btn-lg { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.types-c--compact button { min-height: 48px; display: flex; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; }
+.modal .btn.btn-lg { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
 .total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 2px 0; }
 .total-fen span { font-weight: 700; color: var(--text-light); }
 .total-fen b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .unite-eur { position: relative; }
 .unite-eur .input { padding-right: 38px; }
-.unite-eur::after { content: "€"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 600; color: var(--text-muted); pointer-events: none; }
+.unite-eur::after { content: "€"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 500; color: var(--text-muted); pointer-events: none; }
 .aide-c { font-weight: 600; color: var(--text-muted); }
 /* EN-TÊTE C' (15/11/2026) : pastille d'icône de la couleur de la rubrique, titre en gras, sous-titre gris, croix ronde. */
 .modal-header { gap: 12px; }
 .modal-titres { flex: 1; min-width: 0; }
-.modal-header .modal-title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
+.modal-header .modal-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
 .modal-sous { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* PISTE A (15/11/2026, choisie par l'utilisateur sur _maquettes/Mockup-Entete-Fenetres) : la pastille est PLEINE, de la
    couleur de la rubrique (celle des cartes de tête), icône en blanc ; plus de trait sous l'en-tête. La fenêtre s'ouvre et se
@@ -1422,7 +1422,7 @@ input[type="month"] {
 .auth-carte h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
 .auth-carte p { margin: 2px 0 0; font-size: 14px; font-weight: 600; opacity: 0.75; }
 .auth-form { display: flex; flex-direction: column; gap: 14px; }
-.auth-bouton { margin-top: 6px; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; }
+.auth-bouton { margin-top: 6px; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
 /* Bleu nuit, celui de la carte, et JAMAIS la couleur d'une rubrique : `data-rubrique` est déjà posé sur <html> à la
    connexion (il suit l'adresse), et un lien vers #epargne rendait le bouton cyan. */
 .auth .btn-accent.auth-bouton { background: #1b1f36; border-color: #1b1f36; }
