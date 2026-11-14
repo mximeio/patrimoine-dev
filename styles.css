@@ -1152,7 +1152,7 @@ input[type="month"] {
    en texte foncé. ⚠️ `.card.carte-tete` et `!important` sur le padding : le bloc téléphone pose
    `.card { padding: 18px !important }` PLUS BAS dans le fichier, qui gagnerait à spécificité égale (mesuré : 145 px). */
 .carte-tete {
-  min-height: 136px; border: 0; border-radius: 22px; color: #fff;
+  min-height: 144px; border: 0; border-radius: 22px; color: #fff; /* 144 depuis le 15/11/2026 (136 avant) : ligne d'intitulé à 32 px, la hauteur de la pastille du mois */
   display: flex; flex-direction: column; position: relative; isolation: isolate; margin-bottom: 16px;
   /* Pas d'overflow: hidden (cf. .ct-deco) ; z-index pour que le menu « ⋯ » passe AU-DESSUS de la liste qui suit. */
   z-index: 5;
@@ -1162,17 +1162,17 @@ input[type="month"] {
 /* Reflet et anneau ANCRÉS EN HAUT et dimensionnés pour 136 px : quand la carte grandit (détail de la projection déplié),
    ils restent en place au lieu de glisser et de s'étirer avec le bas (relevé de l'utilisateur, 15/11/2026). Mêmes
    positions qu'avant à 136 px : 136 + 70 − 210 = −4 px. */
-.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 136px; z-index: -1; pointer-events: none;
+.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 144px; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
-.ct-deco::after { content: ""; position: absolute; right: -44px; top: -4px; width: 210px; height: 210px; z-index: -1;
+.ct-deco::after { content: ""; position: absolute; right: -44px; top: 4px; width: 210px; height: 210px; z-index: -1;
   border-radius: 50%; border: 30px solid rgba(255,255,255,0.08); pointer-events: none; }
 /* Hauteur FIXÉE à 26 px : la pastille du mois (32 px, hauteur verrouillée depuis la v493) déborde de 3 px en haut et en
    bas, dans le padding, au lieu de faire grandir la carte (137,8 px mesurés sur ordinateur le 15/11/2026). */
-.ct-l1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 26px; font-size: 13px; font-weight: 600; }
+.ct-l1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 32px; font-size: 13px; font-weight: 600; }
 .ct-lib { opacity: 0.88; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-droite { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
-.ct-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700;
+.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
 .ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
@@ -1312,7 +1312,9 @@ input[type="month"] {
   .vue-rub { display: grid; grid-template-columns: 460px minmax(0, 1fr); column-gap: 32px; align-items: start; }
   .vue-rub > .colle .ct-pill-lib { display: none; }
   .vue-rub > * { grid-column: 2; }
-  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 68px; }
+  /* PAS de position: sticky : à l'ouverture d'une fenêtre, le gel du défilement la faisait sauter de ~65 px (relevé de
+     l'utilisateur, 15/11/2026). La colonne reste à gauche, sans suivre le défilement. */
+  .vue-rub > .colle { grid-column: 1; grid-row: 1 / span 40; }
   .vue-rub > .colle .pastilles-cc { grid-template-columns: 1fr 1fr; }
   .vue-rub > :not(.colle) { min-width: 0; }
   .vue-rub > .section-block:first-of-type, .vue-rub > .colle + * { margin-top: 0; }
@@ -1438,7 +1440,7 @@ input[type="month"] {
 .alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 600; }
 
 /* La projection du compte courant, en pastille dans l'intitulé de la carte (lot 3 de la modernisation). */
-.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 12px; font-weight: 700; gap: 5px; height: 26px; padding: 0 10px; }
+.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 13px; font-weight: 700; gap: 5px; height: 32px; padding: 0 12px; } /* 32 px : la hauteur de la pastille du mois, sur téléphone comme sur ordinateur */
 .carte-tete .ct-pill-btn .proj-chev { color: rgba(255,255,255,0.7); }
 @media (max-width: 360px) { .carte-tete .ct-pill-lib { display: none; } }
 /* Les deux pastilles fines sous la carte du compte courant : « Reste mois préc. » et « Tickets resto ». */

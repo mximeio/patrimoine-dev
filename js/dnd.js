@@ -202,7 +202,20 @@ function startDrag(clientX, clientY) {
     // rouvrir l'effet « double » (l'origine est déjà très estompée, .dragging 0,15).
     + `box-shadow:0 12px 28px rgba(15,23,42,.20); transform:scale(1.02); `
     + `opacity:0.85;`;
-  document.body.appendChild(clone);
+  // Le clone vit dans <body>, hors de la liste : les styles de la liste du compte courant (`.section-block.ops-c …`,
+  // modernisation C') ne l'atteignaient pas, et il montrait l'ancienne ligne (flèche, autre grille). On lui redonne
+  // ce contexte par une enveloppe `display: contents` qui porte les mêmes classes (relevé de l'utilisateur, 15/11/2026).
+  let cloneWrap = null;
+  const liste = row.closest('.section-block.ops-c');
+  if (liste) {
+    cloneWrap = document.createElement('div');
+    cloneWrap.className = 'section-block ops-c dnd-clone-ctx';
+    cloneWrap.style.display = 'contents';
+    cloneWrap.appendChild(clone);
+    document.body.appendChild(cloneWrap);
+  } else {
+    document.body.appendChild(clone);
+  }
   row.classList.add('dragging');
   // v547 : dès l'armement, on bloque le scroll natif pour tout le geste
   // (voir blockTouchScroll). Avant, la poignée en pan-y laissait défiler.
@@ -211,6 +224,7 @@ function startDrag(clientX, clientY) {
   dnd = {
     source: ctx,
     cloneEl: clone,
+    cloneWrap,
     grabDx: clientX - rect.left,
     grabDy: clientY - rect.top,
     scrollEl: findScrollParent(row),
@@ -284,6 +298,7 @@ function cleanup() {
   if (!dnd) { teardownListeners(); return; }
   if (dnd.rafId) cancelAnimationFrame(dnd.rafId);
   if (dnd.cloneEl && dnd.cloneEl.parentNode) dnd.cloneEl.parentNode.removeChild(dnd.cloneEl);
+  if (dnd.cloneWrap && dnd.cloneWrap.parentNode) dnd.cloneWrap.parentNode.removeChild(dnd.cloneWrap);
   document.querySelectorAll('.dragging').forEach(n => n.classList.remove('dragging'));
   clearDropClasses();
   dnd = null;
