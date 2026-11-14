@@ -1238,6 +1238,14 @@ input[type="month"] {
 .bottom-sheet .sheet-act.danger .sheet-act-lbl { color: var(--danger-fonce); }
 .modal .settings-group-title { font-size: 15px; font-weight: 800; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
 .modal .settings-card { background: var(--surface-alt); border: 0; border-radius: 18px; }
+/* Répartition des charges (15/11/2026) : ses listes vivent dans un .settings-card, que la règle ci-dessus grisait depuis la
+   v1169 (effet de bord des Paramètres). Elles reprennent le format des autres listes : fond blanc, trait en haut, lignes de
+   46 px, icône de 20 px ; et ses intitulés quittent les capitales espacées (style abandonné ailleurs). */
+.modal .settings-card:has(> .charge-list) { background: transparent; border-radius: 0; border-top: 1px solid var(--border); }
+.modal .charge-list .charge-row { padding: 6px 2px 6px 0; min-height: 46px; }
+.modal .charge-badge { width: 20px; height: 20px; border-radius: 6px; }
+.modal .charge-list-footer { padding: 12px 0; }
+.modal .inc-name, .modal .inc-lbl, .modal .pc-name, .modal .pcard-hero-label { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; color: var(--text-light); }
 .modal .settings-card { padding: 14px 16px; }
 .modal .settings-card h2 { font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
 .modal .settings-card .muted { font-size: 12.5px; font-weight: 500; }
@@ -1635,7 +1643,8 @@ input[type="month"] {
 .pastille-cc-lib { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 641px) { .pastilles-cc { grid-template-columns: repeat(2, 260px); } }
 .pcc-court { display: none; }
-@media (max-width: 420px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
+/* 460 px (420 avant le 15/11/2026) : sur iPhone 440 px, « Reste mois préc. » se coupait dès un montant à quatre chiffres. */
+@media (max-width: 460px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
 .pastille-cc b { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .pastille-cc-tr { cursor: pointer; }
 .pastille-cc-tr .pastille-cc-ico { color: var(--tr-clair); } /* exception TR, cf. --tr-clair */
