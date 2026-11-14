@@ -770,7 +770,7 @@ function ChargesModal({ ctx, onClose }) {
                     {monthly.length ? monthly.map(renderRow) : emptyMsg('Aucune charge mensuelle pour ce scénario.')}
                   </div>
                   <div className="charge-list-footer">
-                    <button className="btn-add" onClick={() => setEditingCharge('new')}>+ Ajouter une charge mensuelle</button>                  </div>
+                    <button className="btn-add" onClick={() => setEditingCharge('new')}>Ajouter une charge mensuelle</button>                  </div>
                 </div>
 
                 <h3 className="settings-group-title">Charges annuelles</h3>
@@ -779,7 +779,7 @@ function ChargesModal({ ctx, onClose }) {
                     {annual.length ? annual.map(renderRow) : emptyMsg('Aucune charge annuelle. Elles sont réparties automatiquement sur 12 mois.')}
                   </div>
                   <div className="charge-list-footer">
-                    <button className="btn-add" onClick={() => setEditingCharge('new-annual')}>+ Ajouter une charge annuelle</button>                  </div>
+                    <button className="btn-add" onClick={() => setEditingCharge('new-annual')}>Ajouter une charge annuelle</button>                  </div>
                 </div>
               </>
             );

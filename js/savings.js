@@ -53,7 +53,7 @@ function SavingsView({ ctx }) {
             hint="Crée ton premier compte d'épargne pour démarrer."
           />
           <div className="section-footer">
-            <button className="btn-add" onClick={() => setShowCreate(true)}>+ Créer un compte d'épargne</button>
+            <button className="btn-add" onClick={() => setShowCreate(true)}>Créer un compte d'épargne</button>
           </div>
         </div>
         {showCreate && (
@@ -135,7 +135,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
           })}
         </div>
         <div className="section-footer">
-          <button className="btn-add" onClick={() => setShowCreate(true)}>+ Ajouter un compte d'épargne</button>
+          <button className="btn-add" onClick={() => setShowCreate(true)}>Ajouter un compte d'épargne</button>
         </div>
       </div>
 

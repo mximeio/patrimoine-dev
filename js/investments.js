@@ -62,7 +62,7 @@ function InvestmentsView({ ctx }) {
             hint="Crée ta première enveloppe pour suivre tes investissements."
           />
           <div className="section-footer">
-            <button className="btn-add" onClick={() => setShowCreate(true)}>+ Créer une enveloppe</button>
+            <button className="btn-add" onClick={() => setShowCreate(true)}>Créer une enveloppe</button>
           </div>
         </div>
         {showCreate && (
@@ -220,7 +220,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           ))}
         </div>
         <div className="section-footer">
-          <button className="btn-add" onClick={() => setShowCreate(true)}>+ Ajouter une enveloppe</button>
+          <button className="btn-add" onClick={() => setShowCreate(true)}>Ajouter une enveloppe</button>
         </div>
       </div>
 

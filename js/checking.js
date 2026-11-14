@@ -123,7 +123,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
         </div>
         <div className="section-footer">
           <button className="btn-add" onClick={() => setShowCreate(true)}>
-            + Ajouter un compte
+            Ajouter un compte
           </button>
         </div>
       </div>
@@ -1936,7 +1936,7 @@ function OpsSection({ items, onChange, mKey, datesMode, trEnabled, trRefundAmoun
       </div>
       {trEnabled && !hasTR && (
         <div className="section-footer" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn-add" onClick={addTrRefund}>+ Tickets resto (auto)</button>
+          <button className="btn-add" onClick={addTrRefund}><Icon name="plus" size={14} /> Tickets resto (auto)</button>
         </div>
       )}
 
@@ -2274,9 +2274,9 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
               );
             })}
             <div style={{ display: 'grid', gridTemplateColumns: canAddTRComp ? '1fr 1fr' : '1fr', gap: 8 }}>
-              <button type="button" className="btn-add" onClick={addComp}>+ Composante</button>
+              <button type="button" className="btn-add" onClick={addComp}><Icon name="plus" size={14} /> Composante</button>
               {canAddTRComp && (
-                <button type="button" className="btn-add" onClick={addTrComp}>+ Tickets resto (auto)</button>
+                <button type="button" className="btn-add" onClick={addTrComp}><Icon name="plus" size={14} /> Tickets resto (auto)</button>
               )}
             </div>
           </div>

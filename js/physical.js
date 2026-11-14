@@ -82,7 +82,7 @@ function PhysicalView({ ctx }) {
           )}
         </div>
         <div className="section-footer">
-          <button className="btn-add" onClick={() => setShowNew(true)}>+ Ajouter un actif</button>
+          <button className="btn-add" onClick={() => setShowNew(true)}>Ajouter un actif</button>
         </div>
       </div>
 

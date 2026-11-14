@@ -301,7 +301,7 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
         )}
       </div>
 
-      <button type="button" className="btn-add" style={{ marginTop: 10 }} onClick={openCreate}>+ Ajouter un support</button>
+      <button type="button" className="btn-add" style={{ marginTop: 10 }} onClick={openCreate}>Ajouter un support</button>
 
       {editing && (
         <Modal
@@ -557,7 +557,7 @@ function RecurringList({ items, onChange, trEnabled, datesMode, showToast }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
         <button className="btn btn-accent btn-lg btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouvelle opération récurrente</button>
         {trEnabled && !hasTR && (
-          <button className="btn-add" onClick={addTrRefund}>+ Tickets resto (auto)</button>
+          <button className="btn-add" onClick={addTrRefund}><Icon name="plus" size={14} /> Tickets resto (auto)</button>
         )}
       </div>
 
@@ -824,9 +824,9 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
               );
             })}
             <div style={{ display: 'grid', gridTemplateColumns: canAddTRComp ? '1fr 1fr' : '1fr', gap: 8 }}>
-              <button type="button" className="btn-add" onClick={addComp}>+ Composante</button>
+              <button type="button" className="btn-add" onClick={addComp}><Icon name="plus" size={14} /> Composante</button>
               {canAddTRComp && (
-                <button type="button" className="btn-add" onClick={addTrComp}>+ Tickets resto (auto)</button>
+                <button type="button" className="btn-add" onClick={addTrComp}><Icon name="plus" size={14} /> Tickets resto (auto)</button>
               )}
             </div>
           </div>
