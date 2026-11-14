@@ -238,13 +238,18 @@ function ConsolidatedView({ ctx, onNavigate }) {
           {categories.map(c => (
             <button key={c.id} type="button" className={`carte-rub carte-rub--${c.id}`} style={{ background: CARTE_FONDS[c.id] }}
               onClick={() => onNavigate(c.id)} aria-label={`Ouvrir ${c.label}`}>
+              {/* Le pourcentage est écrit DEUX fois : sous le montant (téléphone, où les cartes se chevauchent et où seul le haut
+                  de chacune se voit — 15/11/2026) et en pied de carte (ordinateur, cartes côte à côte) ; le CSS n'en montre qu'un. */}
               <span className="carte-rub-rang">
                 <span className="carte-rub-nom"><i><Icon name={c.icon} size={17} /></i>{c.label}</span>
-                <span className="carte-rub-mt num">{eur(c.value)}</span>
+                <span className="carte-rub-droite">
+                  <span className="carte-rub-mt num">{eur(c.value)}</span>
+                  <span className="carte-rub-pc num">{totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'} % du total</span>
+                </span>
               </span>
               <span className="carte-rub-bas">
                 <span>{c.sub}</span>
-                <span className="num">{totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'} % du total</span>
+                <span className="num carte-rub-pc-bas">{totalPatrimoine > 0 ? ((c.value / totalPatrimoine) * 100).toFixed(2) : '0.00'} % du total</span>
               </span>
             </button>
           ))}

@@ -1383,7 +1383,7 @@ input[type="month"] {
 .section-block.ops-c .tx-row > .tx-grip.dnd-handle::before,
 .liste-rec .recurring-row.recurring-row > .tx-grip.dnd-handle::before,
 .modal .tx-row.tr-row.tr-row > .tx-grip.dnd-handle::before { inset: 0; }
-.liste-rec .recurring-row.composite-row + .composite-comps { margin: 0 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+.liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 14px; padding: 0 4px 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait 10 px avant le libellé du parent, texte 4 px après lui,
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
 .liste-rec .recurring-row.composite-row + .composite-comps .composite-comp-row.composite-comp-row,
@@ -1425,7 +1425,7 @@ input[type="month"] {
 .section-block.ops-c .composite-comps,
 .section-block.ops-c .tx-row.composite-row + .composite-comps { padding-left: 12px; padding-right: 4px; } /* le bloc téléphone pose 35 px à gauche */
 .ops-c .tx-check.checked::after { font-size: 11px; }
-.ops-c .composite-comps { margin: 0 0 6px 44px; padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
+.ops-c .composite-comps { margin: -5px 0 6px 44px; /* −5 px : composite → 1re composante = 36 px, l'écart entre deux composantes (41 avant) */ padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 .ops-c .composite-comp-row { border-bottom: 0; padding: 3px 0; min-height: 36px; }
 
 /* ── LES AUTRES LISTES D'OPÉRATIONS À LA HAUTEUR DU COMPTE COURANT (15/11/2026, demande de l'utilisateur) : 46 px, 3 px de
@@ -1551,11 +1551,11 @@ input[type="month"] {
    montant) et la dernière entière. Sur ordinateur, côte à côte. */
 .pile-rub { display: grid; --n: 4; } /* --n : le nombre de rubriques actives, reposé en ligne par la vue */
 .carte-rub {
-  position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; min-height: 159px; text-align: left;
+  position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; min-height: 120px; text-align: left; /* 120 (159 avant le 15/11/2026) : le pourcentage est monté sous le montant */
   border: 0; border-radius: 22px; padding: 18px; color: #fff; font: inherit; cursor: pointer;
   box-shadow: 0 -10px 24px -14px rgba(11,16,32,0.45); transition: transform .35s cubic-bezier(.2,.8,.2,1);
 }
-.carte-rub + .carte-rub { margin-top: -94px; }
+.carte-rub + .carte-rub { margin-top: -55px; } /* bande visible de chaque carte : 120 − 55 = 65 px, comme avant */
 .carte-rub::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
 .carte-rub::after { content: ""; position: absolute; right: -40px; bottom: -60px; width: 200px; height: 200px; z-index: -1; pointer-events: none;
@@ -1565,7 +1565,11 @@ input[type="month"] {
 .carte-rub-nom { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; min-width: 0; }
 .carte-rub-nom i { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
 .carte-rub-mt { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; white-space: nowrap; }
-.carte-rub-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 70px; font-size: 13px; font-weight: 600; opacity: 0.9; }
+/* Téléphone (cartes empilées) : le pourcentage sous le montant, dans la bande visible de chaque carte (15/11/2026). */
+.carte-rub-droite { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.carte-rub-pc { font-size: 12.5px; font-weight: 600; opacity: 0.85; white-space: nowrap; margin-top: 1px; }
+.carte-rub-pc-bas { display: none; }
+.carte-rub-bas { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 32px; font-size: 13px; font-weight: 600; opacity: 0.9; }
 .carte-rub--physical { color: #2b1d00; }
 .carte-rub--physical .carte-rub-nom i { background: rgba(43,29,0,0.10); }
 .evo-carte { padding: 14px 14px 10px !important; }
@@ -1578,6 +1582,8 @@ input[type="month"] {
   .accueil-haut--cote .carte-tete { margin-bottom: 0; }
   .accueil-cote { display: grid; gap: 12px; }
   .pile-rub { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px; }
+  .carte-rub-pc { display: none; } .carte-rub-pc-bas { display: inline; }
+  .carte-rub-bas { margin-top: 24px; }
   .carte-rub + .carte-rub { margin-top: 0; }
   .carte-rub { min-height: 150px; box-shadow: 0 14px 30px -18px rgba(11,16,32,0.5); }
   .carte-rub-rang { flex-direction: column; align-items: flex-start; gap: 14px; }
