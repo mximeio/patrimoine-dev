@@ -1175,7 +1175,7 @@ input[type="month"] {
 .ct-lib { opacity: 0.88; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-droite { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
-.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
+.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ct-montant { font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; white-space: nowrap; margin: 2px 0 6px; }
 .ct-dec { font-size: 19px; font-weight: 600; opacity: 0.62; letter-spacing: -0.02em; }
@@ -1263,7 +1263,7 @@ input[type="month"] {
 .ops-c > .section-header { padding: 0 2px 12px; border-bottom: 0; }
 .ops-titre { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
 .ops-outils { display: flex; align-items: center; gap: 8px; margin: -8px 0; } /* le bouton (38 px) déborde de l'en-tête sans l'agrandir : « Opérations » à la hauteur des titres des autres rubriques */
-.btn.ops-nouvelle { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+.btn.ops-nouvelle { display: inline-flex; align-items: center; gap: 6px; } /* taille, graisse et coins des boutons de l'app (« Mettre à jour ») : uniformité relevée par l'utilisateur le 15/11/2026 */
 .ops-c .tx-list { border-top: 1px solid var(--border); }
 .ops-c .section-footer { border-top: 1px solid var(--border); padding-left: 0; padding-right: 0; background: transparent; }
 /* Ligne C' : ni flèche ni crayon (masqués, la flèche reste dans le DOM sans rôle) ; la case de 26 px dans sa zone de 44 px
@@ -1450,7 +1450,7 @@ input[type="month"] {
 .alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 600; }
 
 /* La projection du compte courant, en pastille dans l'intitulé de la carte (lot 3 de la modernisation). */
-.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 13px; font-weight: 700; gap: 5px; height: 32px; padding: 0 12px; } /* 32 px : la hauteur de la pastille du mois, sur téléphone comme sur ordinateur */
+.carte-tete .ct-pill-btn { border: 0; background: rgba(255,255,255,0.16); cursor: pointer; color: inherit; font-family: inherit; font-size: 13px; font-weight: 600; gap: 5px; height: 32px; padding: 0 12px; } /* graisse 600, celle de la pastille du mois ; 32 px : la hauteur de la pastille du mois, sur téléphone comme sur ordinateur */
 .carte-tete .ct-pill-btn .proj-chev { color: rgba(255,255,255,0.7); }
 @media (max-width: 360px) { .carte-tete .ct-pill-lib { display: none; } }
 /* Les deux pastilles fines sous la carte du compte courant : « Reste mois préc. » et « Tickets resto ». */
