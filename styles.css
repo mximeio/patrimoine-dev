@@ -1235,20 +1235,20 @@ input[type="month"] {
    en texte foncé. ⚠️ `.card.carte-tete` et `!important` sur le padding : le bloc téléphone pose
    `.card { padding: 18px !important }` PLUS BAS dans le fichier, qui gagnerait à spécificité égale (mesuré : 145 px). */
 .carte-tete {
-  min-height: 136px; border: 0; border-radius: 22px; color: #fff; /* 136 (14/11/2026, choix de l'utilisateur, _maquettes/Mockup-Cartes-136) : 144 depuis la v1150 pour la ligne d'intitulé à 32 px ; les 8 px retirés sont l'espace vide sous le montant, la ligne d'intitulé garde ses 32 px */
+  min-height: 144px; border: 0; border-radius: 22px; color: #fff; /* 144 (15/11/2026, choix de l'utilisateur) : 136 en v1229 (l'espace vide SOUS LE MONTANT retiré), puis les 8 px rendus SOUS LE TRAIT, d'abord sur ordinateur (v1231) puis partout : trait à 88 px du haut, 10 px du trait aux chiffres, 14 px des chiffres au bord */
   display: flex; flex-direction: column; position: relative; isolation: isolate; margin-bottom: 16px;
   /* Pas d'overflow: hidden (cf. .ct-deco) ; z-index pour que le menu « ⋯ » passe AU-DESSUS de la liste qui suit. */
   z-index: 5;
 }
-.card.carte-tete { padding: 11px 16px 10px !important; overflow: visible; }
-/* Le CORPS de la carte (intitulé, montant, rangée du bas) a une hauteur FIXE : 136 − 21 px de padding. Ce qui se déplie
+.card.carte-tete { padding: 11px 16px 14px !important; overflow: visible; }
+/* Le CORPS de la carte (intitulé, montant, rangée du bas) a une hauteur FIXE : 144 − 25 px de padding. Ce qui se déplie
    (`dessous`, le détail de la projection) vient après, sans rien déplacer au-dessus. */
-.ct-corps { display: flex; flex-direction: column; min-height: 115px; flex: none; }
+.ct-corps { display: flex; flex-direction: column; min-height: 119px; flex: none; }
 .ct-deco { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; z-index: -1; pointer-events: none; }
 /* Reflet et anneau ANCRÉS EN HAUT et dimensionnés pour 136 px : quand la carte grandit (détail de la projection déplié),
    ils restent en place au lieu de glisser et de s'étirer avec le bas (relevé de l'utilisateur, 15/11/2026). Mêmes
    positions qu'avant à 136 px : 136 + 70 − 210 = −4 px. */
-.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 136px; z-index: -1; pointer-events: none;
+.ct-deco::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 144px; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.22), transparent 55%); }
 .ct-deco::after { content: ""; position: absolute; right: -44px; top: 4px; width: 210px; height: 210px; z-index: -1;
   border-radius: 50%; border: 30px solid rgba(255,255,255,0.08); pointer-events: none; }
@@ -1276,7 +1276,7 @@ input[type="month"] {
 .ct-dec:not(.ct-eur) { margin-left: 1px; }
 .ct-eur { margin-left: 3px; }
 .ct-pied { margin-top: auto; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px;
-  padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.18); }
+  padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.18); } /* 10 px du trait aux chiffres (6 avant le 15/11/2026) */
 .ct-cel { min-width: 0; }
 .ct-cel small { display: block; font-size: 12px; opacity: 0.82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ct-cel .ct-court { display: none; }
@@ -1310,20 +1310,8 @@ input[type="month"] {
   .ct-cel.ct-cel--anneau .ct-plein { display: none; }
   .ct-cel.ct-cel--anneau .ct-reste { display: inline; }
 }
-.ct-courbe { margin: auto -16px -10px; height: 44px; overflow: hidden; border-radius: 0 0 22px 22px; } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
+.ct-courbe { margin: auto -16px -14px; height: 44px; overflow: hidden; border-radius: 0 0 22px 22px; } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
-/* CARTES DE TÊTE SUR ORDINATEUR (15/11/2026, demande de l'utilisateur : « c'est bien sur smartphone mais un peu serré sur
-   ordi ») : 144 px au lieu de 136, l'air AJOUTÉ SOUS le trait — trait toujours à 88 px du haut, 10 px du trait aux chiffres (6
-   au téléphone), 14 px des chiffres au bord (10). La courbe de l'accueil suit le bas (même hauteur de 44 px). Même critère que
-   les fenêtres sur ordinateur : écran large ET souris. Les cinq cartes ensemble : aucun sautillement d'une rubrique à l'autre. */
-@media (min-width: 641px) and (hover: hover) and (pointer: fine) {
-  .carte-tete { min-height: 144px; }
-  .card.carte-tete { padding-bottom: 14px !important; }
-  .ct-corps { min-height: 119px; } /* 144 − 11 − 14 */
-  .ct-pied { padding-top: 10px; }
-  .ct-courbe { margin-bottom: -14px; }
-  .ct-deco::before { height: 144px; }
-}
 
 /* ── LE MENU « ⋯ », LES PARAMÈTRES (15/11/2026, maquette cartes2.html) ──
    La feuille : l'identité en ligne (avatar à gauche), puis trois rangées pleine largeur — icône et libellé — au lieu des
