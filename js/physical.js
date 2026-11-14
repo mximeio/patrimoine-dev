@@ -108,25 +108,25 @@ function PhysicalRow({ item, onEdit, onDelete }) {
   const invested = physicalInvested(item);
   const gain = current - invested;
   const gainPct = invested > 0 ? (gain / invested) * 100 : 0;
+  // Ligne C' (maquette cartes2.html, 15/11/2026) : avatar à deux lettres et TOUTE la ligne ouvre la modification — le
+  // crayon est retiré, ce qui rend au nom la place qu'il n'avait pas (« Napoléon 20 Fra… » relevé à 390 px).
   return (
-    <div className="asset-row" data-locate={`phys-${item.id}`}>
-      <span className="tx-icon pat">€</span>
-      <div>
-        <div className="asset-name">{item.name}</div>
-        <div className="asset-sub">
+    <button type="button" className="portfolio-list-row" data-locate={`phys-${item.id}`} onClick={onEdit} aria-label={`Modifier ${item.name}`}>
+      <div className="portfolio-list-icon portfolio-list-av" style={{ background: 'var(--warning-light)', color: '#8a5a00' }}>{initiales(item.name)}</div>
+      <div className="portfolio-list-main">
+        <div className="portfolio-list-name">{item.name}</div>
+        <div className="portfolio-list-sub">
           {item.quantity || 0} × {fmt(item.unitCurrentPrice || 0)} € · {fmtDateNumeric(item.priceUpdatedAt)}
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div className="asset-value num">{fmt(current)}<span className="currency-muted"> €</span></div>
-        <div className="asset-gain num" style={{ color: gain >= 0 ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>
+      <div className="portfolio-list-right">
+        <div className="num" style={{ fontSize: 14, fontWeight: 700 }}>{fmt(current)}<span className="currency-muted"> €</span></div>
+        <div className="portfolio-list-sub num" style={{ color: gain >= 0 ? 'var(--success-fonce)' : 'var(--danger-fonce)' }}>
           {gain >= 0 ? '+' : ''}{fmt(gain)} € · {gain >= 0 ? '+' : ''}{gainPct.toFixed(2)}%
         </div>
       </div>
-      <button className="btn-icon" title="Modifier" onClick={onEdit}>
-        <Icon name="pencil" size={14} />
-      </button>
-    </div>
+      <span className="portfolio-list-arrow" aria-hidden="true">›</span>
+    </button>
   );
 }
 

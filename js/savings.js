@@ -103,7 +103,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
         module="savings" libelle="Solde total" montant={totalBalance}
         pied={[
           { label: 'Nombre de comptes', value: savings.length },
-          { label: 'Intérêts perçus', value: `+ ${fmt(totalInterest)} €` },
+          { label: 'Intérêts perçus', value: `+${fmt(totalInterest)} €` },
         ]}
       />
 
@@ -209,8 +209,8 @@ function NewSavingsForm({ onSubmit, showToast }) {
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" placeholder="ex: Livret A (Boursorama)" required />
       </div>
       <div>
-        <label className="label">Solde initial (€)</label>
-        <AmountInput value={balance} onChange={(n) => setBalance(n)} className="input" placeholder="0.00" />
+        <label className="label">Solde initial</label>
+        <div className="unite-eur"><AmountInput value={balance} onChange={(n) => setBalance(n)} className="input" placeholder="0.00" /></div>
         <div className="field-hint">Le solde affiché sera calculé : ce solde initial + tes opérations (versements, retraits, intérêts).</div>
       </div>
       {/* Grisé tant que le nom est vide — aligné sur la création d'un compte
@@ -344,7 +344,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
               </button>
             </Dropdown>}
         pied={[
-          { label: 'Intérêts perçus', value: `+ ${fmt(stats.interets)} €` },
+          { label: 'Intérêts perçus', value: `+${fmt(stats.interets)} €` },
           // 2ᵉ cellule de la maquette C' (15/11/2026) : la date de la dernière opération datée du livret.
           { label: 'Dernière opération', court: 'Dernière op.', value: (() => {
             const d = (saving.operations || []).map(o => o.date).filter(Boolean).sort().pop();
@@ -479,8 +479,8 @@ function SavingsConfigureForm({ saving, onUpdateName, onUpdateInitial, onDirtyCh
         <input type="text" value={name} onChange={e => setName(e.target.value)} className="input" required />
       </div>
       <div>
-        <label className="label">Solde initial (€)</label>
-        <AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" />
+        <label className="label">Solde initial</label>
+        <div className="unite-eur"><AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" /></div>
         <div className="field-hint">
           Point de départ pour le calcul du solde affiché. Toutes les opérations enregistrées s'y ajoutent.
         </div>
@@ -657,8 +657,8 @@ function SavingsOperationForm({ initial, defaultType, onSubmit, onDelete, showTo
         <input type="text" value={label} onChange={e => setLabel(e.target.value)} className="input" placeholder={labelPlaceholder} />
       </div>
       <div>
-        <label className="label">{amountLabel}</label>
-        <AmountInput value={amount} onChange={setAmount} className="input" placeholder="0.00" />
+        <label className="label">{amountLabel.replace(' (€)', '')}</label>
+        <div className="unite-eur"><AmountInput value={amount} onChange={setAmount} className="input" placeholder="0.00" /></div>
       </div>
       <div className="form-actions">
         <button type="submit" className="btn btn-accent btn-lg">{initial ? 'Modifier' : 'Enregistrer'}</button>

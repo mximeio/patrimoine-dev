@@ -217,8 +217,8 @@ function NewCheckingAccountForm({ onSubmit, existingNames = [], showToast }) {
           <MonthInputPicker value={initialBalanceMonth} onChange={setInitialBalanceMonth} />
         </div>
         <div>
-          <label className="label">Solde initial (€)</label>
-          <AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" placeholder="0.00" />
+          <label className="label">Solde initial</label>
+          <div className="unite-eur"><AmountInput value={initialBalance} onChange={(n) => setInitialBalance(n)} className="input" placeholder="0.00" /></div>
         </div>
       </div>
       <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>
@@ -1050,8 +1050,8 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
             <MonthInputPicker value={initMonth} onChange={setInitMonth} />
           </div>
           <div>
-            <label className="label">Solde initial (€)</label>
-            <AmountInput value={initVal} onChange={(n) => setInitVal(n)} className="input" />
+            <label className="label">Solde initial</label>
+            <div className="unite-eur"><AmountInput value={initVal} onChange={(n) => setInitVal(n)} className="input" /></div>
           </div>
         </div>
       </div>
@@ -1076,13 +1076,13 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
         {enabled && (
           <div className="field-grid" style={{ marginTop: 12 }}>
             <div>
-              <label className="label">Valeur d'un TR (€)</label>
-              <AmountInput className="input" value={face} onChange={(n) => setFace(n)} />
+              <label className="label">Valeur d'un TR</label>
+              <div className="unite-eur"><AmountInput className="input" value={face} onChange={(n) => setFace(n)} /></div>
               <div className="field-hint">Montant facial du ticket</div>
             </div>
             <div>
-              <label className="label">Part de ma poche (€)</label>
-              <AmountInput className="input" value={own} onChange={(n) => setOwn(n)} />
+              <label className="label">Part de ma poche</label>
+              <div className="unite-eur"><AmountInput className="input" value={own} onChange={(n) => setOwn(n)} /></div>
               <div className="field-hint">Part employeur : {eur(employer)} ({fmt(employerPct)} %)</div>
             </div>
           </div>

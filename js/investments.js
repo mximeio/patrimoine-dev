@@ -1178,8 +1178,8 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       {/* Montant — pour deposit / purchase / dividend / sale */}
       {needsAmount && (
         <div>
-          <label className="label">{amountLabel}</label>
-          <AmountInput value={amount} onChange={(n) => setAmount(n)} className="input" placeholder="0.00" />
+          <label className="label">{amountLabel.replace(' (€)', '')}</label>
+          <div className="unite-eur"><AmountInput value={amount} onChange={(n) => setAmount(n)} className="input" placeholder="0.00" /></div>
           {opType === 'dividend' && <div className="field-hint">Le cash sera crédité sur le compte (sans gonfler le "versé").</div>}
         </div>
       )}
@@ -1187,8 +1187,8 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       {/* Coût d'acquisition vendu — uniquement pour sale */}
       {opType === 'sale' && (
         <div>
-          <label className="label">Coût d'acquisition de la part vendue (€)</label>
-          <AmountInput value={costBasis} onChange={(n) => setCostBasis(n)} className="input" placeholder="0.00" />
+          <label className="label">Coût d'acquisition de la part vendue</label>
+          <div className="unite-eur"><AmountInput value={costBasis} onChange={(n) => setCostBasis(n)} className="input" placeholder="0.00" /></div>
           <div className="field-hint">Combien tu avais investi pour la part que tu revends. La différence avec le montant récupéré devient ton gain réalisé.</div>
         </div>
       )}
@@ -1196,8 +1196,8 @@ function AddOperationForm({ data, initial, onSubmit, onDelete, showToast }) {
       {/* Valeur de marché — uniquement pour gift */}
       {opType === 'gift' && (
         <div>
-          <label className="label">Valeur de marché à la réception (€)</label>
-          <AmountInput value={marketValue} onChange={(n) => setMarketValue(n)} className="input" placeholder="0.00" />
+          <label className="label">Valeur de marché à la réception</label>
+          <div className="unite-eur"><AmountInput value={marketValue} onChange={(n) => setMarketValue(n)} className="input" placeholder="0.00" /></div>
           <div className="field-hint">Stockée pour l'historique. Le coût d'acquisition reste à 0 € (tu n'as rien déboursé).</div>
         </div>
       )}
