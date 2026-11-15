@@ -1363,6 +1363,10 @@ input[type="month"] {
 /* Groupe gris de rangées de réglage (maquette C' : .groupe-r / .rang-r) : tuile de couleur, titre, aide, interrupteur ;
    un filet entre deux rangées, toute la rangée est cliquable (c'est un <label>). */
 .settings-groupe { background: var(--surface-alt); border-radius: var(--r-touche); overflow: hidden; margin-bottom: 14px; }
+/* Le DERNIER bloc d'une fenêtre ne garde pas sa marge (16/11/2026, relevé de l'utilisateur sur iPhone) : ses 14 px s'ajoutaient
+   à la marge du bas de la fenêtre — 30 px en bas des Paramètres contre 14 en haut (38 / 22 à l'ordinateur), 16 / 24 ailleurs. */
+/* Restreint au bloc qui FINIT la fenêtre : ailleurs (réglages d'une enveloppe), la marge sépare le bloc du bouton « Enregistrer ». */
+.modal-body > :last-child > .settings-groupe:last-child, .modal-body > :last-child > .settings-card:last-child { margin-bottom: 0; }
 .rang-reglage { display: flex; align-items: center; gap: 12px; padding: 11px 14px; } /* plus de curseur main : seul l'interrupteur agit */
 .rang-reglage + .rang-reglage { border-top: 1px solid var(--border); }
 .rang-reglage .toggle { position: relative; }
