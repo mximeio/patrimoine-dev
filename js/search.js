@@ -856,11 +856,26 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     const o = overlayRef.current;
     // Les coins : 34 à l'ouverture (le clavier arrive avec la fenêtre), 54 en bas seulement quand le clavier S'EN VA — donc
     // une fois qu'on l'a vu ouvert. Avant de l'avoir vu, l'instant où il monte n'est pas un « clavier masqué » (DEV v1264).
-    let clavierVu = false;
-    return suivreZoneVisible(o, (ouvert) => {
+    // DEV v1285 (relevé de l'utilisateur : recherche vide, clavier rangé, fenêtre courte… coins du bas à 54) : 54 reprend
+    // l'arrondi de l'écran, il n'a de sens que si le bas de la fenêtre TOUCHE le bas de l'écran — clavier rangé ET fenêtre à
+    // sa hauteur maximale (la liste la remplit). Courte, elle garde 34 partout. Même règle que les feuilles du bas.
+    let clavierVu = false, clavierOuvert = false;
+    const recalculer = () => {
+      const m = o && o.querySelector('.search-modal');
+      if (!m) return;
+      const cs = getComputedStyle(o);
+      const dispo = o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      o.classList.toggle('search-overlay--en-bas', clavierVu && !clavierOuvert && m.offsetHeight >= dispo - 1);
+    };
+    // La hauteur de la fenêtre change aussi sans le clavier (résultats qui arrivent ou s'en vont) : on la suit.
+    const ro = (o && window.ResizeObserver) ? new ResizeObserver(recalculer) : null;
+    if (ro) { const m = o.querySelector('.search-modal'); if (m) ro.observe(m); ro.observe(o); }
+    const arreter = suivreZoneVisible(o, (ouvert) => {
       if (ouvert) clavierVu = true;
-      if (o) o.classList.toggle('search-overlay--sans-clavier', clavierVu && !ouvert);
+      clavierOuvert = ouvert;
+      recalculer();
     });
+    return () => { arreter(); if (ro) ro.disconnect(); };
   }, []);
 
   // Scroll auto pour garder l'élément focusé visible
