@@ -27,6 +27,11 @@
   --danger-light: #fef2f2;
   --warning: #f59e0b;
   --warning-light: #fffbeb;
+  /* Fond pâle des ÉLÉMENTS ambre (actifs, support ou compte de couleur ambre) depuis le 15/11/2026, choix de l'utilisateur
+     sur _maquettes/Mockup-Couleurs-Releve : #fffbeb paraissait crème à côté des fonds pâles cyan et vert (même écart
+     mesuré, perçu plus faible). Un cran plus soutenu, l'initiale #a8730a y fait 3,7:1. Le pendant JS : FOND_PASTILLE (utils.js).
+     Les alertes, encadrés et tickets resto gardent --warning-light. */
+  --ambre-element: #fef3c7;
   --info: #06b6d4;
   --info-light: #ecfeff;
   /* LA nuance de chaque couleur pour tout ce qui s'écrit ou se dessine sur fond clair — texte, icône, fond plein sous un
@@ -1945,7 +1950,7 @@ button.stat-card {
 .section-icon.checking { background: var(--accent-light); color: var(--accent); }
 .section-icon.savings { background: var(--info-light); color: var(--info-fonce); }
 .section-icon.invest { background: var(--success-light); color: var(--success-fonce); }
-.section-icon.physical { background: var(--warning-light); color: var(--warning-fonce); }
+.section-icon.physical { background: var(--ambre-element); color: var(--warning-fonce); }
 .section-total { font-size: 12px; color: var(--text-muted); }
 .section-total strong { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 
@@ -3489,7 +3494,7 @@ button.stat-card {
 .search-result-icon.checking { background: var(--accent-light); color: var(--accent); }
 .search-result-icon.savings { background: var(--info-light); color: var(--info-fonce); }
 .search-result-icon.investments { background: var(--success-light); color: var(--success-fonce); }
-.search-result-icon.physical { background: var(--warning-light); color: var(--warning-fonce); }
+.search-result-icon.physical { background: var(--ambre-element); color: var(--warning-fonce); }
 .search-result-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .search-result-title {
   font-size: 14px; font-weight: 500; color: var(--text);

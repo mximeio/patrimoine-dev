@@ -60,9 +60,10 @@ const couleurIcone = (couleur) => NUANCE_ICONE[String(couleur).toLowerCase()] ||
 // d'actifs et les supports plus ternes que la carte « Tickets resto » (relevé par l'utilisateur). Une couleur hors
 // table (choisie librement) est éclaircie à 8 %. Avec `couleurIcone`, l'icône y reste à 3:1 au moins (test).
 const FOND_PASTILLE = {
-  '#10b981': '#ecfdf5', '#ef4444': '#fef2f2', '#f59e0b': '#fffbeb', '#06b6d4': '#ecfeff',
+  '#10b981': '#ecfdf5', '#ef4444': '#fef2f2', '#f59e0b': '#fef3c7', '#06b6d4': '#ecfeff',
   '#ec4899': '#fdf2f8', '#8b5cf6': '#f5f3ff', '#4f46e5': '#eef2ff', '#64748b': '#f1f5f9',
   '#0891b2': '#ecfeff', '#059669': '#ecfdf5', // repères de l'épargne et des investissements (15/11/2026) : même fond pâle qu'avant
+  // L'ambre : #fef3c7 (et non sa nuance 50 #fffbeb, trop crème à l'œil) depuis le 15/11/2026 — cf. --ambre-element (styles.css).
 };
 const fondPastille = (couleur) => FOND_PASTILLE[String(couleur).toLowerCase()] || `color-mix(in srgb, ${couleur} 8%, #ffffff)`;
 
