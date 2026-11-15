@@ -4456,18 +4456,17 @@ button.stat-card {
    Paysage et ordinateur : inchangés. */
 @media (max-width: 640px) and (orientation: portrait) {
   .modal-overlay.modal-overlay--feuille {
-    padding: max(14px, env(safe-area-inset-top, 0px)) 8px calc(8px + var(--vv-ecart, 0px));
+    padding: max(14px, env(safe-area-inset-top, 0px)) 8px 8px;
     align-items: flex-end;
-    /* La zone VISIBLE (DEV v1268-v1271, `suivreZoneVisible`) : clavier ouvert, la feuille se loge au-dessus de lui au lieu que
-       l'écran entier glisse et emporte l'en-tête ; le voile couvre tout jusqu'au clavier. */
-    top: var(--vv-haut, 0px); bottom: auto; height: var(--vv-h, 100dvh);
+    /* Clavier ouvert : la feuille ne le suit PAS (option 1, DEV v1273) — iOS fait glisser tout l'écran, sans saut. La version
+       « logée au-dessus du clavier » (v1268-v1272) sautait au changement de champ : cf. Modal (ui.js) et le CHANGELOG. */
   }
   .modal-overlay--feuille .modal {
     --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
     --r-feuille-bas: clamp(var(--r-contenant), calc(env(safe-area-inset-bottom, 0px) * 1.6), 54px);
     --marge-boutons: max(16px, calc(env(safe-area-inset-bottom, 0px) - 8px));
     border-radius: var(--r-feuille-haut) var(--r-feuille-haut) var(--r-feuille-bas) var(--r-feuille-bas);
-    max-height: 100%;   /* de la zone visible : clavier ouvert, elle raccourcit (une hauteur posée en ligne y est plafonnée) */
+    max-height: calc(100dvh - max(14px, env(safe-area-inset-top, 0px)) - 8px);
     animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .modal-overlay--feuille .modal-body { padding-bottom: var(--marge-boutons); transition: padding-bottom 0.2s ease; }

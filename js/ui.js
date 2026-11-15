@@ -64,7 +64,8 @@ const ModalDirtyContext = React.createContext(null);
 // DEV v1256, sur décision de l'utilisateur (« tout à 60 % »), AUCUNE ne la porte : toutes s'ouvrent en feuille flottante à la
 // hauteur de leur contenu (plafonnée à 60 %) et la poignée les passe en pleine hauteur. Prop gardée en réserve. Ordinateur et
 // paysage : inchangés (styles.css « FENÊTRES EN FEUILLE »).
-// LA ZONE VISIBLE ET LE CLAVIER D'iOS (DEV v1268) — partagé par `Modal` et `SearchModal` (search.js, chargé après).
+// LA ZONE VISIBLE ET LE CLAVIER D'iOS (DEV v1268) — partagé par `SearchModal` (search.js, chargé après), qui s'y loge, et `Modal`,
+// qui n'en lit que l'état du clavier depuis la DEV v1273 (option 1 : les feuilles ne suivent plus le clavier).
 // Pose sur l'élément `--vv-haut` / `--vv-h` (la zone que le clavier laisse visible, `visualViewport`) et `--vv-ecart`, et dit au rappel si le
 // clavier est ouvert. ⚠️ La v1267 comparait `visualViewport.height` à `window.innerHeight` : sur l'iPhone de l'utilisateur, le
 // clavier n'était JAMAIS vu (les deux hauteurs raccourcissent ensemble — relevé sur ses captures). La référence est désormais la
@@ -353,34 +354,18 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // d'ouverture ; un second geste la ferme. État d'avant : étiquette git `avant-fermeture-poignee` (DEV v1264).
   const montesRef = useRef(true);
   useEffect(() => () => { montesRef.current = false; }, []);
-  // LE CLAVIER (DEV v1267-v1268, idées de l'utilisateur, relevées sur ses captures). Sans rien faire, iOS laissait la feuille en
-  // place et faisait glisser tout l'écran pour montrer le champ touché : l'en-tête sortait par le haut. Désormais l'overlay prend
-  // la zone VISIBLE (`suivreZoneVisible`, comme la recherche) : clavier ouvert, la feuille se loge entre la barre d'état et le
-  // clavier, raccourcit si besoin (en-tête et poignée visibles, le contenu défile) ; et la classe `modal-overlay--clavier` passe
-  // ses coins du bas à 34 et ses boutons à 16 px (styles.css, bloc portrait). Clavier fermé, tout revient.
-  // LE CHAMP TOUCHÉ RESTE EN VUE (DEV v1269, relevé sur iPhone : « Part de ma poche » coupé par le bas de la feuille). iOS fait
-  // défiler le contenu vers le champ AVANT que la feuille ne raccourcisse au-dessus du clavier ; le champ finissait sous le bord.
-  // Une fois la feuille logée, et à chaque changement de champ clavier ouvert, on fait défiler le contenu nous-mêmes pour que le
-  // champ soit entièrement visible, à 16 px des bords du contenu.
-  const amenerLeChamp = () => {
-    const b = bodyRef.current, el = document.activeElement;
-    if (!b || !el || el === b || !b.contains(el) || !el.getBoundingClientRect) return;
-    const r = el.getBoundingClientRect(), z = b.getBoundingClientRect(), marge = 16;
-    if (r.bottom > z.bottom - marge) b.scrollTop += r.bottom - (z.bottom - marge);
-    else if (r.top < z.top + marge) b.scrollTop -= (z.top + marge) - r.top;
-  };
+  // LE CLAVIER — OPTION 1 (DEV v1273, choix de l'utilisateur : « je ne veux pas avoir de couacs »). La feuille NE SUIT PAS le
+  // clavier : comme la carte centrée d'avant (et la PROD), iOS fait glisser tout l'écran lui-même pour montrer le champ touché,
+  // d'un seul mouvement, sans saut ; l'en-tête peut sortir par le haut pendant la saisie des derniers champs. Seule la classe
+  // `modal-overlay--clavier` suit le clavier : coins du bas à 34, boutons à 16 px (styles.css) — elle ne déplace rien.
+  // ⚠️ ESSAYÉ ET RETIRÉ (v1268-v1272) : loger la feuille au-dessus du clavier (overlay sur la zone visible + compensation de
+  // `visualViewport.offsetTop`) garde l'en-tête visible, mais iOS ne prévient de son glissement qu'APRÈS l'avoir fait : la feuille
+  // sautait de ~24 px pendant une ou deux images à chaque changement de champ (mesuré image par image sur les vidéos de
+  // l'utilisateur) ; sans la compensation (v1271), elle partait vers le haut. Pas de solution sans couac : ne pas y revenir sans
+  // une preuve sur iPhone AVANT de livrer. Le détail est au CHANGELOG (v1267 → v1273).
   useEffect(() => {
-    const o = overlayRef.current, b = bodyRef.current;
-    let ouvertAvant = false, raf = 0;
-    const plusTard = () => { if (raf) window.cancelAnimationFrame(raf); raf = window.requestAnimationFrame(() => { raf = 0; amenerLeChamp(); }); };
-    const arreter = suivreZoneVisible(o, (ouvert) => {
-      if (o) o.classList.toggle('modal-overlay--clavier', ouvert);
-      if (ouvert && !ouvertAvant) plusTard();   // la feuille vient de se loger au-dessus du clavier
-      ouvertAvant = ouvert;
-    });
-    const auFocus = () => { if (ouvertAvant) window.setTimeout(plusTard, 60); };   // changement de champ, clavier ouvert
-    if (b) b.addEventListener('focusin', auFocus);
-    return () => { arreter(); if (raf) window.cancelAnimationFrame(raf); if (b) b.removeEventListener('focusin', auFocus); };
+    const o = overlayRef.current;
+    return suivreZoneVisible(o, (ouvert) => { if (o) o.classList.toggle('modal-overlay--clavier', ouvert); });
   }, []);
   const animationsReduites = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const glisserDehors = (vitesse) => {
