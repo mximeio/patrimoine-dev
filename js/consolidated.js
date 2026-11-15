@@ -142,10 +142,15 @@ function ConsolidatedView({ ctx, onNavigate }) {
   ].filter(Boolean);
 
   const totalPatrimoine = categories.reduce((s, c) => s + c.value, 0);
-  // « % du total » : une part n'a de sens que si toutes les rubriques sont positives et le total aussi. Une rubrique négative
-  // (compte courant projeté à découvert) donnait −380 %, 112 %, 337 %… : on ne montre alors AUCUN pourcentage (15/11/2026,
-  // décision de l'utilisateur) — la ligne d'info (« 3 comptes »…) reste. Pas de tiret : « — du total » se lirait mal.
-  const partsLisibles = totalPatrimoine > 0 && categories.every(c => c.value >= 0);
+  // « % du total » → PARTS DES AVOIRS (15/11/2026, décision de l'utilisateur, après un cas pratique) : la part d'une rubrique se
+  // calcule sur la somme des rubriques POSITIVES. Tant que tout est positif, c'est exactement le « % du total » d'avant ; dès
+  // qu'une rubrique est négative (en pratique, le compte courant à découvert), les autres affichent « x % des avoirs » — juste,
+  // stable quand le compte courant bouge, et jamais 112 % ou 337 % comme l'ancien calcul sur le total net (−33 105 € de
+  // découvert) — et la rubrique négative n'affiche pas de part (celle d'une dette n'a pas de sens).
+  const avoirs = categories.reduce((s, c) => s + Math.max(0, c.value), 0);
+  const aDecouvert = categories.some(c => c.value < 0);
+  const libellePart = aDecouvert ? 'des avoirs' : 'du total';
+  const part = (c) => (c.value >= 0 && avoirs > 0) ? `${fmtPct((c.value / avoirs) * 100, { signe: false })} ${libellePart}` : null;
 
   const investmentsGain = portfolios.reduce((s, p) => {
     const ps = computePortfolioStats(p.data);
@@ -217,12 +222,12 @@ function ConsolidatedView({ ctx, onNavigate }) {
                 </span>
                 <span className="carte-rub-droite">
                   <span className="carte-rub-mt num">{eur(c.value)}</span>
-                  {partsLisibles && <span className="carte-rub-pc num">{fmtPct((c.value / totalPatrimoine) * 100, { signe: false })} du total</span>}
+                  {part(c) && <span className="carte-rub-pc num">{part(c)}</span>}
                 </span>
               </span>
               <span className="carte-rub-bas">
                 <span>{c.sub}</span>
-                {partsLisibles && <span className="num carte-rub-pc-bas">{fmtPct((c.value / totalPatrimoine) * 100, { signe: false })} du total</span>}
+                {part(c) && <span className="num carte-rub-pc-bas">{part(c)}</span>}
               </span>
             </button>
           ))}
