@@ -347,9 +347,29 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // la zone VISIBLE (`suivreZoneVisible`, comme la recherche) : clavier ouvert, la feuille se loge entre la barre d'état et le
   // clavier, raccourcit si besoin (en-tête et poignée visibles, le contenu défile) ; et la classe `modal-overlay--clavier` passe
   // ses coins du bas à 34 et ses boutons à 16 px (styles.css, bloc portrait). Clavier fermé, tout revient.
+  // LE CHAMP TOUCHÉ RESTE EN VUE (DEV v1269, relevé sur iPhone : « Part de ma poche » coupé par le bas de la feuille). iOS fait
+  // défiler le contenu vers le champ AVANT que la feuille ne raccourcisse au-dessus du clavier ; le champ finissait sous le bord.
+  // Une fois la feuille logée, et à chaque changement de champ clavier ouvert, on fait défiler le contenu nous-mêmes pour que le
+  // champ soit entièrement visible, à 16 px des bords du contenu.
+  const amenerLeChamp = () => {
+    const b = bodyRef.current, el = document.activeElement;
+    if (!b || !el || el === b || !b.contains(el) || !el.getBoundingClientRect) return;
+    const r = el.getBoundingClientRect(), z = b.getBoundingClientRect(), marge = 16;
+    if (r.bottom > z.bottom - marge) b.scrollTop += r.bottom - (z.bottom - marge);
+    else if (r.top < z.top + marge) b.scrollTop -= (z.top + marge) - r.top;
+  };
   useEffect(() => {
-    const o = overlayRef.current;
-    return suivreZoneVisible(o, (ouvert) => { if (o) o.classList.toggle('modal-overlay--clavier', ouvert); });
+    const o = overlayRef.current, b = bodyRef.current;
+    let ouvertAvant = false, raf = 0;
+    const plusTard = () => { if (raf) window.cancelAnimationFrame(raf); raf = window.requestAnimationFrame(() => { raf = 0; amenerLeChamp(); }); };
+    const arreter = suivreZoneVisible(o, (ouvert) => {
+      if (o) o.classList.toggle('modal-overlay--clavier', ouvert);
+      if (ouvert && !ouvertAvant) plusTard();   // la feuille vient de se loger au-dessus du clavier
+      ouvertAvant = ouvert;
+    });
+    const auFocus = () => { if (ouvertAvant) window.setTimeout(plusTard, 60); };   // changement de champ, clavier ouvert
+    if (b) b.addEventListener('focusin', auFocus);
+    return () => { arreter(); if (raf) window.cancelAnimationFrame(raf); if (b) b.removeEventListener('focusin', auFocus); };
   }, []);
   const animationsReduites = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const glisserDehors = (vitesse) => {
