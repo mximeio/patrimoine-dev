@@ -65,7 +65,7 @@ const ModalDirtyContext = React.createContext(null);
 // hauteur de leur contenu (plafonnée à 60 %) et la poignée les passe en pleine hauteur. Prop gardée en réserve. Ordinateur et
 // paysage : inchangés (styles.css « FENÊTRES EN FEUILLE »).
 // LA ZONE VISIBLE ET LE CLAVIER D'iOS (DEV v1268) — partagé par `Modal` et `SearchModal` (search.js, chargé après).
-// Pose sur l'élément `--vv-h` (la hauteur que le clavier laisse visible, `visualViewport`) et `--vv-ecart`, et dit au rappel si le
+// Pose sur l'élément `--vv-haut` / `--vv-h` (la zone que le clavier laisse visible, `visualViewport`) et `--vv-ecart`, et dit au rappel si le
 // clavier est ouvert. ⚠️ La v1267 comparait `visualViewport.height` à `window.innerHeight` : sur l'iPhone de l'utilisateur, le
 // clavier n'était JAMAIS vu (les deux hauteurs raccourcissent ensemble — relevé sur ses captures). La référence est désormais la
 // PLUS GRANDE hauteur visible vue depuis l'ouverture ; une rotation (largeur qui change) la remet à zéro.
@@ -83,10 +83,12 @@ function suivreZoneVisible(el, auChangement) {
     reference = Math.max(reference, vv.height);
     const ouvert = vv.height < reference - 120;
     hClavier = ouvert ? (hClavier ? Math.min(hClavier, vv.height) : vv.height) : 0;
-    // ⚠️ PAS de compensation du glissement d'iOS (`offsetTop`), retirée en DEV v1271 : la vidéo de l'utilisateur montre qu'iOS ne
-    // déplace pas les éléments fixes quand il fait glisser l'écran au changement de champ — compenser créait le saut (~24 px).
+    // 🔴 La compensation du glissement d'iOS (`offsetTop`) est INDISPENSABLE : iOS fait glisser l'écran pour montrer le champ et
+    // emporte les éléments fixes. La DEV v1271 l'avait retirée (croyant qu'elle causait le saut au changement de champ) : clavier
+    // ouvert, la feuille partait vers le haut, en-tête hors de l'écran (vidéo de l'utilisateur). Rétablie en DEV v1272.
     // L'overlay couvre toute la zone visible (le voile va jusqu'au clavier) ; `--vv-ecart` remonte la feuille de ce que la zone
     // a gagné depuis sa plus petite hauteur (pavé numérique plus bas que les lettres) : la feuille ne bouge pas.
+    el.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
     el.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
     el.style.setProperty('--vv-ecart', Math.round(ouvert ? vv.height - hClavier : 0) + 'px');
     auChangement(ouvert);

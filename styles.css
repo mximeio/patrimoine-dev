@@ -4460,7 +4460,7 @@ button.stat-card {
     align-items: flex-end;
     /* La zone VISIBLE (DEV v1268-v1271, `suivreZoneVisible`) : clavier ouvert, la feuille se loge au-dessus de lui au lieu que
        l'écran entier glisse et emporte l'en-tête ; le voile couvre tout jusqu'au clavier. */
-    top: 0; bottom: auto; height: var(--vv-h, 100dvh);
+    top: var(--vv-haut, 0px); bottom: auto; height: var(--vv-h, 100dvh);
   }
   .modal-overlay--feuille .modal {
     --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
@@ -4494,13 +4494,13 @@ button.stat-card {
   .feuille-poignee::before { content: ""; position: absolute; inset: -12px -40px; }
   .modal-overlay .feuille-poignee + .modal-header { touch-action: none; }
   /* LA RECHERCHE — forme A (DEV v1262, _maquettes/Mockup-Recherche-Feuille) : en haut, sous la barre d'état, 8 px des bords,
-     coins des feuilles ; elle ne descend jamais sous le clavier. L'overlay prend la zone VISIBLE (`--vv-h` / `--vv-ecart`, posées
+     coins des feuilles ; elle ne descend jamais sous le clavier. L'overlay prend la zone VISIBLE (`--vv-haut` / `--vv-h` / `--vv-ecart`, posées
      par `SearchModal` d'après `visualViewport`) : clavier ouvert, la fenêtre s'arrête 8 px au-dessus de sa barre ; clavier masqué,
      elle peut aller jusqu'à 8 px du bas. Coins de 34 à l'ouverture, avec le clavier ; quand le clavier S'EN VA, ceux du bas
      passent à 54, comme une feuille en grand (`--sans-clavier`, posée par `SearchModal` seulement après avoir vu le clavier
      ouvert : sinon l'instant où il monte faisait changer le coin sous les yeux — DEV v1263-v1264). */
   .search-overlay {
-    top: 0; bottom: auto; height: var(--vv-h, 100dvh);
+    top: var(--vv-haut, 0px); bottom: auto; height: var(--vv-h, 100dvh);
     padding: max(14px, env(safe-area-inset-top, 0px)) 8px calc(8px + var(--vv-ecart, 0px));
   }
   .search-modal {
