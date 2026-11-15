@@ -64,7 +64,7 @@ const ModalDirtyContext = React.createContext(null);
 // DEV v1256, sur décision de l'utilisateur (« tout à 60 % »), AUCUNE ne la porte : toutes s'ouvrent en feuille flottante à la
 // hauteur de leur contenu (plafonnée à 60 %) et la poignée les passe en pleine hauteur. Prop gardée en réserve. Ordinateur et
 // paysage : inchangés (styles.css « FENÊTRES EN FEUILLE »).
-function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false }) {
+function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false }) {
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
   // contient un <form> (les listes, la lecture seule « Toutes les opérations »,
@@ -87,6 +87,12 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const dernierGesteRef = useRef(0);       // fin du dernier glisser : le clic qui suit n'est pas un toucher
   const [deborde, setDeborde] = useState(false);
   const [grande, setGrande] = useState(false);
+  // DEUX SORTES DE FEUILLES (DEV v1258, proposition de l'utilisateur) : les LISTES qui grandissent avec les données (prop
+  // `liste` : Paramètres, répartition des charges, récurrents, tickets resto payés, toutes les opérations, réglages et mise à
+  // jour groupée des enveloppes, calculer un versement) gardent tout ce qui précède. Les FORMULAIRES, dont le contenu est borné,
+  // s'ouvrent ENTIERS (hauteur de leur contenu, plafonnée sous la barre d'état par le CSS, qui suit si le contenu change) ; leur
+  // poignée est toujours là et la feuille REBONDIT quand on la tire, vers le haut comme vers le bas : rien ne change de taille.
+  const [feuille, setFeuille] = useState(false);   // feuille de téléphone (portrait), mesurée au montage
   const feuilleTel = () => !pleine && !!(window.matchMedia && window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches);
   const downOnBackdropRef = useRef(false);
   // Stable (deps []) : sûr à utiliser comme valeur de contexte et en dépendance
@@ -222,7 +228,9 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     if (!m || !b) return undefined;
     const figer = () => {
       m.style.height = '';
-      if (!feuilleTel()) { ouvertureRef.current = 0; setDeborde(false); setGrande(false); return; }
+      if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setDeborde(false); setGrande(false); return; }
+      setFeuille(true);
+      if (!liste) { ouvertureRef.current = 0; return; }   // formulaire : entier, la hauteur reste au CSS
       const h = Math.min(m.offsetHeight, Math.round(window.innerHeight * 0.6));
       ouvertureRef.current = h;
       m.style.height = h + 'px';
@@ -261,10 +269,21 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const duree = reduit ? 0 : 260;
     const cible = versGrande ? plafondFeuille() : ouvertureRef.current;
     m.style.transform = '';
-    poserHauteur(cible, duree ? `height ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '');
+    poserHauteur(cible, duree ? `height ${duree}ms cubic-bezier(0.32, 0.72, 0, 1), transform ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '');
     window.clearTimeout(animRef.current.fin);
     animRef.current.fin = window.setTimeout(() => { if (modalRef.current) modalRef.current.style.transition = ''; }, duree + 20);
     setGrande(versGrande);
+  };
+  // Le REBOND d'un formulaire : la feuille revient à sa place, rien d'autre ne bouge.
+  const rebondir = (depuis) => {
+    const m = modalRef.current; if (!m) return;
+    const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duree = reduit ? 0 : 260;
+    window.clearTimeout(animRef.current.fin);
+    if (depuis) { m.style.transition = 'none'; m.style.transform = `translateY(${depuis}px)`; void m.offsetHeight; }
+    m.style.transition = duree ? `transform ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '';
+    m.style.transform = '';
+    animRef.current.fin = window.setTimeout(() => { if (modalRef.current) modalRef.current.style.transition = ''; }, duree + 20);
   };
   const agrandir = () => animerVers(true);
   const reduire = () => animerVers(false);
@@ -272,18 +291,21 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // résiste (élastique, ~42 px au plus, par un `transform`, sans mise en page) : elle ne se ferme jamais.
   const elastique = (a) => (a * 42) / (a + 42);
   const prendreDebut = (e) => {
-    if (!ouvertureRef.current || !(deborde || grande)) return;
+    if (!feuille || (liste && !(ouvertureRef.current && (deborde || grande)))) return;
     if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
     const m = modalRef.current;
     // Tout ce qu'il faut lire, on le lit UNE fois, ici.
-    prendreRef.current = { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(),
-      pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
+    prendreRef.current = liste
+      ? { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(),
+        pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false }
+      : { y0: e.clientY, dy: 0, fixe: true, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
     m.style.transition = 'none';
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
   };
   const peindre = () => {
     animRef.current.raf = 0;
     const d = prendreRef.current, m = modalRef.current; if (!d || !m) return;
+    if (d.fixe) { m.style.transform = `translateY(${d.dy < 0 ? -elastique(-d.dy) : elastique(d.dy)}px)`; return; }
     const voulu = d.h0 - d.dy;
     if (voulu < d.bas) { m.style.height = d.bas + 'px'; m.style.transform = `translateY(${elastique(d.bas - voulu)}px)`; }
     else if (voulu > d.haut) { m.style.height = d.haut + 'px'; m.style.transform = `translateY(${-elastique(voulu - d.haut)}px)`; }
@@ -298,13 +320,15 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const prendreFin = () => {
     const d = prendreRef.current; prendreRef.current = null; if (!d) return;
     if (animRef.current.raf) { window.cancelAnimationFrame(animRef.current.raf); animRef.current.raf = 0; }
-    const m = modalRef.current; if (m) m.style.transform = '';
+    const m = modalRef.current;
+    if (d.fixe) { if (d.bouge) dernierGesteRef.current = Date.now(); rebondir(); return; } // formulaire : il rebondit
+    if (m) m.style.transform = '';
     if (!d.bouge) { if (m) m.style.transition = ''; return; } // un toucher : la poignée le traite en clic
     dernierGesteRef.current = Date.now();
     const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
     animerVers(choix === 'agrandir' ? true : choix === 'reduire' ? false : grande);
   };
-  const poigneeVisible = ouvertureRef.current > 0 && (deborde || grande);
+  const poigneeVisible = feuille && (!liste || (ouvertureRef.current > 0 && (deborde || grande)));
 
   // Rendu via un PORTAIL vers <body> : indispensable pour les modales
   // IMBRIQUÉES. Sinon la sous-modale est un descendant DOM du .modal-body
@@ -323,7 +347,13 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
       }}
     >
       <div className="modal" ref={modalRef} style={{ maxWidth: size === 'xl' ? 880 : size === 'lg' ? 680 : 500 }}>
-        {poigneeVisible && (
+        {poigneeVisible && !liste && (
+          // Formulaire : la poignée n'agrandit rien ; touchée, la feuille esquisse un rebond. Pas un bouton (aucune action).
+          <div className="feuille-poignee" aria-hidden="true"
+            onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}
+            onClick={() => { if (dernierGesteRef.current && Date.now() - dernierGesteRef.current < 350) return; rebondir(-12); }} />
+        )}
+        {poigneeVisible && liste && (
           <button type="button" className="feuille-poignee" aria-label={grande ? 'Réduire la fenêtre' : 'Agrandir la fenêtre'}
             onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}
             onClick={() => { if (dernierGesteRef.current && Date.now() - dernierGesteRef.current < 350) return; (grande ? reduire : agrandir)(); }} />
