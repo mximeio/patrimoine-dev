@@ -694,7 +694,9 @@ function CheckingView({ ctx, onBack }) {
             // à finir dit ce qu'il reste (« Sorties à pointer 129.00 € »), à toutes les largeurs — c'était la forme du petit
             // téléphone depuis le 14/11 ; le détail « pointé / prévu » passe dans une bulle (survol ou toucher, `bulle`).
             // Case terminée inchangée : « Sorties pointées 3 313.48 € », coche dans l'anneau.
-            if (fait) return { label: `${nom} pointées`, court: nom, fait, value: `${fmt(total)} €`, fil: 100 };
+            // Plus de forme courte « Entrées » au téléphone (16/11/2026, relevé de l'utilisateur sur iPhone) : « Entrées pointées »
+            // n'est pas plus long que « Sorties à pointer », qui tient à côté.
+            if (fait) return { label: `${nom} pointées`, fait, value: `${fmt(total)} €`, fil: 100 };
             return { label: `${nom} à pointer`, fait, value: `${fmt(r2(Math.max(0, total - pointe)))} €`,
               fil: total > 0 ? (pointe / total) * 100 : 0,
               bulle: total > 0 ? `${fmt(pointe)} € pointés sur ${fmt(total)} €` : null };
