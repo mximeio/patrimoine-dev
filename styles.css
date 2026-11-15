@@ -4467,7 +4467,12 @@ button.stat-card {
     max-height: calc(100dvh - max(14px, env(safe-area-inset-top, 0px)) - 8px);
     animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .modal-overlay--feuille .modal-body { padding-bottom: var(--marge-boutons); }
+  .modal-overlay--feuille .modal-body { padding-bottom: var(--marge-boutons); transition: padding-bottom 0.2s ease; }
+  /* CLAVIER OUVERT (DEV v1267) : iOS remonte la feuille au-dessus du clavier — ses coins du bas passent à 34 comme ceux du haut,
+     et les boutons du bas à 16 px, alignés sur les champs ; clavier fermé, retour à 54 et 26. Classe posée par `Modal`. */
+  .modal-overlay--feuille .modal { transition: border-radius 0.2s ease; }
+  .modal-overlay--feuille.modal-overlay--clavier .modal { border-radius: var(--r-feuille-haut); --marge-boutons: 16px; }
+  .modal-overlay--feuille .modal-body .form-actions { transition: margin 0.2s ease; }
   .modal-overlay.modal-overlay--pleine {
     padding: calc(max(14px, env(safe-area-inset-top, 0px)) + 6px) 0 0;
     align-items: stretch;

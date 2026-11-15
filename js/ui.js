@@ -318,6 +318,20 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // d'ouverture ; un second geste la ferme. État d'avant : étiquette git `avant-fermeture-poignee` (DEV v1264).
   const montesRef = useRef(true);
   useEffect(() => () => { montesRef.current = false; }, []);
+  // LE CLAVIER (DEV v1267, idée de l'utilisateur, relevé sur ses captures) : clavier ouvert, iOS remonte la feuille au-dessus du
+  // clavier ; ses grands coins du bas (54) et la marge de 26 px des boutons, faits pour la courbe de l'écran, n'épousent plus rien.
+  // La classe `modal-overlay--clavier` les ramène à 34 et 16 (styles.css, bloc portrait) ; clavier fermé, retour à 54 et 26.
+  // Même lecture que la recherche (`visualViewport`, rafraîchie à chaque ouverture ou fermeture du clavier).
+  useEffect(() => {
+    const vv = window.visualViewport, o = overlayRef.current;
+    if (!vv || !o) return undefined;
+    let raf = 0;
+    const caler = () => { raf = 0; o.classList.toggle('modal-overlay--clavier', vv.height < window.innerHeight - 120); };
+    const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
+    caler();
+    vv.addEventListener('resize', planifier);
+    return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); };
+  }, []);
   const animationsReduites = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const glisserDehors = (vitesse) => {
     const m = modalRef.current, o = overlayRef.current; if (!m) return;
