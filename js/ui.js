@@ -84,6 +84,8 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const dernierGesteRef = useRef(0);       // fin du dernier glisser : le clic qui suit n'est pas un toucher
   const toucheeRef = useRef(false);        // la feuille a été prise ou sa poignée touchée : on ne la recale plus
   const [grande, setGrande] = useState(false);
+  // Une liste ouverte EN GRAND d'emblée y reste : elle se comporte comme un formulaire, sa poignée rebondit (DEV v1260).
+  const [ouverteEnGrand, setOuverteEnGrand] = useState(false);
   // DEUX SORTES DE FEUILLES (DEV v1258, proposition de l'utilisateur) : les LISTES qui grandissent avec les données (prop
   // `liste` : Paramètres, répartition des charges, récurrents, tickets resto payés, toutes les opérations, réglages et mise à
   // jour groupée des enveloppes, calculer un versement) s'ouvrent entières ou en grand (cf. `figer`) et la poignée les fait passer de leur taille d'ouverture
@@ -228,17 +230,19 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     if (!m) return undefined;
     // L'OUVERTURE D'UNE LISTE (DEV v1259, règle de l'utilisateur) : ENTIÈRE, à la taille de son contenu du moment, puis cette
     // taille reste (ce qui s'ajoute ensuite défile dedans, et la poignée l'ouvre en grand si besoin) ; si son contenu dépasse
-    // déjà l'écran, elle s'ouvre EN GRAND d'emblée, et sa taille réduite est alors 60 % de l'écran.
+    // déjà l'écran, elle s'ouvre EN GRAND d'emblée et y reste (DEV v1260 : plus de 60 % — on ne descend jamais sous la taille
+    // d'ouverture) ; sa poignée rebondit alors, comme celle d'un formulaire.
     const figer = () => {
       m.style.height = '';
-      if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setGrande(false); return; }
+      if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setGrande(false); setOuverteEnGrand(false); return; }
       setFeuille(true);
       if (!liste) { ouvertureRef.current = 0; return; }   // formulaire : entier, la hauteur reste au CSS
       const naturelle = m.offsetHeight, plafond = plafondFeuille();
       const enGrand = naturelle >= plafond - 2;
-      ouvertureRef.current = enGrand ? Math.round(window.innerHeight * 0.6) : naturelle;
+      ouvertureRef.current = enGrand ? plafond : naturelle;
       m.style.height = (enGrand ? plafond : naturelle) + 'px';
       setGrande(enGrand);
+      setOuverteEnGrand(enGrand);
     };
     figer();
     // Une partie du contenu peut arriver APRÈS l'ouverture (la liste des sauvegardes des Paramètres, lue en base : +90 px
@@ -307,7 +311,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
     const m = modalRef.current;
     // Tout ce qu'il faut lire, on le lit UNE fois, ici.
-    prendreRef.current = liste
+    prendreRef.current = (liste && !ouverteEnGrand)
       ? { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(),
         pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false }
       : { y0: e.clientY, dy: 0, fixe: true, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
@@ -340,6 +344,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
     animerVers(choix === 'agrandir' ? true : choix === 'reduire' ? false : grande);
   };
+  const rebondit = !liste || ouverteEnGrand;   // la poignée n'agrandit rien : formulaire, ou liste ouverte en grand
   const poigneeVisible = feuille;   // toujours, sur toutes les feuilles : elle agrandit (liste) ou rebondit (formulaire)
 
   // Rendu via un PORTAIL vers <body> : indispensable pour les modales
@@ -359,13 +364,13 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
       }}
     >
       <div className="modal" ref={modalRef} style={{ maxWidth: size === 'xl' ? 880 : size === 'lg' ? 680 : 500 }}>
-        {poigneeVisible && !liste && (
+        {poigneeVisible && rebondit && (
           // Formulaire : la poignée n'agrandit rien ; touchée, la feuille esquisse un rebond. Pas un bouton (aucune action).
           <div className="feuille-poignee" aria-hidden="true"
             onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}
             onClick={() => { if (dernierGesteRef.current && Date.now() - dernierGesteRef.current < 350) return; rebondir(-12); }} />
         )}
-        {poigneeVisible && liste && (
+        {poigneeVisible && !rebondit && (
           <button type="button" className="feuille-poignee" aria-label={grande ? 'Réduire la fenêtre' : 'Agrandir la fenêtre'}
             onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}
             onClick={() => { if (dernierGesteRef.current && Date.now() - dernierGesteRef.current < 350) return; (grande ? reduire : agrandir)(); }} />
