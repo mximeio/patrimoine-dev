@@ -3134,17 +3134,7 @@ button.stat-card {
      flottants partagent la même ligne d'appui — l'ancien calage
      (8px + safe-area ≈ 42px) laissait la sheet 12px plus haute que la
      barre depuis le placement « Instagram » (~30px). */
-  /* FORME C (16/11/2026, _maquettes/Mockup-Feuille-Bas, choix de l'utilisateur, d'après Spotify) : posée à 8 px des TROIS
-     bords (elle descend sous la ligne d'appui de la barre), coins du haut --r-contenant, coins du BAS concentriques à ceux
-     de l'écran (rayon de l'écran − 8). Le navigateur ne donne pas ce rayon : on le déduit de la marge du bas de l'iPhone —
-     34 px sur un iPhone à écran arrondi → 54 px (calé sur l'iPhone 17 Pro Max de l'utilisateur, coins ≈ 62 ; un peu plus
-     rond que l'écran sur un iPhone aux coins de 55) ; 0 sur un écran carré ou un ordinateur → 18 (coins ordinaires).
-     Seule exception à la règle 12 / 18 : ce qui touche le bord de l'écran suit la forme de l'écran. */
-  --r-feuille-bas: clamp(var(--r-contenant), calc(env(safe-area-inset-bottom, 0px) * 1.6), 54px);
-  /* Coins du HAUT calqués sur Spotify (mesurés sur la capture de l'utilisateur : 34 pt en haut, 54 en bas, 8 du bord) ;
-     même déduction : 34 sur un iPhone à écran arrondi, 18 ailleurs. */
-  --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
-  bottom: 8px;
+  bottom: var(--ligne-appui);
   z-index: 61;
   /* Tout en BLANC opaque, cartes délimitées par le liseré var(--border) —
      c'est le langage des cards partout ailleurs dans l'app (stat-cards,
@@ -3152,10 +3142,9 @@ button.stat-card {
      backdrop assombri, le verre n'y apporterait rien. */
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-feuille-haut) var(--r-feuille-haut) var(--r-feuille-bas) var(--r-feuille-bas);
+  border-radius: var(--r-contenant);
   box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
-  /* le bas du contenu reste au-dessus de la barre d'accueil de l'iPhone (la feuille descend jusqu'à 8 px du bord) */
-  padding: 8px 16px max(16px, var(--ligne-appui));
+  padding: 8px 16px 16px;
   animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .sheet-handle {
@@ -4544,8 +4533,7 @@ button.stat-card {
   /* Bottom sheet : recadrée en largeur (pleine largeur = absurde en paysage).
      Son bas suit --ligne-appui comme la barre : plus large (430 contre 380) et
      plus haute, elle la recouvre entièrement, comme en portrait. */
-  /* Forme C : en paysage, la feuille centrée ne touche pas les coins de l'écran → elle garde sa ligne d'appui et des coins ordinaires. */
-  .bottom-sheet { left: 0; right: 0; margin: 0 auto; width: min(430px, calc(100% - 16px)); bottom: var(--ligne-appui); --r-feuille-bas: var(--r-contenant); --r-feuille-haut: var(--r-contenant); }
+  .bottom-sheet { left: 0; right: 0; margin: 0 auto; width: min(430px, calc(100% - 16px)); }
 }
 
 /* ============================================================
