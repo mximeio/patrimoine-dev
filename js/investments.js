@@ -269,7 +269,7 @@ function PortfolioListRow({ portfolio, colorIndex, total, onClick }) {
             )}
           </div>
         ) : (
-          <div className="num" style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>{fmt(0)} € · {fmtPct(0, { signe: false })}</div> /* enveloppe sans support : « 0.00 € · 0.00 % » au lieu de « — · — » (15/11/2026, décision de l'utilisateur) */
+          <div className="num" style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>—</div> /* enveloppe sans support : un seul tiret — rien à mesurer, pas un zéro mesuré (15/11/2026, décision de l'utilisateur, qui revient sur « 0.00 € · 0.00 % » ; « — · — » avant) */
         )}
       </div>
       <span className="portfolio-list-arrow" aria-hidden="true">›</span>

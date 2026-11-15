@@ -142,6 +142,10 @@ function ConsolidatedView({ ctx, onNavigate }) {
   ].filter(Boolean);
 
   const totalPatrimoine = categories.reduce((s, c) => s + c.value, 0);
+  // « % du total » : une part n'a de sens que si toutes les rubriques sont positives et le total aussi. Une rubrique négative
+  // (compte courant projeté à découvert) donnait −380 %, 112 %, 337 %… : on ne montre alors AUCUN pourcentage (15/11/2026,
+  // décision de l'utilisateur) — la ligne d'info (« 3 comptes »…) reste. Pas de tiret : « — du total » se lirait mal.
+  const partsLisibles = totalPatrimoine > 0 && categories.every(c => c.value >= 0);
 
   const investmentsGain = portfolios.reduce((s, p) => {
     const ps = computePortfolioStats(p.data);
@@ -213,12 +217,12 @@ function ConsolidatedView({ ctx, onNavigate }) {
                 </span>
                 <span className="carte-rub-droite">
                   <span className="carte-rub-mt num">{eur(c.value)}</span>
-                  <span className="carte-rub-pc num">{fmtPct(totalPatrimoine > 0 ? (c.value / totalPatrimoine) * 100 : 0, { signe: false })} du total</span>
+                  {partsLisibles && <span className="carte-rub-pc num">{fmtPct((c.value / totalPatrimoine) * 100, { signe: false })} du total</span>}
                 </span>
               </span>
               <span className="carte-rub-bas">
                 <span>{c.sub}</span>
-                <span className="num carte-rub-pc-bas">{fmtPct(totalPatrimoine > 0 ? (c.value / totalPatrimoine) * 100 : 0, { signe: false })} du total</span>
+                {partsLisibles && <span className="num carte-rub-pc-bas">{fmtPct((c.value / totalPatrimoine) * 100, { signe: false })} du total</span>}
               </span>
             </button>
           ))}
