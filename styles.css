@@ -44,11 +44,12 @@
   --danger-fonce: #dc2626;
   --warning-fonce: #a8730a; /* ambre DORÉ depuis le 15/11/2026 (était l'orangé #c96a07) : la famille de l'ambre clair des fenêtres
      TR et des actifs (#f2b33d), un cran plus foncé pour rester lisible en texte — 4,1:1 sur blanc, 3,9:1 sur --warning-light */
-  /* 🟡 EXCEPTION NOMMÉE, choisie par l'utilisateur le 15/11/2026 en connaissance de cause : tout ce qui est TICKETS RESTO
-     (montants TR, montant de la composante « Tickets resto », signe « + » des TR, couverts de la pastille) est en ambre CLAIR,
-     la couleur des fenêtres TR — 1,9:1 sur blanc, sous le minimum de lisibilité. Le reste de l'ambre (alertes, actifs) reste
-     en --warning-fonce. Revenir au doré = remplacer cette valeur par var(--warning-fonce). */
-  --tr-clair: #f2b33d;
+  /* L'ÉCRITURE DES TICKETS RESTO (montants TR, montant de la composante « Tickets resto », signe « + » des TR, badge « AUTO »,
+     couverts de la pastille) : un ambre à part, entre l'ambre clair des fenêtres TR (#f2b33d) et le doré des éléments
+     (--warning-fonce). Historique : #f2b33d choisi le 15/11/2026 (1,9:1 sur blanc, trop pâle), foncé de deux crans le
+     16/11/2026 sur _maquettes/Mockup-Couleurs-Releve, choix de l'utilisateur : #b87d0b, 3,5:1 sur blanc, 3,4:1 sur
+     --warning-light. Le nom de la variable est resté « clair » pour ne pas toucher ses dix usages. */
+  --tr-clair: #b87d0b;
   --info-fonce: #0891b2;
   --rose-fonce: #db2777;
   --violet-fonce: #7c3aed;
