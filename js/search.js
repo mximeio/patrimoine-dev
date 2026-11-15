@@ -845,10 +845,16 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     const vv = window.visualViewport, o = overlayRef.current;
     if (!vv || !o) return undefined;
     let raf = 0;
+    // Les coins : 34 à l'ouverture (le clavier arrive avec la fenêtre), 54 en bas seulement quand le clavier S'EN VA — donc
+    // une fois qu'on l'a vu ouvert. Avant de l'avoir vu, l'instant où il monte n'est pas un « clavier masqué » (DEV v1264).
+    let clavierVu = false;
     const caler = () => {
       raf = 0;
       o.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
       o.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
+      const ouvert = vv.height < window.innerHeight - 120;
+      if (ouvert) clavierVu = true;
+      o.classList.toggle('search-overlay--sans-clavier', clavierVu && !ouvert);
     };
     const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
     caler();
