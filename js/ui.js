@@ -77,12 +77,12 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // ---- LA POIGNÉE (lot 4, 16/11/2026 ; cinq règles de l'utilisateur, _maquettes/Mockup-Poignee-Feuille) -----------------
   // Au téléphone en portrait, une feuille flottante (pas `pleine`) prend à l'ouverture la hauteur de son contenu, plafonnée à
   // 60 % de l'écran, puis GARDE cette taille : ce qu'on y affiche ensuite (« Afficher les détails »…) défile dedans. Quand le
-  // contenu dépasse, une poignée apparaît : tirée vers le haut (ou touchée), la feuille passe en pleine hauteur ; vers le bas,
+  // contenu dépasse, une poignée apparaît : tirée vers le haut (ou touchée), la feuille monte jusque sous la barre d'état (en
+  // restant flottante, DEV v1257) ; vers le bas,
   // elle revient à sa taille d'ouverture. Le geste NE FERME JAMAIS (la croix ou le voile). On saisit la feuille par la poignée
   // et l'en-tête seulement : le défilement du contenu reste libre. Ordinateur et paysage : rien de tout ça.
   const modalRef = useRef(null);
   const ouvertureRef = useRef(0);          // taille d'ouverture figée (px), 0 hors feuille de téléphone
-  const rayonBasRef = useRef(0);           // rayon des coins du bas de la feuille flottante (54 sur iPhone, 18 ailleurs)
   const prendreRef = useRef(null);         // { y0, dy, h0, pts, bouge }
   const dernierGesteRef = useRef(0);       // fin du dernier glisser : le clic qui suit n'est pas un toucher
   const [deborde, setDeborde] = useState(false);
@@ -226,7 +226,6 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
       const h = Math.min(m.offsetHeight, Math.round(window.innerHeight * 0.6));
       ouvertureRef.current = h;
       m.style.height = h + 'px';
-      rayonBasRef.current = parseFloat(getComputedStyle(m).borderBottomLeftRadius) || 0;
     };
     const verifier = () => { if (ouvertureRef.current) setDeborde(b.scrollHeight > b.clientHeight + 1); };
     figer(); verifier();
@@ -237,79 +236,73 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     if (mq && mq.addEventListener) mq.addEventListener('change', changement);
     return () => { mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', changement); };
   }, []);
-  // GÉOMÉTRIE CONTINUE (relevé de l'utilisateur, 16/11/2026 : les bords ne changeaient qu'au lâcher). Entre la feuille
-  // flottante (8 px des bords, coins du bas arrondis) et la pleine hauteur (collée aux bords, coins du bas carrés), tout est
-  // interpolé selon l'avancement p ∈ [0, 1] de la hauteur : marges 8 → 0, coins du bas R → 0. Pendant le geste, la feuille
-  // suit le doigt ; au lâcher (ou au toucher de la poignée), elle glisse en 0,26 s vers l'état choisi, puis tout revient au CSS.
-  const hauteurPleine = () => {
+  // UNE SEULE CHOSE BOUGE : LA HAUTEUR (DEV v1257, relevé de l'utilisateur sur iPhone : « ça saccade et ça flash parfois »).
+  // La v1256 faisait passer la feuille agrandie de flottante à collée aux bords pendant le geste : sa LARGEUR changeait à
+  // chaque mouvement du doigt (jusqu'à 120 par seconde), tout le contenu se remettait en page → saccades ; et le changement de
+  // classe en fin de course laissait passer une image fausse → flash. Désormais la feuille agrandie RESTE FLOTTANTE (8 px des
+  // bords, mêmes coins), simplement plus haute, jusque sous la barre d'état : largeur, marges et coins ne changent jamais, seule
+  // la hauteur suit le doigt — une mise à jour par image (requestAnimationFrame), sans lecture de mise en page pendant le geste.
+  // Au lâcher ou au toucher de la poignée, la hauteur glisse en 0,26 s vers l'état choisi (instantané si « réduire les
+  // animations »). Aucune classe ne change : pas d'image intermédiaire.
+  const animRef = useRef({ raf: 0, h: 0, fin: 0 });
+  const plafondFeuille = () => {
     const o = overlayRef.current; if (!o) return window.innerHeight;
-    const haut = parseFloat(getComputedStyle(o).paddingTop) || 0;
-    return o.clientHeight - haut - (grande ? 0 : 6); // en feuille, le haut de la pleine hauteur est 6 px plus bas
+    const cs = getComputedStyle(o);
+    return o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   };
-  const appliquer = (h, transition) => {
-    const m = modalRef.current, o = overlayRef.current; if (!m || !o) return;
-    const h0 = ouvertureRef.current, hp = hauteurPleine();
-    const p = Math.max(0, Math.min(1, (h - h0) / Math.max(1, hp - h0)));
-    const marge = 8 * (1 - p), r = rayonBasRef.current * (1 - p);
+  const poserHauteur = (h, transition) => {
+    const m = modalRef.current; if (!m) return;
     m.style.transition = transition || 'none';
-    o.style.transition = transition ? transition.replace(/height|border-radius/g, 'padding') : 'none';
-    o.style.alignItems = 'flex-end';
-    o.style.paddingLeft = o.style.paddingRight = o.style.paddingBottom = marge + 'px';
-    m.style.maxHeight = 'none';
     m.style.height = h + 'px';
-    m.style.borderBottomLeftRadius = m.style.borderBottomRightRadius = r + 'px';
-  };
-  const rendreAuCss = () => {
-    const m = modalRef.current, o = overlayRef.current;
-    if (m) { m.style.transition = ''; m.style.transform = ''; m.style.maxHeight = ''; m.style.borderBottomLeftRadius = m.style.borderBottomRightRadius = ''; }
-    if (o) { o.style.transition = ''; o.style.alignItems = ''; o.style.paddingLeft = o.style.paddingRight = o.style.paddingBottom = ''; }
   };
   const animerVers = (versGrande) => {
     const m = modalRef.current; if (!m || !ouvertureRef.current) return;
     const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const duree = reduit ? 0 : 260;
-    if (!prendreRef.current) appliquer(m.offsetHeight); // départ figé à la géométrie courante
-    void m.offsetHeight;
-    appliquer(versGrande ? hauteurPleine() : ouvertureRef.current,
-      duree ? `height ${duree}ms cubic-bezier(0.32, 0.72, 0, 1), border-radius ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '');
-    window.setTimeout(() => {
-      rendreAuCss();
-      if (versGrande) { m.style.height = ''; setGrande(true); }
-      else { m.style.height = ouvertureRef.current + 'px'; setGrande(false); }
-    }, duree + 20);
+    const cible = versGrande ? plafondFeuille() : ouvertureRef.current;
+    m.style.transform = '';
+    poserHauteur(cible, duree ? `height ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '');
+    window.clearTimeout(animRef.current.fin);
+    animRef.current.fin = window.setTimeout(() => { if (modalRef.current) modalRef.current.style.transition = ''; }, duree + 20);
+    setGrande(versGrande);
   };
   const agrandir = () => animerVers(true);
   const reduire = () => animerVers(false);
   // Le geste SUIT LE DOIGT dans les deux sens. Au-delà des bornes (petite tirée vers le bas, grande tirée vers le haut), elle
-  // résiste (élastique, ~42 px au plus) : elle ne se ferme jamais. Au lâcher, `decisionPoignee` tranche.
+  // résiste (élastique, ~42 px au plus, par un `transform`, sans mise en page) : elle ne se ferme jamais.
   const elastique = (a) => (a * 42) / (a + 42);
   const prendreDebut = (e) => {
     if (!ouvertureRef.current || !(deborde || grande)) return;
     if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
     const m = modalRef.current;
-    prendreRef.current = { y0: e.clientY, dy: 0, h0: m.offsetHeight, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
-    appliquer(m.offsetHeight);
+    // Tout ce qu'il faut lire, on le lit UNE fois, ici.
+    prendreRef.current = { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(),
+      pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
+    m.style.transition = 'none';
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
+  };
+  const peindre = () => {
+    animRef.current.raf = 0;
+    const d = prendreRef.current, m = modalRef.current; if (!d || !m) return;
+    const voulu = d.h0 - d.dy;
+    if (voulu < d.bas) { m.style.height = d.bas + 'px'; m.style.transform = `translateY(${elastique(d.bas - voulu)}px)`; }
+    else if (voulu > d.haut) { m.style.height = d.haut + 'px'; m.style.transform = `translateY(${-elastique(voulu - d.haut)}px)`; }
+    else { m.style.transform = ''; m.style.height = voulu + 'px'; }
   };
   const prendreBouge = (e) => {
     const d = prendreRef.current; if (!d) return;
     d.pts.push({ y: e.clientY, t: e.timeStamp }); if (d.pts.length > 24) d.pts.splice(0, d.pts.length - 24);
     d.dy = e.clientY - d.y0; if (Math.abs(d.dy) > 6) d.bouge = true;
-    const m = modalRef.current, bas = ouvertureRef.current, haut = hauteurPleine();
-    const voulu = d.h0 - d.dy;
-    if (voulu < bas) { appliquer(bas); m.style.transform = `translateY(${elastique(bas - voulu)}px)`; }
-    else if (voulu > haut) { appliquer(haut); m.style.transform = `translateY(${-elastique(voulu - haut)}px)`; }
-    else { m.style.transform = ''; appliquer(voulu); }
+    if (!animRef.current.raf) animRef.current.raf = window.requestAnimationFrame(peindre); // une mise à jour par image
   };
   const prendreFin = () => {
-    const d = prendreRef.current; if (!d) return;
+    const d = prendreRef.current; prendreRef.current = null; if (!d) return;
+    if (animRef.current.raf) { window.cancelAnimationFrame(animRef.current.raf); animRef.current.raf = 0; }
     const m = modalRef.current; if (m) m.style.transform = '';
-    if (!d.bouge) { prendreRef.current = null; rendreAuCss(); if (m) m.style.height = grande ? '' : ouvertureRef.current + 'px'; return; } // un toucher : la poignée le traite en clic
+    if (!d.bouge) { if (m) m.style.transition = ''; return; } // un toucher : la poignée le traite en clic
     dernierGesteRef.current = Date.now();
     const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
-    const versGrande = choix === 'agrandir' ? true : choix === 'reduire' ? false : grande;
-    animerVers(versGrande);
-    prendreRef.current = null;
+    animerVers(choix === 'agrandir' ? true : choix === 'reduire' ? false : grande);
   };
   const poigneeVisible = ouvertureRef.current > 0 && (deborde || grande);
 
@@ -321,7 +314,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // de <body>, la modale se positionne par rapport au vrai viewport.
   return ReactDOM.createPortal(
     <div
-      className={`modal-overlay ${pleine || grande ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}${grande ? ' modal-overlay--grande' : ''}`}
+      className={`modal-overlay ${pleine ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}${grande ? ' modal-overlay--grande' : ''}`}
       ref={overlayRef}
       onMouseDown={(e) => { downOnBackdropRef.current = e.target === e.currentTarget; }}
       onClick={(e) => {
