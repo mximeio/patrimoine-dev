@@ -785,7 +785,7 @@ function CheckingView({ ctx, onBack }) {
       </div>
 
       {showTrManage && trEnabled && (
-        <Modal title="Tickets resto payés" icon="utensils" tone="tr" subtitle={monthLabel(curKey)} onClose={() => setShowTrManage(false)} noDirtyGuard>
+        <Modal title="Tickets resto payés" icon="utensils" tone="tr" subtitle={monthLabel(curKey)} onClose={() => setShowTrManage(false)} noDirtyGuard longue>
           {/* Mois figé : consultation seule. MÊME garde que le corps (wrapper
               .frozen-month + capture) — c'est le CSS qui fait le travail ici
               (crayons et bouton d'ajout masqués), le handler n'ayant aucun

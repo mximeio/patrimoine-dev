@@ -59,7 +59,13 @@ const ModalDirtyContext = React.createContext(null);
 // En-tête C' (modernisation, 15/11/2026) : `icon` (nom d'icône) pose une pastille de la couleur de la rubrique ouverte
 // (`data-rubrique`, ou `tone="tr"` pour l'ambre des tickets resto), `subtitle` une ligne grise sous le titre. Les deux sont
 // optionnels : une fenêtre qui ne les passe pas garde son titre seul.
-function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone }) {
+// `longue` (16/11/2026, chantier « les fenêtres en feuille du bas ») : une fenêtre LONGUE — une liste qui grandit avec les
+// données (Paramètres, répartition des charges, opérations récurrentes, tickets resto payés, toutes les opérations, réglages
+// d'une enveloppe, mise à jour groupée, calculer un versement). Par défaut, les tailles lg / xl le sont. Au téléphone en
+// portrait, une fenêtre COURTE se pose en feuille flottante en bas de l'écran (lot 2, styles.css « FENÊTRES EN FEUILLE ») ;
+// une longue garde la carte centrée en attendant le lot 3 (pleine hauteur). Ordinateur et paysage : inchangés.
+function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, longue }) {
+  const estLongue = longue !== undefined ? !!longue : (size === 'lg' || size === 'xl');
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
   // contient un <form> (les listes, la lecture seule « Toutes les opérations »,
@@ -206,7 +212,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // de <body>, la modale se positionne par rapport au vrai viewport.
   return ReactDOM.createPortal(
     <div
-      className="modal-overlay"
+      className={`modal-overlay ${estLongue ? 'modal-overlay--longue' : 'modal-overlay--feuille'}`}
       ref={overlayRef}
       onMouseDown={(e) => { downOnBackdropRef.current = e.target === e.currentTarget; }}
       onClick={(e) => {

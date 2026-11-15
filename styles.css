@@ -4438,6 +4438,36 @@ button.stat-card {
   html.pwa-standalone .modal-header { padding: 14px 16px; }
 }
 
+/* === FENÊTRES EN FEUILLE DU BAS — lot 2 (16/11/2026, choix de l'utilisateur, fiche du BACKLOG et _maquettes/Mockup-Fenetres-Feuille)
+   Au téléphone en PORTRAIT, une fenêtre COURTE (un formulaire : `Modal` sans `longue`) n'est plus une carte centrée : elle se pose
+   en feuille flottante en bas, à 8 px des bords, comme la feuille « ⋯ » (forme C) — coins du haut 34 et du bas 54 sur un iPhone à
+   écran arrondi (déduits de la zone sûre du bas : le navigateur ne donne pas le rayon de l'écran), 18 ailleurs. Elle prend la
+   hauteur de son contenu et ne monte jamais sous la barre d'état ; au-delà, son contenu défile dedans.
+   BOUTONS — B4 coins de 12 (tranché) : la rangée du bouton principal (et de la poubelle) à --marge-boutons du bord de la feuille,
+   dessous ET sur les côtés — 26 px sur un iPhone à barre d'accueil (zone sûre 34 − les 8 de la feuille), 16 ailleurs. Les champs
+   restent à 16 ; les boutons gardent leurs coins de 12.
+   Les fenêtres LONGUES (`modal-overlay--longue`) gardent la carte centrée jusqu'au lot 3. Paysage et ordinateur : inchangés. */
+@media (max-width: 640px) and (orientation: portrait) {
+  .modal-overlay.modal-overlay--feuille {
+    padding: max(14px, env(safe-area-inset-top, 0px)) 8px 8px;
+    align-items: flex-end;
+  }
+  .modal-overlay--feuille .modal {
+    --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
+    --r-feuille-bas: clamp(var(--r-contenant), calc(env(safe-area-inset-bottom, 0px) * 1.6), 54px);
+    --marge-boutons: max(16px, calc(env(safe-area-inset-bottom, 0px) - 8px));
+    border-radius: var(--r-feuille-haut) var(--r-feuille-haut) var(--r-feuille-bas) var(--r-feuille-bas);
+    max-height: calc(100dvh - max(14px, env(safe-area-inset-top, 0px)) - 8px);
+    animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .modal-overlay--feuille .modal-body { padding-bottom: var(--marge-boutons); }
+  .modal-overlay--feuille .modal-body .form-actions,
+  .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn) {
+    margin-left: calc(var(--marge-boutons) - 16px);
+    margin-right: calc(var(--marge-boutons) - 16px);
+  }
+}
+
 /* ============================================================
    iOS 27, PWA standalone, portrait : titre flou en haut de l'écran
    ------------------------------------------------------------
