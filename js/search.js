@@ -834,6 +834,30 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     };
   }, []);
 
+  // LA RECHERCHE SUIT LA PLACE VISIBLE (DEV v1262, forme A choisie par l'utilisateur, _maquettes/Mockup-Recherche-Feuille).
+  // Au téléphone en portrait, la fenêtre est posée en haut, sous la barre d'état, et ne descend jamais sous le clavier : l'overlay
+  // prend la hauteur de la zone VISIBLE (`visualViewport`, clavier et barre « ˄ ˅ ✓ » exclus), lue à chaque ouverture ou
+  // fermeture du clavier. Clavier masqué, la fenêtre s'allonge jusqu'en bas (une feuille en grand) ; rouvert, elle raccourcit par
+  // le bas. Le haut ne bouge jamais : le champ reste sous le doigt. Les variables ne servent que dans le bloc portrait de
+  // styles.css ; ailleurs, rien ne change.
+  const overlayRef = useRef(null);
+  useEffect(() => {
+    const vv = window.visualViewport, o = overlayRef.current;
+    if (!vv || !o) return undefined;
+    let raf = 0;
+    const caler = () => {
+      raf = 0;
+      o.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
+      o.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
+      o.classList.toggle('search-overlay--clavier', vv.height < window.innerHeight - 120);
+    };
+    const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
+    caler();
+    vv.addEventListener('resize', planifier);
+    vv.addEventListener('scroll', planifier);
+    return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); vv.removeEventListener('scroll', planifier); };
+  }, []);
+
   // Scroll auto pour garder l'élément focusé visible
   const resultsRef = useRef(null);
   // v617 — L'appui initial a-t-il eu lieu SUR LE FOND ? Cf. le commentaire de
@@ -863,6 +887,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
     // lieu sur le fond. Même correctif que `Modal` (ui.js), qui l'avait déjà.
     <div
       className="search-overlay"
+      ref={overlayRef}
       onMouseDown={(e) => { downOnBackdropRef.current = e.target === e.currentTarget; }}
       onClick={(e) => {
         if (e.target === e.currentTarget && downOnBackdropRef.current) onClose();
