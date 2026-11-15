@@ -359,6 +359,8 @@ function CheckingView({ ctx, onBack }) {
   const curKey = checking.months[currentMonthLocal] ? currentMonthLocal : sortedKeys[sortedKeys.length - 1];
   const m = checking.months[curKey];
   const stats = computeMonth(checking, curKey);
+  // Le reste projeté du mois précédent diffère-t-il du pointé ? (opérations non pointées) — « (projeté) » et son « ? ».
+  const resteEcart = r2(stats.carryProjected - stats.carry) !== 0;
   const idx = sortedKeys.indexOf(curKey);
   const trEnabled = checking.settings.trEnabled !== false;
   // Mois FIGÉ (v485, maquette Mockup-Mois-Fige-Interactif) : consultation
@@ -698,20 +700,14 @@ function CheckingView({ ctx, onBack }) {
         })()}
         dessous={projOpen && (
           <div className="proj-detail num">
-            <div className="pd-row"><span>Reste de {monthLabel(prevMonthKey(curKey))} (projeté)</span><b>{eur(stats.carryProjected)}</b></div>
+            {/* « (projeté) » et son « ? » SEULEMENT quand le reste projeté diffère du reste pointé (16/11/2026, demande de
+                l'utilisateur, _maquettes/Mockup-Projection-Aide) : mois précédent tout pointé, rien à distinguer. Le « ? »
+                remplace la note de trois lignes (v518) qui expliquait l'écart avec la pastille « Reste mois préc. ». */}
+            <div className="pd-row"><span>Reste {monthLabelDe(prevMonthKey(curKey))}{resteEcart && <> (projeté)<InfoTip iconName="aide" size={14} label="Pourquoi projeté ?" className="aide-champ pd-aide" popClassName="infotip-pop--wrap"
+              content={`Inclut les opérations non pointées ${monthLabelDe(prevMonthKey(curKey))}. Pointé seul : ${eur(stats.carry)}, le montant de la pastille Reste mois préc.`} /></>}</span><b>{eur(stats.carryProjected)}</b></div>
             <div className="pd-row"><span>+ Entrées du mois</span><b>+{fmt(stats.entriesAll)} €</b></div>
             <div className="pd-row"><span>− Sorties du mois</span><b>−{fmt(stats.exitsAll)} €</b></div>
             <div className="pd-row pd-total"><span>= Projection fin de mois</span><b>{eur(stats.balanceProjected)}</b></div>
-            {/* Note affichée SEULEMENT quand elle explique un vrai écart :
-                si le mois précédent est entièrement pointé, reste projeté et
-                reste pointé sont identiques — rien à justifier (v518). */}
-            {stats.carryProjected !== stats.carry && (
-              <div className="pd-note">
-                Ce « Reste de {monthLabel(prevMonthKey(curKey))} » inclut les opérations
-                non pointées du mois dernier — d'où l'écart avec la pastille
-                « Reste mois préc. » ({eur(stats.carry)}), qui ne compte que le pointé.
-              </div>
-            )}
           </div>
         )}
       />

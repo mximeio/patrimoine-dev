@@ -1465,8 +1465,8 @@ input[type="month"] {
 .ops-c .tx-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid #cfd4de; }
 .ops-c .tx-check.checked { background: var(--accent); border-color: var(--accent); }
 /* LA POIGNÉE (six points, 15/11/2026, demande de l'utilisateur) : à gauche des lignes du compte, des récurrents, des tickets
-   resto et de leurs composantes. Grise, curseur de prise ; invisible là où l'on ne glisse pas (mois figé, mode dates),
-   sans libérer sa colonne pour que rien ne bouge d'un mois à l'autre. */
+   resto et de leurs composantes. Grise, curseur de prise. Là où l'on ne glisse pas (mode dates, mois figé), elle sort avec
+   sa colonne (règles plus bas). */
 /* La poignée GARDE la classe du type (income / expense / tr) : c'est elle qui colore le montant de la ligne (règles
    `:has(.tx-icon.income)` plus bas) — perdue en v1164, montants devenus gris (relevé de l'utilisateur, 15/11/2026).
    Classe doublée pour passer devant `.tx-icon.income` & co., déclarées plus bas : la poignée reste grise et sans fond. */
@@ -1518,8 +1518,8 @@ input[type="month"] {
 .liste-rec .recurring-row.recurring-row > .tx-grip.dnd-handle::before,
 .modal .tx-row.tr-row.tr-row > .tx-grip.dnd-handle::before { inset: 0; }
 /* MODE DATES (14/11/2026, demande de l'utilisateur) : les opérations y sont triées par date, on ne glisse donc rien — la
-   poignée sort et sa colonne avec, la case revient au bord. Réglage du profil, il ne change pas d'un mois à l'autre ; sur un
-   mois figé, la poignée reste invisible à sa place (rien ne bouge d'un mois à l'autre). La poignée reste dans le DOM, à 0 de
+   poignée sort et sa colonne avec, la case revient au bord. Réglage du profil, il ne change pas d'un mois à l'autre ; le mois
+   figé suit la même règle depuis le 16/11/2026 (plus bas). La poignée reste dans le DOM, à 0 de
    large, pour ne pas décaler le placement des cellules de la grille. */
 .mode-dates { --grip-col: 0px; }
 .mode-dates .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
@@ -1530,6 +1530,18 @@ input[type="month"] {
 .mode-dates .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
 .ops-c.mode-dates .composite-comps { margin-left: 40px; }
 .modal .mode-dates .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
+/* MOIS FIGÉ (16/11/2026, demande de l'utilisateur) : on n'y glisse rien non plus — même règle que le mode dates : la poignée
+   sort avec sa colonne, la case revient à 11 px du bord, le libellé gagne 19 px (ordinateur et téléphone), composantes et
+   lignes de tickets resto suivent. L'ancienne raison de la garder (« rien ne bouge d'un mois à l'autre ») ne tenait plus :
+   la colonne du crayon disparaît déjà sur un mois figé. */
+.frozen-month { --grip-col: 0px; }
+.frozen-month .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
+.frozen-month .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
+.frozen-month .ops-c .composite-comps { margin-left: 40px; }
+.modal .frozen-month .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
+/* La poignée des tickets resto a sa largeur propre (19 px, règle plus spécifique) : à 0 aussi, sinon, invisible, elle déborde
+   de sa colonne vide sur le libellé (même chose en mode dates, relevé au passage). */
+.modal .frozen-month .tx-row.tr-row.tr-row > .tx-grip, .modal .mode-dates .tx-row.tr-row.tr-row > .tx-grip { width: 0; overflow: hidden; }
 /* Récurrents (Paramètres) : triés par jour du mois en mode dates, ils ne se glissent pas non plus — même règle que les tickets
    resto : la colonne sort, le libellé à 11 px du bord ; les composantes suivent (trait sous la 1re lettre du parent, piste A). */
 .liste-rec.mode-dates .recurring-row.recurring-row > .tx-grip { width: 0; overflow: hidden; }
@@ -4896,10 +4908,10 @@ button.stat-card {
 }
 .pd-row b { color: white; font-weight: 600; }
 .pd-row.pd-total { border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 5px; padding-top: 7px; }
-.pd-note {
-  margin-top: 8px; font-size: 12px; line-height: 1.5;
-  color: rgba(255, 255, 255, 0.55);
-}
+/* Le « ? » de « (projeté) » (16/11/2026, à la place de la note de trois lignes) : l'aide des champs, en blanc à 60 % pour se
+   lire sur la carte du compte, blanc plein au focus. */
+.pd-aide .infotip-ico { color: rgba(255, 255, 255, 0.6); }
+.pd-aide:focus-visible .infotip-ico, .pd-aide[aria-expanded="true"] .infotip-ico { color: #fff; }
 
 /* ============================================================
    CALCULER UN VERSEMENT (12/08/2026)
