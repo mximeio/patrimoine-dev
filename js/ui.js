@@ -74,6 +74,18 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const dirtyRef = useRef(false);
   const bodyRef = useRef(null);
   const overlayRef = useRef(null);
+  // ---- LA POIGNÉE (lot 4, 16/11/2026 ; cinq règles de l'utilisateur, _maquettes/Mockup-Poignee-Feuille) -----------------
+  // Au téléphone en portrait, une feuille flottante (pas `pleine`) prend à l'ouverture la hauteur de son contenu, plafonnée à
+  // 60 % de l'écran, puis GARDE cette taille : ce qu'on y affiche ensuite (« Afficher les détails »…) défile dedans. Quand le
+  // contenu dépasse, une poignée apparaît : tirée vers le haut (ou touchée), la feuille passe en pleine hauteur ; vers le bas,
+  // elle revient à sa taille d'ouverture. Le geste NE FERME JAMAIS (la croix ou le voile). On saisit la feuille par la poignée
+  // et l'en-tête seulement : le défilement du contenu reste libre. Ordinateur et paysage : rien de tout ça.
+  const modalRef = useRef(null);
+  const ouvertureRef = useRef(0);          // taille d'ouverture figée (px), 0 hors feuille de téléphone
+  const prendreRef = useRef(null);         // { y0, dy, h0, pts, bouge }
+  const [deborde, setDeborde] = useState(false);
+  const [grande, setGrande] = useState(false);
+  const feuilleTel = () => !pleine && !!(window.matchMedia && window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches);
   const downOnBackdropRef = useRef(false);
   // Stable (deps []) : sûr à utiliser comme valeur de contexte et en dépendance
   // de useEffect côté formulaires sans provoquer de re-déclenchements.
@@ -203,6 +215,58 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     window.addEventListener('orientationchange', onOrient);
     return () => window.removeEventListener('orientationchange', onOrient);
   }, []);
+  useLayoutEffect(() => {
+    const m = modalRef.current, b = bodyRef.current;
+    if (!m || !b) return undefined;
+    const figer = () => {
+      m.style.height = '';
+      if (!feuilleTel()) { ouvertureRef.current = 0; setDeborde(false); setGrande(false); return; }
+      const h = Math.min(m.offsetHeight, Math.round(window.innerHeight * 0.6));
+      ouvertureRef.current = h;
+      m.style.height = h + 'px';
+    };
+    const verifier = () => { if (ouvertureRef.current) setDeborde(b.scrollHeight > b.clientHeight + 1); };
+    figer(); verifier();
+    const mo = new MutationObserver(verifier);
+    mo.observe(b, { childList: true, subtree: true, characterData: true, attributes: true });
+    const mq = window.matchMedia ? window.matchMedia('(max-width: 640px) and (orientation: portrait)') : null;
+    const changement = () => { setGrande(false); figer(); verifier(); };
+    if (mq && mq.addEventListener) mq.addEventListener('change', changement);
+    return () => { mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', changement); };
+  }, []);
+  const plafondFeuille = () => {
+    const o = overlayRef.current; if (!o) return window.innerHeight;
+    const cs = getComputedStyle(o);
+    return o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  };
+  const agrandir = () => { const m = modalRef.current; if (m) m.style.height = ''; setGrande(true); };
+  const reduire = () => { const m = modalRef.current; if (m && ouvertureRef.current) m.style.height = ouvertureRef.current + 'px'; setGrande(false); };
+  const prendreDebut = (e) => {
+    if (!ouvertureRef.current || !(deborde || grande)) return;
+    if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
+    const m = modalRef.current;
+    prendreRef.current = { y0: e.clientY, dy: 0, h0: m.offsetHeight, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
+    m.style.transition = 'none';
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
+  };
+  const prendreBouge = (e) => {
+    const d = prendreRef.current; if (!d) return;
+    d.pts.push({ y: e.clientY, t: e.timeStamp }); if (d.pts.length > 24) d.pts.splice(0, d.pts.length - 24);
+    d.dy = e.clientY - d.y0; if (Math.abs(d.dy) > 6) d.bouge = true;
+    if (!grande) { // la feuille suit le doigt entre sa taille d'ouverture et le plafond
+      const m = modalRef.current;
+      m.style.height = Math.max(ouvertureRef.current, Math.min(plafondFeuille(), d.h0 - d.dy)) + 'px';
+    }
+  };
+  const prendreFin = () => {
+    const d = prendreRef.current; prendreRef.current = null; if (!d) return;
+    const m = modalRef.current; if (m) m.style.transition = '';
+    if (!d.bouge) return; // un simple toucher : la poignée le traite en clic
+    const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
+    if (choix === 'agrandir') agrandir(); else if (choix === 'reduire') reduire(); else if (grande) agrandir(); else reduire();
+  };
+  const poigneeVisible = ouvertureRef.current > 0 && (deborde || grande);
+
   // Rendu via un PORTAIL vers <body> : indispensable pour les modales
   // IMBRIQUÉES. Sinon la sous-modale est un descendant DOM du .modal-body
   // (scrollable) de la modale parente ; sur iOS Safari, un position:fixed
@@ -211,7 +275,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // de <body>, la modale se positionne par rapport au vrai viewport.
   return ReactDOM.createPortal(
     <div
-      className={`modal-overlay ${pleine ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}`}
+      className={`modal-overlay ${pleine || grande ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}${grande ? ' modal-overlay--grande' : ''}`}
       ref={overlayRef}
       onMouseDown={(e) => { downOnBackdropRef.current = e.target === e.currentTarget; }}
       onClick={(e) => {
@@ -219,8 +283,13 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
         downOnBackdropRef.current = false;
       }}
     >
-      <div className="modal" style={{ maxWidth: size === 'xl' ? 880 : size === 'lg' ? 680 : 500 }}>
-        <div className="modal-header">
+      <div className="modal" ref={modalRef} style={{ maxWidth: size === 'xl' ? 880 : size === 'lg' ? 680 : 500 }}>
+        {poigneeVisible && (
+          <button type="button" className="feuille-poignee" aria-label={grande ? 'Réduire la fenêtre' : 'Agrandir la fenêtre'}
+            onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}
+            onClick={(e) => { if (prendreRef.current && prendreRef.current.bouge) return; (grande ? reduire : agrandir)(); }} />
+        )}
+        <div className="modal-header" onPointerDown={prendreDebut} onPointerMove={prendreBouge} onPointerUp={prendreFin} onPointerCancel={prendreFin}>
           {icon && <span className={`modal-ico${tone ? ` modal-ico--${tone}` : ''}`} aria-hidden="true"><Icon name={icon} size={18} /></span>}
           <div className="modal-titres">
             <h3 className="modal-title">{title}</h3>

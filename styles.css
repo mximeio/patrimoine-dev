@@ -4438,6 +4438,9 @@ button.stat-card {
   html.pwa-standalone .modal-header { padding: 14px 16px; }
 }
 
+/* La poignée n'existe qu'au téléphone en portrait (le composant ne la rend pas ailleurs) ; filet si elle restait affichée. */
+.feuille-poignee { display: none; }
+
 /* === FENÊTRES EN FEUILLE DU BAS — lot 2 (16/11/2026, choix de l'utilisateur, fiche du BACKLOG et _maquettes/Mockup-Fenetres-Feuille)
    Au téléphone en PORTRAIT, une fenêtre COURTE (un formulaire : `Modal` sans `longue`) n'est plus une carte centrée : elle se pose
    en feuille flottante en bas, à 8 px des bords, comme la feuille « ⋯ » (forme C) — coins du haut 34 et du bas 54 sur un iPhone à
@@ -4476,6 +4479,12 @@ button.stat-card {
     animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .modal-overlay--pleine .modal-body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
+  /* La POIGNÉE (lot 4) : visible seulement quand le contenu dépasse la feuille ; touchée ou tirée, elle agrandit ou réduit,
+     jamais ne ferme. Zone de toucher élargie sans déplacer le dessin. L'en-tête sert aussi de prise (touch-action: none). */
+  .feuille-poignee { display: block; flex: none; position: relative; width: 40px; height: 5px; margin: 9px auto 0; padding: 0;
+    border: 0; border-radius: 3px; background: var(--border-strong); cursor: grab; touch-action: none; }
+  .feuille-poignee::before { content: ""; position: absolute; inset: -12px -40px; }
+  .modal-overlay .feuille-poignee + .modal-header { touch-action: none; }
   .modal-overlay--feuille .modal-body .form-actions,
   .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn) {
     margin-left: calc(var(--marge-boutons) - 16px);
