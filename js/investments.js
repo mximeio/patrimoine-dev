@@ -2055,7 +2055,7 @@ function ContributionPlannerModal({ data, stats, onSubmit, onClose, showToast })
   const coche = valeursAJour ? <Icon name="check" size={13} /> : null;
 
   return (
-    <Modal liste title="Calculer un versement" icon="chart" size="lg" dirty={aSaisi} onClose={onClose}>
+    <Modal liste vue={etape} title="Calculer un versement" icon="chart" size="lg" dirty={aSaisi} onClose={onClose}>
       {rienASaisir && (
         <EmptyState icon="percent" title="Aucun support à répartir"
           hint="Ajoute un support et fixe sa cible dans les Réglages de l'enveloppe." />

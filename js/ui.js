@@ -64,7 +64,7 @@ const ModalDirtyContext = React.createContext(null);
 // DEV v1256, sur décision de l'utilisateur (« tout à 60 % »), AUCUNE ne la porte : toutes s'ouvrent en feuille flottante à la
 // hauteur de leur contenu (plafonnée à 60 %) et la poignée les passe en pleine hauteur. Prop gardée en réserve. Ordinateur et
 // paysage : inchangés (styles.css « FENÊTRES EN FEUILLE »).
-function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false }) {
+function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false, vue }) {
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
   // contient un <form> (les listes, la lecture seule « Toutes les opérations »,
@@ -244,6 +244,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
       setGrande(enGrand);
       setOuverteEnGrand(enGrand);
     };
+    toucheeRef.current = false;
     figer();
     // Une partie du contenu peut arriver APRÈS l'ouverture (la liste des sauvegardes des Paramètres, lue en base : +90 px
     // mesurés). Pendant 1,5 s, tant qu'on n'a pas touché la feuille, elle se recale sur ce qui arrive ; ensuite, sa taille reste.
@@ -257,7 +258,9 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const mq = window.matchMedia ? window.matchMedia('(max-width: 640px) and (orientation: portrait)') : null;
     if (mq && mq.addEventListener) mq.addEventListener('change', figer);
     return () => { if (mo) mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', figer); };
-  }, []);
+    // `vue` : une fenêtre à étapes (« Calculer un versement », 1 · Valeurs puis 2 · Répartition) la change à chaque étape, et
+    // la feuille se recale alors COMME À UNE NOUVELLE OUVERTURE : entière, ou en grand si l'étape ne tient pas (DEV v1261).
+  }, [vue]);
   // UNE SEULE CHOSE BOUGE : LA HAUTEUR (DEV v1257, relevé de l'utilisateur sur iPhone : « ça saccade et ça flash parfois »).
   // La v1256 faisait passer la feuille agrandie de flottante à collée aux bords pendant le geste : sa LARGEUR changeait à
   // chaque mouvement du doigt (jusqu'à 120 par seconde), tout le contenu se remettait en page → saccades ; et le changement de
