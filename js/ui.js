@@ -69,23 +69,28 @@ const ModalDirtyContext = React.createContext(null);
 // clavier est ouvert. ⚠️ La v1267 comparait `visualViewport.height` à `window.innerHeight` : sur l'iPhone de l'utilisateur, le
 // clavier n'était JAMAIS vu (les deux hauteurs raccourcissent ensemble — relevé sur ses captures). La référence est désormais la
 // PLUS GRANDE hauteur visible vue depuis l'ouverture ; une rotation (largeur qui change) la remet à zéro.
+// DEUX SAUTS CORRIGÉS (DEV v1270, vus image par image sur la vidéo de l'utilisateur) :
+//  1. en changeant de champ, iOS fait glisser l'écran ; on le suivait à l'image suivante (requestAnimationFrame) et toute la
+//     feuille descendait de ~13 px pendant une image. On recale désormais DANS l'événement, sans attendre ;
+//  2. le clavier des lettres (barre de suggestions) est ~18 px plus haut que le pavé numérique : la feuille changeait de taille
+//     en passant du libellé au montant. Tant que le clavier reste ouvert, on garde la PLUS PETITE hauteur visible vue.
 function suivreZoneVisible(el, auChangement) {
   const vv = window.visualViewport;
   if (!vv || !el) return () => {};
-  let raf = 0, reference = vv.height, largeur = vv.width;
+  let reference = vv.height, largeur = vv.width, hClavier = 0;
   const caler = () => {
-    raf = 0;
-    if (Math.abs(vv.width - largeur) > 1) { largeur = vv.width; reference = vv.height; }
+    if (Math.abs(vv.width - largeur) > 1) { largeur = vv.width; reference = vv.height; hClavier = 0; }
     reference = Math.max(reference, vv.height);
+    const ouvert = vv.height < reference - 120;
+    hClavier = ouvert ? (hClavier ? Math.min(hClavier, vv.height) : vv.height) : 0;
     el.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
-    el.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
-    auChangement(vv.height < reference - 120);
+    el.style.setProperty('--vv-h', Math.round(ouvert ? hClavier : vv.height) + 'px');
+    auChangement(ouvert);
   };
-  const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
   caler();
-  vv.addEventListener('resize', planifier);
-  vv.addEventListener('scroll', planifier);
-  return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); vv.removeEventListener('scroll', planifier); };
+  vv.addEventListener('resize', caler);
+  vv.addEventListener('scroll', caler);
+  return () => { vv.removeEventListener('resize', caler); vv.removeEventListener('scroll', caler); };
 }
 
 function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false, vue }) {
