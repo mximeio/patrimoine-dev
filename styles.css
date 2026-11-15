@@ -4446,7 +4446,11 @@ button.stat-card {
    BOUTONS — B4 coins de 12 (tranché) : la rangée du bouton principal (et de la poubelle) à --marge-boutons du bord de la feuille,
    dessous ET sur les côtés — 26 px sur un iPhone à barre d'accueil (zone sûre 34 − les 8 de la feuille), 16 ailleurs. Les champs
    restent à 16 ; les boutons gardent leurs coins de 12.
-   Les fenêtres LONGUES (`modal-overlay--longue`) gardent la carte centrée jusqu'au lot 3. Paysage et ordinateur : inchangés. */
+   PLEINE HAUTEUR — lot 3 (`Modal pleine`, `modal-overlay--pleine`) : Paramètres, répartition des charges, réglages d'une enveloppe,
+   mise à jour des valeurs de toutes les enveloppes (choix de l'utilisateur). La fenêtre monte jusque sous la barre d'état (6 px
+   sous elle), se colle aux bords et au bas, seuls ses coins du haut s'arrondissent ; son contenu finit au-dessus de la barre
+   d'accueil. Toutes les autres, listes comprises, sont des feuilles flottantes qui grandissent avec leur contenu.
+   Paysage et ordinateur : inchangés. */
 @media (max-width: 640px) and (orientation: portrait) {
   .modal-overlay.modal-overlay--feuille {
     padding: max(14px, env(safe-area-inset-top, 0px)) 8px 8px;
@@ -4461,6 +4465,17 @@ button.stat-card {
     animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .modal-overlay--feuille .modal-body { padding-bottom: var(--marge-boutons); }
+  .modal-overlay.modal-overlay--pleine {
+    padding: calc(max(14px, env(safe-area-inset-top, 0px)) + 6px) 0 0;
+    align-items: stretch;
+  }
+  .modal-overlay--pleine .modal {
+    --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
+    border-radius: var(--r-feuille-haut) var(--r-feuille-haut) 0 0;
+    height: auto; max-height: none;
+    animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .modal-overlay--pleine .modal-body { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
   .modal-overlay--feuille .modal-body .form-actions,
   .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn) {
     margin-left: calc(var(--marge-boutons) - 16px);
