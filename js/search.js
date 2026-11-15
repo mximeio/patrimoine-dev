@@ -871,17 +871,21 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // suivants restent ceux d'iOS. Si iOS refuse de rendre la main (`cancelable` faux), on n'insiste pas : comme avant.
   // Écouteurs NATIFS : ceux de React sont passifs pour le toucher, `preventDefault` y est sans effet. Posés sur l'overlay,
   // ils passent AVANT le `onTouchStart` de la liste (qui range le clavier) : le champ a encore le focus.
+  // DEV v1282 (relevé de l'utilisateur sur iPhone : « ça marche, mais ça sonne un peu faux et c'est moins fluide ») : le
+  // blocage n'arrive qu'au PREMIER glissement après l'ouverture de la fenêtre — on ne prend donc la main qu'UNE fois par
+  // ouverture (`dejaPris` ; la fenêtre est remontée à chaque ouverture). Tout le reste, élan compris dès qu'on retouche la
+  // liste, est à iOS. Et la vitesse au lâcher se lit sur les 50 dernières ms (100 avant), nulle si le doigt s'est arrêté.
   useEffect(() => {
     const o = overlayRef.current;
     if (!o || !tactile) return undefined;
-    let geste = null, elan = 0, bloquerClic = 0;
+    let geste = null, elan = 0, bloquerClic = 0, dejaPris = false;
     const arreterElan = () => { if (elan) cancelAnimationFrame(elan); elan = 0; };
     const debut = (e) => {
       arreterElan();
       const liste = e.target.closest && e.target.closest('.search-results');
       const actif = document.activeElement;
       const clavier = !!(actif && actif.classList && actif.classList.contains('search-input'));
-      if (!liste || !clavier || e.touches.length !== 1) { geste = null; return; }
+      if (dejaPris || !liste || !clavier || e.touches.length !== 1) { geste = null; return; }
       const y = e.touches[0].clientY, t = e.timeStamp;
       geste = { liste, y0: y, haut0: liste.scrollTop, bouge: false, echantillons: [{ y, t }] };
     };
@@ -889,11 +893,12 @@ function SearchModal({ ctx, onClose, onNavigate }) {
       if (!geste) return;
       if (!e.cancelable) { geste = null; return; }
       e.preventDefault();
+      dejaPris = true;
       const y = e.touches[0].clientY, t = e.timeStamp;
       if (Math.abs(y - geste.y0) > 8) geste.bouge = true;
       geste.liste.scrollTop = geste.haut0 - (y - geste.y0);
       geste.echantillons.push({ y, t });
-      while (geste.echantillons.length > 2 && t - geste.echantillons[0].t > 100) geste.echantillons.shift();
+      while (geste.echantillons.length > 2 && t - geste.echantillons[0].t > 50) geste.echantillons.shift();
     };
     const fin = (e) => {
       if (!geste) return;
@@ -902,7 +907,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
       if (!bouge) return;
       bloquerClic = e.timeStamp + 500;
       const a = echantillons[0], b = echantillons[echantillons.length - 1];
-      let v = b.t > a.t ? -(b.y - a.y) / (b.t - a.t) : 0;
+      let v = (b.t > a.t && e.timeStamp - b.t < 40) ? -(b.y - a.y) / (b.t - a.t) : 0;
       if (Math.abs(v) < 0.1) return;
       let avant = performance.now();
       const pas = (maintenant) => {
