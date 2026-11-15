@@ -3523,9 +3523,8 @@ button.stat-card {
 .search-result.focused {
   background: var(--surface-alt);
 }
-/* Sur écran tactile, aucune touche ne valide le résultat en surbrillance : pas de surbrillance (DEV v1275). Et plus d'état
-   appuyé (`:active`) sur les résultats (DEV v1278) : il s'allumait sous le doigt au début d'un glissement, comme sur les autres
-   listes au téléphone, d'où il a été retiré. */
+/* Sur écran tactile, aucune touche ne valide le résultat en surbrillance : pas de surbrillance (DEV v1275). L'état appuyé, lui,
+   vit en fin de fichier, retardé de 80 ms (DEV v1279). */
 .search-modal--tactile .search-result.focused { background: transparent; }
 @media (hover: hover) {
 .search-result:hover {
@@ -5396,6 +5395,11 @@ button.cp-seg-item { cursor: pointer; }
 .mc-label:active,
 .proj-value:active { opacity: 0.6; transition: none; }
 .tx-check-hit:active .tx-check { transform: scale(0.85); transition: none; }
+/* Les résultats de la RECHERCHE (DEV v1279, demande de l'utilisateur : ils s'ouvrent au toucher, comme une enveloppe) : l'état
+   appuyé revient, RETARDÉ de 80 ms — la parade prévue ci-dessus pour une liste qu'on fait défiler : un toucher l'allume, un
+   glissement l'annule avant (retiré en v1278 parce qu'il s'allumait au début d'un glissement). `.search-modal` en tête : passe
+   devant « pas de surbrillance » du tactile (la ligne touchée est aussi `.focused`). */
+.search-modal .search-result:active { background: var(--surface-hover); transition: background-color 0s linear 80ms; }
 
 /* ============================================================
    SÉLECTION DE TEXTE SUR ÉCRAN TACTILE — audit du 19/10/2026 (constat 7)
