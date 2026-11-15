@@ -1541,6 +1541,12 @@ input[type="month"] {
 .frozen-month .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
 .frozen-month .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
 .frozen-month .ops-c .composite-comps { margin-left: 40px; }
+/* … et à DROITE (16/11/2026, relevé de l'utilisateur sur iPhone) : sans crayon, le « € » finissait à 6 px du bord ; 5 px de plus
+   le posent à 11 px, comme la case à gauche et le crayon d'un mois ouvert. Sélecteurs renforcés : passent devant les grilles. */
+.frozen-month .section-block.ops-c .tx-row.tx-row.tx-row,
+.modal .frozen-month .tx-row.tr-row.tr-row.tr-row { padding-right: 9px; }
+/* Les composantes dépliées suivent : leur « € » sous celui du parent. */
+.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps.composite-comps { padding-right: 9px; } /* 4 → 9 : passe devant la règle des composantes d'.ops-c, plus bas */
 .modal .frozen-month .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
 /* La poignée des tickets resto a sa largeur propre (19 px, règle plus spécifique) : à 0 aussi, sinon, invisible, elle déborde
    de sa colonne vide sur le libellé (même chose en mode dates, relevé au passage). */
