@@ -74,25 +74,25 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const dirtyRef = useRef(false);
   const bodyRef = useRef(null);
   const overlayRef = useRef(null);
-  // ---- LA POIGNÉE (lot 4, 16/11/2026 ; cinq règles de l'utilisateur, _maquettes/Mockup-Poignee-Feuille) -----------------
-  // Au téléphone en portrait, une feuille flottante (pas `pleine`) prend à l'ouverture la hauteur de son contenu, plafonnée à
-  // 60 % de l'écran, puis GARDE cette taille : ce qu'on y affiche ensuite (« Afficher les détails »…) défile dedans. Quand le
-  // contenu dépasse, une poignée apparaît : tirée vers le haut (ou touchée), la feuille monte jusque sous la barre d'état (en
-  // restant flottante, DEV v1257) ; vers le bas,
-  // elle revient à sa taille d'ouverture. Le geste NE FERME JAMAIS (la croix ou le voile). On saisit la feuille par la poignée
-  // et l'en-tête seulement : le défilement du contenu reste libre. Ordinateur et paysage : rien de tout ça.
+  // ---- LA POIGNÉE (lot 4, 16/11/2026 ; règles de l'utilisateur, revues en DEV v1258 et v1259) ------------------------------
+  // Au téléphone en portrait, toute feuille flottante (pas `pleine`) porte une poignée. Le geste NE FERME JAMAIS (la croix ou le
+  // voile). On saisit la feuille par la poignée et l'en-tête seulement : le défilement du contenu reste libre. Ordinateur et
+  // paysage : rien de tout ça. Deux sortes de feuilles, décrites juste en dessous : les formulaires et les listes.
   const modalRef = useRef(null);
   const ouvertureRef = useRef(0);          // taille d'ouverture figée (px), 0 hors feuille de téléphone
   const prendreRef = useRef(null);         // { y0, dy, h0, pts, bouge }
   const dernierGesteRef = useRef(0);       // fin du dernier glisser : le clic qui suit n'est pas un toucher
-  const [deborde, setDeborde] = useState(false);
+  const toucheeRef = useRef(false);        // la feuille a été prise ou sa poignée touchée : on ne la recale plus
   const [grande, setGrande] = useState(false);
   // DEUX SORTES DE FEUILLES (DEV v1258, proposition de l'utilisateur) : les LISTES qui grandissent avec les données (prop
   // `liste` : Paramètres, répartition des charges, récurrents, tickets resto payés, toutes les opérations, réglages et mise à
-  // jour groupée des enveloppes, calculer un versement) gardent tout ce qui précède. Les FORMULAIRES, dont le contenu est borné,
+  // jour groupée des enveloppes, calculer un versement) s'ouvrent entières ou en grand (cf. `figer`) et la poignée les fait passer de leur taille d'ouverture
+  // au grand (sous la barre d'état, en restant flottantes) et retour. Les FORMULAIRES, dont le contenu est borné,
   // s'ouvrent ENTIERS (hauteur de leur contenu, plafonnée sous la barre d'état par le CSS, qui suit si le contenu change) ; leur
   // poignée est toujours là et la feuille REBONDIT quand on la tire, vers le haut comme vers le bas : rien ne change de taille.
-  const [feuille, setFeuille] = useState(false);   // feuille de téléphone (portrait), mesurée au montage
+  // Posée dès le PREMIER rendu : la poignée (14 px) doit être là quand `figer` mesure, sinon une liste ouverte entière
+  // manquait ses 14 derniers pixels (mesuré dans la pane, DEV v1259).
+  const [feuille, setFeuille] = useState(() => !pleine && !!(window.matchMedia && window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches));
   const feuilleTel = () => !pleine && !!(window.matchMedia && window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches);
   const downOnBackdropRef = useRef(false);
   // Stable (deps []) : sûr à utiliser comme valeur de contexte et en dépendance
@@ -224,25 +224,35 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     return () => window.removeEventListener('orientationchange', onOrient);
   }, []);
   useLayoutEffect(() => {
-    const m = modalRef.current, b = bodyRef.current;
-    if (!m || !b) return undefined;
+    const m = modalRef.current;
+    if (!m) return undefined;
+    // L'OUVERTURE D'UNE LISTE (DEV v1259, règle de l'utilisateur) : ENTIÈRE, à la taille de son contenu du moment, puis cette
+    // taille reste (ce qui s'ajoute ensuite défile dedans, et la poignée l'ouvre en grand si besoin) ; si son contenu dépasse
+    // déjà l'écran, elle s'ouvre EN GRAND d'emblée, et sa taille réduite est alors 60 % de l'écran.
     const figer = () => {
       m.style.height = '';
-      if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setDeborde(false); setGrande(false); return; }
+      if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setGrande(false); return; }
       setFeuille(true);
       if (!liste) { ouvertureRef.current = 0; return; }   // formulaire : entier, la hauteur reste au CSS
-      const h = Math.min(m.offsetHeight, Math.round(window.innerHeight * 0.6));
-      ouvertureRef.current = h;
-      m.style.height = h + 'px';
+      const naturelle = m.offsetHeight, plafond = plafondFeuille();
+      const enGrand = naturelle >= plafond - 2;
+      ouvertureRef.current = enGrand ? Math.round(window.innerHeight * 0.6) : naturelle;
+      m.style.height = (enGrand ? plafond : naturelle) + 'px';
+      setGrande(enGrand);
     };
-    const verifier = () => { if (ouvertureRef.current) setDeborde(b.scrollHeight > b.clientHeight + 1); };
-    figer(); verifier();
-    const mo = new MutationObserver(verifier);
-    mo.observe(b, { childList: true, subtree: true, characterData: true, attributes: true });
+    figer();
+    // Une partie du contenu peut arriver APRÈS l'ouverture (la liste des sauvegardes des Paramètres, lue en base : +90 px
+    // mesurés). Pendant 1,5 s, tant qu'on n'a pas touché la feuille, elle se recale sur ce qui arrive ; ensuite, sa taille reste.
+    const debut = Date.now();
+    const b = bodyRef.current;
+    const mo = (liste && b) ? new MutationObserver(() => {
+      if (Date.now() - debut > 1500) { mo.disconnect(); return; }
+      if (!toucheeRef.current && feuilleTel()) figer();
+    }) : null;
+    if (mo) mo.observe(b, { childList: true, subtree: true, characterData: true });
     const mq = window.matchMedia ? window.matchMedia('(max-width: 640px) and (orientation: portrait)') : null;
-    const changement = () => { setGrande(false); figer(); verifier(); };
-    if (mq && mq.addEventListener) mq.addEventListener('change', changement);
-    return () => { mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', changement); };
+    if (mq && mq.addEventListener) mq.addEventListener('change', figer);
+    return () => { if (mo) mo.disconnect(); if (mq && mq.removeEventListener) mq.removeEventListener('change', figer); };
   }, []);
   // UNE SEULE CHOSE BOUGE : LA HAUTEUR (DEV v1257, relevé de l'utilisateur sur iPhone : « ça saccade et ça flash parfois »).
   // La v1256 faisait passer la feuille agrandie de flottante à collée aux bords pendant le geste : sa LARGEUR changeait à
@@ -265,6 +275,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   };
   const animerVers = (versGrande) => {
     const m = modalRef.current; if (!m || !ouvertureRef.current) return;
+    toucheeRef.current = true;
     const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const duree = reduit ? 0 : 260;
     const cible = versGrande ? plafondFeuille() : ouvertureRef.current;
@@ -291,7 +302,8 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // résiste (élastique, ~42 px au plus, par un `transform`, sans mise en page) : elle ne se ferme jamais.
   const elastique = (a) => (a * 42) / (a + 42);
   const prendreDebut = (e) => {
-    if (!feuille || (liste && !(ouvertureRef.current && (deborde || grande)))) return;
+    if (!feuille || (liste && !ouvertureRef.current)) return;
+    toucheeRef.current = true;
     if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
     const m = modalRef.current;
     // Tout ce qu'il faut lire, on le lit UNE fois, ici.
@@ -328,7 +340,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
     animerVers(choix === 'agrandir' ? true : choix === 'reduire' ? false : grande);
   };
-  const poigneeVisible = feuille && (!liste || (ouvertureRef.current > 0 && (deborde || grande)));
+  const poigneeVisible = feuille;   // toujours, sur toutes les feuilles : elle agrandit (liste) ou rebondit (formulaire)
 
   // Rendu via un PORTAIL vers <body> : indispensable pour les modales
   // IMBRIQUÉES. Sinon la sous-modale est un descendant DOM du .modal-body
