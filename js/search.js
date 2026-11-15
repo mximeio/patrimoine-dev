@@ -776,9 +776,19 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // Reset le focus ET la pagination quand la query change
   useEffect(() => { setFocused(0); setShown(SEARCH_PAGE_SIZE); }, [query, du, au]);
 
+  // ÉCRAN TACTILE (DEV v1275, relevé de l'utilisateur sur iPhone) : pas de flèches pour choisir un résultat, donc Entrée n'ouvre
+  // RIEN — elle masque le clavier pour laisser voir toute la liste, et le premier résultat ne porte plus de surbrillance
+  // (`search-modal--tactile`). Sur ordinateur, flèches et Entrée comme avant. Même critère que le gel de page de `Modal`.
+  const tactile = !(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+
   // Navigation clavier
   useEffect(() => {
     const onKey = (e) => {
+      if (tactile && e.key === 'Enter') {
+        e.preventDefault();
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+        return;
+      }
       if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -889,7 +899,7 @@ function SearchModal({ ctx, onClose, onNavigate }) {
         downOnBackdropRef.current = false;
       }}
     >
-      <div className="search-modal" role="dialog" aria-modal="true" aria-label="Recherche">
+      <div className={`search-modal${tactile ? ' search-modal--tactile' : ''}`} role="dialog" aria-modal="true" aria-label="Recherche">
         <div className="search-input-wrap">
           <span className="search-input-icon"><Icon name="search" size={18} /></span>
           <input

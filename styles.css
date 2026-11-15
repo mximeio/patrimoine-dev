@@ -3521,6 +3521,8 @@ button.stat-card {
 .search-result.focused {
   background: var(--surface-alt);
 }
+/* Sur écran tactile, aucune touche ne valide le résultat en surbrillance : pas de surbrillance (DEV v1275). */
+.search-modal--tactile .search-result.focused { background: transparent; }
 @media (hover: hover) {
 .search-result:hover {
   background: var(--surface-alt);
