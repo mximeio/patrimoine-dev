@@ -240,7 +240,9 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
       m.style.height = '';
       if (!feuilleTel()) { ouvertureRef.current = 0; setFeuille(false); setGrande(false); setOuverteEnGrand(false); return; }
       setFeuille(true);
-      if (!liste) { ouvertureRef.current = 0; return; }   // formulaire : entier, la hauteur reste au CSS
+      // formulaire : entier, la hauteur reste au CSS. Les états de liste sont remis à zéro : une fenêtre à étapes peut passer de
+      // l'une à l'autre (« calculer un versement » : l'étape 1 est un formulaire, l'étape 2 une liste — DEV v1266).
+      if (!liste) { ouvertureRef.current = 0; setGrande(false); setOuverteEnGrand(false); return; }
       const naturelle = m.offsetHeight, plafond = plafondFeuille();
       const enGrand = naturelle >= plafond - 2;
       ouvertureRef.current = enGrand ? plafond : naturelle;
