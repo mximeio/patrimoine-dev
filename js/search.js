@@ -1048,8 +1048,16 @@ function SearchModal({ ctx, onClose, onNavigate }) {
           </div>
         )}
 
+        {/* iOS (DEV v1276, vidéo de l'utilisateur) : liste tout en haut, clavier ouvert, le doigt faisait glisser TOUT l'écran au
+            lieu de la liste. Même parade que le corps de `Modal` : au toucher, on s'écarte d'1 px des bords pour qu'iOS sache que la
+            liste peut défiler dans les deux sens ; et `overscroll-behavior: contain` (styles.css) garde le défilement dans la liste. */}
         {aQuelqueChoseAMontrer && total > 0 && (
-          <div className="search-results" ref={resultsRef}>
+          <div className="search-results" ref={resultsRef} onTouchStart={(e) => {
+            const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
+            if (max <= 0) return;
+            if (el.scrollTop <= 0) el.scrollTop = 1;
+            else if (el.scrollTop >= max) el.scrollTop = max - 1;
+          }}>
             {grouped.map(g => {
               const startIdx = flat.findIndex(it => it === g.items[0]);
               return (

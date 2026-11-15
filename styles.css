@@ -3456,7 +3456,9 @@ button.stat-card {
 .search-periode > .btn { margin-left: auto; }
 
 .search-results {
-  overflow-y: auto; flex: 1;
+  overflow-y: auto; flex: 1; min-height: 0;
+  /* Le défilement reste dans la liste, jamais l'écran derrière (DEV v1276, même réglage que .modal-body). */
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   padding: 8px 0;
 }
 .search-group { padding: 8px 0 4px; }
