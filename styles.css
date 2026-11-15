@@ -1430,7 +1430,10 @@ input[type="month"] {
 .portfolio-list-row { min-height: 64px; }
 /* L'avatar de 42 px a SA colonne : dans celle de 26 px des pastilles, il chevauchait le nom (relevé iPhone, 15/11/2026). */
 .portfolio-list-row:has(> .portfolio-list-av) { grid-template-columns: 42px minmax(0, 1fr) auto 14px; gap: 12px; }
-.section-block .portfolio-list-row { padding-left: 4px; padding-right: 4px; }
+/* MARGES DES LISTES (16/11/2026, choix de l'utilisateur sur _maquettes/Mockup-Marges-Listes) : dans une liste de page, le premier
+   et le dernier élément dessinés à 11 px des traits, comme les opérations du compte. Pastille à 11 (4 avant) ; chevron à 11 (12
+   avant : le « › » a 8 px de vide à droite dans sa colonne de 14, d'où 3 px de marge). */
+.section-block .portfolio-list-row { padding-left: 11px; padding-right: 3px; }
 /* Le nom d'un actif passe à la ligne plutôt que d'être coupé : la colonne de droite porte gain ET pourcentage. */
 .asset-l .portfolio-list-name { white-space: normal; overflow: visible; line-height: 1.25; }
 .portfolio-list-name { font-weight: 500; }
@@ -1499,7 +1502,7 @@ input[type="month"] {
 /* Opérations récentes d'un livret / d'une enveloppe, et « Voir toutes les opérations » : même géométrie que le compte
    (15/11/2026) — icône au bord, libellé 10 px après elle (l'écart case → libellé du compte), montant à 31 px et crayon à 6 px du
    bord droit. La grille vivait en style en ligne ('24px 1fr auto 24px'), retirée des quatre listes. */
-.op-row.op-row { grid-template-columns: 20px minmax(0, 1fr) auto 22px; column-gap: 5px; padding-left: 0; padding-right: 4px; }
+.op-row.op-row { grid-template-columns: 20px minmax(0, 1fr) auto 22px; column-gap: 5px; padding-left: 11px; padding-right: 4px; } /* icône à 11 px du trait (0 avant, 16/11/2026, Mockup-Marges-Listes) ; crayon déjà à 11 */
 .op-row.op-row > .tx-icon { width: 20px; height: 20px; }
 .op-row.op-row > .op-main { padding-left: 5px; }
 .op-row.op-row > .tx-edit { transform: none; margin-left: -3px; }
@@ -1642,7 +1645,7 @@ input[type="month"] {
 @media (hover: hover) and (pointer: fine) { html { scrollbar-gutter: stable; } }
 
 /* Supports d'une enveloppe : avatar à deux lettres de 42 px, comme les autres listes d'entités (maquette C', 15/11/2026). */
-.support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 4px; padding-right: 4px; min-height: 64px; }
+.support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 11px; padding-right: 11px; min-height: 64px; } /* 11 px des traits des deux côtés (4 avant, 16/11/2026, Mockup-Marges-Listes) */
 .support-row .support-icon { width: 42px; height: 42px; border-radius: var(--r-touche); font-size: 13px; font-weight: 700; }
 
 /* Recherche : titre de groupe en gras, sans capitales, précédé du point de la rubrique (maquette C', 15/11/2026). */
@@ -2595,7 +2598,7 @@ button.stat-card {
 .supports-groupe { background: transparent; border-top: 1px solid var(--border); }
 .supports-groupe .support-edit-row {
   width: 100%; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer;
-  grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 2px; min-height: 56px; /* plus de pastille de couleur (15/11/2026) */
+  grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; padding: 10px 0; min-height: 56px; /* plus de pastille de couleur (15/11/2026) ; nom et chevron sur la marge de la fenêtre, comme les champs (2 px avant, 16/11/2026) */
   border-bottom: 1px solid var(--border);
 }
 @media (hover: hover) { .supports-groupe .support-edit-row:hover { background: var(--surface-hover); } }
@@ -2606,8 +2609,8 @@ button.stat-card {
 .supports-groupe .support-edit-lbl { font-size: 13px; font-weight: 500; }
 .support-edit-complet { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .supports-groupe .support-edit-cible { font-size: 14px; font-weight: 500; color: var(--text); }
-.support-edit-chev { color: var(--text-muted); font-size: 18px; line-height: 1; text-align: center; }
-.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 26px 12px 2px; font-size: 14px; } /* 26 px à droite : le total tombe sur la colonne des cibles, qui s'arrête avant le chevron des lignes (mesuré, 15/11/2026) */
+.support-edit-chev { color: var(--text-muted); font-size: 18px; line-height: 1; text-align: right; } /* calé à droite (centré avant : 6 px de retrait, 16/11/2026) */
+.support-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 24px 12px 0; font-size: 14px; } /* 24 px à droite : le total tombe sur la colonne des cibles, qui s'arrête avant le chevron des lignes (14 + 10) ; 0 à gauche, comme les lignes depuis le 16/11/2026 (2 et 26 avant) */
 .support-total b { font-weight: 600; }
 .support-total span { font-weight: 600; }
 .support-total.ok span { color: var(--success-fonce); }
