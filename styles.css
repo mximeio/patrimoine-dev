@@ -4449,8 +4449,8 @@ button.stat-card {
    BOUTONS — B4 coins de 12 (tranché) : la rangée du bouton principal (et de la poubelle) à --marge-boutons du bord de la feuille,
    dessous ET sur les côtés — 26 px sur un iPhone à barre d'accueil (zone sûre 34 − les 8 de la feuille), 16 ailleurs. Les champs
    restent à 16 ; les boutons gardent leurs coins de 12.
-   PLEINE HAUTEUR — lot 3 (`Modal pleine`, `modal-overlay--pleine`) : Paramètres, répartition des charges, réglages d'une enveloppe,
-   mise à jour des valeurs de toutes les enveloppes (choix de l'utilisateur). La fenêtre monte jusque sous la barre d'état (6 px
+   PLEINE HAUTEUR (`modal-overlay--pleine`) : la forme d'une feuille agrandie par sa poignée (`--grande`) ; `Modal pleine` l'impose
+   d'emblée, mais plus aucune fenêtre ne le fait depuis la DEV v1256 (« tout à 60 % », choix de l'utilisateur). La fenêtre monte jusque sous la barre d'état (6 px
    sous elle), se colle aux bords et au bas, seuls ses coins du haut s'arrondissent ; son contenu finit au-dessus de la barre
    d'accueil. Toutes les autres, listes comprises, sont des feuilles flottantes qui grandissent avec leur contenu.
    Paysage et ordinateur : inchangés. */
