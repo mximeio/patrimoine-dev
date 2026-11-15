@@ -241,27 +241,37 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   };
   const agrandir = () => { const m = modalRef.current; if (m) m.style.height = ''; setGrande(true); };
   const reduire = () => { const m = modalRef.current; if (m && ouvertureRef.current) m.style.height = ouvertureRef.current + 'px'; setGrande(false); };
+  // Le geste SUIT LE DOIGT dans les deux sens (relevé de l'utilisateur sur iPhone, 16/11/2026 : en grand, la feuille ne
+  // descendait qu'au lâcher). Petite : vers le haut, elle grandit jusqu'au plafond ; vers le bas, elle résiste (élastique,
+  // ~42 px au plus) puisqu'elle ne se ferme pas. En grand : vers le bas, elle rétrécit vers sa taille d'ouverture, posée en bas
+  // pendant le geste ; vers le haut, elle résiste. Au lâcher, `decisionPoignee` tranche, puis tout revient au CSS.
+  const elastique = (a) => (a * 42) / (a + 42);
   const prendreDebut = (e) => {
     if (!ouvertureRef.current || !(deborde || grande)) return;
     if (e.target.closest('button') && !e.target.closest('.feuille-poignee')) return; // la croix reste un bouton
-    const m = modalRef.current;
+    const m = modalRef.current, o = overlayRef.current;
     prendreRef.current = { y0: e.clientY, dy: 0, h0: m.offsetHeight, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
     m.style.transition = 'none';
+    if (grande && o) { m.style.height = m.offsetHeight + 'px'; o.style.alignItems = 'flex-end'; } // ancrée en bas pendant le geste
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) { /* noop */ }
   };
   const prendreBouge = (e) => {
     const d = prendreRef.current; if (!d) return;
     d.pts.push({ y: e.clientY, t: e.timeStamp }); if (d.pts.length > 24) d.pts.splice(0, d.pts.length - 24);
     d.dy = e.clientY - d.y0; if (Math.abs(d.dy) > 6) d.bouge = true;
-    if (!grande) { // la feuille suit le doigt entre sa taille d'ouverture et le plafond
-      const m = modalRef.current;
-      m.style.height = Math.max(ouvertureRef.current, Math.min(plafondFeuille(), d.h0 - d.dy)) + 'px';
-    }
+    const m = modalRef.current;
+    if (!grande) {
+      if (d.dy <= 0) { m.style.transform = ''; m.style.height = Math.min(plafondFeuille(), d.h0 - d.dy) + 'px'; }
+      else { m.style.height = d.h0 + 'px'; m.style.transform = `translateY(${elastique(d.dy)}px)`; }
+    } else if (d.dy >= 0) { m.style.transform = ''; m.style.height = Math.max(ouvertureRef.current, d.h0 - d.dy) + 'px'; }
+    else { m.style.height = d.h0 + 'px'; m.style.transform = `translateY(${-elastique(-d.dy)}px)`; }
   };
   const prendreFin = () => {
     const d = prendreRef.current; prendreRef.current = null; if (!d) return;
-    const m = modalRef.current; if (m) m.style.transition = '';
-    if (!d.bouge) return; // un simple toucher : la poignée le traite en clic
+    const m = modalRef.current, o = overlayRef.current;
+    if (m) { m.style.transition = ''; m.style.transform = ''; }
+    if (o) o.style.alignItems = '';
+    if (!d.bouge) { if (grande && m) m.style.height = ''; return; } // un simple toucher : la poignée le traite en clic
     const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
     if (choix === 'agrandir') agrandir(); else if (choix === 'reduire') reduire(); else if (grande) agrandir(); else reduire();
   };
