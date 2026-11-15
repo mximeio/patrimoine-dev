@@ -3523,7 +3523,9 @@ button.stat-card {
 .search-result.focused {
   background: var(--surface-alt);
 }
-/* Sur écran tactile, aucune touche ne valide le résultat en surbrillance : pas de surbrillance (DEV v1275). */
+/* Sur écran tactile, aucune touche ne valide le résultat en surbrillance : pas de surbrillance (DEV v1275). Et plus d'état
+   appuyé (`:active`) sur les résultats (DEV v1278) : il s'allumait sous le doigt au début d'un glissement, comme sur les autres
+   listes au téléphone, d'où il a été retiré. */
 .search-modal--tactile .search-result.focused { background: transparent; }
 @media (hover: hover) {
 .search-result:hover {
@@ -5377,7 +5379,6 @@ button.cp-seg-item { cursor: pointer; }
 .portfolio-list-row:active,
 .stat-card-clickable:active,
 .dropdown-item:not(:disabled):active,
-.search-result:active,
 .maj-env-head:active,
 .date-cell:not(.selected):not(.today):active,
 .btn-icon:active,

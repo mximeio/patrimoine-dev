@@ -1052,13 +1052,15 @@ function SearchModal({ ctx, onClose, onNavigate }) {
             lieu de la liste. Même parade que le corps de `Modal` : au toucher, on s'écarte d'1 px des bords pour qu'iOS sache que la
             liste peut défiler dans les deux sens ; et `overscroll-behavior: contain` (styles.css) garde le défilement dans la liste.
             ⚠️ Ça n'a pas suffi : CLAVIER OUVERT, iOS garde la main sur le glissement de l'écran (2e vidéo ; clavier rangé, la liste
-            défile). DEV v1277 : comme iOS (Réglages, Messages, Spotlight), glisser la liste RANGE LE CLAVIER — écran tactile seulement. */}
+            défile). DEV v1277 : comme iOS (Réglages, Messages, Spotlight), glisser la liste RANGE LE CLAVIER — écran tactile seulement.
+            DEV v1278 : dès que le doigt SE POSE (le 1er glissement restait bloqué : iOS attribue le geste à son début). Sans risque de
+            toucher le mauvais résultat : la carte est accrochée en haut, ranger le clavier ne fait que l'allonger par le bas. */}
         {aQuelqueChoseAMontrer && total > 0 && (
-          <div className="search-results" ref={resultsRef} onTouchMove={() => {
-            if (!tactile) return;
-            const actif = document.activeElement;
-            if (actif && actif.classList && actif.classList.contains('search-input')) actif.blur();
-          }} onTouchStart={(e) => {
+          <div className="search-results" ref={resultsRef} onTouchStart={(e) => {
+            if (tactile) {
+              const actif = document.activeElement;
+              if (actif && actif.classList && actif.classList.contains('search-input')) actif.blur();
+            }
             const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
             if (max <= 0) return;
             if (el.scrollTop <= 0) el.scrollTop = 1;
