@@ -718,8 +718,9 @@ function fermerLaFeuille(dy, vitesse) {
 
 // LA POIGNÉE DES FEUILLES (16/11/2026, lot 4 du chantier « les fenêtres en feuille du bas ») : au lâcher, la feuille passe en
 // pleine hauteur, revient à sa taille d'ouverture, ou ne bouge pas. MÊMES réglages que la feuille « ⋯ » (vitesse récente,
-// projection d'Apple, seuil FEUILLE_SEUIL_PX) — mais le geste NE FERME JAMAIS (décision de l'utilisateur : la croix ou le voile).
-// dy > 0 = le doigt descend. Renvoie 'agrandir', 'reduire' ou null.
+// projection d'Apple, seuil FEUILLE_SEUIL_PX). Elle ne décide que la TAILLE ; la fermeture par le geste (DEV v1265), depuis la
+// taille d'ouverture, est décidée par `fermerLaFeuille` dans `Modal` (ui.js). dy > 0 = le doigt descend. Renvoie 'agrandir',
+// 'reduire' ou null.
 function decisionPoignee(dy, vitesse, grande) {
   const portee = dy + projeterGeste(vitesse);
   if (!grande && vitesse <= 0.1 && portee < -FEUILLE_SEUIL_PX) return 'agrandir';

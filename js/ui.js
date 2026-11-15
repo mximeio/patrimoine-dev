@@ -106,6 +106,15 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // l'utilisateur sur la modification d'une opération). Les appelants historiques
   // écrivent `markDirty()` sans argument et gardent exactement leur comportement.
   const markDirty = useCallback((v = true) => { dirtyRef.current = v !== false; }, []);
+  // La SEULE chose qui peut retenir une fermeture (croix, voile, Échap, ou geste depuis la DEV v1265).
+  const QUESTION_FERMER = 'Des modifications n\'ont pas été enregistrées et seront perdues.\n\nFermer sans enregistrer ?';
+  const aDesModifications = () => {
+    if (noDirtyGuard) return false;
+    const hasUnsaved = dirty != null
+      ? dirty
+      : (dirtyRef.current && bodyRef.current && bodyRef.current.querySelector('form'));
+    return !!hasUnsaved;
+  };
   const attemptClose = () => {
     // noDirtyGuard : modales en auto-enregistrement (ex. Paramètres) où il n'y a
     // jamais de « modifications non enregistrées » à abandonner.
@@ -115,12 +124,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     // aux contrôles à CLIC (picker de mois, boutons…) qui n'émettent aucun de
     // ces événements, et ne sait pas « dé-salir » quand on revient aux valeurs
     // d'origine. Sans la prop : comportement historique inchangé.
-    const hasUnsaved = dirty != null
-      ? dirty
-      : (dirtyRef.current && bodyRef.current && bodyRef.current.querySelector('form'));
-    if (!noDirtyGuard && hasUnsaved) {
-      if (!window.confirm('Des modifications n\'ont pas été enregistrées et seront perdues.\n\nFermer sans enregistrer ?')) return;
-    }
+    if (aDesModifications() && !window.confirm(QUESTION_FERMER)) return;
     onClose();
   };
   // Ref vers la dernière version d'attemptClose, pour que le listener clavier
@@ -286,8 +290,8 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const duree = reduit ? 0 : 260;
     const cible = versGrande ? plafondFeuille() : ouvertureRef.current;
-    m.style.transform = '';
     poserHauteur(cible, duree ? `height ${duree}ms cubic-bezier(0.32, 0.72, 0, 1), transform ${duree}ms cubic-bezier(0.32, 0.72, 0, 1)` : '');
+    m.style.transform = '';
     window.clearTimeout(animRef.current.fin);
     animRef.current.fin = window.setTimeout(() => { if (modalRef.current) modalRef.current.style.transition = ''; }, duree + 20);
     setGrande(versGrande);
@@ -303,10 +307,48 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     m.style.transform = '';
     animRef.current.fin = window.setTimeout(() => { if (modalRef.current) modalRef.current.style.transition = ''; }, duree + 20);
   };
+  // ---- FERMER PAR LE GESTE (DEV v1265, forme B « comme iOS » choisie par l'utilisateur, _maquettes/Mockup-Fermer-Par-Poignee) --
+  // Tirée vers le bas depuis sa taille d'ouverture (un formulaire, une liste ouverte en grand, une liste non agrandie), la feuille
+  // suit le doigt ; au lâcher, même règle que la feuille « ⋯ » (`fermerLaFeuille` : le geste prolongé de son élan dépasse 80 px).
+  // Rien à perdre : elle glisse hors de l'écran à la vitesse du doigt et se ferme. Des modifications non enregistrées : elle
+  // REVIENT à sa place et la question s'affiche par-dessus — « OK », elle glisse et se ferme ; « Annuler », rien ne bouge. Tant
+  // qu'on n'a pas répondu, la fenêtre n'est jamais démontée : ses données restent. Une liste agrandie revient d'abord à sa taille
+  // d'ouverture ; un second geste la ferme. État d'avant : étiquette git `avant-fermeture-poignee` (DEV v1264).
+  const montesRef = useRef(true);
+  useEffect(() => () => { montesRef.current = false; }, []);
+  const animationsReduites = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const glisserDehors = (vitesse) => {
+    const m = modalRef.current, o = overlayRef.current; if (!m) return;
+    const reste = Math.max(0, window.innerHeight - m.getBoundingClientRect().top);
+    const duree = animationsReduites() ? 0 : Math.round(dureeFermetureFeuille(reste, vitesse));
+    window.clearTimeout(animRef.current.fin);
+    m.style.pointerEvents = 'none';
+    m.style.transition = duree ? `transform ${duree}ms cubic-bezier(0.25, 0.5, 0.5, 1)` : '';
+    m.style.transform = `translateY(${window.innerHeight}px)`;
+    if (o) { o.style.transition = duree ? 'background-color 0.4s ease' : ''; o.style.backgroundColor = 'transparent'; }
+    window.setTimeout(() => {
+      onClose();
+      // Filet : si le parent ne démontait pas la fenêtre, elle reviendrait au lieu de rester hors de l'écran.
+      window.setTimeout(() => {
+        if (!montesRef.current || !modalRef.current) return;
+        modalRef.current.style.pointerEvents = '';
+        if (o) { o.style.backgroundColor = ''; o.style.transition = ''; }
+        rebondir();
+      }, 150);
+    }, duree + 20);
+  };
+  const fermerParLeGeste = (vitesse) => {
+    if (!aDesModifications()) { glisserDehors(vitesse); return; }
+    rebondir();   // B, comme iOS : elle revient à sa place, on voit ce qu'on s'apprête à perdre
+    window.setTimeout(() => {
+      if (montesRef.current && window.confirm(QUESTION_FERMER)) glisserDehors(0);
+    }, animationsReduites() ? 0 : 280);
+  };
   const agrandir = () => animerVers(true);
   const reduire = () => animerVers(false);
-  // Le geste SUIT LE DOIGT dans les deux sens. Au-delà des bornes (petite tirée vers le bas, grande tirée vers le haut), elle
-  // résiste (élastique, ~42 px au plus, par un `transform`, sans mise en page) : elle ne se ferme jamais.
+  // Le geste SUIT LE DOIGT dans les deux sens. Vers le haut au-delà du grand, elle résiste (élastique, ~42 px au plus, par un
+  // `transform`, sans mise en page) ; vers le bas depuis sa taille d'ouverture, elle suit le doigt (c'est la fermeture) ; une
+  // liste agrandie tirée sous sa taille d'ouverture résiste : elle y revient d'abord.
   const elastique = (a) => (a * 42) / (a + 42);
   const prendreDebut = (e) => {
     if (!feuille || (liste && !ouvertureRef.current)) return;
@@ -315,7 +357,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const m = modalRef.current;
     // Tout ce qu'il faut lire, on le lit UNE fois, ici.
     prendreRef.current = (liste && !ouverteEnGrand)
-      ? { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(),
+      ? { y0: e.clientY, dy: 0, h0: m.offsetHeight, bas: ouvertureRef.current, haut: plafondFeuille(), grande0: grande,
         pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false }
       : { y0: e.clientY, dy: 0, fixe: true, pts: [{ y: e.clientY, t: e.timeStamp }], bouge: false };
     m.style.transition = 'none';
@@ -324,9 +366,9 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   const peindre = () => {
     animRef.current.raf = 0;
     const d = prendreRef.current, m = modalRef.current; if (!d || !m) return;
-    if (d.fixe) { m.style.transform = `translateY(${d.dy < 0 ? -elastique(-d.dy) : elastique(d.dy)}px)`; return; }
+    if (d.fixe) { m.style.transform = `translateY(${d.dy < 0 ? -elastique(-d.dy) : d.dy}px)`; return; }
     const voulu = d.h0 - d.dy;
-    if (voulu < d.bas) { m.style.height = d.bas + 'px'; m.style.transform = `translateY(${elastique(d.bas - voulu)}px)`; }
+    if (voulu < d.bas) { m.style.height = d.bas + 'px'; m.style.transform = `translateY(${d.grande0 ? elastique(d.bas - voulu) : d.bas - voulu}px)`; }
     else if (voulu > d.haut) { m.style.height = d.haut + 'px'; m.style.transform = `translateY(${-elastique(voulu - d.haut)}px)`; }
     else { m.style.transform = ''; m.style.height = voulu + 'px'; }
   };
@@ -340,11 +382,13 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
     const d = prendreRef.current; prendreRef.current = null; if (!d) return;
     if (animRef.current.raf) { window.cancelAnimationFrame(animRef.current.raf); animRef.current.raf = 0; }
     const m = modalRef.current;
-    if (d.fixe) { if (d.bouge) dernierGesteRef.current = Date.now(); rebondir(); return; } // formulaire : il rebondit
-    if (m) m.style.transform = '';
-    if (!d.bouge) { if (m) m.style.transition = ''; return; } // un toucher : la poignée le traite en clic
-    dernierGesteRef.current = Date.now();
-    const choix = decisionPoignee(d.dy, vitesseRecente(d.pts), grande);
+    const vitesse = vitesseRecente(d.pts);
+    if (d.bouge) dernierGesteRef.current = Date.now();
+    const depuisOuverture = d.fixe || !d.grande0;   // à sa taille d'ouverture : tirée vers le bas, elle se ferme
+    if (d.bouge && depuisOuverture && d.dy > 0 && fermerLaFeuille(d.dy, vitesse)) { fermerParLeGeste(vitesse); return; }
+    if (d.fixe) { rebondir(); return; } // formulaire ou liste ouverte en grand : il rebondit
+    if (!d.bouge) { if (m) { m.style.transform = ''; m.style.transition = ''; } return; } // un toucher : la poignée le traite en clic
+    const choix = decisionPoignee(d.dy, vitesse, grande);
     animerVers(choix === 'agrandir' ? true : choix === 'reduire' ? false : grande);
   };
   const rebondit = !liste || ouverteEnGrand;   // la poignée n'agrandit rien : formulaire, ou liste ouverte en grand
