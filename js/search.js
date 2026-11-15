@@ -849,7 +849,6 @@ function SearchModal({ ctx, onClose, onNavigate }) {
       raf = 0;
       o.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
       o.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
-      o.classList.toggle('search-overlay--clavier', vv.height < window.innerHeight - 120);
     };
     const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
     caler();
