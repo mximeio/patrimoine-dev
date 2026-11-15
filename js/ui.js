@@ -909,8 +909,8 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous
             // `reste` / `labelReste` : ce qui s'affiche quand la case est trop étroite pour « pointé / prévu » à côté de
             // l'anneau (petit téléphone, < 140 px de texte, requête de conteneur) : le reste à pointer, un seul montant.
             const reste = anneau && c.reste;
-            return (
-              <div key={i} className={`ct-cel${anneau ? ' ct-cel--anneau' : ''}`}>
+            const cls = `ct-cel${anneau ? ' ct-cel--anneau' : ''}`;
+            const corps = (<>
                 {anneau && <AnneauTete part={c.fil} fait={c.fait} />}
                 <div className="ct-cel-tx">
                   {/* `fait` : la cellule est terminée (tout pointé) — avec la barre, coche verte après l'intitulé et jauge
@@ -925,7 +925,14 @@ function CarteDeTete({ module, libelle, droite, montant, pied, children, dessous
                   <b className="num">{reste ? <><span className="ct-plein">{c.value}</span><span className="ct-reste">{c.reste}</span></> : c.value}</b>
                   {aJauge && !anneau && <div className={`ct-fil${c.fait ? ' ct-fil--fait' : ''}`}><i style={{ width: Math.max(0, Math.min(100, c.fil)) + '%' }} /></div>}
                 </div>
-              </div>
+              </>);
+            // `bulle` (16/11/2026) : le détail de la case, au survol ou au toucher de TOUTE la case — « 3 184.48 € pointés sur
+            // 3 313.48 € » sous « Sorties à pointer 129.00 € ». La case devient alors le déclencheur textuel d'InfoTip.
+            if (c.bulle) return (
+              <InfoTip key={i} label={`${c.label} ${c.value} — ${c.bulle}`} content={c.bulle} className={`${cls} ct-cel-bulle`} popClassName="infotip-pop--wrap">{corps}</InfoTip>
+            );
+            return (
+              <div key={i} className={cls}>{corps}</div>
             );
           })}
         </div>

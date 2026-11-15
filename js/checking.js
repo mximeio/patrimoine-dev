@@ -688,15 +688,19 @@ function CheckingView({ ctx, onBack }) {
         pied={(() => {
           // « Tout pointé » (piste B, 15/11/2026) : le montant ne s'écrit plus qu'une fois, coche et jauge vertes.
           // Même règle qu'avant la modernisation : il faut au moins une ligne (`> 0`), et un reste nul au centime près.
-          const cellule = (label, court, pointe, total) => {
+          const cellule = (nom, pointe, total) => {
             const fait = total > 0 && r2(total - pointe) <= 0;
-            // `reste` / `labelReste` : la forme courte à côté de l'anneau sur petit téléphone (14/11/2026, idée de l'utilisateur).
-            return { label, court, fait, value: fait ? `${fmt(total)} €` : `${fmt(pointe)} / ${fmt(total)} €`,
+            // LE RESTE À POINTER EN PREMIER (16/11/2026, demande de l'utilisateur, _maquettes/Mockup-Reste-A-Pointer) : une case
+            // à finir dit ce qu'il reste (« Sorties à pointer 129.00 € »), à toutes les largeurs — c'était la forme du petit
+            // téléphone depuis le 14/11 ; le détail « pointé / prévu » passe dans une bulle (survol ou toucher, `bulle`).
+            // Case terminée inchangée : « Sorties pointées 3 313.48 € », coche dans l'anneau.
+            if (fait) return { label: `${nom} pointées`, court: nom, fait, value: `${fmt(total)} €`, fil: 100 };
+            return { label: `${nom} à pointer`, fait, value: `${fmt(r2(Math.max(0, total - pointe)))} €`,
               fil: total > 0 ? (pointe / total) * 100 : 0,
-              reste: fait ? `${fmt(total)} €` : `${fmt(r2(Math.max(0, total - pointe)))} €`, labelReste: fait ? court : `${court} à pointer` };
+              bulle: total > 0 ? `${fmt(pointe)} € pointés sur ${fmt(total)} €` : null };
           };
-          return [cellule('Entrées pointées', 'Entrées', stats.entriesPointed, stats.entriesAll),
-            cellule('Sorties pointées', 'Sorties', stats.exitsPointed, stats.exitsAll)];
+          return [cellule('Entrées', stats.entriesPointed, stats.entriesAll),
+            cellule('Sorties', stats.exitsPointed, stats.exitsAll)];
         })()}
         dessous={projOpen && (
           <div className="proj-detail num">

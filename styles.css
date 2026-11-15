@@ -1318,6 +1318,9 @@ input[type="month"] {
    PETIT TÉLÉPHONE : quand le texte a moins de 140 px (≈ « 9 999.99 / 9 999.99 € »), il passe au reste à pointer — « Entrées à
    pointer », un seul montant (idée de l'utilisateur). Requête de CONTENEUR, pas d'écran : elle suit la largeur réelle de la case. */
 .ct-cel--anneau { display: flex; align-items: center; gap: 9px; }
+/* Case qui porte une bulle (reste à pointer, 16/11/2026) : déclencheur textuel d'InfoTip, sans le padding de 9 px des mentions. */
+.ct-cel.ct-cel-bulle { padding: 0; cursor: pointer; }
+.ct-cel.ct-cel-bulle:focus-visible { outline: 2px solid rgba(255,255,255,0.7); outline-offset: 3px; border-radius: 6px; }
 .ct-anneau { flex: none; display: block; }
 .ct-cel-tx { min-width: 0; flex: 1; }
 .ct-cel--anneau .ct-cel-tx { container-type: inline-size; }
