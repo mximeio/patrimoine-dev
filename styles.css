@@ -4510,6 +4510,12 @@ button.stat-card {
     top: var(--vv-haut, 0px); bottom: auto; height: var(--vv-h, 100dvh);
     padding: max(14px, env(safe-area-inset-top, 0px)) 8px calc(8px + var(--vv-ecart, 0px));
   }
+  /* Le voile continue SOUS la zone visible (DEV v1284, demande de l'utilisateur) : la barre des flèches et le clavier d'iOS sont
+     translucides, et l'on voyait à travers la page non voilée entre la fenêtre et le clavier. Purement visuel : aucun toucher. */
+  .search-overlay::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 100vh;
+    background: inherit; pointer-events: none;
+  }
   .search-modal {
     --r-feuille-haut: clamp(var(--r-contenant), env(safe-area-inset-bottom, 0px), 34px);
     --r-feuille-bas: clamp(var(--r-contenant), calc(env(safe-area-inset-bottom, 0px) * 1.6), 54px);
