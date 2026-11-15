@@ -741,7 +741,7 @@ function nomSupportUneLigne(etf, compact = false) {
 function CustomTooltip({ active, payload, label, suffix = '€' }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: '10px 14px', boxShadow: '0 8px 24px rgba(15,23,42,0.10)', fontSize: 13 }}>
+    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 'var(--r-touche)', padding: '10px 14px', boxShadow: '0 8px 24px rgba(15,23,42,0.10)', fontSize: 13 }}>
       {label && <div style={{ fontWeight: 600, marginBottom: 6, color: COLORS.text }}>{label}</div>}
       {payload.map((e, i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, color: COLORS.text }}>
@@ -775,7 +775,7 @@ function LogoPatrimoine({ size = 48 }) {
 
 function ConfigError() {
   return (
-    <div style={{ maxWidth: 600, margin: '60px auto', padding: 32, background: 'white', border: `1px solid ${COLORS.border}`, borderRadius: 14 }}>
+    <div style={{ maxWidth: 600, margin: '60px auto', padding: 32, background: 'white', border: `1px solid ${COLORS.border}`, borderRadius: 'var(--r-contenant)' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 0, color: 'var(--danger-fonce)' }}>Configuration Firebase manquante</h1>
       <p style={{ color: COLORS.muted, lineHeight: 1.6 }}>
         Renseigne ta configuration Firebase dans <code>js/config.js</code> (constante <code>FIREBASE_CONFIG</code>).

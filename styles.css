@@ -52,6 +52,13 @@
   --radius-lg: 14px;
   --radius-xl: 20px;
   --radius-full: 999px;
+  /* LA RÈGLE DES ARRONDIS (15/11/2026, piste C de _maquettes/Mockup-Arrondis, choix de l'utilisateur) — DEUX valeurs :
+     --r-contenant (18) pour ce qui contient et se pose sur la page : cartes, encarts, fenêtres, feuilles, menus, calendrier,
+     recherche, carte de connexion ; --r-touche (12) pour ce qu'on touche (champs, boutons, pastilles, avatars) et pour
+     TOUT ce qui est dans une fenêtre (groupes, cartes, cadres) — toujours plus petit dedans que dehors. Restent à part :
+     les éléments de moins de 32 px (cases 6, petits boutons-icônes, chevrons, pastilles de signe…) et les pilules (999). */
+  --r-touche: 12px;
+  --r-contenant: 18px;
   /* LIGNE D'APPUI des objets flottants du bas, sur téléphone : la barre
      basse (.tabbar-wrap), la feuille « ⋯ » (.bottom-sheet), la réserve de
      .main-container et le bas des modales (bloc « Modale : PORTRAIT »). ≈ 30 pt
@@ -130,7 +137,7 @@ b, strong { font-weight: 600; }
   border: 1.5px solid #e1e4ec;
   background: var(--surface);
   font-size: 16px; font-weight: 400; /* 400 depuis le 15/11/2026 (600, puis 500) : la valeur saisie n'a pas à être grasse — échelle typographique */ color: var(--text);
-  border-radius: 14px;
+  border-radius: var(--r-touche);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -170,7 +177,7 @@ input[type="month"] {
    (avant, la barre du textarea « cassait » le liseré à droite). */
 .note-field {
   border: 1.5px solid #e1e4ec;
-  border-radius: 14px;
+  border-radius: var(--r-touche);
   background: var(--surface);
   overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -190,7 +197,7 @@ input[type="month"] {
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 9px 16px; border: 1px solid transparent;
-  border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
+  border-radius: var(--r-touche); font-size: 13px; font-weight: 500;
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
 .btn-primary { background: var(--text); color: white; border-color: var(--text); }
@@ -211,7 +218,7 @@ input[type="month"] {
   width: 100%; padding: 11px 16px;
   border: 1px solid #fca5a5; background: var(--danger-light);
   color: var(--danger-fonce); font-family: inherit; font-size: 14px; font-weight: 600;
-  border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s;
+  border-radius: var(--r-touche); cursor: pointer; transition: background 0.15s;
 }
 @media (hover: hover) { .btn-delete-line:hover { background: #fee2e2; } }
 /* Boutons d'action d'un formulaire d'édition sur une seule ligne :
@@ -233,8 +240,8 @@ input[type="month"] {
 .form-actions > .btn-delete-line { flex: 0 0 auto; width: auto; }
 /* MODERNISATION C' (14/11/2026) — le pied des fenêtres : le bouton principal en grand (52 px, coins de 16), et
    « Supprimer » réduit à une POUBELLE carrée à sa droite (le libellé reste, masqué : c'est le nom lu du bouton). */
-.form-actions > .btn { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
-.form-actions > .btn-delete-line { width: 52px; padding: 0; gap: 0; font-size: 0; border: 0; border-radius: 16px; }
+.form-actions > .btn { min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; }
+.form-actions > .btn-delete-line { width: 52px; padding: 0; gap: 0; font-size: 0; border: 0; border-radius: var(--r-touche); }
 .form-actions > .btn-delete-line svg { width: 18px; height: 18px; }
 /* Le bouton principal prend la couleur de la rubrique ouverte (`data-rubrique`, posé par app.js) ; ambre pour les
    tickets resto. Le compte courant et l'accueil gardent l'indigo de --accent. */
@@ -252,9 +259,9 @@ input[type="month"] {
   .btn-accent.btn-tr:hover { background: #e8a521; box-shadow: none; }
 }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
-.btn.btn-fen { width: 100%; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.btn-fen { width: 100%; min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 /* Le bandeau d'indicateurs des fenêtres (BandeauIndicateurs, ui.js). */
-.bandeau-ind { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: 16px; padding: 10px 14px; margin-bottom: 14px; color: #fff; }
+.bandeau-ind { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border-radius: var(--r-touche); padding: 10px 14px; margin-bottom: 14px; color: #fff; }
 .bandeau-ind-cel { min-width: 0; }
 .bandeau-ind-cel + .bandeau-ind-cel { border-left: 1px solid rgba(255,255,255,0.22); padding-left: 12px; }
 .bandeau-ind-cel small { display: block; font-size: 12px; font-weight: 600; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -280,7 +287,7 @@ input[type="month"] {
 
 .card {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 20px;
+  border-radius: var(--r-contenant); padding: 20px;
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 @media (hover: hover) { .card-hover:hover { box-shadow: var(--shadow-md); } }
@@ -311,7 +318,7 @@ input[type="month"] {
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal {
-  background: var(--surface); border-radius: var(--radius-lg);
+  background: var(--surface); border-radius: var(--r-contenant);
   max-width: 500px; width: 100%; max-height: 90vh; overflow: hidden;
   box-shadow: var(--shadow-overlay); animation: slideUp 0.2s ease;
   display: flex; flex-direction: column;
@@ -331,14 +338,14 @@ input[type="month"] {
    la mention « facultatif » en gris, les interrupteurs plus grands (46 × 28) et verts une fois activés. */
 .types-c { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; --t: var(--accent); --tp: var(--accent-light); } /* --t, --tp : la couleur du type, reposée en ligne */
 .types-c button {
-  min-height: 54px; border-radius: 14px; border: 1.5px solid #e1e4ec; background: var(--surface); color: var(--text-light);
+  min-height: 54px; border-radius: var(--r-touche); border: 1.5px solid #e1e4ec; background: var(--surface); color: var(--text-light);
   display: grid; place-items: center; align-content: center; gap: 1px; padding: 6px 4px; font-family: inherit; cursor: pointer; text-align: center;
 }
 .types-c button b { font-size: 13px; font-weight: 600; }
 .types-c button small { font-size: 12px; font-weight: 400; opacity: 0.8; }
 .types-c button[aria-checked="true"] { border-color: var(--t); background: var(--tp); color: var(--t); }
 .types-c--compact button { min-height: 48px; display: flex; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; }
-.modal .btn.btn-lg { min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
+.modal .btn.btn-lg { min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; }
 .total-fen { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 10px; padding: 2px 0 0; } /* sur les bords des champs (15/11/2026 : 2 px de retrait de chaque côté avant) */
 .total-fen span { font-weight: 600; color: var(--text-light); }
 .total-fen b { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
@@ -354,7 +361,7 @@ input[type="month"] {
 /* PISTE A (15/11/2026, choisie par l'utilisateur sur _maquettes/Mockup-Entete-Fenetres) : la pastille est PLEINE, de la
    couleur de la rubrique (celle des cartes de tête), icône en blanc ; plus de trait sous l'en-tête. La fenêtre s'ouvre et se
    ferme sur la même couleur : la pastille en haut, le bouton principal en bas. */
-.modal-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; background: #4f46e5; color: #fff; }
+.modal-ico { width: 38px; height: 38px; border-radius: var(--r-touche); display: grid; place-items: center; flex: none; background: #4f46e5; color: #fff; }
 [data-rubrique="savings"] .modal-ico { background: #0e7490; }
 [data-rubrique="investments"] .modal-ico { background: #047857; }
 [data-rubrique="physical"] .modal-ico { background: #f2b33d; color: #2b1d00; }
@@ -401,13 +408,13 @@ input[type="month"] {
 .dropdown-menu {
   position: absolute; top: calc(100% + 6px); min-width: 220px;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  border-radius: var(--r-contenant); box-shadow: var(--shadow-lg);
   padding: 6px; z-index: 110;
 }
 .dropdown-item {
   display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 8px 12px; background: transparent; border: none;
-  border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
+  border-radius: var(--r-touche); font-size: 14px; font-weight: 500;
   color: var(--text); text-align: left; cursor: pointer;
   transition: background 0.1s; font-family: inherit;
 }
@@ -444,7 +451,7 @@ input[type="month"] {
    ============================================================ */
 .charges-input {
   width: 100%; min-width: 120px; padding: 7px 9px;
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); border-radius: var(--r-touche);
   font-size: 13px; font-family: inherit;
   background: var(--surface); color: var(--text);
 }
@@ -483,7 +490,7 @@ input[type="month"] {
   position: relative;
   display: inline-flex; gap: 3px; align-items: center;
   background: #eef1f5;
-  border-radius: 11px; padding: 3px;
+  border-radius: var(--r-touche); padding: 3px;
   overflow-x: auto; max-width: 100%;
   flex: 0 1 auto; min-width: 0;
 }
@@ -529,7 +536,7 @@ input[type="month"] {
 .seg-add {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   width: 32px; height: 32px;
-  border: 1px dashed var(--border-strong); border-radius: 9px;
+  border: 1px dashed var(--border-strong); border-radius: var(--r-touche);
   background: transparent; color: var(--text-muted);
   font-size: 16px; line-height: 1; cursor: pointer; transition: all 0.15s;
 }
@@ -540,7 +547,7 @@ input[type="month"] {
 .seg-solo {
   display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
   padding: 9px 14px;
-  background: #eef1f5; border: none; border-radius: 11px;
+  background: #eef1f5; border: none; border-radius: var(--r-touche);
   color: var(--text-muted); font-size: 13px; font-weight: 500;
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
   margin-left: auto;
@@ -720,7 +727,7 @@ input[type="month"] {
    « Scénario » figée. Valeurs exactes par défaut ; arrondies en portrait
    smartphone (bascule .cmpd-exact / .cmpd-round). Écart en % sous la valeur. */
 .cmp-d1 { display: flex; flex-direction: column; gap: 12px; }
-.cmpp { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.cmpp { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-touche); overflow: hidden; }
 .cmpp-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px 9px; }
 .cmpp-ava { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
 .cmpp-name { font-size: 14px; font-weight: 600; }
@@ -862,12 +869,12 @@ input[type="month"] {
 .ch-ligne.drag-over-top { box-shadow: inset 0 2px 0 0 var(--accent); }
 .ch-ligne.drag-over-bottom { box-shadow: inset 0 -2px 0 0 var(--accent); }
 .ch-ligne .tx-edit { justify-self: center; }
-.ch-av { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.ch-av { width: 34px; height: 34px; border-radius: var(--r-touche); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
 .ch-av.ch-av--petit { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
 .settings-group-title .ch-total { margin-left: auto; padding-right: 30px; font-size: 13px; font-weight: 600; color: var(--text-light); font-variant-numeric: tabular-nums; } /* 30 px = écart 8 + colonne du crayon 22 : le « € » du total tombe sur celui des lignes */
 .ch-ajout { margin-top: 10px; }
 .ch-vide { padding: 14px 0; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-.ch-carte { background: var(--surface-alt); border-radius: 16px; padding: 2px 14px 4px; }
+.ch-carte { background: var(--surface-alt); border-radius: var(--r-touche); padding: 2px 14px 4px; }
 .ch-carte + .ch-carte { margin-top: 10px; }
 .ch-carte-tete { display: flex; align-items: center; gap: 10px; min-height: 48px; }
 .ch-carte-tete b { font-size: 14px; font-weight: 600; }
@@ -888,14 +895,14 @@ input[type="month"] {
 .charge-badge { width: 24px; height: 24px; font-size: 11px; }
 
 /* Formulaire "Charge" : segmented control + ligne mensuel */
-.seg { display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.seg { display: flex; border: 1px solid var(--border); border-radius: var(--r-touche); overflow: hidden; }
 .seg-btn { flex: 1; padding: 10px 8px; background: var(--surface); border: none; border-right: 1px solid var(--border); font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; }
 .seg-btn:last-child { border-right: none; }
 .seg-btn.on { background: var(--accent); color: #fff; }
 .charge-mensuel-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 14px; font-weight: 500;
-  padding: 10px 14px; background: var(--surface-alt); border-radius: var(--radius-md);
+  padding: 10px 14px; background: var(--surface-alt); border-radius: var(--r-touche);
 }
 @media (max-width: 640px) {
   /* 16px uniquement sur les CHAMPS de saisie : empêche le zoom auto d'iOS au
@@ -1238,7 +1245,7 @@ input[type="month"] {
    en texte foncé. ⚠️ `.card.carte-tete` et `!important` sur le padding : le bloc téléphone pose
    `.card { padding: 18px !important }` PLUS BAS dans le fichier, qui gagnerait à spécificité égale (mesuré : 145 px). */
 .carte-tete {
-  min-height: 144px; border: 0; border-radius: 22px; color: #fff; /* 144 (15/11/2026, choix de l'utilisateur) : 136 en v1229 (l'espace vide SOUS LE MONTANT retiré), puis les 8 px rendus SOUS LE TRAIT, d'abord sur ordinateur (v1231) puis partout : trait à 88 px du haut, 10 px du trait aux chiffres, 14 px des chiffres au bord */
+  min-height: 144px; border: 0; border-radius: var(--r-contenant); color: #fff; /* 144 (15/11/2026, choix de l'utilisateur) : 136 en v1229 (l'espace vide SOUS LE MONTANT retiré), puis les 8 px rendus SOUS LE TRAIT, d'abord sur ordinateur (v1231) puis partout : trait à 88 px du haut, 10 px du trait aux chiffres, 14 px des chiffres au bord */
   display: flex; flex-direction: column; position: relative; isolation: isolate; margin-bottom: 16px;
   /* Pas d'overflow: hidden (cf. .ct-deco) ; z-index pour que le menu « ⋯ » passe AU-DESSUS de la liste qui suit. */
   z-index: 5;
@@ -1261,7 +1268,7 @@ input[type="month"] {
 .ct-lib { opacity: 0.88; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-droite { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ct-ico { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; }
-.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 10px; /* 10 px comme les boutons (15/11/2026) */ font-size: 13px; font-weight: 600;
+.ct-pill { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: var(--r-touche); /* 10 px comme les boutons (15/11/2026) */ font-size: 13px; font-weight: 600;
   background: rgba(255,255,255,0.16); white-space: nowrap; font-variant-numeric: tabular-nums; }
 /* ÉCHELLE TYPOGRAPHIQUE (15/11/2026, choix de l'utilisateur : « lisible, uniforme, ni trop petit ni trop gras »).
    Relevée écran par écran (téléphone et ordinateur), puis appliquée partout. À RESPECTER pour toute nouvelle règle :
@@ -1313,7 +1320,7 @@ input[type="month"] {
   .ct-cel.ct-cel--anneau .ct-plein { display: none; }
   .ct-cel.ct-cel--anneau .ct-reste { display: inline; }
 }
-.ct-courbe { margin: auto -16px -14px; height: 44px; overflow: hidden; border-radius: 0 0 22px 22px; } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
+.ct-courbe { margin: auto -16px -14px; height: 44px; overflow: hidden; border-radius: 0 0 var(--r-contenant) var(--r-contenant); } /* la carte ne rogne plus (menu « ⋯ ») : la courbe se rogne elle-même aux coins du bas */
 .ct-courbe svg { display: block; width: 100%; height: 100%; }
 
 /* ── LE MENU « ⋯ », LES PARAMÈTRES (15/11/2026, maquette cartes2.html) ──
@@ -1324,12 +1331,12 @@ input[type="month"] {
 .bottom-sheet .sheet-id .sheet-id-name { margin-top: 0; font-weight: 600; }
 .bottom-sheet .sheet-id .sheet-id-mail { margin-top: 0; max-width: none; }
 .bottom-sheet .sheet-actions { flex-direction: column; gap: 2px; padding: 4px 0; }
-.bottom-sheet .sheet-act { flex-direction: row; justify-content: flex-start; gap: 14px; width: 100%; min-height: 52px; padding: 0 6px; border-radius: 14px; }
+.bottom-sheet .sheet-act { flex-direction: row; justify-content: flex-start; gap: 14px; width: 100%; min-height: 52px; padding: 0 6px; border-radius: var(--r-touche); }
 .bottom-sheet .sheet-act .sheet-act-circle { width: 36px; height: 36px; background: var(--surface-alt); }
 .bottom-sheet .sheet-act .sheet-act-lbl { font-size: 15px; font-weight: 500; color: var(--text); }
 .bottom-sheet .sheet-act.danger .sheet-act-lbl { color: var(--danger-fonce); }
 .modal .settings-group-title { font-size: 15px; font-weight: 600; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
-.modal .settings-card { background: var(--surface-alt); border: 0; border-radius: 18px; }
+.modal .settings-card { background: var(--surface-alt); border: 0; border-radius: var(--r-touche); }
 /* Répartition des charges (15/11/2026) : ses listes vivent dans un .settings-card, que la règle ci-dessus grisait depuis la
    v1169 (effet de bord des Paramètres). Elles reprennent le format des autres listes : fond blanc, trait en haut, lignes de
    46 px, icône de 20 px ; et ses intitulés quittent les capitales espacées (style abandonné ailleurs). */
@@ -1346,12 +1353,12 @@ input[type="month"] {
 .settings-note { font-size: 13px; font-weight: 400; color: var(--text-muted); margin: -4px 0 10px; }
 /* Groupe gris de rangées de réglage (maquette C' : .groupe-r / .rang-r) : tuile de couleur, titre, aide, interrupteur ;
    un filet entre deux rangées, toute la rangée est cliquable (c'est un <label>). */
-.settings-groupe { background: var(--surface-alt); border-radius: 18px; overflow: hidden; margin-bottom: 14px; }
+.settings-groupe { background: var(--surface-alt); border-radius: var(--r-touche); overflow: hidden; margin-bottom: 14px; }
 .rang-reglage { display: flex; align-items: center; gap: 12px; padding: 11px 14px; } /* plus de curseur main : seul l'interrupteur agit */
 .rang-reglage + .rang-reglage { border-top: 1px solid var(--border); }
 .rang-reglage .toggle { position: relative; }
 .rang-reglage .toggle::after { content: ""; position: absolute; inset: -8px; } /* cible de 62 × 44 au doigt autour de l'interrupteur, maintenant qu'il est seul à agir */
-.rang-reglage-ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+.rang-reglage-ico { width: 34px; height: 34px; border-radius: var(--r-touche); display: grid; place-items: center; flex: none; }
 /* Tuile PLEINE d'un module (Paramètres, 15/11/2026) : la couleur de la rubrique, icône blanche — sombre sur l'ambre — comme ses
    cartes de l'accueil et l'en-tête de ses fenêtres (.modal-ico). */
 .rang-reglage-ico--checking { background: #4f46e5; color: #fff; }
@@ -1407,10 +1414,10 @@ input[type="month"] {
 .section-block > .section-header + * { border-top: 1px solid var(--border); }
 .section-block .section-footer { padding: 10px 0 0; background: transparent; }
 .section-block .section-footer .btn-add {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: 16px;
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; border-radius: var(--r-touche);
   border: 1.5px dashed #d5d9e2; color: var(--text-light); font-size: 13px; font-weight: 500;
 }
-.portfolio-list-icon.portfolio-list-av { width: 42px; height: 42px; border-radius: 14px; font-size: 13px; font-weight: 700; letter-spacing: 0; }
+.portfolio-list-icon.portfolio-list-av { width: 42px; height: 42px; border-radius: var(--r-touche); font-size: 13px; font-weight: 700; letter-spacing: 0; }
 .portfolio-list-row { min-height: 64px; }
 /* L'avatar de 42 px a SA colonne : dans celle de 26 px des pastilles, il chevauchait le nom (relevé iPhone, 15/11/2026). */
 .portfolio-list-row:has(> .portfolio-list-av) { grid-template-columns: 42px minmax(0, 1fr) auto 14px; gap: 12px; }
@@ -1541,7 +1548,7 @@ input[type="month"] {
   .op-row > .tx-edit { transform: translateX(3px); }
 }
 /* Le bouton œil a la forme et la taille de « + Nouvelle », en bouton secondaire (demande de l'utilisateur, 15/11/2026). */
-.ops-c .ops-eye-pill { height: 36px; /* 36 comme « Nouvelle » (14/11/2026) : à 37, l'en-tête « Opérations » faisait 33 px et la liste partait 1 px plus bas que celles des autres rubriques */ margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: 10px;
+.ops-c .ops-eye-pill { height: 36px; /* 36 comme « Nouvelle » (14/11/2026) : à 37, l'en-tête « Opérations » faisait 33 px et la liste partait 1 px plus bas que celles des autres rubriques */ margin: 0; padding: 0 12px; gap: 6px; border: 1px solid var(--border); border-radius: var(--r-touche);
   background: var(--surface); color: var(--text-light); font-size: 13px; font-weight: 500; }
 .ops-c .ops-eye-pill.on { background: var(--accent-light); border-color: var(--accent-pale); color: var(--accent); }
 .ops-c .ops-eye-pill .num { font-weight: 600; }
@@ -1609,7 +1616,7 @@ input[type="month"] {
 
 /* Supports d'une enveloppe : avatar à deux lettres de 42 px, comme les autres listes d'entités (maquette C', 15/11/2026). */
 .support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-left: 4px; padding-right: 4px; min-height: 64px; }
-.support-row .support-icon { width: 42px; height: 42px; border-radius: 14px; font-size: 13px; font-weight: 700; }
+.support-row .support-icon { width: 42px; height: 42px; border-radius: var(--r-touche); font-size: 13px; font-weight: 700; }
 
 /* Recherche : titre de groupe en gras, sans capitales, précédé du point de la rubrique (maquette C', 15/11/2026). */
 .search-group .search-group-title { font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-light); }
@@ -1617,14 +1624,14 @@ input[type="month"] {
 
 /* ── FENÊTRES DANS LE DÉTAIL (15/11/2026, maquette cartes2.html) : zone de suppression d'une enveloppe, totaux des
    valeurs, étiquette « Composite » des récurrents. ── */
-.zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 12.5px; border: 1.5px solid #f5c2c0; /* 12,5 + 1,5 de bordure = 14 : texte aligné sur les rangées de réglage */ border-radius: 16px; }
+.zone-danger { display: grid; gap: 4px; justify-items: start; margin-top: 8px; padding: 12px 12.5px; border: 1.5px solid #f5c2c0; /* 12,5 + 1,5 de bordure = 14 : texte aligné sur les rangées de réglage */ border-radius: var(--r-touche); }
 .zone-danger b { font-size: 14px; font-weight: 600; color: var(--danger-fonce); }
 .zone-danger small { font-size: 12px; font-weight: 400; color: var(--text-muted); }
 .zone-danger .btn { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; }
 .modal .maj-total b { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 /* « Mettre à jour les valeurs » façon maquette C' (fenValeurs, 15/11/2026) : enveloppe en groupe gris sans bordure, lignes de
    support à deux étages (nom, libellé dessous) séparées d'un filet, sous-total en tête. */
-.modal .maj-env { background: var(--surface-alt); border: 0; border-radius: 18px; padding: 4px 14px; }
+.modal .maj-env { background: var(--surface-alt); border: 0; border-radius: var(--r-touche); padding: 4px 14px; }
 .modal .maj-env-nom { font-weight: 600; font-size: 14px; }
 .modal .maj-env-montant { font-size: 14px; font-weight: 600; }
 .modal .maj-sup { border-top: 1px solid var(--border); min-height: 56px; padding: 6px 0; }
@@ -1646,29 +1653,29 @@ input[type="month"] {
    avec une souris. Seulement sur un écran large ET à survol : un téléphone, même couché, garde ses tailles. */
 @media (min-width: 641px) and (hover: hover) {
   .modal .input, .modal .note-field textarea, .modal select.input { font-size: 14px; }
-  .modal .input { padding: 9px 12px; border-radius: 12px; }
+  .modal .input { padding: 9px 12px; border-radius: var(--r-touche); }
   .modal .unite-eur::after { font-size: 14px; }
   .modal .label { font-size: 13px; margin-bottom: 5px; }
-  .modal .btn.btn-lg, .modal .form-actions > .btn { min-height: 44px; font-size: 15px; border-radius: 13px; }
-  .modal .form-actions > .btn-delete-line { width: 44px; border-radius: 13px; }
+  .modal .btn.btn-lg, .modal .form-actions > .btn { min-height: 44px; font-size: 15px; border-radius: var(--r-touche); }
+  .modal .form-actions > .btn-delete-line { width: 44px; border-radius: var(--r-touche); }
   .modal .types-c button { min-height: 46px; }
   .modal .types-c--compact button { min-height: 40px; font-size: 13px; }
   .modal .modal-header .modal-title { font-size: 17px; }
-  .modal .modal-ico { width: 34px; height: 34px; border-radius: 11px; }
+  .modal .modal-ico { width: 34px; height: 34px; border-radius: var(--r-touche); }
 }
 
 /* ── L'ÉCRAN DE CONNEXION C' (modernisation, 14/11/2026 — auth.js) ── */
 .auth { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 20px; background: var(--bg); }
 .auth-colonne { width: 100%; max-width: 400px; }
 .auth-pile { position: relative; height: 36px; margin: 0 14px; }
-.auth-bord { position: absolute; left: 0; right: 0; height: 40px; border-radius: 22px 22px 0 0; }
+.auth-bord { position: absolute; left: 0; right: 0; height: 40px; border-radius: var(--r-contenant) var(--r-contenant) 0 0; }
 .auth-bord--physical { top: 0; margin: 0 18px; background: linear-gradient(150deg, #f2b33d, #e09a1a); }
 .auth-bord--investments { top: 9px; margin: 0 12px; background: linear-gradient(150deg, #047857, #065f46); }
 .auth-bord--savings { top: 18px; margin: 0 6px; background: linear-gradient(150deg, #0e7490, #155e75); }
 .auth-bord--checking { top: 27px; background: linear-gradient(150deg, #4f46e5, #3730a3); }
 .auth-carte {
   position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; gap: 14px;
-  min-height: 120px; padding: 20px 22px; border-radius: 26px; color: #fff; margin-bottom: 28px;
+  min-height: 120px; padding: 20px 22px; border-radius: var(--r-contenant); color: #fff; margin-bottom: 28px;
   background: linear-gradient(150deg, #2a2f4a, #0b1020); box-shadow: 0 18px 40px -22px rgba(11,16,32,0.6);
 }
 .auth-carte::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,0.18), transparent 55%); }
@@ -1676,12 +1683,12 @@ input[type="month"] {
 .auth-carte h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
 .auth-carte p { margin: 2px 0 0; font-size: 14px; font-weight: 500; opacity: 0.75; }
 .auth-form { display: flex; flex-direction: column; gap: 14px; }
-.auth-bouton { margin-top: 6px; min-height: 52px; border-radius: 16px; font-size: 16px; font-weight: 600; }
+.auth-bouton { margin-top: 6px; min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; }
 /* Bleu nuit, celui de la carte, et JAMAIS la couleur d'une rubrique : `data-rubrique` est déjà posé sur <html> à la
    connexion (il suit l'adresse), et un lien vers #epargne rendait le bouton cyan. */
 .auth .btn-accent.auth-bouton { background: #1b1f36; border-color: #1b1f36; }
 @media (hover: hover) { .auth .btn-accent.auth-bouton:hover { background: #0b1020; box-shadow: none; } }
-.auth-msg { padding: 10px 12px; margin-bottom: 16px; font-size: 13px; font-weight: 500; border-radius: 12px; }
+.auth-msg { padding: 10px 12px; margin-bottom: 16px; font-size: 13px; font-weight: 500; border-radius: var(--r-touche); }
 .auth-msg--erreur { background: var(--danger-light); color: var(--danger-fonce); }
 .auth-msg--info { background: var(--success-light); color: var(--success-fonce); }
 .auth-pied { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
@@ -1698,7 +1705,7 @@ input[type="month"] {
 .pile-rub { display: grid; --n: 4; } /* --n : le nombre de rubriques actives, reposé en ligne par la vue */
 .carte-rub {
   position: relative; isolation: isolate; overflow: hidden; display: block; width: 100%; min-height: 120px; text-align: left; /* 120 (159 avant le 15/11/2026) : le pourcentage est monté sous le montant */
-  border: 0; border-radius: 22px; padding: 18px; color: #fff; font: inherit; cursor: pointer;
+  border: 0; border-radius: var(--r-contenant); padding: 18px; color: #fff; font: inherit; cursor: pointer;
   box-shadow: 0 -10px 24px -14px rgba(11,16,32,0.45); transition: transform .35s cubic-bezier(.2,.8,.2,1);
 }
 .carte-rub + .carte-rub { margin-top: -55px; } /* bande visible de chaque carte : 120 − 55 = 65 px, comme avant */
@@ -1709,7 +1716,7 @@ input[type="month"] {
 @media (hover: hover) { .carte-rub:hover { transform: translateY(-6px); } }
 .carte-rub-rang { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .carte-rub-nom { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; min-width: 0; }
-.carte-rub-nom i { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
+.carte-rub-nom i { width: 34px; height: 34px; border-radius: var(--r-touche); background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
 .carte-rub-mt { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; white-space: nowrap; }
 /* Téléphone (cartes empilées) : le pourcentage sous le montant, dans la bande visible de chaque carte (15/11/2026). */
 .carte-rub-droite { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
@@ -1739,7 +1746,7 @@ input[type="month"] {
   .carte-rub-mt { font-size: 22px; }
   .carte-rub-bas { flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 24px; }
 }
-.alerte-valo { display: flex; gap: 10px; background: var(--warning-light); border: 1px solid #fde7c2; border-radius: 18px; padding: 14px 16px; }
+.alerte-valo { display: flex; gap: 10px; background: var(--warning-light); border: 1px solid #fde7c2; border-radius: var(--r-contenant); padding: 14px 16px; }
 .alerte-valo-ico { color: var(--warning-fonce); flex: none; margin-top: 1px; }
 .alerte-valo b { font-size: 14px; font-weight: 600; }
 .alerte-valo p { margin: 2px 0 10px; font-size: 13px; color: var(--text-light); font-weight: 400; }
@@ -1756,11 +1763,11 @@ input[type="month"] {
 .ind-fen + .section-block { margin-top: 14px; }
 /* … et elle commence par un trait, comme toutes les listes de l'app (trait en haut, aucun en bas) ; elle était la seule sans. */
 .ind-fen + .section-block .tx-list:has(.tx-row) { border-top: 1px solid var(--border); }
-.ind-fen-cel { min-width: 0; padding: 8px 10px; /* 10 px de côté, comme les pastilles : « +1 431.00 € » tient à 375 px (78 px pour 76) */ border-radius: 12px; background: var(--surface-alt); border: 1px solid var(--border); }
+.ind-fen-cel { min-width: 0; padding: 8px 10px; /* 10 px de côté, comme les pastilles : « +1 431.00 € » tient à 375 px (78 px pour 76) */ border-radius: var(--r-touche); background: var(--surface-alt); border: 1px solid var(--border); }
 .ind-fen-cel small { display: block; font-size: 12px; font-weight: 500; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ind-fen-cel b { display: block; margin-top: 1px; font-size: 13px; font-weight: 600; /* 13 px partout, comme les pastilles du compte (15/11/2026) */ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pastille-cc {
-  display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; padding: 0 10px; border-radius: 12px;
+  display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; padding: 0 10px; border-radius: var(--r-touche);
   background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); font: inherit; text-align: left;
 }
 .pastille-cc-ico { color: var(--text-muted); display: inline-flex; flex: none; }
@@ -2226,7 +2233,7 @@ button.stat-card {
 .modal-comp-row .tx-amount-wrap {
   border: 1.5px solid #e1e4ec;
   background: var(--surface);
-  border-radius: 14px;
+  border-radius: var(--r-touche);
   height: 46px; padding: 0 12px 0 36px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -2235,7 +2242,7 @@ button.stat-card {
    saisie, échelle typographique). Avant : 42 px et coins de 10 partout, 16 px et 500 même sur ordinateur. */
 .modal-comp-row .tx-amount-wrap input { font-size: 16px; font-weight: 400; padding: 0; }
 @media (min-width: 641px) and (hover: hover) {
-  .modal-comp-row .tx-amount-wrap { height: 37px; border-radius: 12px; }
+  .modal-comp-row .tx-amount-wrap { height: 37px; border-radius: var(--r-touche); }
   .modal-comp-row .tx-amount-wrap input { font-size: 14px; }
 }
 /* Boutons « + Composante » et « + Tickets resto (auto) » : côte à côte, calés à gauche (15/11/2026) — dans une grille à deux
@@ -2281,7 +2288,7 @@ button.stat-card {
 }
 .btn-add {
   padding: 6px 12px; background: transparent;
-  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong); border-radius: var(--r-touche);
   color: var(--text-muted); font-size: 12px; font-weight: 500;
   cursor: pointer; transition: all 0.15s;
 }
@@ -2291,7 +2298,7 @@ button.stat-card {
    dans les fenêtres (15/11/2026) ; seul le pointillé dit « ajouter ». Calés à gauche, comme l'.ajout-c de la maquette. */
 .modal .btn-add {
   justify-self: start; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 36px; padding: 0 16px; border-radius: var(--radius-md);
+  min-height: 36px; padding: 0 16px; border-radius: var(--r-touche);
   border: 1px dashed var(--border-strong); color: var(--text-muted);
   font-size: 13px; font-weight: 500;
 }
@@ -2454,7 +2461,7 @@ button.stat-card {
 .settings-group-title:first-child { margin-top: 0; }
 .settings-card {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 20px;
+  border-radius: var(--r-contenant); padding: 20px;
   margin-bottom: 14px;
 }
 .settings-card h2 { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
@@ -2592,7 +2599,7 @@ button.stat-card {
 .target-sum b { font-variant-numeric: tabular-nums; }
 
 /* Modale support : segmented control « type » façon onglets desktop (pilule accent) */
-.support-type-seg { display: flex; background: #eef1f5; border-radius: 11px; padding: 3px; gap: 3px; }
+.support-type-seg { display: flex; background: #eef1f5; border-radius: var(--r-touche); padding: 3px; gap: 3px; }
 .support-type-seg button {
   flex: 1; padding: 10px 12px; border: none; background: transparent;
   color: var(--text-muted); font-size: 13px; font-weight: 500;
@@ -2671,7 +2678,7 @@ button.stat-card {
    ============================================================ */
 .month-chip {
   display: inline-flex; align-items: center; gap: 2px;
-  border-radius: 10px; padding: 3px; /* 10 px, l'arrondi des boutons (15/11/2026 ; pilule avant) */
+  border-radius: var(--r-touche); padding: 3px; /* 10 px, l'arrondi des boutons (15/11/2026 ; pilule avant) */
   position: relative;
   /* Hauteur VERROUILLÉE (v493) : 26px de chevrons + 2×3px de padding.
      C'était déjà la hauteur naturelle, mais l'explicite garantit qu'AUCUN
@@ -2777,7 +2784,7 @@ button.stat-card {
   position: absolute; top: calc(100% + 8px); left: 50%;
   transform: translateX(-50%);
   background: white; border: 1px solid var(--border);
-  border-radius: 14px; box-shadow: var(--shadow-lg);
+  border-radius: var(--r-contenant); box-shadow: var(--shadow-lg);
   padding: 14px; z-index: 100;
   /* Couleur explicite : le popover peut s'ouvrir depuis la chip du HERO
      (color: white) — sans ça, le titre de l'année hériterait du blanc
@@ -2843,7 +2850,7 @@ button.stat-card {
 .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .month-cell {
   background: white; border: 1px dashed var(--border);
-  border-radius: 8px; padding: 14px 4px;
+  border-radius: var(--r-touche); padding: 14px 4px;
   cursor: pointer; font-family: inherit;
   font-size: 13px; font-weight: 500;
   color: var(--text-muted); text-transform: capitalize;
@@ -3135,7 +3142,7 @@ button.stat-card {
      backdrop assombri, le verre n'y apporterait rien. */
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 28px;
+  border-radius: var(--r-contenant);
   box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.2);
   padding: 8px 16px 16px;
   animation: sheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3206,7 +3213,7 @@ button.stat-card {
 .confirm-q { text-align: center; font-size: 14px; font-weight: 600; }
 .confirm-sub { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: -4px; margin-bottom: 6px; }
 .confirm-btn {
-  width: 100%; padding: 14px; border-radius: 14px; border: none;
+  width: 100%; padding: 14px; border-radius: var(--r-touche); border: none;
   font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
   transition: transform 0.12s, background 0.15s;
 }
@@ -3288,7 +3295,7 @@ button.stat-card {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .search-modal {
   background: white;
-  border-radius: var(--radius-lg);
+  border-radius: var(--r-contenant);
   box-shadow: 0 24px 48px rgba(15,23,42,0.16), 0 8px 16px rgba(15,23,42,0.08);
   width: 100%; max-width: 600px;
   overflow: hidden;
@@ -3426,7 +3433,7 @@ button.stat-card {
   margin: 6px 20px 4px; padding: 9px 12px;
   background: var(--surface-alt);
   border: 1px dashed var(--border-strong);
-  border-radius: 10px;
+  border-radius: var(--r-touche);
   font-size: 12px; color: var(--text-muted);
   line-height: 1.45; text-align: left;
   font-family: inherit; cursor: pointer;
@@ -3549,7 +3556,7 @@ button.stat-card {
   transform: translateX(-50%);
   background: var(--text); color: white;
   padding: 10px 18px; font-size: 13px; font-weight: 500;
-  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  border-radius: var(--r-touche); box-shadow: var(--shadow-lg);
   z-index: 2000; animation: slideDown 0.2s ease;
   /* 🔴 `text-align` et `max-width` ajoutés le 10/08/2026, sur capture iPhone de
      l'utilisateur. La BOÎTE était déjà centrée (`left:50%` + `translateX`), mais le
@@ -3678,11 +3685,11 @@ button.stat-card {
 .backup-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .backup-row {
   display: flex; align-items: center; gap: 12px;
-  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-touche); padding: 10px 12px; background: var(--surface);
 }
 .backup-row.latest { border-color: var(--accent-pale); background: #fbfbff; }
 .backup-row .ic {
-  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: var(--r-touche); flex-shrink: 0;
   background: var(--accent-light); color: var(--accent);
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -3755,7 +3762,7 @@ button.stat-card {
   font-size: 12px; font-weight: 500; color: var(--text-muted); /* en clair, plus de capitales (15/11/2026) */
 }
 .restore-confirm .rc-head span:nth-child(2), .restore-confirm .rc-head span:nth-child(3) { text-align: right; }
-.restore-confirm .rc-grid { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.restore-confirm .rc-grid { border: 1px solid var(--border); border-radius: var(--r-touche); overflow: hidden; }
 .restore-confirm .rc-r {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px;
   padding: 8px 12px; font-size: 12px;
@@ -3797,12 +3804,12 @@ button.stat-card {
   cursor: pointer; background: none; border: none; padding: 9px 2px 0; font-family: inherit;
 }
 .restore-confirm .rc-safe {
-  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px;
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--r-touche); padding: 10px 12px;
   font-size: 12px; color: var(--success-fonce); line-height: 1.45; display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 18px;
 }
 .restore-confirm .rc-safe svg { color: var(--success-fonce); flex-shrink: 0; margin-top: 1px; }
 .restore-confirm .rc-blocked {
-  background: var(--warning-light); border: 1px solid #fde68a; border-radius: 10px; padding: 12px;
+  background: var(--warning-light); border: 1px solid #fde68a; border-radius: var(--r-touche); padding: 12px;
   font-size: 12px; color: var(--warning-fonce); line-height: 1.45; display: flex; gap: 9px; align-items: flex-start; margin: 4px 0 18px;
 }
 .restore-confirm .rc-blocked svg { flex-shrink: 0; margin-top: 1px; }
@@ -3882,7 +3889,7 @@ button.stat-card {
 }
 .empty-state-icon {
   width: 48px; height: 48px; margin: 0 auto 12px;
-  border-radius: 12px; background: var(--surface-hover);
+  border-radius: var(--r-touche); background: var(--surface-hover);
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted); font-size: 22px; /* 4,3:1 — le gris clair ne faisait que 2,3:1 (DEV v1095) */
 }
@@ -3929,7 +3936,7 @@ button.stat-card {
   gap: 0;
   background: var(--surface-alt);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--r-touche);
 }
 .period-toggle button {
   padding: 6px 12px;
@@ -3938,7 +3945,7 @@ button.stat-card {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
@@ -4051,7 +4058,7 @@ button.stat-card {
   position: fixed; transform: translateY(calc(-100% - 8px));
   background: var(--surface); color: var(--text); border: 1px solid var(--border);
   font-size: 12px; font-weight: 500; line-height: 1.35;
-  padding: 7px 10px; border-radius: var(--radius-md); width: max-content; max-width: 220px;
+  padding: 7px 10px; border-radius: var(--r-touche); width: max-content; max-width: 220px;
   box-shadow: 0 8px 24px rgba(15,23,42,0.12); z-index: 3200; white-space: nowrap;
   overscroll-behavior: contain; /* v602 : le défilement en butée de la bulle ne s'étend pas à la page (qui, en défilant, la fermerait) */
 }
@@ -4263,7 +4270,7 @@ button.stat-card {
     max-width: 640px;
     height: auto;
     max-height: 94dvh;
-    border-radius: var(--radius-lg);
+    border-radius: var(--r-contenant);
   }
   .modal-body {
     /* padding bas = padding haut (16px), pas de safe-area : la modale flotte
@@ -4376,7 +4383,7 @@ button.stat-card {
     height: 100dvh;  /* s'arrête au-dessus de la barre Safari */
   }
   .modal {
-    border-radius: var(--radius-lg); max-width: 100%; width: 100%;
+    border-radius: var(--r-contenant); max-width: 100%; width: 100%;
     height: auto;
     max-height: calc(100vh - 14px - var(--ligne-appui));   /* repli sans dvh */
     max-height: calc(100dvh - 14px - var(--ligne-appui));  /* = le padding de l'overlay */
@@ -4555,7 +4562,7 @@ button.stat-card {
 .maj-env {
   position: relative; overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px;
+  border-radius: var(--r-touche); padding: 12px 14px; margin-bottom: 10px;
   background: var(--surface);
 }
 /* 🔴 LISERÉ PORTÉ PAR UN PSEUDO-ÉLÉMENT, PLUS PAR `border-left` — et ce n'est pas
@@ -4875,7 +4882,7 @@ button.stat-card {
   margin-top: 12px; padding: 10px 12px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px; font-size: 12px;
+  border-radius: var(--r-touche); font-size: 12px;
 }
 .pd-row {
   display: flex; justify-content: space-between; gap: 12px;
@@ -4895,7 +4902,7 @@ button.stat-card {
    ============================================================ */
 .cp-cibles { font-size: 12px; color: var(--warning-fonce); margin-top: 6px; font-weight: 600; }
 
-.cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; position: relative; }
+.cp-etape { border: 1px solid var(--border); border-radius: var(--r-touche); padding: 12px; margin-bottom: 10px; position: relative; }
 /* ⚠️ `--ajustee` était défini DEUX FOIS dans ce fichier, ici et dans le bloc du
    relifting plus bas, avec des valeurs différentes. La seconde l'emportait, donc
    celle-ci ne servait à rien tout en donnant à lire le contraire. Une seule
@@ -4914,17 +4921,17 @@ button.stat-card {
    ⚠️ Elle était définie DEUX FOIS dans ce fichier ; les deux sont parties. */
 
 .cp-exclu-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 10px;
-  border: 1px dashed var(--border-strong); border-radius: var(--radius-md); font-size: 12px; color: var(--text-muted); }
+  border: 1px dashed var(--border-strong); border-radius: var(--r-touche); font-size: 12px; color: var(--text-muted); }
 .cp-reset { margin: 4px 0 14px; }
 /* ⚠️ `.cp-reset-note` SUPPRIMÉE le 13/08/2026 avec la phrase qu'elle portait
    (« Le versement et les valeurs sont conservés ») : l'information est passée dans la
    confirmation du bouton, où elle arrive AVANT le geste au lieu d'être à deviner —
    et la fenêtre ne bouge plus, la note apparaissant/disparaissant avec le bloc. */
 .cp-synthese { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px;
-  background: var(--surface-alt); border-radius: var(--radius-md); margin-top: 4px; }
+  background: var(--surface-alt); border-radius: var(--r-touche); margin-top: 4px; }
 .cp-synthese span { display: block; font-size: 12px; color: var(--text-muted); }
 .cp-synthese b { font-size: 14px; }
-.cp-etat { font-size: 12px; padding: 10px 12px; border-radius: var(--radius-md); margin: 10px 0 14px; }
+.cp-etat { font-size: 12px; padding: 10px 12px; border-radius: var(--r-touche); margin: 10px 0 14px; }
 .cp-etat--rouge { background: var(--danger-light); color: var(--danger-fonce); }
 .cp-etat--vert { background: var(--success-light); color: var(--success-fonce); }
 .cp-etat--ambre { background: var(--warning-light); color: var(--warning-fonce); }
@@ -4940,7 +4947,7 @@ button.stat-card {
    du montant à 148 px, barre de 22 px. Les retoucher au jugé, c'est refaire le
    travail que la maquette a servi à éviter. */
 .cp-onglets { padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
-.cp-seg { display: inline-flex; gap: 3px; background: var(--surface-hover); border-radius: 11px; padding: 3px; }
+.cp-seg { display: inline-flex; gap: 3px; background: var(--surface-hover); border-radius: var(--r-touche); padding: 3px; }
 .cp-seg-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   border: 0; background: none; border-radius: 8px; padding: 7px 13px;
   font-size: 13px; font-weight: 500; color: var(--text-muted); }
@@ -5021,7 +5028,7 @@ button.cp-seg-item { cursor: pointer; }
 /* Les deux cartes : ce dont on dispose, ce qu'on ajoute */
 .cp-duo { display: flex; gap: 12px; }
 .cp-carte { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 14px 15px; }
+  border-radius: var(--r-touche); padding: 14px 15px; }
 /* ⚠️ `.cp-carte--saisie` A ÉTÉ SUPPRIMÉE le 13/08/2026 (fond `--surface-alt`), et la
    classe est retirée du JSX avec elle. Elle teintait la carte « Versement prévu »
    pour dire « ici tu saisis » — mais le champ est déjà blanc bordé, ce qui EST le
@@ -5057,7 +5064,7 @@ button.cp-seg-item { cursor: pointer; }
    ⚠️ `overflow: hidden` + `background` explicite : copiés de `.maj-env`, ils font
    que le liseré ci-dessous est ROGNÉ par le rayon de la carte, donc propre dans
    les coins sans avoir à lui donner son propre `border-radius`. */
-.cp-etape { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px;
+.cp-etape { border: 1px solid var(--border); border-radius: var(--r-touche); padding: 12px 14px;
   position: relative; overflow: hidden; background: var(--surface); }
 /* 🔴 SIGNAL D'UNE CARTE MODIFIÉE — ALIGNÉ SUR `.maj-env--modifiee` (mise à jour
    groupée), à la demande de l'utilisateur le 13/08/2026. **Un liseré indigo pleine
@@ -5128,7 +5135,7 @@ button.cp-seg-item { cursor: pointer; }
 .cp-achat { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
 .cp-achat .label { font-size: 12px; font-weight: 500; margin-bottom: 5px; }
 .cp-stepper { display: flex; align-items: center; border: 1px solid var(--border);
-  background: var(--surface); border-radius: var(--radius-sm); width: 132px; height: 38px;
+  background: var(--surface); border-radius: var(--r-touche); width: 132px; height: 38px;
   overflow: hidden; }
 .cp-stepper button { width: 42px; height: 100%; border: 0; background: var(--surface-alt);
   font-size: 16px; line-height: 1; color: var(--text); cursor: pointer; }
@@ -5158,15 +5165,15 @@ button.cp-seg-item { cursor: pointer; }
 .cp-bilan-reste { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
 .cp-exclu-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  background: var(--surface-alt); border-radius: var(--radius-md); padding: 10px 11px;
+  background: var(--surface-alt); border-radius: var(--r-touche); padding: 10px 11px;
   font-size: 12px; color: var(--text-muted); }
 .cp-cibles { font-size: 12px; color: var(--warning-fonce); font-weight: 600; }
 .cp-reset { margin: 2px 0; }
 .cp-synthese { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px;
-  background: var(--surface-alt); border-radius: var(--radius-md); }
+  background: var(--surface-alt); border-radius: var(--r-touche); }
 .cp-synthese span { display: block; font-size: 12px; color: var(--text-muted); }
 .cp-synthese b { font-size: 14px; }
-.cp-etat { font-size: 12px; padding: 10px 12px; border-radius: var(--radius-md); }
+.cp-etat { font-size: 12px; padding: 10px 12px; border-radius: var(--r-touche); }
 .cp-etat--rouge { background: var(--danger-light); color: var(--danger-fonce); }
 .cp-etat--vert { background: var(--success-light); color: var(--success-fonce); }
 .cp-etat--ambre { background: var(--warning-light); color: var(--warning-fonce); }

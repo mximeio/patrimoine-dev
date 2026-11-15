@@ -1062,7 +1062,7 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
       {/* Section : Tickets resto */}
       <div>
         <h3 className="settings-group-title">Tickets resto</h3>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>Module activé</div>
             <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
@@ -2136,7 +2136,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
 
       {/* Toggle composite — masqué en mode Paiement TR (composite sans objet). */}
       {!isTr ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 500 }}>Ligne composite</div>
             <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
@@ -2149,7 +2149,7 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
           </label>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--warning-fonce)', background: 'var(--warning-light)', border: '1px solid #fcd9a3', borderRadius: 10, padding: '9px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--warning-fonce)', background: 'var(--warning-light)', border: '1px solid #fcd9a3', borderRadius: 'var(--r-touche)', padding: '9px 12px' }}>
           <Icon name="utensils" size={14} /> Comptabilisé dans les tickets resto du mois.
         </div>
       )}

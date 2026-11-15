@@ -741,7 +741,7 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       <ChoixType types={types} value={type} onChange={setType} compact />
 
       {/* Toggle composite */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 500 }}>Ligne composite</div>
           <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>

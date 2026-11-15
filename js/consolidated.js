@@ -257,19 +257,18 @@ function PatrimoineEvolutionChart({ data, enabled, profile }) {
     );
   }
   // Les rubriques ne se dessinent plus (une seule courbe, le total — modernisation C', 14/11/2026), mais la bulle les
-  // détaille toujours, de la plus grosse à la plus petite sur la période affichée.
+  // détaille toujours, dans l'ORDRE FIXE de l'app — celui de la barre des onglets et des cartes (15/11/2026, décision de
+  // l'utilisateur : l'ordre par montant, utile quand les aires s'empilaient, changeait avec la période).
   const categories = [
     enabled.checking !== false && { key: 'checking', label: checkingModuleLabel(profile), color: MODULE_COLORS.checking },
     enabled.savings && { key: 'savings', label: 'Épargne', color: MODULE_COLORS.savings },
     enabled.investments && { key: 'investments', label: 'Investissements', color: MODULE_COLORS.investments },
     enabled.physical && { key: 'physical', label: 'Actifs physiques', color: MODULE_COLORS.physical },
   ].filter(Boolean);
-  const moyenne = (k) => data.reduce((s, d) => s + (d[k] || 0), 0) / data.length;
-  const sortedCategories = [...categories].sort((a, b) => moyenne(b.key) - moyenne(a.key));
   return (
     <RedessinARotation>
     <ResponsiveContainer width="100%" height={200}>
-      <EvolutionAiresChart data={data} categories={sortedCategories} />
+      <EvolutionAiresChart data={data} categories={categories} />
     </ResponsiveContainer>
     </RedessinARotation>
   );
@@ -311,7 +310,7 @@ function EvolutionTooltip({ active, payload, categories }) {
     <div style={{
       background: COLORS.surface, color: COLORS.text,
       border: `1px solid ${COLORS.border}`,
-      padding: '10px 14px', borderRadius: 10,
+      padding: '10px 14px', borderRadius: 'var(--r-touche)',
       fontSize: 12, boxShadow: '0 8px 24px rgba(15,23,42,0.10)',
       minWidth: 200,
     }}>
