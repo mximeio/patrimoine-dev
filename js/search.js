@@ -841,26 +841,16 @@ function SearchModal({ ctx, onClose, onNavigate }) {
   // le bas. Le haut ne bouge jamais : le champ reste sous le doigt. Les variables ne servent que dans le bloc portrait de
   // styles.css ; ailleurs, rien ne change.
   const overlayRef = useRef(null);
+  // La lecture de la zone visible est partagée avec `Modal` (`suivreZoneVisible`, ui.js — DEV v1268, détection du clavier fiable).
   useEffect(() => {
-    const vv = window.visualViewport, o = overlayRef.current;
-    if (!vv || !o) return undefined;
-    let raf = 0;
+    const o = overlayRef.current;
     // Les coins : 34 à l'ouverture (le clavier arrive avec la fenêtre), 54 en bas seulement quand le clavier S'EN VA — donc
     // une fois qu'on l'a vu ouvert. Avant de l'avoir vu, l'instant où il monte n'est pas un « clavier masqué » (DEV v1264).
     let clavierVu = false;
-    const caler = () => {
-      raf = 0;
-      o.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
-      o.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
-      const ouvert = vv.height < window.innerHeight - 120;
+    return suivreZoneVisible(o, (ouvert) => {
       if (ouvert) clavierVu = true;
-      o.classList.toggle('search-overlay--sans-clavier', clavierVu && !ouvert);
-    };
-    const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
-    caler();
-    vv.addEventListener('resize', planifier);
-    vv.addEventListener('scroll', planifier);
-    return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); vv.removeEventListener('scroll', planifier); };
+      if (o) o.classList.toggle('search-overlay--sans-clavier', clavierVu && !ouvert);
+    });
   }, []);
 
   // Scroll auto pour garder l'élément focusé visible

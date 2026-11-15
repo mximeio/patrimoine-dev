@@ -64,6 +64,30 @@ const ModalDirtyContext = React.createContext(null);
 // DEV v1256, sur décision de l'utilisateur (« tout à 60 % »), AUCUNE ne la porte : toutes s'ouvrent en feuille flottante à la
 // hauteur de leur contenu (plafonnée à 60 %) et la poignée les passe en pleine hauteur. Prop gardée en réserve. Ordinateur et
 // paysage : inchangés (styles.css « FENÊTRES EN FEUILLE »).
+// LA ZONE VISIBLE ET LE CLAVIER D'iOS (DEV v1268) — partagé par `Modal` et `SearchModal` (search.js, chargé après).
+// Pose sur l'élément `--vv-haut` / `--vv-h` (la zone que le clavier laisse visible, `visualViewport`) et dit au rappel si le
+// clavier est ouvert. ⚠️ La v1267 comparait `visualViewport.height` à `window.innerHeight` : sur l'iPhone de l'utilisateur, le
+// clavier n'était JAMAIS vu (les deux hauteurs raccourcissent ensemble — relevé sur ses captures). La référence est désormais la
+// PLUS GRANDE hauteur visible vue depuis l'ouverture ; une rotation (largeur qui change) la remet à zéro.
+function suivreZoneVisible(el, auChangement) {
+  const vv = window.visualViewport;
+  if (!vv || !el) return () => {};
+  let raf = 0, reference = vv.height, largeur = vv.width;
+  const caler = () => {
+    raf = 0;
+    if (Math.abs(vv.width - largeur) > 1) { largeur = vv.width; reference = vv.height; }
+    reference = Math.max(reference, vv.height);
+    el.style.setProperty('--vv-haut', Math.round(vv.offsetTop) + 'px');
+    el.style.setProperty('--vv-h', Math.round(vv.height) + 'px');
+    auChangement(vv.height < reference - 120);
+  };
+  const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
+  caler();
+  vv.addEventListener('resize', planifier);
+  vv.addEventListener('scroll', planifier);
+  return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); vv.removeEventListener('scroll', planifier); };
+}
+
 function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false, vue }) {
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
@@ -318,19 +342,14 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // d'ouverture ; un second geste la ferme. État d'avant : étiquette git `avant-fermeture-poignee` (DEV v1264).
   const montesRef = useRef(true);
   useEffect(() => () => { montesRef.current = false; }, []);
-  // LE CLAVIER (DEV v1267, idée de l'utilisateur, relevé sur ses captures) : clavier ouvert, iOS remonte la feuille au-dessus du
-  // clavier ; ses grands coins du bas (54) et la marge de 26 px des boutons, faits pour la courbe de l'écran, n'épousent plus rien.
-  // La classe `modal-overlay--clavier` les ramène à 34 et 16 (styles.css, bloc portrait) ; clavier fermé, retour à 54 et 26.
-  // Même lecture que la recherche (`visualViewport`, rafraîchie à chaque ouverture ou fermeture du clavier).
+  // LE CLAVIER (DEV v1267-v1268, idées de l'utilisateur, relevées sur ses captures). Sans rien faire, iOS laissait la feuille en
+  // place et faisait glisser tout l'écran pour montrer le champ touché : l'en-tête sortait par le haut. Désormais l'overlay prend
+  // la zone VISIBLE (`suivreZoneVisible`, comme la recherche) : clavier ouvert, la feuille se loge entre la barre d'état et le
+  // clavier, raccourcit si besoin (en-tête et poignée visibles, le contenu défile) ; et la classe `modal-overlay--clavier` passe
+  // ses coins du bas à 34 et ses boutons à 16 px (styles.css, bloc portrait). Clavier fermé, tout revient.
   useEffect(() => {
-    const vv = window.visualViewport, o = overlayRef.current;
-    if (!vv || !o) return undefined;
-    let raf = 0;
-    const caler = () => { raf = 0; o.classList.toggle('modal-overlay--clavier', vv.height < window.innerHeight - 120); };
-    const planifier = () => { if (!raf) raf = window.requestAnimationFrame(caler); };
-    caler();
-    vv.addEventListener('resize', planifier);
-    return () => { if (raf) window.cancelAnimationFrame(raf); vv.removeEventListener('resize', planifier); };
+    const o = overlayRef.current;
+    return suivreZoneVisible(o, (ouvert) => { if (o) o.classList.toggle('modal-overlay--clavier', ouvert); });
   }, []);
   const animationsReduites = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const glisserDehors = (vitesse) => {
