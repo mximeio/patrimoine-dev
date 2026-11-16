@@ -1700,7 +1700,7 @@ input[type="month"] {
 /* ── L'ÉCRAN DE CONNEXION C' (modernisation, 14/11/2026 — auth.js) ── */
 .auth { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px 20px; background: var(--bg); }
 .auth-colonne { width: 100%; max-width: 400px; }
-/* LA PILE DROITE (DEV v1287, piste A de _maquettes/Mockup-Connexion-Pile, choix de l'utilisateur) : les quatre cartes des
+/* LA PILE DROITE (DEV v1288, piste A de _maquettes/Mockup-Connexion-Pile, choix de l'utilisateur) : les quatre cartes des
    rubriques ont EXACTEMENT la largeur et l'arrondi de la carte sombre, et dépassent de 8 px chacune. La même forme répétée :
    rien ne peut se décaler. Avant, des retraits de 6, 6, 6 puis 14 px et des bandes de 9 px pour un arrondi de 18 laissaient
    un bout de pile en escalier cassé, avec des crochets de courbe. ⚠️ Ne pas réintroduire de retrait latéral. */
