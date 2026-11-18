@@ -311,21 +311,45 @@ function TickAxeMois({ x, y, payload, parLibelle }) {
 }
 function EvolutionAiresChart({ data, categories, width, height, style }) {
   const duree = useDureeAnimationGraphique();
-  // LA BULLE AU TOUCHER (18/11/2026, relevé de l'utilisateur sur iPhone) : Recharts ouvre la bulle au doigt mais ne la ferme
-  // qu'à la sortie de la SOURIS — faire défiler la page le doigt posé sur le graphique la laissait affichée, et toucher ailleurs
-  // ne la fermait pas. Comme les bulles d'aide (`InfoTip`) : elle se ferme au toucher hors du graphique et au défilement de la
-  // page ; un toucher sur le graphique ou la souris qui le survole la rendent. `active={false}` force la fermeture (curseur
-  // compris) ; `undefined` rend la main à Recharts.
+  // LA BULLE AU TOUCHER (relevés de l'utilisateur sur iPhone, 18/11/2026) : Recharts ouvre la bulle dès que le doigt se pose
+  // et ne la ferme qu'à la sortie de la SOURIS. Faire défiler la page le doigt posé sur le graphique l'affichait (bulle et point),
+  // puis la laissait ouverte. Désormais : elle ne s'ouvre qu'au LEVER d'un TOUCHER FRANC sur le graphique (doigt resté à moins de
+  // 10 px de son point de départ) ; pendant un glissement, rien ne s'affiche. Elle se ferme au toucher suivant, hors du graphique
+  // comme dedans tant que le doigt n'est pas levé, et au défilement — comme les bulles d'aide (`InfoTip`). À la souris, le survol
+  // la montre (`onMouseMove`). `active={false}` force la fermeture (curseur compris) ; `undefined` rend la main à Recharts.
   const [bulle, setBulle] = useState(true);
   const bulleRef = useRef(true);
   const montrerBulle = (v) => { if (bulleRef.current !== v) { bulleRef.current = v; setBulle(v); } };
   useEffect(() => {
-    const auToucher = (e) => montrerBulle(!!(e.target && e.target.closest && e.target.closest('.evo-graphe')));
-    const auDefilement = () => montrerBulle(false);
+    let geste = null;   // { x, y, bouge } : un toucher commencé sur le graphique
+    const auToucher = (e) => {
+      montrerBulle(false);
+      const t = e.touches && e.touches[0];
+      const surGraphe = !!(e.target && e.target.closest && e.target.closest('.evo-graphe'));
+      geste = (surGraphe && t && e.touches.length === 1) ? { x: t.clientX, y: t.clientY, bouge: false, cible: e.target } : null;
+    };
+    const auDeplacement = (e) => {
+      const t = e.touches && e.touches[0];
+      if (geste && t && Math.hypot(t.clientX - geste.x, t.clientY - geste.y) > 10) geste.bouge = true;
+    };
+    // Au lever d'un toucher franc, Recharts n'a pas recalé le mois : son `touchstart` n'est qu'un appui, seuls `touchmove` et
+    // `mousemove` déplacent la bulle (lu dans Recharts 2.12.7). On lui envoie donc un `mousemove` au point touché, puis on montre.
+    const auLever = () => {
+      if (geste && !geste.bouge) {
+        geste.cible.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: geste.x, clientY: geste.y }));
+        montrerBulle(true);
+      }
+      geste = null;
+    };
+    const auDefilement = () => { if (geste) geste.bouge = true; montrerBulle(false); };
     document.addEventListener('touchstart', auToucher, { capture: true, passive: true });
+    document.addEventListener('touchmove', auDeplacement, { capture: true, passive: true });
+    document.addEventListener('touchend', auLever, { capture: true, passive: true });
     document.addEventListener('scroll', auDefilement, { capture: true, passive: true });
     return () => {
       document.removeEventListener('touchstart', auToucher, { capture: true });
+      document.removeEventListener('touchmove', auDeplacement, { capture: true });
+      document.removeEventListener('touchend', auLever, { capture: true });
       document.removeEventListener('scroll', auDefilement, { capture: true });
     };
   }, []);
