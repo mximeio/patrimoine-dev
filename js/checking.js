@@ -81,6 +81,10 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
             <span className="section-icon checking"><Icon name="creditCard" size={14} /></span>
             Mes comptes courants
           </div>
+          {/* DEV v1298 (demande de l'utilisateur) : le bouton d'ajout passe EN TÊTE de la liste, à la place du nombre d'éléments, comme
+              « Opérations … + Nouvelle » — dans `.ops-outils`, qui le fait déborder sans agrandir l'en-tête (32 px, la géométrie commune des
+              rubriques) ; au téléphone, il cède la place au « + » de la barre (`.ops-nouvelle` masqué). */}
+          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
         </div>
         <div>
           {accountsWithBalance.map((acc, i) => {
@@ -122,11 +126,6 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
               </button>
             );
           })}
-        </div>
-        <div className="section-footer">
-          <button className="btn-add" onClick={() => setShowCreate(true)}>
-            Ajouter un compte
-          </button>
         </div>
       </div>
 
@@ -662,13 +661,8 @@ function CheckingView({ ctx, onBack }) {
                   ⚠️ Le séparateur suit donc « Nouvelle opération » SEULE : il
                   testait aussi `trEnabled`, et le garder ainsi afficherait un
                   trait sans rien au-dessus sur un mois figé. */}
-              {!frozen && (
-                <button className="dropdown-item" onClick={() => setOpCreateSignal(n => n + 1)}>
-                  <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
-                  Nouvelle opération
-                </button>
-              )}
-              {!frozen && <div className="dropdown-separator" />}
+              {/* « Nouvelle opération » et son séparateur retirés du menu (DEV v1298) : le bouton d'en-tête « + Nouvelle » et le
+                  « + » de la barre la portent. */}
               <button className="dropdown-item" onClick={() => setShowRecurring(true)}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="arrowLeftRight" size={14} /></span>
                 Opérations récurrentes

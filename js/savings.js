@@ -118,7 +118,10 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
             <span className="section-icon savings"><Icon name="piggy" size={14} /></span>
             Mes comptes d'épargne
           </div>
-          <span className="section-aide">{savings.length}</span>
+          {/* DEV v1298 (demande de l'utilisateur) : le bouton d'ajout passe EN TÊTE de la liste, à la place du nombre d'éléments, comme
+              « Opérations … + Nouvelle » — dans `.ops-outils`, qui le fait déborder sans agrandir l'en-tête (32 px, la géométrie commune des
+              rubriques) ; au téléphone, il cède la place au « + » de la barre (`.ops-nouvelle` masqué). */}
+          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
         </div>
         <div>
           {sortByNumber(savings, s => computeSavingsBalance(s)).map(s => {
@@ -132,9 +135,6 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
               />
             );
           })}
-        </div>
-        <div className="section-footer">
-          <button className="btn-add" onClick={() => setShowCreate(true)}>Ajouter un compte d'épargne</button>
         </div>
       </div>
 
@@ -336,11 +336,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
       <CarteDeTete
         module="savings" libelle="Solde" montant={balance}
         droite={<Dropdown trigger={<button className="btn-icon hero-kebab" aria-label="Actions">⋯</button>}>
-              <button className="dropdown-item" onClick={() => setModal('add')}>
-                <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="plus" size={14} /></span>
-                Nouvelle opération
-              </button>
-              <div className="dropdown-separator" />
+              {/* « Nouvelle opération » retirée du menu (DEV v1298) : le bouton d'en-tête et le « + » de la barre la portent. */}
               <button className="dropdown-item" onClick={() => setModal('configure')}>
                 <span style={{ color: COLORS.accent, display: 'inline-flex' }}><Icon name="settings" size={14} /></span>
                 Réglages
