@@ -40,8 +40,7 @@ function CheckingModule({ ctx }) {
 function CheckingConsolidatedView({ ctx, onOpenAccount }) {
   const { checkingAccounts, createCheckingAccount, showToast } = ctx;
   const [showCreate, setShowCreate] = useState(false);
-  // Le « + » de la barre sur la liste des comptes (plusieurs comptes courants, DEV v1297) : un nouveau compte courant.
-  useNouvelle(true, () => setShowCreate(true));
+  // Pas de `useNouvelle` sur la liste des comptes (plusieurs comptes courants) : le « + » de la barre est réservé aux opérations (DEV v1299) : une liste n'en a pas, la création passe par « + Nouveau » en tête.
 
   // Calcul des soldes par compte (mois de référence = plus récent ≤ aujourd'hui)
   const cur = currentMonthKey();
@@ -83,8 +82,9 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
           </div>
           {/* DEV v1298 (demande de l'utilisateur) : le bouton d'ajout passe EN TÊTE de la liste, à la place du nombre d'éléments, comme
               « Opérations … + Nouvelle » — dans `.ops-outils`, qui le fait déborder sans agrandir l'en-tête (32 px, la géométrie commune des
-              rubriques) ; au téléphone, il cède la place au « + » de la barre (`.ops-nouvelle` masqué). */}
-          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
+              rubriques). DEV v1299 : il reste au téléphone (`liste-nouveau`) — créer un compte ou un actif est rare, le « + » de la barre est
+              réservé aux opérations, qui sont de tous les jours. */}
+          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle liste-nouveau" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
         </div>
         <div>
           {accountsWithBalance.map((acc, i) => {

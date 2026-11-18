@@ -10,8 +10,7 @@ function SavingsView({ ctx }) {
   const { user, savings, showToast } = ctx;
   const [activeId, setActiveId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
-  // Le « + » de la barre sur la LISTE des livrets (DEV v1297) : un nouveau compte d'épargne. Un livret ouvert répond à sa place.
-  useNouvelle(!activeId, () => setShowCreate(true));
+  // Pas de `useNouvelle` sur la LISTE des livrets : le « + » de la barre est réservé aux opérations (DEV v1299) : une liste n'en a pas, la création passe par « + Nouveau » en tête.
 
   // Si le livret actif disparaît (suppression / sync), retour à la liste.
   useEffect(() => {
@@ -120,8 +119,9 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
           </div>
           {/* DEV v1298 (demande de l'utilisateur) : le bouton d'ajout passe EN TÊTE de la liste, à la place du nombre d'éléments, comme
               « Opérations … + Nouvelle » — dans `.ops-outils`, qui le fait déborder sans agrandir l'en-tête (32 px, la géométrie commune des
-              rubriques) ; au téléphone, il cède la place au « + » de la barre (`.ops-nouvelle` masqué). */}
-          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
+              rubriques). DEV v1299 : il reste au téléphone (`liste-nouveau`) — créer un compte ou un actif est rare, le « + » de la barre est
+              réservé aux opérations, qui sont de tous les jours. */}
+          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle liste-nouveau" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouveau</button></div>
         </div>
         <div>
           {sortByNumber(savings, s => computeSavingsBalance(s)).map(s => {

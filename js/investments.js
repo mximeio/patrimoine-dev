@@ -13,8 +13,7 @@ function InvestmentsView({ ctx }) {
   const { user, portfolios, showToast } = ctx;
   const [activeId, setActiveId] = useState(null); // null = vue liste, sinon id du portefeuille
   const [showCreate, setShowCreate] = useState(false);
-  // Le « + » de la barre sur la LISTE des enveloppes (DEV v1297) : une nouvelle enveloppe. Une enveloppe ouverte répond à sa place.
-  useNouvelle(!activeId, () => setShowCreate(true));
+  // Pas de `useNouvelle` sur la LISTE des enveloppes : le « + » de la barre est réservé aux opérations (DEV v1299) : une liste n'en a pas, la création passe par « + Nouveau » en tête.
 
   // Si le portefeuille actif disparaît (suppression / import), retour à la liste.
   useEffect(() => {
@@ -210,8 +209,9 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
           </div>
           {/* DEV v1298 (demande de l'utilisateur) : le bouton d'ajout passe EN TÊTE de la liste, à la place du nombre d'éléments, comme
               « Opérations … + Nouvelle » — dans `.ops-outils`, qui le fait déborder sans agrandir l'en-tête (32 px, la géométrie commune des
-              rubriques) ; au téléphone, il cède la place au « + » de la barre (`.ops-nouvelle` masqué). */}
-          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouvelle</button></div>
+              rubriques). DEV v1299 : il reste au téléphone (`liste-nouveau`) — créer un compte ou un actif est rare, le « + » de la barre est
+              réservé aux opérations, qui sont de tous les jours. */}
+          <div className="ops-outils"><button type="button" className="btn btn-accent ops-nouvelle liste-nouveau" onClick={() => setShowCreate(true)}><Icon name="plus" size={15} /> Nouvelle</button></div>
         </div>
         <div>
           {sortByNumber(portfolios, p => computePortfolioStats(p.data).totalValue).map((p, i) => (

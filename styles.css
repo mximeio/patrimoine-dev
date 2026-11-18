@@ -4415,6 +4415,7 @@ button.stat-card {
   /* Le « + Nouvelle » des en-têtes (compte, livret, enveloppe) laisse la place au « + » de la barre (DEV v1296) : un seul
      geste de création par écran. À l'ordinateur, sans barre du bas, il reste. */
   .btn.ops-nouvelle { display: none; }
+  .btn.ops-nouvelle.liste-nouveau { display: inline-flex; } /* en tête des listes, il reste : le « + » de la barre est réservé aux opérations (DEV v1299) */
   /* Modale plein écran : règles déplacées dans le bloc
      @media (max-width:640px) and (orientation: portrait) plus bas.
      ATTENTION : en PAYSAGE la modale n'est PAS plein écran (marge + coins
@@ -4678,6 +4679,7 @@ button.stat-card {
   .tabbar-wrap .tabbar-actions { flex-basis: 80px; height: 44px; padding: 2px; } /* capsule « + | ⋯ » compacte : 2 + 37 + 2 + 37 + 2 */
   .tabbar-wrap .tabbar-actions.sans-plus { flex-basis: 44px; } /* accueil : le rond « ⋯ » compact (DEV v1297) */
   .btn.ops-nouvelle { display: none; } /* le « + » de la barre le remplace (DEV v1296) */
+  .btn.ops-nouvelle.liste-nouveau { display: inline-flex; } /* sauf en tête des listes (DEV v1299) */
   /* Le toggle .mini (scroll) ne doit pas écraser les insets safe-area
      du paysage (spécificité supérieure de .tabbar-wrap.mini) */
   .tabbar-wrap.mini {

@@ -829,17 +829,20 @@ function App() {
   const safeModule = tabs.find(t => t.id === moduleName) ? moduleName : 'overview';
 
   // LE « + » DE LA BARRE (DEV v1296-v1297). Il pose l'intention « nouvelle » ; la page affichée la consomme (`useNouvelle`) et
-  // ouvre ce qu'elle sait créer : une opération (compte, livret ou enveloppe ouverts), un compte d'épargne, une enveloppe, un
-  // actif, un compte courant (liste des comptes). L'accueil n'a pas de « + » (DEV v1297 : la feuille « Où l'ajouter ? » de la
+  // ouvre sa fenêtre d'opération (compte, livret ou enveloppe ouverts ; jusqu'à la v1298, les listes créaient aussi un compte
+  // ou un actif — cf. `avecPlus` plus bas). L'accueil n'a pas de « + » (DEV v1297 : la feuille « Où l'ajouter ? » de la
   // v1296 posait la question du mois et oubliait les tickets resto). Personne ne l'a prise : on la retire, rien ne s'ouvre.
   const nouvelleDepuisBarre = () => {
     requestOpen('nouvelle', {});
     const p = window.__pendingOpen;
     if (p && p.type === 'nouvelle') window.__pendingOpen = null;
   };
-  const libellePlus = sousPage ? 'Nouvelle opération' : ({
-    checking: modulesEnabled.multiCheckingAccounts ? 'Nouveau compte courant' : 'Nouvelle opération', savings: "Nouveau compte d'épargne", investments: 'Nouvelle enveloppe', physical: 'Nouvel actif physique',
-  })[safeModule];
+  // DEV v1299 (demande de l'utilisateur) : le « + » veut TOUJOURS dire « nouvelle opération ». Sur une liste (livrets,
+  // enveloppes, comptes courants en multi) ou les actifs, il aurait créé un compte, geste rare — et le même bouton aurait changé
+  // de sens d'une page à l'autre (on y aurait cherché un versement). La capsule s'y replie en rond « ⋯ », comme sur l'accueil ;
+  // la création passe par le « + Nouveau » d'en-tête, gardé au téléphone (`liste-nouveau`).
+  // Restent : le compte courant (un seul compte), et toute sous-page ouverte (compte en multi, livret, enveloppe).
+  const avecPlus = !!sousPage || (safeModule === 'checking' && !modulesEnabled.multiCheckingAccounts);
 
   // Sélection d'un onglet (desktop et mobile). Re-tap sur l'onglet déjà
   // actif → retour en haut de page (réflexe standard des tab bars iOS).
@@ -933,8 +936,7 @@ function App() {
         onSelect={selectModule}
         onMore={() => setShowSheet(true)}
         onNouvelle={nouvelleDepuisBarre}
-        avecPlus={safeModule !== 'overview'}
-        libellePlus={libellePlus}
+        avecPlus={avecPlus}
         online={netOnline}
         cacheOk={cacheOk}
       />
