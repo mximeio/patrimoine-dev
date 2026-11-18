@@ -387,7 +387,9 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
         : <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLORS.muted }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />}
       <YAxis hide domain={['dataMin', 'dataMax']} />
       <Tooltip active={bulle ? undefined : false} content={<EvolutionTooltip categories={categories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
-      <Area type="monotone" dataKey="total" stroke={COURBE_TOTAL} strokeWidth={2.5} fill="url(#evo-fond)"
+      {/* Le point de la courbe suit la bulle (DEV v1295) : Recharts le dessine d'après SON état (`isTooltipActive`), sans lire
+          `Tooltip active` — il restait affiché pendant un glissement, bulle et ligne pointillée cachées (relevé de l'utilisateur). */}
+      <Area type="monotone" dataKey="total" stroke={COURBE_TOTAL} strokeWidth={2.5} fill="url(#evo-fond)" activeDot={bulle}
         animationBegin={0} animationDuration={duree} />
     </AreaChart>
   );
