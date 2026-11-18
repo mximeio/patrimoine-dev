@@ -311,6 +311,24 @@ function TickAxeMois({ x, y, payload, parLibelle }) {
 }
 function EvolutionAiresChart({ data, categories, width, height, style }) {
   const duree = useDureeAnimationGraphique();
+  // LA BULLE AU TOUCHER (18/11/2026, relevé de l'utilisateur sur iPhone) : Recharts ouvre la bulle au doigt mais ne la ferme
+  // qu'à la sortie de la SOURIS — faire défiler la page le doigt posé sur le graphique la laissait affichée, et toucher ailleurs
+  // ne la fermait pas. Comme les bulles d'aide (`InfoTip`) : elle se ferme au toucher hors du graphique et au défilement de la
+  // page ; un toucher sur le graphique ou la souris qui le survole la rendent. `active={false}` force la fermeture (curseur
+  // compris) ; `undefined` rend la main à Recharts.
+  const [bulle, setBulle] = useState(true);
+  const bulleRef = useRef(true);
+  const montrerBulle = (v) => { if (bulleRef.current !== v) { bulleRef.current = v; setBulle(v); } };
+  useEffect(() => {
+    const auToucher = (e) => montrerBulle(!!(e.target && e.target.closest && e.target.closest('.evo-graphe')));
+    const auDefilement = () => montrerBulle(false);
+    document.addEventListener('touchstart', auToucher, { capture: true, passive: true });
+    document.addEventListener('scroll', auDefilement, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('touchstart', auToucher, { capture: true });
+      document.removeEventListener('scroll', auDefilement, { capture: true });
+    };
+  }, []);
   // L'axe des mois : l'échelle de `etiquettesAxeMois` (utils.js), recalculée à chaque largeur et à chaque période.
   const axe = useMemo(() => {
     if (!width || !data || data.length < 2) return null;
@@ -321,7 +339,8 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
     return { ticks: r.etiquettes.map(e => data[e.i].label), parLibelle, avecAn: r.etiquettes.some(e => e.an) };
   }, [data, width]);
   return (
-    <AreaChart width={width} height={height} style={style} data={data} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+    <AreaChart width={width} height={height} style={style} className="evo-graphe" data={data} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
+      onMouseMove={() => montrerBulle(true)}>
       <defs>
         <linearGradient id="evo-fond" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor={COURBE_TOTAL} stopOpacity={0.18} />
@@ -332,7 +351,7 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
         ? <XAxis dataKey="label" ticks={axe.ticks} interval={0} tick={<TickAxeMois parLibelle={axe.parLibelle} />} tickLine={false} axisLine={false} height={axe.avecAn ? 34 : 22} />
         : <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLORS.muted }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />}
       <YAxis hide domain={['dataMin', 'dataMax']} />
-      <Tooltip content={<EvolutionTooltip categories={categories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
+      <Tooltip active={bulle ? undefined : false} content={<EvolutionTooltip categories={categories} />} cursor={{ stroke: COLORS.muted, strokeWidth: 1, strokeDasharray: '3 3' }} />
       <Area type="monotone" dataKey="total" stroke={COURBE_TOTAL} strokeWidth={2.5} fill="url(#evo-fond)"
         animationBegin={0} animationDuration={duree} />
     </AreaChart>
