@@ -5,6 +5,8 @@
 function PhysicalView({ ctx }) {
   const { user, physical, showToast } = ctx;
   const [showNew, setShowNew] = useState(false);
+  // Le « + » de la barre (DEV v1297) : un nouvel actif physique.
+  useNouvelle(true, () => setShowNew(true));
   const [editId, setEditId] = useState(null);
 
   const totalCurrent = physical.reduce((s, a) => s + physicalCurrentValue(a), 0);

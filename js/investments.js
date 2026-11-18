@@ -13,6 +13,8 @@ function InvestmentsView({ ctx }) {
   const { user, portfolios, showToast } = ctx;
   const [activeId, setActiveId] = useState(null); // null = vue liste, sinon id du portefeuille
   const [showCreate, setShowCreate] = useState(false);
+  // Le « + » de la barre sur la LISTE des enveloppes (DEV v1297) : une nouvelle enveloppe. Une enveloppe ouverte répond à sa place.
+  useNouvelle(!activeId, () => setShowCreate(true));
 
   // Si le portefeuille actif disparaît (suppression / import), retour à la liste.
   useEffect(() => {
@@ -27,12 +29,7 @@ function InvestmentsView({ ctx }) {
   // Recherche (phase 2) : ouverture directe d'un portefeuille depuis un
   // résultat (intention requestOpen, consommée au montage ou via événement).
   useEffect(() => {
-    // `nouvelle` : relais vers la sous-page, comme pour un livret (DEV v1296).
-    const apply = (p) => {
-      if (!p || !portfolios.find(x => x.id === p.id)) return;
-      setActiveId(p.id);
-      if (p.nouvelle) setTimeout(() => requestOpen('nouvelle', { id: p.id }), 0);
-    };
+    const apply = (p) => { if (p && portfolios.find(x => x.id === p.id)) setActiveId(p.id); };
     apply(consumeOpen('portfolio'));
     const onOpen = (e) => { if (e.detail && e.detail.type === 'portfolio') apply(consumeOpen('portfolio')); };
     window.addEventListener('patrimoine:open', onOpen);
@@ -331,13 +328,7 @@ function PortfolioDetailView({ ctx, portfolio, onBack }) {
   const { user, showToast } = ctx;
   const [modal, setModal] = useState(null);
   // Le « + » de la barre (DEV v1296) : nouvelle opération dans cette enveloppe.
-  useEffect(() => {
-    const apply = (p) => { if (p && (!p.id || p.id === portfolio.id)) setModal('add'); };
-    apply(consumeOpen('nouvelle'));
-    const onOpen = (e) => { if (e.detail && e.detail.type === 'nouvelle') apply(consumeOpen('nouvelle')); };
-    window.addEventListener('patrimoine:open', onOpen);
-    return () => window.removeEventListener('patrimoine:open', onOpen);
-  }, [portfolio.id]);
+  useNouvelle(true, () => setModal('add'));
   // ID de l'opération en cours d'édition (depuis HistoryOpsTable).
   // Null = pas de modale d'édition ouverte. Quand on a un id, on rend
   // une modale "Modifier l'opération" qui réutilise AddOperationForm

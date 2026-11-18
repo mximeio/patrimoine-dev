@@ -40,6 +40,8 @@ function CheckingModule({ ctx }) {
 function CheckingConsolidatedView({ ctx, onOpenAccount }) {
   const { checkingAccounts, createCheckingAccount, showToast } = ctx;
   const [showCreate, setShowCreate] = useState(false);
+  // Le « + » de la barre sur la liste des comptes (plusieurs comptes courants, DEV v1297) : un nouveau compte courant.
+  useNouvelle(true, () => setShowCreate(true));
 
   // Calcul des soldes par compte (mois de référence = plus récent ≤ aujourd'hui)
   const cur = currentMonthKey();
@@ -355,19 +357,12 @@ function CheckingView({ ctx, onBack }) {
     return () => window.removeEventListener('patrimoine:open', onOpen);
   }, [checking.id]); // eslint-disable-line
 
-  // Le « + » de la barre (DEV v1296) : intention « nouvelle » → la fenêtre « Nouvelle opération », comme le bouton de l'en-tête.
-  // Sur un mois figé, le même refus que les autres gestes. `accountId` : posé par la feuille de choix (plusieurs comptes).
-  useEffect(() => {
-    const apply = (p) => {
-      if (!p || (p.accountId && p.accountId !== checking.id)) return;
-      if (moisFigeRef.current) { showToast('Mois figé — défige-le via le menu ⋯'); return; }
-      setOpCreateSignal(n => n + 1);
-    };
-    apply(consumeOpen('nouvelle'));
-    const onOpen = (e) => { if (e.detail && e.detail.type === 'nouvelle') apply(consumeOpen('nouvelle')); };
-    window.addEventListener('patrimoine:open', onOpen);
-    return () => window.removeEventListener('patrimoine:open', onOpen);
-  }, [checking.id]); // eslint-disable-line
+  // Le « + » de la barre (DEV v1296) : la fenêtre « Nouvelle opération », comme le bouton de l'en-tête. Sur un mois figé, le même
+  // refus que les autres gestes.
+  useNouvelle(true, () => {
+    if (moisFigeRef.current) { showToast('Mois figé — défige-le via le menu ⋯'); return; }
+    setOpCreateSignal(n => n + 1);
+  });
 
   if (!hasMonths) {
     return (<div className="loading" style={{ minHeight: 200 }}><Spinner /></div>);

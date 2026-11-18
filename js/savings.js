@@ -10,6 +10,8 @@ function SavingsView({ ctx }) {
   const { user, savings, showToast } = ctx;
   const [activeId, setActiveId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  // Le « + » de la barre sur la LISTE des livrets (DEV v1297) : un nouveau compte d'épargne. Un livret ouvert répond à sa place.
+  useNouvelle(!activeId, () => setShowCreate(true));
 
   // Si le livret actif disparaît (suppression / sync), retour à la liste.
   useEffect(() => {
@@ -23,13 +25,7 @@ function SavingsView({ ctx }) {
   // (intention posée par requestOpen, consommée au montage OU via événement
   // si la vue est déjà montée).
   useEffect(() => {
-    // `nouvelle` (le « + » de la barre, feuille de choix — DEV v1296) : une fois la sous-page ouverte, on relaie l'intention
-    // « nouvelle », que la sous-page consomme à son montage (une seule intention attend à la fois).
-    const apply = (p) => {
-      if (!p || !savings.find(s => s.id === p.id)) return;
-      setActiveId(p.id);
-      if (p.nouvelle) setTimeout(() => requestOpen('nouvelle', { id: p.id }), 0);
-    };
+    const apply = (p) => { if (p && savings.find(s => s.id === p.id)) setActiveId(p.id); };
     apply(consumeOpen('saving'));
     const onOpen = (e) => { if (e.detail && e.detail.type === 'saving') apply(consumeOpen('saving')); };
     window.addEventListener('patrimoine:open', onOpen);
@@ -238,13 +234,7 @@ function SavingsDetailView({ ctx, saving, onBack }) {
   const [modal, setModal] = useState(null); // 'add' | 'configure' | null
   const [editingOpId, setEditingOpId] = useState(null);
   // Le « + » de la barre (DEV v1296) : nouvelle opération sur ce livret.
-  useEffect(() => {
-    const apply = (p) => { if (p && (!p.id || p.id === saving.id)) setModal('add'); };
-    apply(consumeOpen('nouvelle'));
-    const onOpen = (e) => { if (e.detail && e.detail.type === 'nouvelle') apply(consumeOpen('nouvelle')); };
-    window.addEventListener('patrimoine:open', onOpen);
-    return () => window.removeEventListener('patrimoine:open', onOpen);
-  }, [saving.id]);
+  useNouvelle(true, () => setModal('add'));
   // Garde-fou « modifications non enregistrées » de la modale Réglages.
   const [reglagesDirty, setReglagesDirty] = useState(false);
   const closeReglages = () => {

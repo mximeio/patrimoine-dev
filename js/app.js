@@ -157,9 +157,6 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   // Bottom sheet du menu « ⋯ » mobile (refonte nav)
   const [showSheet, setShowSheet] = useState(false);
-  // La feuille « Nouvelle opération dans… » (DEV v1296) : ouverte par le « + » de la barre quand l'écran affiché n'a pas de
-  // création directe (accueil, liste des livrets ou des enveloppes, actifs physiques).
-  const [showChoixNouvelle, setShowChoixNouvelle] = useState(false);
   // Mise à jour du service worker en attente (mode hors ligne, v522) :
   // le worker « waiting » est transmis par le script d'enregistrement
   // d'index.html — via __SW_WAITING si l'événement a été émis avant le
@@ -831,32 +828,18 @@ function App() {
 
   const safeModule = tabs.find(t => t.id === moduleName) ? moduleName : 'overview';
 
-  // LE « + » DE LA BARRE (DEV v1296). Il pose l'intention « nouvelle » : l'écran qui sait créer la consomme aussitôt (compte
-  // courant, détail d'un livret, détail d'une enveloppe — les écouteurs sont synchrones). Personne ne l'a prise ? L'écran n'a
-  // pas de création directe : on la retire et on propose où créer.
+  // LE « + » DE LA BARRE (DEV v1296-v1297). Il pose l'intention « nouvelle » ; la page affichée la consomme (`useNouvelle`) et
+  // ouvre ce qu'elle sait créer : une opération (compte, livret ou enveloppe ouverts), un compte d'épargne, une enveloppe, un
+  // actif, un compte courant (liste des comptes). L'accueil n'a pas de « + » (DEV v1297 : la feuille « Où l'ajouter ? » de la
+  // v1296 posait la question du mois et oubliait les tickets resto). Personne ne l'a prise : on la retire, rien ne s'ouvre.
   const nouvelleDepuisBarre = () => {
     requestOpen('nouvelle', {});
     const p = window.__pendingOpen;
-    if (p && p.type === 'nouvelle') { window.__pendingOpen = null; setShowChoixNouvelle(true); }
+    if (p && p.type === 'nouvelle') window.__pendingOpen = null;
   };
-  const choixNouvelle = [
-    ...(checkingEnabled ? checkingAccounts.map(a => ({
-      cle: 'c-' + a.id, module: 'checking', id: a.id,
-      nom: checkingAccounts.length > 1 ? (a.name || 'Compte courant') : 'Compte courant',
-    })) : []),
-    ...(modulesEnabled.savings ? savings.map(s => ({ cle: 's-' + s.id, module: 'savings', id: s.id, nom: s.name })) : []),
-    ...(modulesEnabled.investments ? portfolios.map(p => ({ cle: 'p-' + p.id, module: 'investments', id: p.id, nom: p.name })) : []),
-  ];
-  // Aller créer : on bascule sur la rubrique (comme la recherche, `onNavigate`), puis l'intention : « nouvelle » pour le compte,
-  // « saving » / « portfolio » avec `nouvelle: true` pour un livret ou une enveloppe — leur vue ouvre la sous-page, qui ouvre
-  // la création (une seule intention peut attendre à la fois, d'où le relais).
-  const allerCreer = (c) => {
-    setShowChoixNouvelle(false);
-    setModuleName(c.module);
-    if (c.module === 'checking') { setCurrentAccountId(c.id); requestOpen('nouvelle', { accountId: c.id }); }
-    if (c.module === 'savings') requestOpen('saving', { id: c.id, nouvelle: true });
-    if (c.module === 'investments') requestOpen('portfolio', { id: c.id, nouvelle: true });
-  };
+  const libellePlus = sousPage ? 'Nouvelle opération' : ({
+    checking: modulesEnabled.multiCheckingAccounts ? 'Nouveau compte courant' : 'Nouvelle opération', savings: "Nouveau compte d'épargne", investments: 'Nouvelle enveloppe', physical: 'Nouvel actif physique',
+  })[safeModule];
 
   // Sélection d'un onglet (desktop et mobile). Re-tap sur l'onglet déjà
   // actif → retour en haut de page (réflexe standard des tab bars iOS).
@@ -950,6 +933,8 @@ function App() {
         onSelect={selectModule}
         onMore={() => setShowSheet(true)}
         onNouvelle={nouvelleDepuisBarre}
+        avecPlus={safeModule !== 'overview'}
+        libellePlus={libellePlus}
         online={netOnline}
         cacheOk={cacheOk}
       />
@@ -995,23 +980,6 @@ function App() {
       {showSettings && (
         <Modal liste title="Paramètres" icon="settings" tone="neutre" subtitle="Général · Données · Mon compte" size="lg" noDirtyGuard onClose={() => setShowSettings(false)}>
           <SettingsView ctx={ctx} />
-        </Modal>
-      )}
-      {showChoixNouvelle && (
-        <Modal liste title="Nouvelle opération" icon="plus" tone="neutre" subtitle="Où l'ajouter ?" noDirtyGuard onClose={() => setShowChoixNouvelle(false)}>
-          {choixNouvelle.length === 0
-            ? <EmptyState icon="plus" title="Aucun compte, livret ni enveloppe" hint="Créez-en un depuis sa rubrique." />
-            : (
-              <div className="choix-nouvelle">
-                {choixNouvelle.map(c => (
-                  <button key={c.cle} type="button" className="choix-nouvelle-ligne" onClick={() => allerCreer(c)}>
-                    <span className="choix-nouvelle-point" style={{ background: MODULE_COLORS[c.module] }} aria-hidden="true" />
-                    <span className="choix-nouvelle-nom">{c.nom}</span>
-                    <Icon name="chevronRight" size={16} />
-                  </button>
-                ))}
-              </div>
-            )}
         </Modal>
       )}
       {showSearch && (
@@ -1203,7 +1171,13 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     const onResize = () => follow(400);
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
+    // Le conteneur change de largeur SANS que la fenêtre bouge (DEV v1297 : la capsule « + | ⋯ » s'étire ou se rétracte en
+    // changeant de page) : on remesure à chaque changement de taille. Filet du suivi image par image, qui peut être
+    // interrompu (onglet en arrière-plan) — la pastille finit toujours sur son onglet.
+    const ro = (window.ResizeObserver && containerRef.current) ? new ResizeObserver(() => move()) : null;
+    if (ro) ro.observe(containerRef.current);
     return () => {
+      if (ro) ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
       if (indicatorRef.current) indicatorRef.current.style.transition = '';
       clearTimeout(t);
@@ -1316,7 +1290,7 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
 // Fixée en bas, jamais masquée, à taille constante en portrait (plus de
 // rétractation au défilement depuis le 16/11/2026 ; compacte en paysage).
 // Affichée uniquement sur mobile (CSS).
-function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, online = true, cacheOk = true }) {
+function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = true, libellePlus = 'Nouvelle opération', online = true, cacheOk = true }) {
   const wrapRef = useRef(null);
   const barRef = useRef(null);
   const indRef = useRef(null);
@@ -1365,7 +1339,9 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, online = tr
   // l'animation de la capsule (au lieu de se recaler en retard).
   // v569 : idem barre desktop — les libellés (short) entrent dans les deps
   // pour re-mesurer la goutte quand un texte change de largeur (multi-comptes).
-  useSlideIndicator(barRef, indRef, '.tab-item-active .tab-pill', [current, tabs.map(t => t.short || t.label).join('|'), mini], mini, true);
+  // `avecPlus` dans la clé de suivi (DEV v1297) : la capsule « + | ⋯ » s'étire ou se rétracte en 0,25 s en changeant de page,
+  // les onglets changent de largeur pendant ce temps — la pastille les suit image par image (340 ms), comme pour le mode réduit.
+  useSlideIndicator(barRef, indRef, '.tab-item-active .tab-pill', [current, tabs.map(t => t.short || t.label).join('|'), mini, avecPlus], `${mini}|${avecPlus}`, true);
 
 
   // PLUS DE RÉTRACTATION AU DÉFILEMENT (16/11/2026, choix de l'utilisateur sur _maquettes/Mockup-Barre-Sans-Retractation) :
@@ -1543,12 +1519,18 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, online = tr
           « + » de la couleur de la rubrique — nouvelle opération en UN toucher, depuis n'importe quel écran (création directe sur
           le compte, un livret ou une enveloppe ouverts ; ailleurs, la feuille « Nouvelle opération dans… », cf. App) ; à droite le
           « ⋯ », inchangé. Une seule pastille de verre, de la hauteur de la barre : les onglets s'étroitisent de ~7 px. */}
-      <div className="tabbar-actions glassbar">
+      {/* DEV v1297 (choix de l'utilisateur) : sur l'ACCUEIL, pas de « + » — rien à y créer sans ambiguïté (quel compte, quel
+          mois ?) — la capsule redevient le rond « ⋯ » ; elle s'étire en arrivant sur une page où l'on crée (classe `sans-plus`,
+          largeur animée). Le « + » reste dans le DOM, replié, hors tabulation. */}
+      <div className={`tabbar-actions glassbar${avecPlus ? '' : ' sans-plus'}`}>
       <button
         type="button"
         className="tabbar-plus"
         onClick={() => { setMini(false); onNouvelle(); }}
-        aria-label="Nouvelle opération"
+        aria-label={avecPlus ? libellePlus : undefined}
+        aria-hidden={avecPlus ? undefined : 'true'}
+        tabIndex={avecPlus ? undefined : -1}
+        disabled={!avecPlus}
       ><Icon name="plus" size={20} /></button>
       {/* « ⋯ » : une ACTION, pas une section → icône seule, jamais d'état actif (recommandation retenue à la validation). */}
       <button

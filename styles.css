@@ -3177,14 +3177,14 @@ button.stat-card {
 [data-rubrique="physical"] .tabbar-plus { background: #f2b33d; color: #2b1d00; }
 .tabbar-wrap.seule .tabbar-actions { margin-left: auto; }
 .tabbar-wrap.mini .tabbar-actions { flex-basis: 76px; height: 44px; padding: 2px; }
-/* La feuille « Nouvelle opération dans… » (App, DEV v1296) : une ligne par compte, livret, enveloppe. */
-.choix-nouvelle { display: flex; flex-direction: column; }
-.choix-nouvelle-ligne { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 4px; border: 0; border-bottom: 1px solid var(--border);
-  background: transparent; font: inherit; font-size: 15px; font-weight: 500; color: var(--text); text-align: left; cursor: pointer; }
-.choix-nouvelle-ligne:last-child { border-bottom: 0; }
-.choix-nouvelle-point { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.choix-nouvelle-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.choix-nouvelle-ligne svg { color: var(--text-muted); flex: none; }
+/* L'ACCUEIL SANS « + » (DEV v1297, choix de l'utilisateur) : la capsule redevient le rond « ⋯ » (54 = 3 + 48 + 3) et s'étire en
+   arrivant sur une page où l'on crée — largeur animée en 0,25 s, le « + » se replie dans le même temps (largeur, opacité,
+   échelle). La pastille de l'onglet actif suit les onglets image par image (`useSlideIndicator`, clé `avecPlus`). */
+.tabbar-actions { transition: flex-basis .25s cubic-bezier(0.4, 0, 0.2, 1), gap .25s cubic-bezier(0.4, 0, 0.2, 1); }
+.tabbar-plus { transition: background-color .3s ease, flex-grow .25s cubic-bezier(0.4, 0, 0.2, 1), opacity .2s ease, transform .25s cubic-bezier(0.4, 0, 0.2, 1); }
+.tabbar-actions.sans-plus { flex-basis: 54px; gap: 0; }
+.tabbar-actions.sans-plus .tabbar-plus { flex-grow: 0; opacity: 0; transform: scale(0.5); pointer-events: none; }
+.tabbar-wrap.mini .tabbar-actions.sans-plus { flex-basis: 44px; }
 
 /* Bottom sheet (menu « ⋯ ») — flottante et en verre, comme la barre */
 .sheet-backdrop {
@@ -4676,6 +4676,7 @@ button.stat-card {
   .tabbar-wrap .tab-ico { --icob: 0.86; }
   .tabbar-wrap .tabbar-more { flex: 0 0 44px; height: 44px; font-size: 17px; } /* = capsule compacte (2 + 38 + 2 + 2) */
   .tabbar-wrap .tabbar-actions { flex-basis: 80px; height: 44px; padding: 2px; } /* capsule « + | ⋯ » compacte : 2 + 37 + 2 + 37 + 2 */
+  .tabbar-wrap .tabbar-actions.sans-plus { flex-basis: 44px; } /* accueil : le rond « ⋯ » compact (DEV v1297) */
   .btn.ops-nouvelle { display: none; } /* le « + » de la barre le remplace (DEV v1296) */
   /* Le toggle .mini (scroll) ne doit pas écraser les insets safe-area
      du paysage (spécificité supérieure de .tabbar-wrap.mini) */
