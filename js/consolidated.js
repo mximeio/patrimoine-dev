@@ -327,17 +327,20 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
   const auSurvol = () => { if (Date.now() - derniereToucheRef.current > 1000) montrerBulle(true); };
   useEffect(() => {
     let geste = null;   // { x, y, bouge } : un toucher commencé sur le graphique
+    // Un toucher qui COMMENCE sur le graphique ne ferme rien (DEV v1294, relevé de l'utilisateur : toucher un autre mois faisait
+    // disparaître puis réapparaître la bulle — elle doit se DÉPLACER) ; elle se ferme seulement s'il devient un glissement.
+    // Un toucher hors du graphique la ferme aussitôt.
     const auToucher = (e) => {
       derniereToucheRef.current = Date.now();
-      montrerBulle(false);
       const t = e.touches && e.touches[0];
       const surGraphe = !!(e.target && e.target.closest && e.target.closest('.evo-graphe'));
       geste = (surGraphe && t && e.touches.length === 1) ? { x: t.clientX, y: t.clientY, bouge: false, cible: e.target } : null;
+      if (!geste) montrerBulle(false);
     };
     const auDeplacement = (e) => {
       derniereToucheRef.current = Date.now();
       const t = e.touches && e.touches[0];
-      if (geste && t && Math.hypot(t.clientX - geste.x, t.clientY - geste.y) > 10) geste.bouge = true;
+      if (geste && !geste.bouge && t && Math.hypot(t.clientX - geste.x, t.clientY - geste.y) > 10) { geste.bouge = true; montrerBulle(false); }
     };
     // Au lever d'un toucher franc, Recharts n'a pas recalé le mois : son `touchstart` n'est qu'un appui, seuls `touchmove` et
     // `mousemove` déplacent la bulle (lu dans Recharts 2.12.7). On lui envoie donc un `mousemove` au point touché, puis on montre.
