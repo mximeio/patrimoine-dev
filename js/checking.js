@@ -290,6 +290,9 @@ function CheckingView({ ctx, onBack }) {
   // (v574 : l'ancien `trCreateSignal` pour TrSection était du code mort —
   //  jamais incrémenté — supprimé ; les TR se gèrent via la popup.)
   const [opCreateSignal, setOpCreateSignal] = useState(0);
+  // Le mois affiché est-il figé ? Lu par l'intention « nouvelle » (plus bas), dont l'écouteur est posé avant que `frozen`
+  // existe (retour anticipé tant que les mois ne sont pas chargés).
+  const moisFigeRef = useRef(false);
   const closeReglages = () => {
     // La confirmation « modifications non enregistrées » est portée par le
     // composant Modal via la prop dirty={reglagesDirty} (v535) : le calcul
@@ -352,6 +355,20 @@ function CheckingView({ ctx, onBack }) {
     return () => window.removeEventListener('patrimoine:open', onOpen);
   }, [checking.id]); // eslint-disable-line
 
+  // Le « + » de la barre (DEV v1296) : intention « nouvelle » → la fenêtre « Nouvelle opération », comme le bouton de l'en-tête.
+  // Sur un mois figé, le même refus que les autres gestes. `accountId` : posé par la feuille de choix (plusieurs comptes).
+  useEffect(() => {
+    const apply = (p) => {
+      if (!p || (p.accountId && p.accountId !== checking.id)) return;
+      if (moisFigeRef.current) { showToast('Mois figé — défige-le via le menu ⋯'); return; }
+      setOpCreateSignal(n => n + 1);
+    };
+    apply(consumeOpen('nouvelle'));
+    const onOpen = (e) => { if (e.detail && e.detail.type === 'nouvelle') apply(consumeOpen('nouvelle')); };
+    window.addEventListener('patrimoine:open', onOpen);
+    return () => window.removeEventListener('patrimoine:open', onOpen);
+  }, [checking.id]); // eslint-disable-line
+
   if (!hasMonths) {
     return (<div className="loading" style={{ minHeight: 200 }}><Spinner /></div>);
   }
@@ -367,6 +384,7 @@ function CheckingView({ ctx, onBack }) {
   // seule. L'état vit sur le mois (m.frozen), l'action dans le kebab, la
   // pédagogie dans un toast — pas de bandeau permanent.
   const frozen = !!m.frozen;
+  moisFigeRef.current = frozen;
 
   // setCurrentMonth est purement LOCAL : state React + localStorage.
   // Plus aucune écriture en Firestore pour le mois courant.
