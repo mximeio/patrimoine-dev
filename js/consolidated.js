@@ -320,21 +320,29 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
   const [bulle, setBulle] = useState(true);
   const bulleRef = useRef(true);
   const montrerBulle = (v) => { if (bulleRef.current !== v) { bulleRef.current = v; setBulle(v); } };
+  // ⚠️ Recharts appelle AUSSI `onMouseMove` à chaque `touchmove` (`triggeredAfterMouseMove`, Recharts 2.12.7) : branché tel quel,
+  // il rouvrait la bulle pendant un glissement (DEV v1292, relevé de l'utilisateur sur iPhone ; reproduit : elle clignotait). On
+  // l'ignore pendant un geste au doigt et dans la seconde qui suit — le survol qu'iOS simule après un toucher compris.
+  const derniereToucheRef = useRef(0);
+  const auSurvol = () => { if (Date.now() - derniereToucheRef.current > 1000) montrerBulle(true); };
   useEffect(() => {
     let geste = null;   // { x, y, bouge } : un toucher commencé sur le graphique
     const auToucher = (e) => {
+      derniereToucheRef.current = Date.now();
       montrerBulle(false);
       const t = e.touches && e.touches[0];
       const surGraphe = !!(e.target && e.target.closest && e.target.closest('.evo-graphe'));
       geste = (surGraphe && t && e.touches.length === 1) ? { x: t.clientX, y: t.clientY, bouge: false, cible: e.target } : null;
     };
     const auDeplacement = (e) => {
+      derniereToucheRef.current = Date.now();
       const t = e.touches && e.touches[0];
       if (geste && t && Math.hypot(t.clientX - geste.x, t.clientY - geste.y) > 10) geste.bouge = true;
     };
     // Au lever d'un toucher franc, Recharts n'a pas recalé le mois : son `touchstart` n'est qu'un appui, seuls `touchmove` et
     // `mousemove` déplacent la bulle (lu dans Recharts 2.12.7). On lui envoie donc un `mousemove` au point touché, puis on montre.
     const auLever = () => {
+      derniereToucheRef.current = Date.now();
       if (geste && !geste.bouge) {
         geste.cible.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: geste.x, clientY: geste.y }));
         montrerBulle(true);
@@ -364,7 +372,7 @@ function EvolutionAiresChart({ data, categories, width, height, style }) {
   }, [data, width]);
   return (
     <AreaChart width={width} height={height} style={style} className="evo-graphe" data={data} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
-      onMouseMove={() => montrerBulle(true)}>
+      onMouseMove={auSurvol}>
       <defs>
         <linearGradient id="evo-fond" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor={COURBE_TOTAL} stopOpacity={0.18} />
