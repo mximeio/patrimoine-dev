@@ -3336,11 +3336,6 @@ button.stat-card {
    de l'ouverture. `forwards` fige l'état final le temps du démontage. */
 @keyframes sheetDown { from { transform: translateY(0); } to { transform: translateY(110%); } }
 @keyframes sheetFadeOut { from { opacity: 1; } to { opacity: 0; } }
-/* LA SORTIE DES FENÊTRES (DEV v1310-v1311) : `.modal-fantome` est la copie figée que `Modal` laisse au démontage (ui.js,
-   `laisserUnFantome`), qui pilote elle-même la sortie (Web Animations, v1311 : les animations CSS de la v1310 se rejouaient sur
-   iPhone). Ici, seulement : aucune animation CSS d'entrée ne doit repartir sur la copie, et elle ne prend aucun toucher. */
-.modal-overlay.modal-fantome, .modal-overlay.modal-fantome .modal { animation: none; }
-.modal-overlay.modal-fantome { pointer-events: none; }
 .bottom-sheet.closing { animation: sheetDown 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 .sheet-backdrop.closing { animation: sheetFadeOut 0.4s ease forwards; } /* v525 */
 
