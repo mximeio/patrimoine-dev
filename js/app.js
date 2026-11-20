@@ -1485,9 +1485,6 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     const idx = barItems().indexOf(item);
     gestureRef.current = { hover: idx, startX: e.clientX, moved: false };
     try { bar.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
-    bar.classList.add('bar-pressed');
-    ind.classList.add('ind-pressed');
-    item.classList.add('item-pressed');
     // La bulle vient au doigt (transition ressort du CSS), aperçu
     // d'activation — l'onglet ne s'ouvrira qu'au relâcher. Elle vise la place FINALE de l'onglet (cf. `rectsPour`).
     const iCourant = tabs.findIndex((t) => t.id === current);
@@ -1521,18 +1518,13 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     let n = 0, bd = Infinity;
     rects.forEach((r, i) => { const d = Math.abs(r.cx - cx); if (d < bd) { bd = d; n = i; } });
     if (n !== g.hover) {
-      const items = barItems();
-      items[g.hover].classList.remove('item-pressed');
-      items[n].classList.add('item-pressed');
       setActivePreview(n);
       g.hover = n;
     }
   };
   const clearPressVisuals = () => {
-    const bar = barRef.current, ind = indRef.current;
-    if (bar) bar.classList.remove('bar-pressed');
-    if (ind) ind.classList.remove('ind-pressed', 'ind-dragging');
-    if (bar) barItems().forEach(it => it.classList.remove('item-pressed'));
+    const ind = indRef.current;
+    if (ind) ind.classList.remove('ind-dragging');
   };
   const onBarPointerUp = () => {
     const g = gestureRef.current;
