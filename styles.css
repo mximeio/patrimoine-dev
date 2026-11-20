@@ -768,6 +768,7 @@ input[type="month"] {
 .ch-nom--ligne b { flex: 0 1 auto; min-width: 0; }
 .ch-nom--ligne .charge-vir-dot, .ch-nom--ligne .charge-prov-dot { margin-left: 1px; }
 .ch-tag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--text-light); white-space: nowrap; flex: none; }
+.ch-tag--perso { border-color: transparent; font-weight: 700; } /* initiales de qui paie seul : le fond pâle et le gras des pastilles des revenus (.ch-av), même taille que les autres pastilles — DEV v1315 */
 .ch-montant { white-space: nowrap; }
 .ch-montant-val { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--danger-fonce); }
 .ch-montant-val--neutre { color: var(--text); }

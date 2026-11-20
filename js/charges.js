@@ -172,7 +172,8 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
   const partsTexte = parts.map((x) => `${x.p.label} ${eur(x.v)}`).join(' · ');
   // Repères — LA LÉGENDE D'AVANT (DEV v1314, piste A du canevas Claude Design « Répartition — listes allégées », choix de
   // l'utilisateur pour alléger les listes) : une seule ligne. À côté du libellé, la pastille du partage (« Prorata »,
-  // « 50/50 », « Montants »), ou les INITIALES de la personne qui paie seule, dans sa couleur ; puis le point indigo du
+  // « 50/50 », « Montants »), ou les INITIALES de la personne qui paie seule — au style des pastilles des revenus (`.ch-av`) :
+  // fond pâle de la personne, texte en gras, sans filet (DEV v1315, planche « Initiales » du même canevas) ; puis le point indigo du
   // virement mensuel (compte joint) et le point ambre de la provision (livret), expliqués une fois sous les listes
   // (`.charges-legend-global`). L'équivalent par mois d'une charge annuelle passe dans la bulle du montant.
   // (Avant : version A′ du 15/11/2026, pastilles « Compte joint » et « Livret » en toutes lettres sous le libellé.)
@@ -184,7 +185,7 @@ function ChargeRow({ c, index, people, nets, onEdit, onRemove, onDrop }) {
   const reperes = (
     <>
       {seule
-        ? <span className="ch-tag" title={`Payée par ${seule.label}`} style={{ color: personTextAt(iSeule), borderColor: `color-mix(in srgb, ${personColorAt(iSeule)} 35%, #fff)` }}>{initials(seule.label)}</span>
+        ? <span className="ch-tag ch-tag--perso" title={`Payée par ${seule.label}`} style={{ color: personTextAt(iSeule), background: personLightAt(iSeule) }}>{initials(seule.label)}</span>
         : <span className="ch-tag">{partageEnMots(c, people) === 'Au prorata' ? 'Prorata' : partageEnMots(c, people) === 'Montants fixés' ? 'Montants' : partageEnMots(c, people)}</span>}
       {c.joint && <span className="charge-vir-dot" role="img" title="Virement mensuel (compte joint)" aria-label="Compte joint" />}
       {annuelle && c.provision !== false && <span className="charge-prov-dot" role="img" title="Provision mensuelle (livret)" aria-label="Livret" />}
