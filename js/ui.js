@@ -100,6 +100,37 @@ function suivreZoneVisible(el, auChangement) {
   return () => { vv.removeEventListener('resize', caler); vv.removeEventListener('scroll', caler); };
 }
 
+// LE FANTÔME (DEV v1310 ; constat 4 de l'audit d'interface du 19/10/2026, maquette Claude Design « Fermeture des fenêtres —
+// avant / après », go de l'utilisateur le 20/11/2026). Une fenêtre disparaissait d'un coup : ce sont les PARENTS qui la
+// démontent (`editId = null` à l'enregistrement…), `Modal` ne voit jamais sa propre fin. Au démontage, `Modal` laisse donc une
+// COPIE FIGÉE d'elle-même, qui joue la sortie (styles.css, `.modal-fantome`) puis s'efface. Tous les chemins sont couverts
+// (✕, Échap, le voile, Annuler, l'enregistrement) sans toucher aux 35 écrans qui ouvrent une fenêtre.
+// Prouvé au navigateur avant de coder (React 18.3.1) : au nettoyage d'un `useLayoutEffect`, la fenêtre est ENCORE dans la page.
+// La copie : valeurs des champs recopiées (le clonage les garde déjà, par sécurité), défilement du corps recopié, aucun `id`
+// (pas de doublon le temps de la sortie), `inert` et `aria-hidden` (ni toucher ni VoiceOver), insérée juste après l'originale
+// pour garder l'ordre d'empilement des fenêtres ouvertes l'une sur l'autre.
+function laisserUnFantome(o) {
+  if (!o || !o.isConnected || !o.parentNode) return;
+  const f = o.cloneNode(true);
+  const src = o.querySelectorAll('input, textarea, select');
+  const dst = f.querySelectorAll('input, textarea, select');
+  src.forEach((el, i) => {
+    const d = dst[i]; if (!d) return;
+    if (el.type === 'checkbox' || el.type === 'radio') d.checked = el.checked;
+    else if (el.tagName === 'SELECT') d.selectedIndex = el.selectedIndex;
+    else if (el.type !== 'file') d.value = el.value;
+  });
+  f.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+  f.removeAttribute('id');
+  f.classList.add('modal-fantome');
+  f.setAttribute('aria-hidden', 'true');
+  f.setAttribute('inert', '');
+  o.parentNode.insertBefore(f, o.nextSibling);
+  const b = o.querySelector('.modal-body'), fb = f.querySelector('.modal-body');
+  if (b && fb) fb.scrollTop = b.scrollTop;
+  setTimeout(() => f.remove(), 320);
+}
+
 function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false, vue }) {
   // Confirmation avant fermeture si le contenu a été modifié sans enregistrer.
   // dirtyRef passe à true au 1er input/change ; on ne confirme QUE si la modale
@@ -167,6 +198,8 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // (enregistré une seule fois) lise toujours l'état dirty courant.
   const attemptCloseRef = useRef(attemptClose);
   attemptCloseRef.current = attemptClose;
+  // La sortie animée : cf. `laisserUnFantome` (au-dessus de `Modal`).
+  useLayoutEffect(() => () => laisserUnFantome(overlayRef.current), []);
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') attemptCloseRef.current(); };
     document.addEventListener('keydown', onKey);
