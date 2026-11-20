@@ -1411,7 +1411,8 @@ input[type="month"] {
 @media (max-width: 1023px) { .mt-long { display: none; } .mt-court { display: inline; } } /* tablette : libellés courts (« Invest. », « Actifs ») */
 .app-bar-user { margin-left: 0; }
 .app-bar-user .btn-icon { width: 38px; height: 38px; border-radius: 50%; background: #f1f3f7; }
-.tab-slide-ind::before { transition: background-color .3s ease, box-shadow .2s ease; }
+/* (DEV v1309) La bulle change de couleur D'UN COUP en changeant de rubrique : la règle de fondu qui était ici n'a jamais joué
+   (la transition de `.tab-slide-ind::before`, plus bas, l'écrasait) et a été retirée. Le « + » de la barre fait de même. */
 [data-rubrique="checking"] .tab-slide-ind::before { background: #4f46e5; }
 [data-rubrique="savings"] .tab-slide-ind::before { background: #0e7490; }
 [data-rubrique="investments"] .tab-slide-ind::before { background: #047857; }
@@ -3183,7 +3184,7 @@ button.stat-card {
 .tabbar-wrap .tabbar-actions.sans-plus .tabbar-more::before { left: calc(-1 * var(--bord-capsule)); }
 .tabbar-wrap .tabbar-actions .tabbar-more { flex: 1 1 0; min-width: 0; padding: 0; height: auto; font-size: 18px; border: 0; background: transparent; box-shadow: none; }
 .tabbar-plus { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--radius-full);
-  background: rgba(15, 23, 42, 0.92); color: #ffffff; cursor: pointer; transition: background-color .3s ease; }
+  background: rgba(15, 23, 42, 0.92); color: #ffffff; cursor: pointer; }
 [data-rubrique="checking"] .tabbar-plus { background: #4f46e5; }
 [data-rubrique="savings"] .tabbar-plus { background: #0e7490; }
 [data-rubrique="investments"] .tabbar-plus { background: #047857; }
@@ -3198,10 +3199,10 @@ button.stat-card {
    un retard, dans les deux sens. cubic-bezier(0, 0, 0.2, 1) part tout de suite (21 %, 37 %, 50 %) et finit en douceur, même durée.
    Ne pas revenir à une courbe qui accélère au départ pour un mouvement qui RÉPOND à un geste. */
 .tabbar-actions { transition: flex-basis .25s cubic-bezier(0, 0, 0.2, 1), gap .25s cubic-bezier(0, 0, 0.2, 1); }
-.tabbar-plus { transition: background-color .3s ease, flex-grow .25s cubic-bezier(0, 0, 0.2, 1), opacity .2s ease, transform .25s cubic-bezier(0, 0, 0.2, 1); }
+/* Couleur : D'UN COUP, comme la bulle des onglets (DEV v1309, demande de l'utilisateur : « uniformise ») — plus de fondu de couleur,
+   ni en réapparaissant (il partait de la couleur de la page quittée), ni déjà visible (livret → compte). */
+.tabbar-plus { transition: flex-grow .25s cubic-bezier(0, 0, 0.2, 1), opacity .2s ease, transform .25s cubic-bezier(0, 0, 0.2, 1); }
 .tabbar-actions.sans-plus { flex-basis: 54px; gap: 0; }
-/* Le « + » qui RÉAPPARAÎT : sa couleur est posée sans fondu (DEV v1308 — il partait de la couleur de la page quittée). */
-.tabbar-actions.plus-arrive .tabbar-plus { transition: flex-grow .25s cubic-bezier(0, 0, 0.2, 1), opacity .2s ease, transform .25s cubic-bezier(0, 0, 0.2, 1); }
 .tabbar-actions.sans-plus .tabbar-plus { flex-grow: 0; opacity: 0; transform: scale(0.5); pointer-events: none; }
 .tabbar-wrap.mini .tabbar-actions.sans-plus { flex-basis: 44px; }
 
@@ -5548,9 +5549,8 @@ button.cp-seg-item { cursor: pointer; }
      nouvelle largeur au lieu de s'étirer, et le « + » apparaît en fondu, sans grandir ; la feuille « ⋯ » prend sa nouvelle
      hauteur d'un coup en passant à la confirmation de déconnexion (les panneaux, eux, se croisent déjà en fondu). */
   .tabbar-actions { transition: none; }
-  .tabbar-plus { transition: background-color .3s ease, opacity .2s ease; }
+  .tabbar-plus { transition: opacity .2s ease; }
   .tabbar-actions.sans-plus .tabbar-plus { transform: none; }
-  .tabbar-actions.plus-arrive .tabbar-plus { transition: opacity .2s ease; } /* v1308 : sans fondu de couleur, mais sans mouvement non plus */
   .sheet-swap { transition: none; }
 }
 
