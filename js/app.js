@@ -1433,24 +1433,8 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
   //  Pointer capture : la mécanique éprouvée de la poignée de la sheet.
   // ============================================================
   const gestureRef = useRef(null);
-  // Géométrie des pills en COORDONNÉES DE LAYOUT (offsetLeft cumulés),
-  // PAS getBoundingClientRect : pendant l'appui la capsule est scalée
-  // (×1.035) et les rects vivent dans l'espace agrandi alors que
-  // style.left vit dans l'espace layout — l'écart (proportionnel à la
-  // distance du centre) faisait sortir la bulle de la barre à droite
-  // (bug v495 signalé). Les offsets, eux, ignorent les transforms.
-  const pillRects = () => {
-    const bar = barRef.current;
-    const layoutLeft = (el) => {
-      let x = 0, n = el;
-      while (n && n !== bar) { x += n.offsetLeft; n = n.offsetParent; }
-      return x;
-    };
-    return [...bar.querySelectorAll('.tab-pill')].map(p => {
-      const left = layoutLeft(p);
-      return { left, width: p.offsetWidth, cx: left + p.offsetWidth / 2 };
-    });
-  };
+  // (DEV v1307) `pillRects`, qui mesurait en offsetLeft cumulés, est retiré : il ne tombait pas au même endroit que `move`
+  // (jusqu'à 23 px d'écart, mesuré). Toute mesure passe par `rectsExactes`, qui divise par l'échelle de la capsule.
   // VISER LA PLACE FINALE DÈS LE TOUCHER (DEV v1306, demande de l'utilisateur après la v1305 : « ça saccade encore
   // légèrement »). Toucher un onglet qui fera apparaître ou disparaître le « + » : la capsule changera de largeur au relâcher
   // et l'onglet bougera. Avant, la pastille visait sa place ACTUELLE, puis `trajetDirect` la relançait vers la finale — un
@@ -1522,7 +1506,7 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     if (!g || !bar || !ind) return;
     if (!g.moved && Math.abs(e.clientX - g.startX) < 6) return;
     if (!g.moved) { g.moved = true; ind.classList.add('ind-dragging'); ind.style.transition = ''; } // le style en ligne posé à l'appui couvrirait `ind-dragging`
-    const rects = pillRects();
+    const rects = rectsExactes();
     // Position du doigt convertie en coordonnées de LAYOUT : la capsule
     // pressée est scalée, on divise par le facteur d'échelle courant.
     const c = bar.getBoundingClientRect();
@@ -1556,9 +1540,14 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     gestureRef.current = null;
     clearPressVisuals();
     const ind = indRef.current;
-    if (ind) {
-      // Pose de la bulle sur son slot exact (le ressort CSS reprend)
-      const rects = pillRects();
+    // ⚠️ DEV v1307 (« je vois toujours le coup de frein », mesuré) : le relâcher reposait la bulle avec `pillRects`
+    // (positions entières, et un écart allant jusqu'à 23 px avec la mesure de `move`), puis la mise à jour de la page la
+    // ramenait : le ressort repartait DEUX fois, sur TOUS les changements d'onglet. Après un simple toucher, la bulle vise
+    // déjà sa place finale depuis l'appui : on n'y touche plus. Après un glissé, on la pose avec la même mesure que partout.
+    if (ind && g.moved) {
+      const iCourant = tabs.findIndex((x) => x.id === current);
+      const avecPlusCible = (g.hover === iCourant || !avecPlusPour) ? avecPlus : !!avecPlusPour(tabs[g.hover].id);
+      const rects = rectsPour(avecPlusCible);
       ind.style.setProperty('--tx', rects[g.hover].left + 'px');
       ind.style.width = rects[g.hover].width + 'px';
     }
@@ -1577,7 +1566,7 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     setActivePreview(idx);
     const ind = indRef.current;
     if (ind && idx >= 0) {
-      const rects = pillRects();
+      const rects = rectsExactes();
       ind.style.setProperty('--tx', rects[idx].left + 'px');
       ind.style.width = rects[idx].width + 'px';
     }
