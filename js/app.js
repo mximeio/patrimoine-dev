@@ -937,6 +937,7 @@ function App() {
         onMore={() => setShowSheet(true)}
         onNouvelle={nouvelleDepuisBarre}
         avecPlus={avecPlus}
+        avecPlusPour={(id) => id === 'checking' && !modulesEnabled.multiCheckingAccounts}
         online={netOnline}
         cacheOk={cacheOk}
       />
@@ -1152,7 +1153,11 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
       act.style.transition = 'none';
       act.style.flexBasis = '';
       ind.style.transition = 'transform 0.62s cubic-bezier(0.22, 1.08, 0.3, 1), width 0.25s cubic-bezier(0, 0, 0.2, 1)';
+      const txAvant = parseFloat(ind.style.getPropertyValue('--tx'));
       move();                                   // géométrie finale : la pastille part vers sa place définitive
+      // Déjà visée au toucher (v1306) : une différence d'arrondi ne doit pas relancer le ressort.
+      const txApres = parseFloat(ind.style.getPropertyValue('--tx'));
+      if (!isNaN(txAvant) && Math.abs(txApres - txAvant) < 1.5) ind.style.setProperty('--tx', txAvant + 'px');
       pills.forEach((p) => { p.style.transition = ''; });
       act.style.flexBasis = largeurDepart + 'px';
       void act.offsetWidth;                     // la capsule repart de sa largeur de départ…
@@ -1347,7 +1352,7 @@ function AppBar({ user, onSignOut, tabs, currentModule, onSelectModule, onOpenSe
 // Fixée en bas, jamais masquée, à taille constante en portrait (plus de
 // rétractation au défilement depuis le 16/11/2026 ; compacte en paysage).
 // Affichée uniquement sur mobile (CSS).
-function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = true, libellePlus = 'Nouvelle opération', online = true, cacheOk = true }) {
+function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = true, avecPlusPour, libellePlus = 'Nouvelle opération', online = true, cacheOk = true }) {
   const wrapRef = useRef(null);
   const barRef = useRef(null);
   const indRef = useRef(null);
@@ -1446,6 +1451,44 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
       return { left, width: p.offsetWidth, cx: left + p.offsetWidth / 2 };
     });
   };
+  // VISER LA PLACE FINALE DÈS LE TOUCHER (DEV v1306, demande de l'utilisateur après la v1305 : « ça saccade encore
+  // légèrement »). Toucher un onglet qui fera apparaître ou disparaître le « + » : la capsule changera de largeur au relâcher
+  // et l'onglet bougera. Avant, la pastille visait sa place ACTUELLE, puis `trajetDirect` la relançait vers la finale — un
+  // coup de frein en route (mesuré : 4,7 → 1,6 px par image). Ici on mesure la géométrie finale (classe `sans-plus`
+  // basculée un instant, transitions coupées, tout est rétabli dans la même tâche : rien ne s'affiche) et la pastille vise
+  // d'emblée sa place définitive. Mesure à la manière de `move` (rectangles, fractions de pixel) : au relâcher, `trajetDirect`
+  // retrouve la même valeur et ne relance rien.
+  const rectsExactes = () => {
+    const bar = barRef.current;
+    const c = bar.getBoundingClientRect();
+    const s = bar.offsetWidth ? (c.width / bar.offsetWidth) : 1;
+    return [...bar.querySelectorAll('.tab-pill')].map((p) => {
+      const b = p.getBoundingClientRect();
+      const left = (b.left - c.left) / s + bar.scrollLeft - bar.clientLeft;
+      return { left, width: b.width / s, cx: left + b.width / s / 2 };
+    });
+  };
+  const rectsPour = (avecPlusCible) => {
+    const bar = barRef.current;
+    const act = bar && bar.parentElement ? bar.parentElement.querySelector('.tabbar-actions') : null;
+    if (!act || act.classList.contains('sans-plus') === !avecPlusCible) return rectsExactes();
+    const plus = act.querySelector('.tabbar-plus');
+    const pills = [...bar.querySelectorAll('.tab-pill')];
+    const largeur = act.getBoundingClientRect().width;
+    act.style.transition = 'none';
+    if (plus) plus.style.transition = 'none';
+    pills.forEach((p) => { p.style.transition = 'none'; });
+    act.classList.toggle('sans-plus', !avecPlusCible);
+    const rects = rectsExactes();
+    act.classList.toggle('sans-plus', avecPlusCible);
+    act.style.flexBasis = largeur + 'px';
+    void act.offsetWidth;
+    act.style.transition = '';
+    act.style.flexBasis = '';
+    if (plus) plus.style.transition = '';
+    pills.forEach((p) => { p.style.transition = ''; });
+    return rects;
+  };
   const barItems = () => [...barRef.current.querySelectorAll('.tab-item')];
   const setActivePreview = (idx) => {
     barItems().forEach((it, k) => it.classList.toggle('tab-item-active', k === idx));
@@ -1462,9 +1505,14 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     ind.classList.add('ind-pressed');
     item.classList.add('item-pressed');
     // La bulle vient au doigt (transition ressort du CSS), aperçu
-    // d'activation — l'onglet ne s'ouvrira qu'au relâcher.
-    const rects = pillRects();
+    // d'activation — l'onglet ne s'ouvrira qu'au relâcher. Elle vise la place FINALE de l'onglet (cf. `rectsPour`).
+    const iCourant = tabs.findIndex((t) => t.id === current);
+    const avecPlusCible = (idx === iCourant || !avecPlusPour) ? avecPlus : !!avecPlusPour(tabs[idx].id);
+    const rects = rectsPour(avecPlusCible);
     ind.style.setProperty('--tx', rects[idx].left + 'px');
+    if (Math.abs(rects[idx].width - ind.getBoundingClientRect().width) > 0.5) {
+      ind.style.transition = 'transform 0.62s cubic-bezier(0.22, 1.08, 0.3, 1), width 0.25s cubic-bezier(0, 0, 0.2, 1)';
+    }
     ind.style.width = rects[idx].width + 'px';
     setActivePreview(idx);
   };
@@ -1473,7 +1521,7 @@ function MobileTabBar({ tabs, current, onSelect, onMore, onNouvelle, avecPlus = 
     const bar = barRef.current, ind = indRef.current;
     if (!g || !bar || !ind) return;
     if (!g.moved && Math.abs(e.clientX - g.startX) < 6) return;
-    if (!g.moved) { g.moved = true; ind.classList.add('ind-dragging'); }
+    if (!g.moved) { g.moved = true; ind.classList.add('ind-dragging'); ind.style.transition = ''; } // le style en ligne posé à l'appui couvrirait `ind-dragging`
     const rects = pillRects();
     // Position du doigt convertie en coordonnées de LAYOUT : la capsule
     // pressée est scalée, on divise par le facteur d'échelle courant.
