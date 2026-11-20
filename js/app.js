@@ -1113,19 +1113,21 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     // resterait figée sur des dimensions périmées. On coupe la transition
     // de la pastille, on la colle à l'élément actif à chaque frame, puis on
     // rend la main à la transition CSS normale.
+    // `glisser` (DEV v1304) : la pastille GARDE son ressort et seule sa cible est recalée à chaque image — elle suit l'onglet
+    // qui bouge au lieu d'y être collée. Sans lui (rotation, retour du système), elle est collée image par image.
     let raf = null;
-    const follow = (ms) => {
+    const follow = (ms, glisser = false) => {
       const ind = indicatorRef.current;
       if (!ind) return;
       if (raf) cancelAnimationFrame(raf);
-      ind.style.transition = 'none';
+      if (!glisser) ind.style.transition = 'none';
       const start = performance.now();
       const step = () => {
         move();
         if (performance.now() - start < ms) {
           raf = requestAnimationFrame(step);
         } else {
-          ind.style.transition = '';
+          if (!glisser) ind.style.transition = '';
           move();
         }
       };
@@ -1148,7 +1150,11 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     // pose la nouvelle position. Une coupure posée ailleurs était annulée —
     // mesuré au navigateur sur la première version (DEV v1072).
     const systeme = performance.now() - derniereNavSysteme < 600;
-    if (followChanged) follow(340);
+    // ⚠️ DEV v1304 (saccade relevée par l'utilisateur, mesurée image par image) : quand le « + » apparaît ou disparaît avec le
+    // changement d'onglet, la capsule change de largeur et `follow` COLLAIT la pastille à l'onglet — elle avait déjà été lancée
+    // par le doigt, elle sautait le reste du chemin (≈ 20 px en une image), puis restait collée 0,35 s. Désormais elle glisse en
+    // suivant l'onglet. Un retour du SYSTÈME garde la pose collée (constat 9 de l'audit du 19/10 : pas de glissement).
+    if (followChanged) follow(340, !systeme);
     else if (systeme && indicatorRef.current) {
       const ind = indicatorRef.current;
       // Les icônes aussi : `.tab-pill` fond sa couleur en 0,3 s, et pendant ce
