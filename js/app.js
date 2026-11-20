@@ -1113,26 +1113,54 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     // resterait figée sur des dimensions périmées. On coupe la transition
     // de la pastille, on la colle à l'élément actif à chaque frame, puis on
     // rend la main à la transition CSS normale.
-    // `glisser` (DEV v1304) : la pastille GARDE son ressort et seule sa cible est recalée à chaque image — elle suit l'onglet
-    // qui bouge au lieu d'y être collée. Sans lui (rotation, retour du système), elle est collée image par image.
     let raf = null;
-    const follow = (ms, glisser = false) => {
+    const follow = (ms) => {
       const ind = indicatorRef.current;
       if (!ind) return;
       if (raf) cancelAnimationFrame(raf);
-      if (!glisser) ind.style.transition = 'none';
+      ind.style.transition = 'none';
       const start = performance.now();
       const step = () => {
         move();
         if (performance.now() - start < ms) {
           raf = requestAnimationFrame(step);
         } else {
-          if (!glisser) ind.style.transition = '';
+          ind.style.transition = '';
           move();
         }
       };
       raf = requestAnimationFrame(step);
     };
+
+    // TRAJET DIRECT (DEV v1305) quand la capsule « + | ⋯ » change de largeur avec le changement d'onglet. Historique :
+    //  - jusqu'à la v1303, `follow` COLLAIT la pastille à l'onglet image par image : lancée par le doigt, elle sautait le
+    //    reste du chemin (19 à 22 px en une image, mesuré) ;
+    //  - la v1304 gardait le ressort et recalait la cible À CHAQUE IMAGE : fluide dans Chrome, « saccade énormément » sur
+    //    l'iPhone de l'utilisateur (Safari relance l'animation à chaque recalage).
+    // Ici, technique FLIP : on mesure la géométrie FINALE (transition de la capsule coupée un instant), on envoie la pastille
+    // UNE FOIS vers sa place finale (position au ressort, largeur sur la courbe de la capsule), puis on rend à la capsule sa
+    // largeur de départ pour qu'elle s'étire comme avant. Aucun recalage pendant le trajet : le ResizeObserver se tait.
+    const trajetDirect = () => {
+      const cont = containerRef.current, ind = indicatorRef.current;
+      const act = cont && cont.parentElement ? cont.parentElement.querySelector('.tabbar-actions') : null;
+      if (!cont || !ind || !act) { move(); return false; }
+      const largeurDepart = act.getBoundingClientRect().width;
+      // `.tab-pill` (l'élément mesuré) anime sa propre largeur (`transition: all 0.3s`) : sans coupure, on lisait son
+      // ANCIENNE largeur — la pastille gardait sa taille tout le trajet puis changeait de 8 px d'un coup (mesuré, v1305).
+      const pills = [...cont.querySelectorAll('.tab-pill')];
+      pills.forEach((p) => { p.style.transition = 'none'; });
+      act.style.transition = 'none';
+      act.style.flexBasis = '';
+      ind.style.transition = 'transform 0.62s cubic-bezier(0.22, 1.08, 0.3, 1), width 0.25s cubic-bezier(0, 0, 0.2, 1)';
+      move();                                   // géométrie finale : la pastille part vers sa place définitive
+      pills.forEach((p) => { p.style.transition = ''; });
+      act.style.flexBasis = largeurDepart + 'px';
+      void act.offsetWidth;                     // la capsule repart de sa largeur de départ…
+      act.style.transition = '';
+      act.style.flexBasis = '';                 // …et s'étire vers la finale avec sa transition CSS
+      return act;
+    };
+    let calmeJusqua = 0;
 
     const followChanged = prevFollowKey.current !== followKey;
     prevFollowKey.current = followKey;
@@ -1150,11 +1178,28 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     // pose la nouvelle position. Une coupure posée ailleurs était annulée —
     // mesuré au navigateur sur la première version (DEV v1072).
     const systeme = performance.now() - derniereNavSysteme < 600;
-    // ⚠️ DEV v1304 (saccade relevée par l'utilisateur, mesurée image par image) : quand le « + » apparaît ou disparaît avec le
-    // changement d'onglet, la capsule change de largeur et `follow` COLLAIT la pastille à l'onglet — elle avait déjà été lancée
-    // par le doigt, elle sautait le reste du chemin (≈ 20 px en une image), puis restait collée 0,35 s. Désormais elle glisse en
-    // suivant l'onglet. Un retour du SYSTÈME garde la pose collée (constat 9 de l'audit du 19/10 : pas de glissement).
-    if (followChanged) follow(340, !systeme);
+    // Capsule qui change de largeur : trajet direct (cf. `trajetDirect`). Un retour du SYSTÈME garde la pose collée (constat 9
+    // de l'audit du 19/10 : pas de glissement), comme une rotation.
+    // Fin du trajet : à la FIN RÉELLE de l'étirement de la capsule (`transitionend`), pas à heure fixe — un iPhone occupé à
+    // afficher la page peut finir plus tard, et un recalage en cours d'étirement viserait une position intermédiaire.
+    // Filet : 600 ms. Jusque-là, aucun recalage (ResizeObserver et polices se taisent).
+    let finTrajet = null, capsuleEnTrajet = null, finirTrajet = null;
+    const capsule = (followChanged && !systeme) ? trajetDirect() : null;
+    if (capsule) {
+      calmeJusqua = Infinity;
+      capsuleEnTrajet = capsule;
+      finirTrajet = (e) => {
+        if (e && (e.target !== capsule || e.propertyName !== 'flex-basis')) return;
+        capsule.removeEventListener('transitionend', finirTrajet);
+        clearTimeout(finTrajet);
+        calmeJusqua = 0;
+        if (indicatorRef.current) indicatorRef.current.style.transition = '';
+        move();
+      };
+      capsule.addEventListener('transitionend', finirTrajet);
+      finTrajet = setTimeout(() => finirTrajet(), 600);
+    }
+    else if (followChanged) follow(340);
     else if (systeme && indicatorRef.current) {
       const ind = indicatorRef.current;
       // Les icônes aussi : `.tab-pill` fond sa couleur en 0,3 s, et pendant ce
@@ -1171,7 +1216,9 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
 
     // Recalage quand la police web finit de charger (largeurs des libellés)
     // et en fin de transition par sécurité.
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(move);
+    // ⚠️ Se tait pendant un trajet direct : `fonts.ready`, déjà résolu, rappelait `move` dans la foulée et remesurait la
+    // capsule revenue à sa largeur de départ — la pastille perdait sa largeur finale (mesuré, v1305).
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (performance.now() >= calmeJusqua) move(); });
     const t = setTimeout(move, 380);
     // Resize / rotation : les media queries peuvent déclencher des
     // transitions sur les éléments mesurés (paysage = capsule compacte) →
@@ -1182,11 +1229,13 @@ function useSlideIndicator(containerRef, indicatorRef, activeSelector, deps, fol
     // Le conteneur change de largeur SANS que la fenêtre bouge (DEV v1297 : la capsule « + | ⋯ » s'étire ou se rétracte en
     // changeant de page) : on remesure à chaque changement de taille. Filet du suivi image par image, qui peut être
     // interrompu (onglet en arrière-plan) — la pastille finit toujours sur son onglet.
-    const ro = (window.ResizeObserver && containerRef.current) ? new ResizeObserver(() => move()) : null;
+    const ro = (window.ResizeObserver && containerRef.current) ? new ResizeObserver(() => { if (performance.now() >= calmeJusqua) move(); }) : null;
     if (ro) ro.observe(containerRef.current);
     return () => {
       if (ro) ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
+      if (finTrajet) clearTimeout(finTrajet);
+      if (capsuleEnTrajet && finirTrajet) capsuleEnTrajet.removeEventListener('transitionend', finirTrajet);
       if (indicatorRef.current) indicatorRef.current.style.transition = '';
       clearTimeout(t);
       window.removeEventListener('resize', onResize);
