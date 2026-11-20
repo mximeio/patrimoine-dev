@@ -128,7 +128,27 @@ function laisserUnFantome(o) {
   o.parentNode.insertBefore(f, o.nextSibling);
   const b = o.querySelector('.modal-body'), fb = f.querySelector('.modal-body');
   if (b && fb) fb.scrollTop = b.scrollTop;
-  setTimeout(() => f.remove(), 320);
+  // ⚠️ DEV v1311 — sortie pilotée par le CODE (Web Animations), plus par des animations CSS : sur l'iPhone de l'utilisateur
+  // (vidéo, 60 i/s), la sortie de la v1310 se REJOUAIT en transparence ~0,45 s après la fermeture, ce que Chrome ne reproduit
+  // pas. Une animation CSS peut repartir quand Safari recalcule les styles ; `element.animate` non. À la fin : copie masquée
+  // puis retirée aussitôt (plus de minuterie fixe), filet à durée + 150 ms.
+  const m = f.querySelector('.modal');
+  const reduit = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const portrait = f.classList.contains('modal-overlay--feuille') && !!(window.matchMedia && window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches);
+  const duree = (portrait && !reduit) ? 240 : 200;
+  let fini = false;
+  const finir = () => { if (fini) return; fini = true; f.style.visibility = 'hidden'; f.style.opacity = '0'; f.remove(); };
+  if (typeof f.animate !== 'function') { finir(); return; }
+  const anims = [f.animate([{ opacity: 1 }, { opacity: 0 }], { duration: duree, easing: 'ease', fill: 'forwards' })];
+  if (m) {
+    if (reduit) anims.push(m.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease', fill: 'forwards' }));
+    // Téléphone en portrait : la feuille redescend, comme le menu « ⋯ ».
+    else if (portrait) anims.push(m.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(110%)' }], { duration: 240, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' }));
+    // Ordinateur et paysage : le miroir de l'entrée (10 px), en s'éteignant.
+    else anims.push(m.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(10px)', opacity: 0 }], { duration: 200, easing: 'cubic-bezier(0.42, 0, 1, 1)', fill: 'forwards' }));
+  }
+  Promise.all(anims.map((a) => a.finished)).then(finir, finir);
+  setTimeout(finir, duree + 150);
 }
 
 function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, dirty, footer, icon, subtitle, tone, pleine = false, liste = false, vue }) {
