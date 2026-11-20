@@ -359,7 +359,11 @@ function PhysicalOperationForm({ assets, initial, initialAssetId, onSubmit, onDe
   const autres = asset ? (asset.operations || []).filter((o) => !editing || o.id !== initial.id) : [];
   const avant = deriverActifPhysique({ operations: autres });
   const op = { id: editing ? initial.id : uid(), type, date: date || null, qty: nq, unitPrice: np, fees: nf, ...(note.trim() ? { note: note.trim() } : {}) };
-  const apres = deriverActifPhysique({ operations: [...autres, op] });
+  // En modification, l'opération reste À SA PLACE dans le journal : à date égale, l'ordre d'écriture départage (une vente du
+  // même jour ne doit pas passer avant l'achat qu'on modifie — défaut trouvé au test réel du 20/11/2026).
+  const apres = deriverActifPhysique({ operations: editing && asset
+    ? (asset.operations || []).map((o) => (o.id === initial.id ? op : o))
+    : [...autres, op] });
 
   const types = [
     { id: 'purchase', label: 'Achat', icon: 'trendUp', color: COLORS.accent, bg: 'var(--accent-light)', desc: 'Acheter' },
