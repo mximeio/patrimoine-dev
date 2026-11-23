@@ -296,7 +296,8 @@ function PatrimoineEvolutionChart({ data, enabled, profile }) {
 // - en lecture : le mois (13 px, 600), l'écart depuis le début de la période AVANT le total (règle des deltas, 13/08/2026 ;
 //   modèle `.total-fen`), le total (14 px, 600) ; dessous, les rubriques — la première à gauche, la dernière à droite sous le
 //   total, les autres réparties ; chaque montant a la largeur du plus long de la période, pour que RIEN NE BOUGE pendant la
-//   lecture ; les noms s'affichent dès que la ligne les contient (ordinateur, 768 px), sinon les pastilles seules (téléphone).
+//   lecture ; on écrit LE PLUS COMPLET QUI TIENT (23/11/2026) : noms et centimes (ordinateur), noms seuls (768 px), centimes
+//   seuls (iPhone 17 Pro Max, 440 px), sinon les pastilles et les euros ronds (iPhone 15 Pro, 393 px) — `detailRubriques`.
 // La zone a une hauteur fixe ; la courbe rend ce qu'elle prend : la carte garde sa hauteur d'avant (258 px au téléphone).
 // LE GESTE (règle Apple des gestes ambigus) : le doigt qui part à l'HORIZONTALE (10 px) lit et suit le doigt, puis au lever on
 // revient au repos ; à la VERTICALE la page défile et rien ne s'affiche (règle « rien pendant un glissement » de la DEV v1291) ;
@@ -371,11 +372,14 @@ function EvolutionLue({ data, categories, ligneValeur }) {
   const sortie = (e) => { if (e.pointerType === 'mouse') setLu(null); };
 
   // Les largeurs fixes des montants (le plus long de la période, chiffres comptés comme des « 0 » : le canvas ignore
-  // `tabular-nums`) et la place qu'il faut pour écrire les noms.
-  const largeurs = categories.map((c) => Math.ceil(Math.max(...data.map((d) => mesurerTexte(`${fmtNoDec(d[c.key])} €`.replace(/\d/g, '0'), 500, 12)))) + 1);
-  const besoinAvecNoms = categories.reduce((s, c, k) => s + 8 + 6 + Math.ceil(mesurerTexte(c.label, 400, 12)) + 6 + largeurs[k], 0)
+  // `tabular-nums`), en euros ronds et avec les centimes, et celles des noms : de quoi décider ce qui tient.
+  const largeursDe = (centimes) => categories.map((c) =>
+    Math.ceil(Math.max(...data.map((d) => mesurerTexte(montantRubrique(d[c.key], centimes).replace(/\d/g, '0'), 500, 12)))) + 1);
+  const largeurs = { true: largeursDe(true), false: largeursDe(false) };
+  const largeursNoms = categories.map((c) => Math.ceil(mesurerTexte(c.label, 400, 12)));
+  const besoin = (noms, centimes) => categories.reduce((s, c, k) => s + 8 + 6 + (noms ? largeursNoms[k] + 6 : 0) + largeurs[centimes][k], 0)
     + 16 * (categories.length - 1);
-  const avecNoms = largeurZone > 0 && besoinAvecNoms <= largeurZone;
+  const ecrit = detailRubriques(largeurZone, besoin);
   const indice = (window.matchMedia && window.matchMedia('(hover: hover)').matches)
     ? 'Survolez la courbe pour lire un mois.' : 'Touchez la courbe pour lire un mois.';
 
@@ -400,9 +404,9 @@ function EvolutionLue({ data, categories, ligneValeur }) {
               {categories.map((c, k) => (
                 <span key={c.key} className="evo-r">
                   <span className="evo-r-pt" style={{ background: c.color }} />
-                  {avecNoms && <span className="evo-r-nom">{c.label}</span>}
-                  <span className="evo-r-mt num" style={{ minWidth: largeurs[k], textAlign: k === categories.length - 1 ? 'right' : 'left' }}>
-                    {fmtNoDec(d[c.key])} €
+                  {ecrit.noms && <span className="evo-r-nom">{c.label}</span>}
+                  <span className="evo-r-mt num" style={{ minWidth: largeurs[ecrit.centimes][k], textAlign: k === categories.length - 1 ? 'right' : 'left' }}>
+                    {montantRubrique(d[c.key], ecrit.centimes)}
                   </span>
                 </span>
               ))}
@@ -431,6 +435,18 @@ function EvolutionLue({ data, categories, ligneValeur }) {
   );
 }
 
+// Ce qu'on écrit pour chaque rubrique : le plus complet qui TIENT, dans cet ordre — noms et centimes, noms seuls, centimes
+// seuls, puis euros ronds (23/11/2026, décision de l'utilisateur : le nom de la rubrique passe avant le centime). `place` = la
+// largeur utile, `besoin(noms, centimes)` = celle de la ligne. Pure, testée.
+function detailRubriques(place, besoin) {
+  const ordre = [[true, true], [true, false], [false, true]];
+  for (const [noms, centimes] of ordre) if (place > 0 && besoin(noms, centimes) <= place) return { noms, centimes };
+  return { noms: false, centimes: false };
+}
+// Le montant d'une rubrique, avec ou sans centimes.
+function montantRubrique(valeur, centimes) {
+  return `${centimes ? fmt(valeur) : fmtNoDec(valeur)} €`;
+}
 // L'intention d'un toucher posé sur la courbe, d'après son déplacement depuis l'appui (pure, testée) : rien tant qu'il reste
 // sous le seuil ; « lecture » s'il part plutôt à l'horizontale, « defilement » plutôt à la verticale.
 function intentionGeste(dx, dy, seuil = 10) {
