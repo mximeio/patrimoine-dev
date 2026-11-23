@@ -243,7 +243,7 @@ function ConsolidatedView({ ctx, onNavigate }) {
           </div>
         </div>
         <div className="card evo-carte">
-          <PatrimoineEvolutionChart data={evolution} enabled={enabled} profile={profile} avecPlusValue={avecPlusValue} plusValue={signe(totalGain)} />
+          <PatrimoineEvolutionChart data={evolution} enabled={enabled} profile={profile} />
         </div>
       </section>
     </div>
@@ -253,14 +253,11 @@ function ConsolidatedView({ ctx, onNavigate }) {
 // ============================================================
 //  GRAPHIQUE D'ÉVOLUTION (aires empilées par catégorie)
 // ============================================================
-function PatrimoineEvolutionChart({ data, enabled, profile, avecPlusValue, plusValue }) {
-  // La ligne du repos, celle d'avant la lecture fixe : « dont … de plus-value ».
-  const ligneValeur = avecPlusValue && <div className="evo-sous">dont <b className="num">{plusValue}</b> de plus-value</div>;
+function PatrimoineEvolutionChart({ data, enabled, profile }) {
   // Si on n'a qu'un seul point, l'AreaChart n'a rien à tracer.
   if (data.length < 2) {
     return (
       <>
-        {ligneValeur}
         <div style={{ padding: '32px 16px', textAlign: 'center', color: COLORS.muted, fontSize: 13 }}>
           Pas encore assez d'historique pour tracer une évolution.<br />
           <span style={{ fontSize: 12 }}>Les premières données apparaîtront au fil des mois.</span>
@@ -277,6 +274,17 @@ function PatrimoineEvolutionChart({ data, enabled, profile, avecPlusValue, plusV
     enabled.investments && { key: 'investments', label: 'Investissements', color: MODULE_COLORS.investments },
     enabled.physical && { key: 'physical', label: 'Actifs physiques', color: MODULE_COLORS.physical },
   ].filter(Boolean);
+  // LA LIGNE DU REPOS : la VARIATION DE LA PÉRIODE affichée (23/11/2026, décision de l'utilisateur). Elle remplace « dont … de
+  // plus-value », qui troublait à côté de la pastille de la carte de tête (« +4 810.12 € depuis juin 26 ») : deux mesures
+  // différentes — la plus-value compte depuis l'achat et ne suit pas la période — sous des boutons de période. Désormais, à 12M,
+  // le même chiffre que la pastille ; à 3M et « Tout », celui de la période. La plus-value reste en tête des pages
+  // Investissements et Actifs physiques (et sur la carte de tête tant qu'il n'y a pas de courbe).
+  const variation = r2(data[data.length - 1].total - data[0].total);
+  const ligneValeur = (
+    <div className="evo-sous">
+      <span className={`num evo-variation ${variation >= 0 ? 'evo-ecart--pos' : 'evo-ecart--neg'}`}>{variation >= 0 ? '+' : ''}{fmt(variation)} €</span> depuis {data[0].label}
+    </div>
+  );
   return <EvolutionLue data={data} categories={categories} ligneValeur={ligneValeur} />;
 }
 
@@ -284,7 +292,7 @@ function PatrimoineEvolutionChart({ data, enabled, profile, avecPlusValue, plusV
 // forme E3, validée par l'utilisateur le 23/11/2026). Plus de bulle : au doigt, elle couvrait la moitié du graphique, posée sur
 // les mois voisins — ceux avec lesquels on compare. Principe posé le 19/10/2026 : une valeur de graphique s'affiche à un
 // endroit FIXE, jamais sous le doigt. La ligne du haut de la carte devient la lecture :
-// - au repos : « dont … de plus-value » et l'invite « Touchez (Survolez) la courbe pour lire un mois » ;
+// - au repos : la variation de la période (« +4 810.12 € depuis juin 26 ») et l'invite « Touchez (Survolez) la courbe pour lire un mois » ;
 // - en lecture : le mois (13 px, 600), l'écart depuis le début de la période AVANT le total (règle des deltas, 13/08/2026 ;
 //   modèle `.total-fen`), le total (14 px, 600) ; dessous, les rubriques — la première à gauche, la dernière à droite sous le
 //   total, les autres réparties ; chaque montant a la largeur du plus long de la période, pour que RIEN NE BOUGE pendant la

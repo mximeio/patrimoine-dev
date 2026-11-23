@@ -1682,6 +1682,7 @@ input[type="month"] {
    avant le total (modèle `.total-fen`), total 14 / 600, montants des rubriques 12 / 500 (listes), noms 12 / 400 gris. */
 .evo-lecture { height: 44px; display: flex; flex-direction: column; justify-content: center; gap: 6px; margin: 0 0 4px; }
 .evo-lecture .evo-sous { margin: 0; }
+.evo-variation { font-weight: 600; } /* au repos, la variation de la période : couleur de l'écart (`.evo-ecart--pos`, `--neg`) */
 .evo-indice { color: var(--text-muted); font-size: 12px; }
 .evo-l1 { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; line-height: 18px; }
 .evo-mois { font-size: 13px; font-weight: 600; white-space: nowrap; }
