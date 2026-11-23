@@ -366,6 +366,50 @@ function requestLocate(key) {
 }
 
 // ============================================================
+//  L'ALLUMAGE APRÈS ENREGISTREMENT (rang 3 du BACKLOG, décisions du 23/11/2026)
+// ============================================================
+// Après l'ajout ou la modification d'une opération (compte courant, tickets resto), la ligne s'allume comme un résultat de
+// recherche (`.row-flash`, 2,4 s — une seule forme). Écart volontaire avec `requestLocate` : on ne défile QUE si la ligne
+// n'est pas entièrement visible — pour une saisie, inutile de faire bouger la page. ⚠️ Sans défilement du tout (la fiche
+// d'origine), la ligne créée, ajoutée en FIN de liste, tombait presque toujours hors de l'écran depuis le « + » de la barre.
+// « Réduire les animations » : saut direct ; l'allumage, qui n'est qu'une couleur, reste.
+// Pure : la ligne tient-elle ENTIÈRE dans la zone visible ({ top, bottom }) ?
+function ligneEntierementVisible(rect, zone) {
+  return !!rect && !!zone && rect.top >= zone.top && rect.bottom <= zone.bottom;
+}
+function allumerLigne(key) {
+  if (!key) return;
+  const deadline = Date.now() + 3000;
+  const attempt = () => {
+    const el = document.querySelector('[data-locate="' + key + '"]');
+    if (!el) { if (Date.now() < deadline) setTimeout(attempt, 120); return; }
+    // La zone visible : le conteneur qui défile (la page, ou le corps d'une fenêtre), moins la barre du bas hors fenêtre.
+    let p = el.parentElement;
+    while (p && p !== document.body) {
+      const o = getComputedStyle(p).overflowY;
+      if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) break;
+      p = p.parentElement;
+    }
+    const zr = p && p !== document.body ? p.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    let bas = Math.min(zr.bottom, window.innerHeight);
+    if (!el.closest('.modal-overlay')) {
+      const barre = document.querySelector('.tabbar-wrap');
+      if (barre) { const b = barre.getBoundingClientRect(); if (b.height > 0 && b.top < bas) bas = b.top; }
+    }
+    if (!ligneEntierementVisible(el.getBoundingClientRect(), { top: Math.max(zr.top, 0), bottom: bas })) {
+      const reduit = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      try { el.scrollIntoView({ behavior: reduit ? 'auto' : 'smooth', block: 'center' }); } catch (e) { el.scrollIntoView(); }
+    }
+    el.classList.remove('row-flash');
+    void el.offsetWidth; // relance l'animation si la ligne était déjà allumée
+    el.classList.add('row-flash');
+    setTimeout(() => el.classList.remove('row-flash'), 2600);
+  };
+  // Même délai que `requestLocate` : la fenêtre se ferme et rend son défilement à la page avant la première tentative.
+  setTimeout(attempt, 180);
+}
+
+// ============================================================
 //  INTENTION D'OUVERTURE (recherche, phases 2/3) : ouvrir une sous-page
 //  (livret, portefeuille) ou une modale (récurrents) depuis un résultat.
 //  Problème : au moment du clic, la vue cible n'est pas forcément montée
