@@ -1114,17 +1114,9 @@ function ReglagesForm({ checking, onSubmit, onDirtyChange, isMultiMode, onDelete
       {/* Section : Tickets resto */}
       <div>
         <h3 className="settings-group-title">Tickets resto</h3>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>Module activé</div>
-            <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
-              {enabled ? 'Calcul automatique du remboursement.' : 'Désactivé.'}
-            </div>
-          </div>
-          <label className="toggle">
-            <input type="checkbox" checked={enabled} onChange={(e) => toggleEnabled(e.target.checked)} />
-            <span className="toggle-slider"></span>
-          </label>
+        {/* Le gabarit commun des interrupteurs de fenêtre (26/11/2026, planche « Paramètres complets ») : nom 14, aide 12, sur la marge. */}
+        <div className="settings-groupe">
+          <ModuleToggleRow label="Module activé" hint={enabled ? 'Calcul automatique du remboursement.' : 'Désactivé.'} enabled={enabled} onChange={toggleEnabled} />
         </div>
         {enabled && (
           <div className="field-grid" style={{ marginTop: 12 }}>
@@ -2186,17 +2178,8 @@ function OperationForm({ initial, onSubmit, onDelete, trEnabled, hasGlobalTRRefu
 
       {/* Toggle composite — masqué en mode Paiement TR (composite sans objet). */}
       {!isTr ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>Ligne composite</div>
-            <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
-              Décompose la ligne en plusieurs composantes.
-            </div>
-          </div>
-          <label className="toggle">
-            <input type="checkbox" checked={isComposite} onChange={(e) => setIsComposite(e.target.checked)} disabled={isTRAuto} />
-            <span className="toggle-slider"></span>
-          </label>
+        <div className="settings-groupe">
+          <ModuleToggleRow label="Ligne composite" hint="Décompose la ligne en plusieurs composantes." enabled={isComposite} onChange={setIsComposite} disabled={isTRAuto} />
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--warning-fonce)', background: 'var(--warning-light)', border: '1px solid #fcd9a3', borderRadius: 'var(--r-touche)', padding: '9px 12px' }}>

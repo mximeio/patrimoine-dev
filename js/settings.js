@@ -109,7 +109,7 @@ function SettingsView({ ctx }) {
           <ModuleToggleRow module="physical" icon="coin" label="Actifs physiques" hint="Pièces d'or, métaux (prix manuel)" enabled={modules.physical} onChange={garde(pasLaDerniere('physical', (v) => { if (confirmToggle(v, 'Actifs physiques')) setModule('physical', v); }))} />
       </div>
 
-      <h3 className="settings-group-title">Données</h3>
+      {/* Plus de titre « Données » (26/11/2026, Paramètres en B) : « Sauvegardes » et « Export / Import » sont eux-mêmes des titres de groupe. */}
       <BackupsCard ctx={ctx} />
       <DataActionsCard ctx={ctx} />
 
@@ -145,9 +145,8 @@ function MonCompteGroupe({ ctx }) {
           <b>Mot de passe</b>
           <small>{MOT_DE_PASSE_MIN} caractères minimum</small>
         </span>
-        <button type="button" className="btn-modifier-rang" onClick={() => setMdpOuvert(true)}>
-          Modifier <Icon name="chevronRight" size={15} />
-        </button>
+        {/* Le CRAYON rond : il modifie (26/11/2026, Paramètres en B ; « Modifier › » avant). */}
+        <button type="button" className="tx-edit" onClick={() => setMdpOuvert(true)} title="Modifier" aria-label="Modifier le mot de passe"><Icon name="pencil" size={13} /></button>
       </div>
       {mdpOuvert && <PasswordChangeModal ctx={ctx} onClose={() => setMdpOuvert(false)} />}
     </div>
@@ -466,7 +465,7 @@ function SupportForm({ etf, onSubmit, onDelete, onDirtyChange, showToast }) {
 }
 
 
-function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, module = null, couleur = MODULE_COLORS.checking, sous = false }) {
+function ModuleToggleRow({ icon, label, hint = null, aide = null, enabled, onChange, module = null, couleur = MODULE_COLORS.checking, sous = false, disabled = false }) {
   return (
     // Seul l'INTERRUPTEUR bascule l'option (15/11/2026, demande de l'utilisateur) : la rangée entière était un <label>, si bien
     // qu'un toucher pour fermer la bulle du « ? » — ou un toucher distrait sur le texte — activait l'option par mégarde.
@@ -481,10 +480,10 @@ function ModuleToggleRow({ icon, label, hint, aide = null, enabled, onChange, mo
       )}
       <span className="rang-reglage-txt">
         <b>{label}<AideChamp>{aide}</AideChamp></b>
-        <small>{hint}</small>
+        {hint && <small>{hint}</small>}
       </span>
       <label className="toggle">
-        <input type="checkbox" aria-label={label} checked={!!enabled} onChange={(e) => onChange(e.target.checked)} />
+        <input type="checkbox" aria-label={label} checked={!!enabled} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
         <span className="toggle-slider"></span>
       </label>
     </div>
@@ -749,18 +748,9 @@ function RecurringForm({ initial, onSubmit, onDelete, datesMode, trEnabled, hasG
       {/* Sélecteur de type */}
       <ChoixType types={types} value={type} onChange={setType} compact />
 
-      {/* Toggle composite */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: 'var(--r-touche)' }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 500 }}>Ligne composite</div>
-          <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>
-            Décompose le récurrent en plusieurs composantes.
-          </div>
-        </div>
-        <label className="toggle">
-          <input type="checkbox" checked={isComposite} onChange={(e) => setIsComposite(e.target.checked)} disabled={isTRAuto} />
-          <span className="toggle-slider"></span>
-        </label>
+      {/* Le gabarit commun des interrupteurs de fenêtre (26/11/2026, planche « Paramètres complets ») : nom 14, aide 12, sur la marge. */}
+      <div className="settings-groupe">
+        <ModuleToggleRow label="Ligne composite" hint="Décompose la ligne en plusieurs composantes." /* le texte de l'opération : « le récurrent » ne tenait pas sur une ligne à 393 px */ enabled={isComposite} onChange={setIsComposite} disabled={isTRAuto} />
       </div>
 
       {/* Libellé */}

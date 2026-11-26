@@ -1298,9 +1298,6 @@ function BackupsCard({ ctx }) {
         );
       })()}
 
-      <button className="btn btn-secondary backup-save" onClick={doManualBackup} disabled={busy}>
-        <Icon name="cloudUp" size={15} /> {busy ? 'Sauvegarde…' : 'Sauvegarder maintenant'}
-      </button>
 
       {backups === null && <p className="muted" style={{ marginTop: 12 }}>Chargement…</p>}
 
@@ -1338,16 +1335,22 @@ function BackupsCard({ ctx }) {
               </div>
             ))}
           </div>
-          {backups.length > 1 && (
-            <button className="backup-showall" onClick={() => setShowAll(v => !v)}>
-              <span className={`backup-chev${showAll ? ' up' : ''}`}><Icon name="chevronDown" size={13} /></span>
-              {showAll
-                ? 'Masquer les autres sauvegardes'
-                : `Afficher les ${backups.length - 1} autre${backups.length - 1 > 1 ? 's' : ''} sauvegarde${backups.length - 1 > 1 ? 's' : ''}`}
-            </button>
-          )}
         </>
       )}
+
+      {/* Sous la liste (26/11/2026, Paramètres en B) : « Sauvegarder maintenant » à gauche, « Afficher les autres » à droite. */}
+      <div className="backup-actions">
+        <button className="btn btn-secondary backup-save" onClick={doManualBackup} disabled={busy}>
+          <Icon name="cloudUp" size={15} /> {busy ? 'Sauvegarde…' : 'Sauvegarder maintenant'}
+        </button>
+        {backups && backups.length > 1 && (
+          <button className="backup-showall" onClick={() => setShowAll(v => !v)} aria-label={showAll ? 'Masquer les autres sauvegardes' : `Afficher les ${backups.length - 1} autres sauvegardes`}>
+            {/* Libellé court : il partage la rangée avec « Sauvegarder maintenant » (26/11/2026). */}
+            {showAll ? 'Masquer' : `${backups.length - 1} autre${backups.length - 1 > 1 ? 's' : ''}`}
+            <span className={`backup-chev${showAll ? ' up' : ''}`}><Icon name="chevronDown" size={13} /></span>
+          </button>
+        )}
+      </div>
 
       {restoring && (
         <ReplaceConfirmModal

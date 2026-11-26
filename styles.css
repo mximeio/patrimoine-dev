@@ -1289,6 +1289,41 @@ input[type="month"] {
 .rang-reglage-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
 .rang-reglage-txt b { font-size: 14px; font-weight: 500; color: var(--text); }
 .rang-reglage-txt small { font-size: 12px; font-weight: 400; color: var(--text-muted); line-height: 1.35; }
+/* ── PARAMÈTRES EN B (26/11/2026, décision de l'utilisateur, planches « Paramètres » et « Paramètres complets » du canevas) ──
+   Dans une FENÊTRE, une rangée de réglage est une ligne de LISTE comme les autres : sur la marge, entre des traits, plus de cadre
+   gris ; hauteur FIXE du palier moyen (56), nom 14 / aide 12 sur UNE ligne (coupée par « … » si elle ne tient pas — 393 px
+   d'iPhone : toutes tiennent), interrupteur au bord. Une option d'un module part sous son nom (34 + 12). Les sauvegardes et
+   l'export perdent aussi leur cadre : leur titre devient un titre de groupe, la liste des sauvegardes une liste de la marge. */
+.modal .settings-groupe { background: transparent; border-radius: 0; overflow: visible; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.modal .rang-reglage { height: var(--ligne-moyen); box-sizing: border-box; padding: 0; }
+.modal form .settings-groupe { margin-bottom: 0; } /* dans un formulaire, l'écart du formulaire suffit (pas 16 + 14) */
+.modal .rang-reglage.rang-reglage--sous { padding-left: 46px; }
+.modal .rang-reglage.rang-reglage--sous::before { left: 46px; }
+.modal .rang-reglage-txt b, .modal .rang-reglage-txt small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal .rang-reglage-txt small { line-height: normal; }
+.modal .rang-reglage-txt { gap: 2px; } /* 2 px entre le nom et l'aide, comme les autres listes */
+.modal .rang-reglage:has(> .tx-edit) > .rang-reglage-txt { margin-right: -7px; } /* 5 px avant le rond, comme partout */
+.modal .settings-card { background: transparent; padding: 0; border-radius: 0; margin-bottom: 0; }
+.modal .settings-card h2 { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 24px 0 10px; }
+.modal .settings-card .backup-status { margin: -2px 0 10px; }
+.modal .backup-list { gap: 0; margin-top: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.modal .backup-row, .modal .backup-row.latest { height: var(--ligne-moyen); box-sizing: border-box; padding: 0; gap: 12px; border: 0; border-radius: 0; background: transparent; }
+.modal .backup-row + .backup-row { border-top: 1px solid var(--border); }
+.modal .backup-row .ic { display: inline-flex; width: 34px; height: 34px; }
+.modal .backup-row .d { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal .backup-row .figs { margin-top: 2px; }
+.modal .backup-restore { border: 0; background: none; padding: 0 4px; min-height: 32px; font-size: 14px; font-weight: 600; }
+.modal .backup-restore svg { display: none; }
+.modal .backup-del { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -7px; }
+.modal .backup-del::after { content: ""; position: absolute; inset: -6px; }
+@media (hover: hover) { .modal .backup-del:hover { background: var(--danger-light); color: var(--danger-fonce); } .modal .backup-restore:hover { background: none; text-decoration: underline; } }
+.modal .backup-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.modal .backup-actions .backup-save { margin: 0; }
+.modal .backup-actions .backup-showall { margin: 0; font-size: 13px; }
+.modal .rang-reglage > .tx-edit { position: relative; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--text-muted); flex: none; transition: background 0.12s, color 0.12s; }
+.modal .rang-reglage > .tx-edit::after { content: ""; position: absolute; inset: -6px; }
+@media (hover: hover) { .modal .rang-reglage:hover > .tx-edit { background: var(--surface-hover); color: var(--text-light); } .modal .rang-reglage > .tx-edit:hover { background: var(--border); color: var(--text); } }
+.modal .rang-reglage > .tx-edit:active, .modal .backup-del:active { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
 .settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 /* « Modifier › » au bout d'une rangée de réglage (mot de passe, 15/11/2026) : un lien-bouton discret, comme une rangée des
    réglages de l'iPhone. */

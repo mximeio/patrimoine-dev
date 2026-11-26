@@ -767,7 +767,7 @@ function PortfolioConfigureForm({ data, portfolioName, onSubmit, onDirtyChange, 
         <div className="settings-groupe">
         <ModuleToggleRow
           label="Calculer mes versements"
-          hint="Ajoute au menu ⋯ un calcul du nombre de parts à acheter pour coller à tes cibles."
+          hint="Les parts à acheter, dans le menu ⋯" /* raccourcie le 26/11/2026 : une aide tient sur UNE ligne (Paramètres en B) */
           enabled={!!draft.contributionPlanner}
           onChange={(v) => {
             const neuf = { ...draft, contributionPlanner: v };
