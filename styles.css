@@ -1407,7 +1407,32 @@ input[type="month"] {
 .op-row.op-row > .op-main { padding-left: 5px; }
 .op-row.op-row > .tx-edit { transform: none; margin-left: -3px; }
 @media (max-width: 768px) { .op-row.op-row > .tx-edit { margin-left: -2px; } }
-.modal-scroll-list .op-row.op-row { padding-left: 11px; padding-right: 4px; } /* 16/11/2026 : contenu à 11 px des traits, revenus sur la marge (Mockup-Listes-Fenetres) */
+.modal-scroll-list .op-row.op-row { padding-left: 11px; padding-right: 4px; } /* 16/11/2026 : contenu à 11 px des traits, revenus sur la marge (Mockup-Listes-Fenetres) — REMPLACÉ dans les fenêtres par la piste A3 juste en dessous */
+/* ── LISTES DANS LES FENÊTRES : PISTE A3 (26/11/2026, décision de l'utilisateur, canevas « Réglages des listes », planches
+   « Boutons » et « Téléphone A3 ») — téléphone ET ordinateur. Le contenu des lignes part de la MARGE de la fenêtre (16 / 24 px),
+   comme l'en-tête et les champs : le retrait de 11 px de la v1250 est retiré, sa raison (le fond gris du SURVOL, qui démarrait
+   pile sur le texte) disparaissant avec lui — une ligne de fenêtre ne se grise plus. Le signe de fin de ligne (crayon, chevron)
+   devient un BOUTON ROND de 32 px (règle : un bouton d'icône seule est rond, comme le « ✕ »), discret au repos ; au survol de la
+   ligne (souris), le rond gris pâle apparaît ; au survol du bouton, il fonce ; à l'appui, il fonce et rétrécit (fin de fichier).
+   Zone de toucher : 44 px (`::after`). ⚠️ Hors champ, à dessein : récurrents, tickets resto payés et répartition des charges
+   (lignes glissables, réglages fins des v1243-v1250). Retour arrière : étiquette git `avant-a3-fenetres` (dépôt DEV). ── */
+.modal .support-row.support-row, .modal .op-row.op-row, .modal .modal-scroll-list .op-row.op-row { padding-left: 0; padding-right: 0; }
+.modal .support-row.support-row { grid-template-columns: 42px minmax(0, 1fr) 32px; }
+.modal .op-row.op-row { grid-template-columns: 20px minmax(0, 1fr) auto 32px; }
+.modal .op-row.op-row > .tx-edit { margin-left: 0; transform: none; }
+.supports-groupe .support-edit-row.support-edit-row { grid-template-columns: 42px minmax(0, 1fr) auto 32px; padding-left: 0; padding-right: 0; min-height: 62px; }
+.supports-groupe .support-icon { width: 42px; height: 42px; border-radius: var(--r-touche); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.supports-groupe .support-total { padding: 12px 42px 12px 0; } /* le total tombe sur la colonne des cibles : bouton de 32 + écart de 10 */
+.modal .support-row > .tx-edit, .modal .op-row > .tx-edit, .supports-groupe .support-edit-chev {
+  position: relative; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: transparent; color: var(--text-muted); transition: background 0.12s, color 0.12s;
+}
+.modal .support-row > .tx-edit::after, .modal .op-row > .tx-edit::after, .supports-groupe .support-edit-chev::after { content: ""; position: absolute; inset: -6px; }
+@media (hover: hover) {
+  .modal .support-row:hover, .modal .op-row:hover, .supports-groupe .support-edit-row.support-edit-row:hover { background: transparent; } /* classe doublée : la règle du survol des supports (v1250) est plus bas dans le fichier */
+  .modal .support-row:hover > .tx-edit, .modal .op-row:hover > .tx-edit, .supports-groupe .support-edit-row:hover .support-edit-chev { background: var(--surface-hover); color: var(--text-light); }
+  .modal .support-row > .tx-edit:hover, .modal .op-row > .tx-edit:hover { background: var(--border); color: var(--text); }
+}
 /* ZONES DE TOUCHER élargies sans rien déplacer (15/11/2026, simulation Mockup-Zones-Toucher validée par l'utilisateur) :
    - la poignée couvre toute la hauteur de la ligne et 19 px de large (sa colonne de 14 + l'écart de 5), jusqu'à la case sans la
      chevaucher — un déplacement ne s'arme qu'après l'appui long de 300 ms (dnd.js), faire défiler n'en déclenche pas ;
@@ -5324,6 +5349,11 @@ button.cp-seg-item { cursor: pointer; }
 .btn-add:active { background: var(--surface-hover); transition: none; }
 .month-cell:active { background: var(--bg); border-style: solid; border-color: var(--text-light); transition: none; }
 .tx-edit:active { background: var(--accent-light); color: var(--accent); transition: none; }
+/* Piste A3 (26/11/2026) : dans une fenêtre, le bouton rond de fin de ligne fonce et rétrécit DÈS L'APPUI — au doigt comme à la
+   souris ; pour un support, c'est toute la ligne qu'on touche, et son chevron qui répond. */
+.modal .support-row > .tx-edit:active, .modal .op-row > .tx-edit:active, .supports-groupe .support-edit-row:active .support-edit-chev {
+  background: var(--border); color: var(--text); transform: scale(0.94); transition: none;
+}
 .tx-delete:active,
 .btn-delete-line:active,
 .btn-icon.btn-icon-danger:active { background: var(--danger-light); color: var(--danger-fonce); transition: none; }

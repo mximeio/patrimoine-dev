@@ -304,6 +304,11 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
           const nomComplet = complet && complet !== court && complet !== supportName(e) ? complet : '';
           return (
             <button type="button" key={e.id} className="support-edit-row" onClick={() => setEditing(e)} aria-label={`Modifier le support ${supportName(e)}`}>
+              {/* La pastille d'initiales, la même que sur la page de l'enveloppe (`SupportRow`) : un même objet a le même aspect
+                  partout (piste A3, 26/11/2026). Ce n'est pas la pastille de COULEUR retirée le 15/11/2026. */}
+              <span className="support-icon" aria-hidden="true" style={{ background: fondPastille(MODULE_COLORS.investments), color: couleurIcone(MODULE_COLORS.investments) }}>
+                {initiales(e.ticker || supportName(e))}
+              </span>
               <span className="support-edit-name">
                 {/* Nom complet si la place le permet, nom court sinon — motif partagé
                     (`LibelleSupport`, ui.js). Cette table était le seul endroit à ne
