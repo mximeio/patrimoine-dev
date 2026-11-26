@@ -2329,7 +2329,7 @@ button.stat-card {
    ces fenêtres n'ont pas d'« Enregistrer », l'ajout y est l'action principale — il prend donc la RANGÉE DU BAS, pleine largeur, à la
    hauteur d'« Enregistrer » (52 ; 44 à l'ordinateur) et, au téléphone, à --marge-boutons des bords (bloc des feuilles). Les ajouts
    AU MILIEU d'une fenêtre (« Ajouter un support », charges, « + Composante », « + Tickets resto ») gardent la forme ci-dessus. */
-.modal .btn-add.btn-add--bas { display: flex; width: auto; justify-self: stretch; min-height: 52px; margin-top: 16px; border-width: 1.5px; font-size: 15px; color: var(--text-light); transition: background 0.15s, border-color 0.15s, color 0.15s; } /* pas `all` : la marge suit le clavier D'UN COUP, comme « Enregistrer » (DEV v1313) */
+.modal .btn-add.btn-add--bas { display: flex; box-sizing: border-box; width: calc(100% - 2 * (var(--marge-boutons, 16px) - 16px)); /* largeur EXPLICITE : un <button> ne s'étire pas seul, et Safari ignore `justify-self` en bloc (relevé iPhone, 26/11/2026) ; moins les marges des feuilles au téléphone */ min-height: 52px; margin-top: 16px; border-width: 1.5px; font-size: 15px; color: var(--text-light); transition: background 0.15s, border-color 0.15s, color 0.15s; } /* pas `all` : la marge suit le clavier D'UN COUP, comme « Enregistrer » (DEV v1313) */
 @media (min-width: 641px) and (hover: hover) { .modal .btn-add.btn-add--bas { min-height: 44px; font-size: 14px; } }
 
 /* Composite row */
