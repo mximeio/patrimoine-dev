@@ -269,6 +269,11 @@ input[type="month"] {
   [data-rubrique="physical"] .btn-accent:hover { background: #e8a521; box-shadow: none; }
   .btn-accent.btn-tr:hover { background: #e8a521; box-shadow: none; }
 }
+/* Fenêtres GÉNÉRALES (`Modal tone="neutre"` : Paramètres, mot de passe, restauration, import) : elles n'appartiennent à aucune
+   rubrique — leur bouton principal garde l'indigo de l'app, quelle que soit la page ouverte derrière (26/11/2026, relevé de
+   l'utilisateur : « Restaurer » sortait vert depuis Investissements). */
+.modal-overlay--neutre .btn.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+@media (hover: hover) { .modal-overlay--neutre .btn.btn-accent:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(79,70,229,0.25); } }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
 .btn.btn-fen { width: 100%; min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 /* Le bandeau d'indicateurs des fenêtres (BandeauIndicateurs, ui.js). */

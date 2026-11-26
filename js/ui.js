@@ -453,7 +453,7 @@ function Modal({ title, onClose, children, size = 'md', noDirtyGuard = false, di
   // de <body>, la modale se positionne par rapport au vrai viewport.
   return ReactDOM.createPortal(
     <div
-      className={`modal-overlay ${pleine ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}${grande ? ' modal-overlay--grande' : ''}`}
+      className={`modal-overlay ${pleine ? 'modal-overlay--pleine' : 'modal-overlay--feuille'}${grande ? ' modal-overlay--grande' : ''}${tone === 'neutre' ? ' modal-overlay--neutre' : ''}`}
       ref={overlayRef}
       onMouseDown={(e) => { downOnBackdropRef.current = e.target === e.currentTarget; }}
       onClick={(e) => {
