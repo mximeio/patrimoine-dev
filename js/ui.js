@@ -1276,7 +1276,9 @@ function ListeReglages({ module, elements, onModifier, libelleAjout, onAjouter, 
         ))}
         {elements.length === 0 && vide}
       </div>
-      <button type="button" className="btn-add" style={{ marginTop: 10 }} onClick={onAjouter}>{libelleAjout}</button>
+      {/* Pleine largeur : dans une fenêtre « Réglages », l'ajout EST l'action principale (pas d'« Enregistrer ») — il prend la
+          rangée du bas, comme « Enregistrer » ailleurs (26/11/2026, planche « Dernier bouton »). */}
+      <button type="button" className="btn-add btn-add--bas" onClick={onAjouter}>{libelleAjout}</button>
     </>
   );
 }

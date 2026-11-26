@@ -766,8 +766,8 @@ input[type="month"] {
 .seg-solo + .seg-kebab { margin-left: 0; }
 .ch-liste { border-top: 1px solid var(--border); }
 .ch-ligne { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto 32px; align-items: center; gap: 8px; height: var(--ligne-petit); padding: 4px 0 4px 3px; border-bottom: 1px solid var(--border); } /* 16/11/2026 (Mockup-Listes-Fenetres) : poignée à 3 px du trait, comme le compte courant ; crayon à 11 (0 et 5 avant) */
-.ch-ligne--revenu { grid-template-columns: 34px minmax(0, 1fr) auto 32px; gap: 8px; height: var(--ligne-moyen); padding-left: 11px; } /* palier MOYEN : 11 px autour de la pastille (52 avant le 26/11/2026) */ /* pastille à 11 px du trait (0 avant) */
-.ch-ligne--revenu .ch-av { margin-right: 4px; } /* 12 px entre l'avatar et le nom, mais 8 avant le crayon : le « € » tombe sur celui des charges */
+.ch-ligne--revenu { grid-template-columns: 34px minmax(0, 1fr) auto 32px; gap: 12px; height: var(--ligne-moyen); padding-left: 0; } /* palier MOYEN : 11 px autour de la pastille (52 avant le 26/11/2026) ; pastille SUR LA MARGE comme les listes des autres fenêtres (11 px du trait avant, 26/11/2026) */ /* pastille à 11 px du trait (0 avant) */
+.ch-ligne.ch-ligne.ch-ligne--revenu > .ch-montant { margin-right: -7px; } /* écart de 12 (le nom part comme le titre de la fenêtre), 5 avant le rond : le « € » tombe sur celui des charges (26/11/2026 ; la marge de 4 sur la pastille, sans effet dans sa colonne, est retirée) */
 .ch-grip { display: grid; place-items: center; height: 100%; color: var(--text-subtle); cursor: grab; touch-action: none; }
 .ch-nom { min-width: 0; display: grid; gap: 1px; }
 .ch-nom b { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2325,6 +2325,12 @@ button.stat-card {
   border: 1px dashed var(--border-strong); color: var(--text-muted);
   font-size: 13px; font-weight: 500;
 }
+/* L'AJOUT QUI TERMINE UNE FENÊTRE « Réglages » (`ListeReglages`, 26/11/2026, décision de l'utilisateur, planche « Dernier bouton ») :
+   ces fenêtres n'ont pas d'« Enregistrer », l'ajout y est l'action principale — il prend donc la RANGÉE DU BAS, pleine largeur, à la
+   hauteur d'« Enregistrer » (52 ; 44 à l'ordinateur) et, au téléphone, à --marge-boutons des bords (bloc des feuilles). Les ajouts
+   AU MILIEU d'une fenêtre (« Ajouter un support », charges, « + Composante », « + Tickets resto ») gardent la forme ci-dessus. */
+.modal .btn-add.btn-add--bas { display: flex; width: auto; justify-self: stretch; min-height: 52px; margin-top: 16px; border-width: 1.5px; font-size: 15px; color: var(--text-light); transition: background 0.15s, border-color 0.15s, color 0.15s; } /* pas `all` : la marge suit le clavier D'UN COUP, comme « Enregistrer » (DEV v1313) */
+@media (min-width: 641px) and (hover: hover) { .modal .btn-add.btn-add--bas { min-height: 44px; font-size: 14px; } }
 
 /* Composite row */
 .tx-composite-wrap {
@@ -4516,7 +4522,8 @@ button.stat-card {
     border-radius: var(--r-feuille-haut) var(--r-feuille-haut) var(--r-feuille-bas) var(--r-feuille-bas);
   }
   .modal-overlay--feuille .modal-body .form-actions,
-  .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn) {
+  .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn),
+  .modal-overlay--feuille .modal-body .btn-add--bas {
     margin-left: calc(var(--marge-boutons) - 16px);
     margin-right: calc(var(--marge-boutons) - 16px);
   }
