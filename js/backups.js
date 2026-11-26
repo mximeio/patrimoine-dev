@@ -1248,14 +1248,16 @@ function BackupsCard({ ctx }) {
   };
 
   const doDelete = async (b) => {
-    if (!confirm(`Supprimer la sauvegarde du ${backupDateLabel(b.at)} ?\n\nCette sauvegarde sera définitivement retirée. Tes données ne sont pas touchées.`)) return;
+    if (!confirm(`Supprimer la sauvegarde du ${backupDateLabel(b.at)} ?\n\nCette sauvegarde sera définitivement retirée. Tes données ne sont pas touchées.`)) return false;
     try {
       await Adapter.deleteBackup(user.uid, b.id);
       await reload();
       showToast('Sauvegarde supprimée', 'success');
+      return true; // la fenêtre de restauration se ferme alors (corbeille de sa rangée du bas)
     } catch (e) {
       console.error(e);
       showToast('Suppression impossible', 'error');
+      return false;
     }
   };
 
@@ -1307,7 +1309,10 @@ function BackupsCard({ ctx }) {
               le bouton ci-dessous déplie les autres si besoin. */}
           <div className="backup-list">
             {(showAll ? backups : backups.slice(0, 1)).map((b, i) => (
-              <div key={b.id} className={`backup-row${i === 0 ? ' latest' : ''}`}>
+              /* PISTE CHEVRON (26/11/2026, décision de l'utilisateur, planche « Restauration ») : toute la ligne ouvre la fenêtre de
+                 restauration, le chevron le dit ; la suppression passe dans cette fenêtre, corbeille à droite de « Restaurer »
+                 (règle 10 ter). Plus de bouton d'action dans la ligne. */
+              <button type="button" key={b.id} className={`backup-row${i === 0 ? ' latest' : ''}`} onClick={() => setRestoring(b)} aria-label={`Ouvrir la sauvegarde du ${backupDateLabel(b.at)}`}>
                 {/* v559 : pictogramme masqué en portrait mobile (voir CSS). */}
                 <span className="ic"><Icon name="layers" size={15} /></span>
                 <div className="meta">
@@ -1326,16 +1331,8 @@ function BackupsCard({ ctx }) {
                     {backupRelativeAge(b.at)}
                   </div>
                 </div>
-                {/* Rond « historique » (26/11/2026, décision de l'utilisateur, planche « Sauvegarde ») : le MOT « Restaurer » du 26/10
-                    cède la place à une icône qui se lit seule — une horloge et sa flèche qui revient, « revenir à cet état » ; le
-                    nuage d'avant le 26/10 disait « télécharger ». Le nom complet reste lu par `aria-label`. */}
-                <button className="backup-restore" title="Restaurer" aria-label={`Restaurer la sauvegarde du ${backupDateLabel(b.at)}`} onClick={() => setRestoring(b)}>
-                  <Icon name="history" size={16} />
-                </button>
-                <button className="backup-del" title="Supprimer cette sauvegarde" onClick={() => doDelete(b)}>
-                  <Icon name="trash" size={15} />
-                </button>
-              </div>
+                <span className="backup-chevron" aria-hidden="true"><Icon name="chevronRight" size={15} /></span>
+              </button>
             ))}
           </div>
         </>
@@ -1359,6 +1356,7 @@ function BackupsCard({ ctx }) {
         <ReplaceConfirmModal
           ctx={ctx}
           backup={restoring}
+          onDelete={async () => { if (await doDelete(restoring)) setRestoring(null); }}
           onClose={() => setRestoring(null)}
         />
       )}
@@ -1392,7 +1390,7 @@ function BackupsCard({ ctx }) {
 //  `sessionStorage` n'est pas touchée, et l'écriture part immédiatement
 //  après le geste. Ne pas rendre `io.confirm` asynchrone pour ça.
 // ============================================================
-function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode = 'restore', onConfirm, onClose }) {
+function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode = 'restore', onConfirm, onDelete = null, onClose }) {
   const { user, showToast } = ctx;
   const [showDetail, setShowDetail] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -1648,6 +1646,11 @@ function ReplaceConfirmModal({ ctx, backup, payload: payloadImport, label, mode 
                       : (aPerte ? 'Restaurer quand même' : 'Restaurer'))}
               </button>
             : <button className="btn btn-secondary btn-lg" onClick={onClose}>Fermer</button>}
+          {/* La corbeille à droite du bouton principal (26/11/2026, piste chevron) : supprimer une sauvegarde se fait ici, plus
+              dans la liste. Restauration seulement — un import n'a rien à supprimer. */}
+          {!estImport && onDelete && (
+            <button type="button" className="btn-delete-line" onClick={onDelete} disabled={busy}><Icon name="trash" size={14} /> Supprimer</button>
+          )}
         </div>
       </div>
     </Modal>

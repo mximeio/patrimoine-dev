@@ -1312,19 +1312,19 @@ input[type="month"] {
 .modal .backup-row .ic { display: inline-flex; width: 34px; height: 34px; }
 .modal .backup-row .d { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .modal .backup-row .figs { margin-top: 2px; }
-.modal .backup-restore { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -7px; } /* rond « historique » (26/11/2026) */
-.modal .backup-restore svg { display: inline; }
-.modal .backup-restore::after { content: ""; position: absolute; inset: -6px; }
-.modal .backup-del { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -8px; } /* 4 px après le rond « restaurer » */
-.modal .backup-del::after { content: ""; position: absolute; inset: -6px; }
-@media (hover: hover) { .modal .backup-row:hover > .backup-restore, .modal .backup-row:hover > .backup-del { background: var(--surface-hover); color: var(--text-light); } .modal .backup-restore:hover { background: var(--border); color: var(--text); } .modal .backup-del:hover { background: var(--danger-light); color: var(--danger-fonce); } }
+/* PISTE CHEVRON (26/11/2026) : la ligne est un bouton qui ouvre la fenêtre de restauration ; le chevron rond de 32 en témoin,
+   comme les listes de livrets et d'enveloppes ; la suppression est dans la fenêtre. */
+.modal .backup-row { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.modal .backup-chevron { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; margin-left: -7px; color: var(--text-muted); transition: background 0.12s, color 0.12s; }
+@media (hover: hover) { .modal .backup-row:hover > .backup-chevron { background: var(--surface-hover); color: var(--text-light); } }
+.modal .backup-row:active > .backup-chevron { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
 .modal .backup-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
 .modal .backup-actions .backup-save { margin: 0; }
 .modal .backup-actions .backup-showall { margin: 0; font-size: 13px; }
 .modal .rang-reglage > .tx-edit { position: relative; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--text-muted); flex: none; transition: background 0.12s, color 0.12s; }
 .modal .rang-reglage > .tx-edit::after { content: ""; position: absolute; inset: -6px; }
 @media (hover: hover) { .modal .rang-reglage:hover > .tx-edit { background: var(--surface-hover); color: var(--text-light); } .modal .rang-reglage > .tx-edit:hover { background: var(--border); color: var(--text); } }
-.modal .rang-reglage > .tx-edit:active, .modal .backup-del:active, .modal .backup-restore:active { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
+.modal .rang-reglage > .tx-edit:active { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
 .settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 /* « Modifier › » au bout d'une rangée de réglage (mot de passe, 15/11/2026) : un lien-bouton discret, comme une rangée des
    réglages de l'iPhone. */
@@ -3792,17 +3792,6 @@ button.stat-card {
 .backup-tag.latest-tag { background: var(--accent-light); color: var(--accent); }
 /* « avant restauration » : teinte ardoise neutre, casse normale (libellé long). */
 .backup-tag.pre { background: #e7ecf3; color: #475569; text-transform: none; letter-spacing: 0; font-weight: 700; }
-.backup-restore {
-  border: 1px solid var(--border); background: var(--surface); color: var(--accent);
-  border-radius: 9px; padding: 7px 11px; font-family: inherit; font-size: 12px; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0;
-}
-@media (hover: hover) { .backup-restore:hover { background: var(--accent-light); } }
-.backup-del {
-  border: 1px solid var(--border); background: var(--surface); color: var(--text-subtle);
-  border-radius: 9px; padding: 7px 9px; display: inline-flex; align-items: center; cursor: pointer; flex-shrink: 0;
-}
-@media (hover: hover) { .backup-del:hover { color: var(--danger-fonce); border-color: #fecaca; background: var(--danger-light); } }
 .backup-showall {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
   font-family: inherit; font-size: 12px; font-weight: 600; color: var(--accent);
@@ -3829,8 +3818,6 @@ button.stat-card {
   .backup-row .d-long { display: none; }
   .backup-row .d-court { display: inline; }
   .backup-row .figs .sub-tag { display: inline-block; }
-  .backup-restore { padding: 7px 9px; gap: 0; }
-  .backup-restore svg { display: none; }
 }
 
 /* --- Confirmation de restauration --- */
