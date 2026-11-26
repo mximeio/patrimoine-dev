@@ -1263,7 +1263,7 @@ function BackupsCard({ ctx }) {
 
   return (
     <div className="settings-card">
-      <h2>Sauvegardes<AideChamp>Instantané de tes données personnelles, restaurable. Une sauvegarde automatique est posée chaque semaine à l'ouverture ; les {BACKUP_KEEP} dernières sont conservées.</AideChamp></h2>
+      <h2>Sauvegarde<AideChamp>Instantané de tes données personnelles, restaurable. Une sauvegarde automatique est posée chaque semaine à l'ouverture ; les {BACKUP_KEEP} dernières sont conservées.</AideChamp></h2>
 
       {/* 🔴 « À JOUR » N'EST PLUS INCONDITIONNEL — corrigé le 03/09/2026.
           Cette étiquette affichait « À jour » dès qu'UNE sauvegarde existait,
@@ -1326,8 +1326,11 @@ function BackupsCard({ ctx }) {
                     {backupRelativeAge(b.at)}
                   </div>
                 </div>
-                <button className="backup-restore" title="Restaurer" onClick={() => setRestoring(b)}>
-                  <Icon name="cloudDown" size={14} /> <span className="lbl">Restaurer</span>
+                {/* Rond « historique » (26/11/2026, décision de l'utilisateur, planche « Sauvegarde ») : le MOT « Restaurer » du 26/10
+                    cède la place à une icône qui se lit seule — une horloge et sa flèche qui revient, « revenir à cet état » ; le
+                    nuage d'avant le 26/10 disait « télécharger ». Le nom complet reste lu par `aria-label`. */}
+                <button className="backup-restore" title="Restaurer" aria-label={`Restaurer la sauvegarde du ${backupDateLabel(b.at)}`} onClick={() => setRestoring(b)}>
+                  <Icon name="history" size={16} />
                 </button>
                 <button className="backup-del" title="Supprimer cette sauvegarde" onClick={() => doDelete(b)}>
                   <Icon name="trash" size={15} />

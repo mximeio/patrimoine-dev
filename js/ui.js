@@ -1276,9 +1276,9 @@ function ListeReglages({ module, elements, onModifier, libelleAjout, onAjouter, 
         ))}
         {elements.length === 0 && vide}
       </div>
-      {/* Pleine largeur : dans une fenêtre « Réglages », l'ajout EST l'action principale (pas d'« Enregistrer ») — il prend la
-          rangée du bas, comme « Enregistrer » ailleurs (26/11/2026, planche « Dernier bouton »). */}
-      <button type="button" className="btn-add btn-add--bas" onClick={onAjouter}>{libelleAjout}</button>
+      {/* L'ajout EST l'action principale de ces fenêtres (pas d'« Enregistrer ») : le bouton PLEIN « + Nouveau … » à la couleur de
+          la rubrique, pleine largeur, comme « Nouvelle opération récurrente » et « Nouveau paiement TR » (26/11/2026). */}
+      <button type="button" className="btn btn-accent btn-lg btn-fen ajout-bas" onClick={onAjouter}><Icon name="plus" size={16} /> {libelleAjout}</button>
     </>
   );
 }

@@ -1312,18 +1312,19 @@ input[type="month"] {
 .modal .backup-row .ic { display: inline-flex; width: 34px; height: 34px; }
 .modal .backup-row .d { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .modal .backup-row .figs { margin-top: 2px; }
-.modal .backup-restore { border: 0; background: none; padding: 0 4px; min-height: 32px; font-size: 14px; font-weight: 600; }
-.modal .backup-restore svg { display: none; }
-.modal .backup-del { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -7px; }
+.modal .backup-restore { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -7px; } /* rond « historique » (26/11/2026) */
+.modal .backup-restore svg { display: inline; }
+.modal .backup-restore::after { content: ""; position: absolute; inset: -6px; }
+.modal .backup-del { position: relative; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); justify-content: center; margin-left: -8px; } /* 4 px après le rond « restaurer » */
 .modal .backup-del::after { content: ""; position: absolute; inset: -6px; }
-@media (hover: hover) { .modal .backup-del:hover { background: var(--danger-light); color: var(--danger-fonce); } .modal .backup-restore:hover { background: none; text-decoration: underline; } }
+@media (hover: hover) { .modal .backup-row:hover > .backup-restore, .modal .backup-row:hover > .backup-del { background: var(--surface-hover); color: var(--text-light); } .modal .backup-restore:hover { background: var(--border); color: var(--text); } .modal .backup-del:hover { background: var(--danger-light); color: var(--danger-fonce); } }
 .modal .backup-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
 .modal .backup-actions .backup-save { margin: 0; }
 .modal .backup-actions .backup-showall { margin: 0; font-size: 13px; }
 .modal .rang-reglage > .tx-edit { position: relative; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--text-muted); flex: none; transition: background 0.12s, color 0.12s; }
 .modal .rang-reglage > .tx-edit::after { content: ""; position: absolute; inset: -6px; }
 @media (hover: hover) { .modal .rang-reglage:hover > .tx-edit { background: var(--surface-hover); color: var(--text-light); } .modal .rang-reglage > .tx-edit:hover { background: var(--border); color: var(--text); } }
-.modal .rang-reglage > .tx-edit:active, .modal .backup-del:active { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
+.modal .rang-reglage > .tx-edit:active, .modal .backup-del:active, .modal .backup-restore:active { background: var(--border); color: var(--text); transform: scale(0.94); transition: none; }
 .settings-card.settings-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 /* « Modifier › » au bout d'une rangée de réglage (mot de passe, 15/11/2026) : un lien-bouton discret, comme une rangée des
    réglages de l'iPhone. */
@@ -2360,12 +2361,9 @@ button.stat-card {
   border: 1px dashed var(--border-strong); color: var(--text-muted);
   font-size: 13px; font-weight: 500;
 }
-/* L'AJOUT QUI TERMINE UNE FENÊTRE « Réglages » (`ListeReglages`, 26/11/2026, décision de l'utilisateur, planche « Dernier bouton ») :
-   ces fenêtres n'ont pas d'« Enregistrer », l'ajout y est l'action principale — il prend donc la RANGÉE DU BAS, pleine largeur, à la
-   hauteur d'« Enregistrer » (52 ; 44 à l'ordinateur) et, au téléphone, à --marge-boutons des bords (bloc des feuilles). Les ajouts
-   AU MILIEU d'une fenêtre (« Ajouter un support », charges, « + Composante », « + Tickets resto ») gardent la forme ci-dessus. */
-.modal .btn-add.btn-add--bas { display: flex; box-sizing: border-box; width: calc(100% - 2 * (var(--marge-boutons, 16px) - 16px)); /* largeur EXPLICITE : un <button> ne s'étire pas seul, et Safari ignore `justify-self` en bloc (relevé iPhone, 26/11/2026) ; moins les marges des feuilles au téléphone */ min-height: 52px; margin-top: 16px; border-width: 1.5px; font-size: 15px; color: var(--text-light); transition: background 0.15s, border-color 0.15s, color 0.15s; } /* pas `all` : la marge suit le clavier D'UN COUP, comme « Enregistrer » (DEV v1313) */
-@media (min-width: 641px) and (hover: hover) { .modal .btn-add.btn-add--bas { min-height: 44px; font-size: 14px; } }
+/* L'ajout qui termine une fenêtre « Réglages » (`ListeReglages`) : le bouton PLEIN « + Nouveau … » (btn-accent btn-lg btn-fen),
+   comme les récurrents et les tickets resto (26/11/2026) ; ses marges au téléphone viennent de la règle des boutons du bas. */
+.modal .btn.ajout-bas { margin-top: 16px; box-sizing: border-box; width: calc(100% - 2 * (var(--marge-boutons, 16px) - 16px)); } /* `btn-fen` prend 100 % : moins les marges des feuilles, sinon il déborde de 20 px sur iPhone (mesuré) */
 
 /* Composite row */
 .tx-composite-wrap {
@@ -4557,8 +4555,7 @@ button.stat-card {
     border-radius: var(--r-feuille-haut) var(--r-feuille-haut) var(--r-feuille-bas) var(--r-feuille-bas);
   }
   .modal-overlay--feuille .modal-body .form-actions,
-  .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn),
-  .modal-overlay--feuille .modal-body .btn-add--bas {
+  .modal-overlay--feuille .modal-body .btn.btn-lg:not(.form-actions .btn) {
     margin-left: calc(var(--marge-boutons) - 16px);
     margin-right: calc(var(--marge-boutons) - 16px);
   }

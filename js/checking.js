@@ -146,7 +146,7 @@ function CheckingConsolidatedView({ ctx, onOpenAccount }) {
               return { id: acc.id, nom: acc.name || '(sans nom)', locate: `cc-reg-${acc.id}`, sous: `${fmt(acc._balance)} € · ${n} mois` };
             })}
             onModifier={setEditId}
-            libelleAjout="Ajouter un compte courant"
+            libelleAjout="Nouveau compte courant"
             onAjouter={() => setShowCreate(true)}
           />
         </Modal>

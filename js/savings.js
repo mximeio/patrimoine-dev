@@ -165,7 +165,7 @@ function SavingsConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, onCre
                 sous: `${fmt(computeSavingsBalance(s))} € · ${n} opération${n > 1 ? 's' : ''}` };
             })}
             onModifier={setEditId}
-            libelleAjout="Ajouter un compte d'épargne"
+            libelleAjout="Nouveau compte d'épargne"
             onAjouter={() => setShowCreate(true)}
           />
         </Modal>

@@ -245,7 +245,7 @@ function PortfoliosConsolidatedView({ ctx, onOpen, showCreate, setShowCreate, on
                 sous: `${fmt(computePortfolioStats(d).totalValue)} € · ${ns} support${ns > 1 ? 's' : ''} · ${no} opération${no > 1 ? 's' : ''}` };
             })}
             onModifier={setEditId}
-            libelleAjout="Ajouter une enveloppe"
+            libelleAjout="Nouvelle enveloppe"
             onAjouter={() => setShowCreate(true)}
           />
         </Modal>

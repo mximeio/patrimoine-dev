@@ -259,7 +259,7 @@ function PhysicalView({ ctx }) {
                 sous: `${piecesTxt(deriverActifPhysique(a).qty)} · ${n} opération${n > 1 ? 's' : ''}` };
             })}
             onModifier={setEditAsset}
-            libelleAjout="Ajouter un actif"
+            libelleAjout="Nouvel actif"
             onAjouter={() => setEditAsset('new')}
             vide={<EmptyState icon="coin" title="Aucun actif" hint="Pièces d'or, métaux précieux, …" />}
           />
