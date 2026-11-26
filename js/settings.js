@@ -303,7 +303,9 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
           const tk = (e.ticker || '').trim(), court = (e.label || '').trim(), complet = (e.fullName || '').trim();
           const nomComplet = complet && complet !== court && complet !== supportName(e) ? complet : '';
           return (
-            <button type="button" key={e.id} className="support-edit-row" onClick={() => setEditing(e)} aria-label={`Modifier le support ${supportName(e)}`}>
+            // 26/11/2026, 2ᵉ temps d'A3 (décision de l'utilisateur) : la ligne n'est plus un bouton. Seul le CRAYON ouvre « Modifier le support » —
+            // un crayon modifie, un chevron mène à une page ; c'est une modification, comme dans les autres fenêtres « Réglages ».
+            <div key={e.id} className="support-edit-row">
               {/* La pastille d'initiales, la même que sur la page de l'enveloppe (`SupportRow`) : un même objet a le même aspect
                   partout (piste A3, 26/11/2026). Ce n'est pas la pastille de COULEUR retirée le 15/11/2026. */}
               <span className="support-icon" aria-hidden="true" style={{ background: fondPastille(MODULE_COLORS.investments), color: couleurIcone(MODULE_COLORS.investments) }}>
@@ -319,8 +321,8 @@ function EtfsList({ data, onUpdate, onPersist, showToast }) {
                 {nomComplet && <small className="support-edit-complet">{nomComplet}</small>}
               </span>
               <span className="support-edit-cible num">{e.target != null && e.target !== '' ? `${fmt(e.target)} %` : ''}</span>
-              <span className="support-edit-chev" aria-hidden="true">›</span>
-            </button>
+              <button type="button" className="tx-edit" onClick={() => setEditing(e)} title="Modifier" aria-label={`Modifier le support ${supportName(e)}`}><Icon name="pencil" size={13} /></button>
+            </div>
           );
         })}
         {etfs.length === 0 && (
