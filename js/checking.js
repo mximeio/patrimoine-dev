@@ -2351,7 +2351,7 @@ function SimpleTxRow({ item, variant, scope, list, index, onUpdate, onRemove, on
         </span>
         {item.note && <InfoTip iconName="comment" size={13} label={item.note} className="op-note" popClassName="infotip-pop--wrap" />}
         {datesMode && item.date && (
-          <span className="op-date">{fmtDateNumeric(item.date)}</span>
+          <span className="op-date">{fmtDate(item.date)}</span>
         )}
       </div>
       <div className="tx-amount-wrap">
@@ -2407,7 +2407,7 @@ function CompositeTxRow({ item, variant, scope, list, index, expanded, onToggle,
           {item.note && <InfoTip iconName="comment" size={13} label={item.note} className="op-note" popClassName="infotip-pop--wrap" />}
           <span className="composite-tag" title="Ligne composite">Composite</span>
           {datesMode && item.date && (
-            <span className="op-date">{fmtDateNumeric(item.date)}</span>
+            <span className="op-date">{fmtDate(item.date)}</span>
           )}
         </div>
         <div className="tx-amount-wrap">
@@ -2625,7 +2625,7 @@ function TrItemRow({ item, scope, list, index, onRemove, onEdit, onDrop, datesMo
         </span>
         {item.note && <InfoTip iconName="comment" size={13} label={item.note} className="op-note" popClassName="infotip-pop--wrap" />}
         {datesMode && item.date && (
-          <span className="op-date">{fmtDateNumeric(item.date)}</span>
+          <span className="op-date">{fmtDate(item.date)}</span>
         )}
       </div>
       <div className="tx-amount-wrap">
