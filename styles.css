@@ -273,7 +273,7 @@ input[type="month"] {
    rubrique — leur bouton principal garde l'indigo de l'app, quelle que soit la page ouverte derrière (26/11/2026, relevé de
    l'utilisateur : « Restaurer » sortait vert depuis Investissements). */
 .modal-overlay--neutre .btn.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
-@media (hover: hover) { .modal-overlay--neutre .btn.btn-accent:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(79,70,229,0.25); } }
+@media (hover: hover) { .modal-overlay--neutre .btn.btn-accent:hover:not(:disabled) { /* `:not(:disabled)` (27/11/2026) : un bouton grisé ne réagit pas au survol */ background: var(--accent-hover); box-shadow: 0 4px 12px rgba(79,70,229,0.25); } }
 /* Un bouton d'action pleine largeur au pied d'une liste dans une fenêtre (« Nouveau paiement TR »). */
 .btn.btn-fen { width: 100%; min-height: 52px; border-radius: var(--r-touche); font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 /* Le bandeau d'indicateurs des fenêtres (BandeauIndicateurs, ui.js). */
@@ -1501,7 +1501,7 @@ input[type="month"] {
 .ch-ligne.ch-ligne > .ch-montant { margin-right: -3px; } /* charges : 8 d'écart → 5 avant le rond, c'est le montant qui déborde (comme A3) */
 @media (hover: hover) {
   .support-row.support-row:hover, .op-row.op-row:hover, .supports-groupe .support-edit-row.support-edit-row:hover, .portfolio-list-row.portfolio-list-row:hover,
-  .tx-row.tx-row:hover, .recurring-row.recurring-row:hover { background: transparent; } /* compte courant, récurrents, tickets resto : depuis le crayon rond (26/11/2026, relevé de l'utilisateur) */ /* classes doublées : les anciennes règles de survol sont plus bas dans le fichier */
+  .tx-row.tx-row:hover:not(.drag-over-nest), .recurring-row.recurring-row:hover:not(.drag-over-nest) { background: transparent; } /* `:not(.drag-over-nest)` (27/11/2026) : le glisser-déposer suit le pointeur, la ligne visée est donc survolée — sans cette exception, elle perdait son fond violet de rangement */ /* compte courant, récurrents, tickets resto : depuis le crayon rond (26/11/2026, relevé de l'utilisateur) */ /* classes doublées : les anciennes règles de survol sont plus bas dans le fichier */
   .modal .support-row:hover > .tx-edit, .op-row:hover > .tx-edit, .supports-groupe .support-edit-row:hover > .tx-edit, .portfolio-list-row:hover > .portfolio-list-arrow,
   .section-block.ops-c .tx-row:hover > .tx-edit, .liste-rec .recurring-row:hover > .tx-edit, .liste-rec .composite-comp-row:hover > .tx-edit, .modal .tx-row.tr-row:hover > .tx-edit, .ch-ligne:hover > .tx-edit { background: var(--surface-hover); color: var(--text-light); }
   .modal .support-row > .tx-edit:hover, .op-row > .tx-edit:hover, .supports-groupe .support-edit-row > .tx-edit:hover,
@@ -1840,7 +1840,8 @@ input[type="month"] {
 }
 .pastille-cc-ico { color: var(--text-muted); display: inline-flex; flex: none; }
 .pastille-cc-lib { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (min-width: 641px) { .pastilles-cc { grid-template-columns: repeat(2, 260px); } }
+/* Plus de largeur fixe de 260 px dès 641 px (27/11/2026, relevé de l'utilisateur) : entre 641 et 1099 px, les deux pastilles
+   laissaient un vide à droite. Elles se partagent la largeur, comme au téléphone et dans la colonne de 1100 px et plus. */
 .pcc-court { display: none; }
 /* 460 px (420 avant le 15/11/2026) : sur iPhone 440 px, « Reste mois préc. » se coupait dès un montant à quatre chiffres. */
 @media (max-width: 460px) { .pcc-long { display: none; } .pcc-court { display: inline; } }
