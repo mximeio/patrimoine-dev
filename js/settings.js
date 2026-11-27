@@ -1107,8 +1107,9 @@ function CompositeRecurringCompRow({ c, parent, variant, scope, list, index, onD
         style={{ cursor: 'default' }}
         title={c.label || 'Cliquer sur le crayon de la ligne parente pour modifier'}
       />
+      {/* Badge « Auto » calé sur le bord droit de la colonne des montants, comme le « € » des autres composantes (27/11/2026 ; 6 px de retrait avant). */}
       {c.isTRRefund ? (
-        <span className="tr-tag" style={{ justifySelf: 'end', marginRight: 6 }} title="Calculé automatiquement à partir des TR du mois précédent">Auto</span>
+        <span className="tr-tag" style={{ justifySelf: 'end' }} title="Calculé automatiquement à partir des TR du mois précédent">Auto</span>
       ) : (
         <div className="tx-amount-wrap">
           <input

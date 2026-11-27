@@ -1407,11 +1407,11 @@ input[type="month"] {
 .section-block.ops-c .tx-row.with-edit,
 .section-block.ops-c .tx-row.composite-row.with-edit,
 .frozen-month .section-block.ops-c .tx-row.with-edit,
-.frozen-month .section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) 30px minmax(0, 1fr) var(--amt-w, 112px); gap: 5px; padding: 3px 4px 3px 0; min-height: var(--ligne-petit); } /* 46 px : resserré à la demande de l'utilisateur (56 sur la maquette, ~45 avant) */
+.frozen-month .section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) var(--case-col, 30px) minmax(0, 1fr) var(--amt-w, 112px); gap: 5px; padding: 3px 4px 3px 0; min-height: var(--ligne-petit); } /* 46 px : resserré à la demande de l'utilisateur (56 sur la maquette, ~45 avant) */
 /* Le crayon REVIENT (15/11/2026, demande de l'utilisateur) : comme les autres listes d'opérations. Le libellé reste
    touchable. Sur un mois figé, il reste masqué (règle d'origine), d'où la colonne sans crayon juste au-dessus. */
 .section-block.ops-c .tx-row.with-edit,
-.section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) 30px minmax(0, 1fr) var(--amt-w, 112px) 32px; padding-right: 0; } /* crayon ROND de 32 au bord (piste A minimale, 26/11/2026) — 22 et 4 px de marge avant */
+.section-block.ops-c .tx-row.composite-row.with-edit { grid-template-columns: var(--grip-col, 14px) var(--case-col, 30px) minmax(0, 1fr) var(--amt-w, 112px) 32px; padding-right: 0; } /* crayon ROND de 32 au bord (piste A minimale, 26/11/2026) — 22 et 4 px de marge avant */
 .section-block.ops-c .tx-check-hit { margin: -3px 0 -3px 0; }
 /* Case CENTRÉE dans sa colonne de 30 px (15/11/2026, demande de l'utilisateur) : depuis qu'elle fait 20 px, calée à gauche elle
    laissait 15 px d'air avant le libellé et touchait presque la poignée ; centrée, ~11 px de chaque côté. ⚠️ Le retour à gauche
@@ -1527,36 +1527,34 @@ input[type="month"] {
    large, pour ne pas décaler le placement des cellules de la grille. */
 .mode-dates { --grip-col: 0px; }
 .mode-dates .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
-/* La case dessinée se place à 11 px du bord gauche de la liste, l'écart du crayon au bord droit (mesuré : 11 px sur téléphone
-   et ordinateur ; demande de l'utilisateur, 14/11/2026). Sa zone de toucher reprend les 5 px de l'écart vide et part du bord.
-   Le libellé garde sa place dans la grille (40 px) ; les composantes suivent (trait sous sa 1re lettre, piste A). Tickets resto, sans case :
-   le libellé prend lui aussi les 11 px (calé sur le bord, il paraissait collé au fond de la ligne — remarque de l'utilisateur). */
-.mode-dates .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
-.ops-c.mode-dates .composite-comps { margin-left: 40px; }
-.modal .mode-dates .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
+/* SUR LA MARGE, mode dates ET mois figé (27/11/2026, relevé de l'utilisateur : « tout a été fait sauf la liste des opérations
+   sur les mois figés ») : la case part du TRAIT, comme la poignée d'un mois ouvert, et sa colonne passe de 30 à 20 px (la case
+   en fait 20) pour garder 10 px avant le libellé, l'écart d'un mois ouvert. Sa zone de toucher reprend les 5 px de l'écart vide.
+   Le libellé des tickets resto et des récurrents part du trait ; les composantes suivent (trait sous la 1re lettre du parent).
+   Remplace les 11 px du 14/11 et du 16/11/2026, posés avant la piste A3 quand le crayon était lui-même à 11 px du bord. */
+.mode-dates, .frozen-month { --case-col: 20px; }
+.mode-dates .tx-row > .tx-check-hit.tx-check-hit.tx-check-hit,
+.frozen-month .tx-row > .tx-check-hit.tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 0; width: 30px; }
+.ops-c.mode-dates .composite-comps.composite-comps,
+.frozen-month .ops-c .composite-comps.composite-comps { margin-left: 30px; }
+.modal .mode-dates .tx-row.tr-row.tr-row.tr-row > .op-main,
+.modal .frozen-month .tx-row.tr-row.tr-row.tr-row > .op-main,
+.liste-rec.mode-dates .recurring-row.recurring-row.recurring-row > .op-main { margin-left: -5px; padding-left: 0; }
+.liste-rec.mode-dates .recurring-row.composite-row + .composite-comps.composite-comps { margin-left: 0; }
+/* … et à droite : sans crayon, le « € » finit sur le trait (il était à 9 px). */
+.frozen-month .section-block.ops-c .tx-row.tx-row.tx-row.tx-row,
+.modal .frozen-month .tx-row.tr-row.tr-row.tr-row.tr-row,
+.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps.composite-comps.composite-comps { padding-right: 0; }
 /* MOIS FIGÉ (16/11/2026, demande de l'utilisateur) : on n'y glisse rien non plus — même règle que le mode dates : la poignée
-   sort avec sa colonne, la case revient à 11 px du bord, le libellé gagne 19 px (ordinateur et téléphone), composantes et
-   lignes de tickets resto suivent. L'ancienne raison de la garder (« rien ne bouge d'un mois à l'autre ») ne tenait plus :
-   la colonne du crayon disparaît déjà sur un mois figé. */
+   sort avec sa colonne (la case et le « € » sur le trait : bloc « SUR LA MARGE », plus haut). */
 .frozen-month { --grip-col: 0px; }
 .frozen-month .tx-row > .tx-grip.tx-grip { width: 0; overflow: hidden; }
-.frozen-month .tx-row > .tx-check-hit.tx-check-hit { margin-left: -5px; padding-left: 11px; }
-.frozen-month .ops-c .composite-comps { margin-left: 40px; }
-/* … et à DROITE (16/11/2026, relevé de l'utilisateur sur iPhone) : sans crayon, le « € » finissait à 6 px du bord ; 5 px de plus
-   le posent à 11 px, comme la case à gauche et le crayon d'un mois ouvert. Sélecteurs renforcés : passent devant les grilles. */
-.frozen-month .section-block.ops-c .tx-row.tx-row.tx-row,
-.modal .frozen-month .tx-row.tr-row.tr-row.tr-row { padding-right: 9px; }
-/* Les composantes dépliées suivent : leur « € » sous celui du parent. */
-.frozen-month .section-block.ops-c .tx-row.composite-row + .composite-comps.composite-comps { padding-right: 9px; } /* 4 → 9 : passe devant la règle des composantes d'.ops-c, plus bas */
-.modal .frozen-month .tx-row.tr-row.tr-row > .op-main { margin-left: -5px; padding-left: 11px; }
 /* La poignée des tickets resto a sa largeur propre (19 px, règle plus spécifique) : à 0 aussi, sinon, invisible, elle déborde
    de sa colonne vide sur le libellé (même chose en mode dates, relevé au passage). */
 .modal .frozen-month .tx-row.tr-row.tr-row > .tx-grip, .modal .mode-dates .tx-row.tr-row.tr-row > .tx-grip { width: 0; overflow: hidden; }
 /* Récurrents (Paramètres) : triés par jour du mois en mode dates, ils ne se glissent pas non plus — même règle que les tickets
-   resto : la colonne sort, le libellé à 11 px du bord ; les composantes suivent (trait sous la 1re lettre du parent, piste A). */
+   resto : la colonne sort, le libellé sur le trait (bloc « SUR LA MARGE », plus haut). */
 .liste-rec.mode-dates .recurring-row.recurring-row > .tx-grip { width: 0; overflow: hidden; }
-.liste-rec.mode-dates .recurring-row.recurring-row > .op-main { margin-left: -5px; padding-left: 11px; }
-.liste-rec.mode-dates .recurring-row.composite-row + .composite-comps { margin-left: 11px; }
 .liste-rec .recurring-row.composite-row + .composite-comps { margin: -5px 0 6px 24px; padding: 0 0 0 12px; border-top: 0; border-left: 2px solid #e1e4ec; background: transparent; }
 /* Composantes des récurrents = celles du compte (15/11/2026) : trait sous la 1re lettre du libellé du parent, texte 14 px après (piste A, 14/11/2026),
    montants sur la même colonne que le parent ; la poignée invisible sort de la grille (comme .ops-c). */
