@@ -4889,7 +4889,11 @@ button.stat-card {
    mais deviennent inertes (clics interceptés par le wrapper + toast).
    Le cadenas est partout INFORMATIF, jamais bloquant.
    ============================================================ */
-.frozen-month .tx-edit,
+/* Classe quadruplée (27/11/2026) : le crayon rond de la piste A minimale
+   (`.section-block.ops-c .tx-row > .tx-edit`, `.modal .tx-row.tr-row > .tx-edit`…,
+   4 classes, display: grid) passait devant ce masquage — sur tout mois figé,
+   le crayon revenait et tombait sous la ligne. */
+.frozen-month .tx-edit.tx-edit.tx-edit.tx-edit,
 .frozen-month .btn-add { display: none; }
 /* Le crayon masqué ne doit pas laisser sa COLONNE vide : en mois figé,
    les grilles .with-edit reprennent le gabarit sans crayon — le libellé

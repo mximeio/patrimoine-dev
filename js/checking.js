@@ -838,6 +838,7 @@ function CheckingView({ ctx, onBack }) {
               mKey={curKey}
               datesMode={checkingDatesEnabled(profile)}
               noDrag={frozen}
+              frozen={frozen}
               onAddOperation={(it) => updateMonth({ ...m, operations: [...(m.operations || []), it] })}
               onMoveToOps={(id, it) => updateMonth({ ...m, tr: (m.tr || []).filter(t => t.id !== id), operations: [...(m.operations || []), it] })}
             />
@@ -2484,7 +2485,7 @@ function CompositeComponentRow({ c, parent, variant, scope, list, index, onDrop,
   );
 }
 
-function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal = 0, onAddOperation, onMoveToOps, noDrag = false, showToast }) {
+function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal = 0, onAddOperation, onMoveToOps, noDrag = false, frozen = false, showToast }) {
   const scope = `tr-${mKey}`;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -2568,9 +2569,14 @@ function TrSection({ items, trStats, onChange, mKey, datesMode, openCreateSignal
         })}
         {items.length === 0 && <EmptyState icon="utensils" title="Aucun paiement de tickets resto ce mois" />}
       </div>
-      <div className="section-footer">
-        <button className="btn btn-accent btn-lg btn-tr btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouveau paiement TR</button>
-      </div>
+      {/* Mois figé : pas d'ajout. Le bouton était caché par `.frozen-month .btn-add`
+          jusqu'au lot 4 (14/11/2026), où il est devenu `btn-fen` sans cette classe —
+          il réapparaissait, et la saisie n'était refusée qu'à l'enregistrement. */}
+      {!frozen && (
+        <div className="section-footer">
+          <button className="btn btn-accent btn-lg btn-tr btn-fen" onClick={openCreate}><Icon name="plus" size={16} /> Nouveau paiement TR</button>
+        </div>
+      )}
 
       {showForm && (
         <Modal title={editing ? 'Modifier un paiement TR' : 'Nouveau paiement TR'} icon="utensils" tone="tr" subtitle={`Tickets resto · ${monthLabel(mKey)}`} onClose={() => { setShowForm(false); setEditing(null); }}>
