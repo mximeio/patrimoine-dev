@@ -577,13 +577,24 @@ input[type="month"] {
 .seg-solo.on { background: var(--text); color: white; }
 @media (hover: hover) { .seg-solo.on:hover { color: white; } }
 
-/* Mise en évidence d'un résultat de recherche localisé (requestLocate) :
-   flash violet + liseré accent qui s'estompent, puis retour à la normale. */
-@keyframes rowFlash {
-  0%, 55% { background-color: var(--accent-light); box-shadow: inset 3px 0 0 var(--accent); }
-  100% { background-color: transparent; box-shadow: inset 3px 0 0 transparent; }
+/* L'ALLUMAGE d'une ligne (`.row-flash`, 2,4 s) : résultat de recherche (requestLocate), ligne créée ou modifiée, valeurs
+   ou prix mis à jour (allumerLignes) — une seule forme dans toute l'app.
+   Piste B (27/11/2026, décision de l'utilisateur, planche « À essayer » et trois relectures impeccable / apple-design) : plus
+   de liseré de 3 px (il tombait sur la première lettre depuis la mise sur la marge) ; le fond sort de 10 px dans la marge de
+   chaque côté, 2 px d'air en haut et en bas, coins arrondis. Le contenu ne bouge pas. Écartés : A (fond à la largeur de la
+   ligne : le contenu collait à son bord) et D (bande jusqu'au bord de l'écran : à l'ordinateur, elle s'arrêtait dans le blanc).
+   Arrondi CONCENTRIQUE : 10 px sur les lignes de texte, celui de la pastille + 10 sinon (20 px r6 → 16 ; 34 ou 42 px r12 → 22).
+   Le fond est un ::before derrière le contenu (`isolation`), pas sur la ligne : elle ne peut pas déborder d'elle-même.
+   ⚠️ `:not(.drag-over-top)` : le ::before d'une ligne sert aussi de repère au glisser-déposer. */
+@keyframes rowFlash { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+.row-flash { position: relative; isolation: isolate; }
+.row-flash:not(.drag-over-top)::before {
+  content: ""; position: absolute; top: 2px; bottom: 2px; left: -10px; right: -10px; z-index: -1; pointer-events: none;
+  background: var(--accent-light); border-radius: var(--flash-r, 10px);
+  animation: rowFlash 2.4s ease forwards;
 }
-.row-flash { animation: rowFlash 2.4s ease forwards; }
+.op-row.row-flash { --flash-r: 16px; }
+.portfolio-list-row.row-flash, .support-row.row-flash, .ch-ligne--revenu.row-flash { --flash-r: 22px; }
 
 /* Liste des charges : lignes dans le style des opérations du compte courant */
 .charge-list { display: flex; flex-direction: column; }
